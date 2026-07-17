@@ -1,0 +1,15 @@
+tools/
+tests/
+test-results/
+reports/
+docs/
+mithuuu/
+playwright.config.ts
+playwright.production.config.ts
+*.ps1
+*.cmd
+CURRENCY_AUDIT_REPORT.md
+audit_err.log
+invoice-integration-example.html
+data/*.snapshot.json
+data/*-report.json

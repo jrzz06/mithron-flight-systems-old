@@ -1,0 +1,121 @@
+.row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 20px;
+  padding: var(--ds-s3);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.imageLink {
+  display: block;
+}
+
+.image,
+.imagePlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background: #f8fafc;
+  object-fit: contain;
+}
+
+.body {
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.meta,
+.sku,
+.unitPrice,
+.stock {
+  margin: 4px 0 0;
+  color: rgba(15, 23, 42, 0.62);
+  font-size: 0.82rem;
+}
+
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #b91c1c;
+  cursor: pointer;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.qtyControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.qtyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.qtyValue {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.pricing {
+  text-align: right;
+}
+
+.lineTotal {
+  margin: 2px 0 0;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 72px 1fr;
+    gap: 12px;
+  }
+
+  .image,
+  .imagePlaceholder {
+    width: 72px;
+    height: 72px;
+  }
+}

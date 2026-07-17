@@ -1,0 +1,2 @@
+ALTER TABLE enquiries
+  ADD COLUMN IF NOT EXISTS enquiry_number integer GENERATED ALWAYS AS IDENTITY;

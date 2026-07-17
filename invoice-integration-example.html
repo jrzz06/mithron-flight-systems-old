@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Invoice</title>
+<style>
+  body { margin: 0; background: #eef0f3; }
+  .print-btn {
+    display: block; margin: 16px auto; padding: 9px 24px;
+    background: #0f172a; color: #fff; border: none;
+    border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  @media print { .print-btn { display: none; } body { background: #fff; } }
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+<div id="invoice-root"></div>
+
+<!-- 1. Load the generator -->
+<script src="invoice-generator.js"></script>
+
+<!-- 2. Call render() with your real data from backend -->
+<script>
+  MithronInvoice.render(
+    document.getElementById('invoice-root'),
+    {
+      serial      : '00001',       // from your DB / order system
+      financialYr : '26-27',       // compute from order date
+      date        : '27-06-2026',  // order / payment date
+      dueDate     : '27-07-2026',  // payment due date
+
+      customer: {
+        name  : 'Customer Company Name',
+        gstin : 'GSTIN_HERE',          // optional, leave '' if none
+        billTo: [
+          'Street Address Line 1',
+          'City – PIN',
+          'State, Country'
+        ],
+        shipTo: [                       // omit key to auto-copy billTo
+          'Shipping Address Line 1',
+          'City – PIN',
+          'State, Country'
+        ]
+      },
+
+      items: [
+        { desc: 'Product Name', qty: 1, unit: 'pcs', rate: 1000, gstPct: 18 },
+        { desc: 'Service Fee',  qty: 1, unit: '',    rate: 500,  gstPct: 18 }
+      ],
+
+      paymentMade: null   // null = fully paid; or pass amount e.g. 500
+    }
+  );
+</script>
+</body>
+</html>

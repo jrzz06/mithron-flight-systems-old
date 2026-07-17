@@ -1,0 +1,394 @@
+﻿.listingHeader {
+  display: grid;
+  gap: 0;
+  margin-bottom: 14px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.listingHeaderShowroom {
+  border: none;
+  box-shadow: none;
+}
+
+.headerTitleBlock {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: var(--brand-accent-bright, #1f6b46);
+}
+
+.title {
+  margin: 0;
+  max-width: 22ch;
+  color: #0f172a;
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* Single unified control bar — no sticky, no nested cards */
+.toolbar {
+  container-type: inline-size;
+  container-name: catalog-toolbar;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 0 14px;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.toolbarInner {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.toolbarBack {
+  flex: 0 0 auto !important;
+  align-self: stretch !important;
+  width: auto !important;
+  min-width: 5.25rem;
+  height: auto !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 0 14px 0 10px !important;
+  border: 0 !important;
+  border-inline-end: 1px solid #eef0f2 !important;
+  border-radius: 10px 0 0 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+}
+
+.toolbarBack:hover {
+  background: #f8f8f8 !important;
+}
+
+.toolbarBack:active {
+  transform: scale(0.98);
+}
+
+.toolbarBack:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--brand-accent, #1f6b46) !important;
+}
+
+.searchField {
+  position: relative;
+  display: flex;
+  flex: 1 1 0%;
+  align-items: stretch;
+  min-width: 8rem;
+  border-inline-end: 1px solid #eef0f2;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: #94a3b8;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.searchInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  padding: 0 16px 0 42px;
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.2;
+  box-shadow: none;
+  transition: background-color 180ms var(--ease-system, ease);
+}
+
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+
+.searchInput:hover {
+  background: #f8f8f8;
+}
+
+.searchInput:focus {
+  outline: none;
+  background: #f8f8f8;
+  box-shadow: none;
+}
+
+.sortField {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  align-items: stretch;
+  width: 10.5rem;
+  max-width: 12.5rem;
+  min-width: 7.5rem;
+}
+
+.sortSelect {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  padding: 0 36px 0 14px;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.2;
+  box-shadow: none;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% + 2px),
+    calc(100% - 12px) calc(50% + 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: background-color 180ms var(--ease-system, ease);
+}
+
+.sortSelect:hover {
+  background-color: #f8f8f8;
+}
+
+.sortSelect:focus {
+  outline: none;
+  background-color: #f8f8f8;
+  box-shadow: none;
+}
+
+.groupRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.groupChip {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 0 16px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.groupChip:hover {
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+.groupChipActive {
+  border-color: rgba(31, 107, 70, 0.28);
+  background: rgba(31, 107, 70, 0.08);
+  color: #14532d;
+  box-shadow: 0 4px 16px rgba(31, 107, 70, 0.08);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.metaCount {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid rgba(15, 23, 42, 0.045);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 0 14px;
+}
+
+/* Stack when the bar itself is narrow — works even if DevTools resize fakes viewport only */
+@container catalog-toolbar (max-width: 560px) {
+  .toolbarInner {
+    flex-direction: column;
+  }
+
+  .toolbarBack {
+    border-inline-end: 0 !important;
+    border-bottom: 1px solid #eef0f2 !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: flex-start !important;
+  }
+
+  .searchField {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    border-inline-end: 0;
+    border-bottom: 1px solid #eef0f2;
+  }
+
+  .sortField {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .listingHeader {
+    margin-bottom: 12px;
+  }
+
+  .title {
+    max-width: none;
+  }
+
+  .toolbar {
+    padding: 6px;
+  }
+
+  .toolbarInner {
+    flex-direction: column;
+    flex-wrap: wrap;
+  }
+
+  .toolbarBack {
+    border-inline-end: 0 !important;
+    border-bottom: 1px solid #eef0f2 !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: flex-start !important;
+  }
+
+  .searchField {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    border-inline-end: 0;
+    border-bottom: 1px solid #eef0f2;
+  }
+
+  .sortField {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .metaRow {
+    margin-bottom: 14px;
+  }
+}
+
+@media (min-width: 768px) {
+  .listingHeader {
+    margin-bottom: 16px;
+  }
+
+  .headerTitleBlock {
+    gap: 8px;
+  }
+
+  .toolbar {
+    padding: 4px 6px;
+    margin-bottom: 16px;
+  }
+
+  .toolbarBack,
+  .searchInput,
+  .sortSelect {
+    min-height: 44px !important;
+  }
+
+  .metaRow {
+    margin-bottom: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .toolbar {
+    padding: 4px 8px;
+  }
+
+  .sortField {
+    width: 12.5rem;
+  }
+
+  .toolbarBack {
+    min-width: 6rem;
+    padding-inline: 14px 16px !important;
+  }
+}

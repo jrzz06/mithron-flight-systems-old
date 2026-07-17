@@ -1,0 +1,123 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  place-items: center;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: auto;
+  background: #050608;
+  color: #f8fafc;
+  padding:
+    max(1.5rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right))
+    max(1.5rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+}
+
+.card {
+  width: 100%;
+  max-width: clamp(26.25rem, 92vw, 30rem);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  background: rgba(8, 11, 15, 0.92);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.45);
+}
+
+.eyebrow {
+  margin: 0;
+  color: #7ce7c9;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 1rem 0 0;
+  font-family: var(--type-display);
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.copy {
+  margin: 1rem 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: clamp(0.875rem, 2.2vw, 0.9375rem);
+  line-height: 1.6;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 2rem;
+}
+
+.input {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(8, 11, 15, 0.6);
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 180ms ease;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.input:focus {
+  border-color: #7ce7c9;
+}
+
+.message {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background: rgba(8, 11, 15, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.submit {
+  display: inline-flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: #7ce7c9;
+  color: #000000;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: opacity 180ms ease;
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding:
+      max(2.5rem, env(safe-area-inset-top))
+      max(2.5rem, env(safe-area-inset-right))
+      max(2.5rem, env(safe-area-inset-bottom))
+      max(2.5rem, env(safe-area-inset-left));
+  }
+}

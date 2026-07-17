@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      MITHRON_CMS_STRICT: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run security:verify-secrets
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+
+  security-boundaries:
+    if: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+    runs-on: ubuntu-latest
+    needs: verify
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      MITHRON_UPLOAD_API_RETIRED: "true"
+      SECURITY_BOUNDARY_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Start production server
+        run: |
+          npm run start &
+          echo $! > server.pid
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3000/api/health >/dev/null; then
+              echo "Server ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server failed to start"
+          exit 1
+      - run: npm run security:validate-boundaries
+      - name: Stop server
+        if: always()
+        run: kill "$(cat server.pid)" 2>/dev/null || true
+
+  e2e-nightly:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.STAGING_URL != ''
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}

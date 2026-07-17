@@ -1,0 +1,2799 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-12T11:24:06.714Z",
+  "assets": {
+    "/media/mithron/mission/agrone/agrone-drone-owner-registration.png": {
+      "assetId": "storefront-agrone-drone-owner-registration",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agrone-drone-owner-registration-768w-enh-v1.b5e3c98a.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 1024,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agrone-drone-owner-registration-768w-enh-v1.b5e3c98a.webp",
+            "storagePath": "storefront/agrone-drone-owner-registration-768w-enh-v1.b5e3c98a.webp",
+            "optimizedSizeKb": 168.28
+          },
+          {
+            "width": 480,
+            "height": 640,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agrone-drone-owner-registration-480w-enh-v1.c6e058be.webp",
+            "storagePath": "storefront/agrone-drone-owner-registration-480w-enh-v1.c6e058be.webp",
+            "optimizedSizeKb": 87.12
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/agrone/agrone-pilot-registration.png": {
+      "assetId": "storefront-agrone-pilot-registration",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agrone-pilot-registration-768w-enh-v1.3849ee0b.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agrone-pilot-registration-768w-enh-v1.3849ee0b.webp",
+            "storagePath": "storefront/agrone-pilot-registration-768w-enh-v1.3849ee0b.webp",
+            "optimizedSizeKb": 113.92
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agrone-pilot-registration-480w-enh-v1.29a55bf4.webp",
+            "storagePath": "storefront/agrone-pilot-registration-480w-enh-v1.29a55bf4.webp",
+            "optimizedSizeKb": 53.44
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/agrone/all-india-drone-farmer.png": {
+      "assetId": "storefront-all-india-drone-farmer",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/all-india-drone-farmer-768w-enh-v1.e0ec920c.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/all-india-drone-farmer-768w-enh-v1.e0ec920c.webp",
+            "storagePath": "storefront/all-india-drone-farmer-768w-enh-v1.e0ec920c.webp",
+            "optimizedSizeKb": 52.71
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/all-india-drone-farmer-480w-enh-v1.4e33c241.webp",
+            "storagePath": "storefront/all-india-drone-farmer-480w-enh-v1.4e33c241.webp",
+            "optimizedSizeKb": 25.9
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/agrone/smart-farmer-register.png": {
+      "assetId": "storefront-smart-farmer-register",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/smart-farmer-register-768w-enh-v1.8a9c8fc4.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/smart-farmer-register-768w-enh-v1.8a9c8fc4.webp",
+            "storagePath": "storefront/smart-farmer-register-768w-enh-v1.8a9c8fc4.webp",
+            "optimizedSizeKb": 62.29
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/smart-farmer-register-480w-enh-v1.0faf7348.webp",
+            "storagePath": "storefront/smart-farmer-register-480w-enh-v1.0faf7348.webp",
+            "optimizedSizeKb": 29.2
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/agrone/agri-drone-loan.png": {
+      "assetId": "storefront-agri-drone-loan",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-loan-768w-enh-v1.23093c92.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-loan-768w-enh-v1.23093c92.webp",
+            "storagePath": "storefront/agri-drone-loan-768w-enh-v1.23093c92.webp",
+            "optimizedSizeKb": 44.95
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-loan-480w-enh-v1.4f744b4d.webp",
+            "storagePath": "storefront/agri-drone-loan-480w-enh-v1.4f744b4d.webp",
+            "optimizedSizeKb": 21.94
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/city/dronelancer-model.png": {
+      "assetId": "storefront-dronelancer-model",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/dronelancer-model-768w-enh-v1.65ce279a.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 512,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/dronelancer-model-768w-enh-v1.65ce279a.webp",
+            "storagePath": "storefront/dronelancer-model-768w-enh-v1.65ce279a.webp",
+            "optimizedSizeKb": 115.52
+          },
+          {
+            "width": 480,
+            "height": 320,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/dronelancer-model-480w-enh-v1.5361b314.webp",
+            "storagePath": "storefront/dronelancer-model-480w-enh-v1.5361b314.webp",
+            "optimizedSizeKb": 56.09
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/city/city-drone-rental-services-app.png": {
+      "assetId": "storefront-city-drone-rental-services-app",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/city-drone-rental-services-app-768w-enh-v1.9ce68078.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 512,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/city-drone-rental-services-app-768w-enh-v1.9ce68078.webp",
+            "storagePath": "storefront/city-drone-rental-services-app-768w-enh-v1.9ce68078.webp",
+            "optimizedSizeKb": 121.59
+          },
+          {
+            "width": 480,
+            "height": 320,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/city-drone-rental-services-app-480w-enh-v1.d8dbf2b2.webp",
+            "storagePath": "storefront/city-drone-rental-services-app-480w-enh-v1.d8dbf2b2.webp",
+            "optimizedSizeKb": 56.81
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/city/drone-franchisecare-center.png": {
+      "assetId": "storefront-drone-franchisecare-center",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-franchisecare-center-768w-enh-v1.0ddc9c61.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 512,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-franchisecare-center-768w-enh-v1.0ddc9c61.webp",
+            "storagePath": "storefront/drone-franchisecare-center-768w-enh-v1.0ddc9c61.webp",
+            "optimizedSizeKb": 63.08
+          },
+          {
+            "width": 480,
+            "height": 320,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-franchisecare-center-480w-enh-v1.bfcfddf3.webp",
+            "storagePath": "storefront/drone-franchisecare-center-480w-enh-v1.bfcfddf3.webp",
+            "optimizedSizeKb": 32.59
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/city/drone-technician-aggregation.png": {
+      "assetId": "storefront-drone-technician-aggregation",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-technician-aggregation-768w-enh-v1.e4b3ad51.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 512,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-technician-aggregation-768w-enh-v1.e4b3ad51.webp",
+            "storagePath": "storefront/drone-technician-aggregation-768w-enh-v1.e4b3ad51.webp",
+            "optimizedSizeKb": 72.93
+          },
+          {
+            "width": 480,
+            "height": 320,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-technician-aggregation-480w-enh-v1.1d0f02a8.webp",
+            "storagePath": "storefront/drone-technician-aggregation-480w-enh-v1.1d0f02a8.webp",
+            "optimizedSizeKb": 33.77
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/city/all-drone-acadamic.png": {
+      "assetId": "storefront-all-drone-acadamic",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/all-drone-acadamic-768w-enh-v1.f5efa818.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 512,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/all-drone-acadamic-768w-enh-v1.f5efa818.webp",
+            "storagePath": "storefront/all-drone-acadamic-768w-enh-v1.f5efa818.webp",
+            "optimizedSizeKb": 91.12
+          },
+          {
+            "width": 480,
+            "height": 320,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/all-drone-acadamic-480w-enh-v1.f918b25c.webp",
+            "storagePath": "storefront/all-drone-acadamic-480w-enh-v1.f918b25c.webp",
+            "optimizedSizeKb": 44.05
+          }
+        ]
+      }
+    },
+    "/media/mithron/press/mithron-company-network.webp": {
+      "assetId": "storefront-mithron-company-network",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-company-network-1280w-enh-v1.e46771d8.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-company-network-1280w-enh-v1.e46771d8.webp",
+            "storagePath": "storefront/mithron-company-network-1280w-enh-v1.e46771d8.webp",
+            "optimizedSizeKb": 126.84
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-company-network-768w-enh-v1.a61a6bca.webp",
+            "storagePath": "storefront/mithron-company-network-768w-enh-v1.a61a6bca.webp",
+            "optimizedSizeKb": 78.25
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-company-network-480w-enh-v1.c06d0718.webp",
+            "storagePath": "storefront/mithron-company-network-480w-enh-v1.c06d0718.webp",
+            "optimizedSizeKb": 37.61
+          }
+        ]
+      }
+    },
+    "/media/mithron/press/precision-pilot-ecosystem.webp": {
+      "assetId": "storefront-precision-pilot-ecosystem",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-pilot-ecosystem-1280w-enh-v1.1d0236da.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-pilot-ecosystem-1280w-enh-v1.1d0236da.webp",
+            "storagePath": "storefront/precision-pilot-ecosystem-1280w-enh-v1.1d0236da.webp",
+            "optimizedSizeKb": 213.92
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-pilot-ecosystem-768w-enh-v1.932fbc87.webp",
+            "storagePath": "storefront/precision-pilot-ecosystem-768w-enh-v1.932fbc87.webp",
+            "optimizedSizeKb": 116.65
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-pilot-ecosystem-480w-enh-v1.7601a898.webp",
+            "storagePath": "storefront/precision-pilot-ecosystem-480w-enh-v1.7601a898.webp",
+            "optimizedSizeKb": 51.46
+          }
+        ]
+      }
+    },
+    "/media/mithron/press/india-drone-market.webp": {
+      "assetId": "storefront-india-drone-market",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/india-drone-market-1280w-enh-v1.6ace6306.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/india-drone-market-1280w-enh-v1.6ace6306.webp",
+            "storagePath": "storefront/india-drone-market-1280w-enh-v1.6ace6306.webp",
+            "optimizedSizeKb": 190.17
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/india-drone-market-768w-enh-v1.52622d1f.webp",
+            "storagePath": "storefront/india-drone-market-768w-enh-v1.52622d1f.webp",
+            "optimizedSizeKb": 105.39
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/india-drone-market-480w-enh-v1.b5c05a16.webp",
+            "storagePath": "storefront/india-drone-market-480w-enh-v1.b5c05a16.webp",
+            "optimizedSizeKb": 49.09
+          }
+        ]
+      }
+    },
+    "/media/mithron/hero/ag10-command.webp": {
+      "assetId": "hero-ag10-command",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/ag10-command-1920w-v1.e1b2c279.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1920,
+            "height": 1080,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/ag10-command-1920w-v1.e1b2c279.webp",
+            "storagePath": "ag10-command-1920w-v1.e1b2c279.webp",
+            "optimizedSizeKb": 22.43
+          },
+          {
+            "width": 1280,
+            "height": 720,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/ag10-command-1280w-v1.3d604375.webp",
+            "storagePath": "ag10-command-1280w-v1.3d604375.webp",
+            "optimizedSizeKb": 11.65
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/ag10-command-768w-v1.d7bed922.webp",
+            "storagePath": "ag10-command-768w-v1.d7bed922.webp",
+            "optimizedSizeKb": 5.21
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/ag10-command-480w-v1.f4f7c50b.webp",
+            "storagePath": "ag10-command-480w-v1.f4f7c50b.webp",
+            "optimizedSizeKb": 2.5
+          }
+        ]
+      }
+    },
+    "/media/mithron/hero/security-grid.webp": {
+      "assetId": "hero-security-grid",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/security-grid-1920w-v1.cfdb3b61.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1920,
+            "height": 1080,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/security-grid-1920w-v1.cfdb3b61.webp",
+            "storagePath": "security-grid-1920w-v1.cfdb3b61.webp",
+            "optimizedSizeKb": 17.95
+          },
+          {
+            "width": 1280,
+            "height": 720,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/security-grid-1280w-v1.de029dbc.webp",
+            "storagePath": "security-grid-1280w-v1.de029dbc.webp",
+            "optimizedSizeKb": 9.92
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/security-grid-768w-v1.f0d4bd11.webp",
+            "storagePath": "security-grid-768w-v1.f0d4bd11.webp",
+            "optimizedSizeKb": 4.91
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/security-grid-480w-v1.733f2dfd.webp",
+            "storagePath": "security-grid-480w-v1.733f2dfd.webp",
+            "optimizedSizeKb": 2.59
+          }
+        ]
+      }
+    },
+    "/media/mithron/hero/mapping-flight.webp": {
+      "assetId": "hero-mapping-flight",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/mapping-flight-1920w-v1.1d20f39d.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1920,
+            "height": 1080,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/mapping-flight-1920w-v1.1d20f39d.webp",
+            "storagePath": "mapping-flight-1920w-v1.1d20f39d.webp",
+            "optimizedSizeKb": 62.5
+          },
+          {
+            "width": 1280,
+            "height": 720,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/mapping-flight-1280w-v1.6e385b54.webp",
+            "storagePath": "mapping-flight-1280w-v1.6e385b54.webp",
+            "optimizedSizeKb": 33.96
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/mapping-flight-768w-v1.9bd35739.webp",
+            "storagePath": "mapping-flight-768w-v1.9bd35739.webp",
+            "optimizedSizeKb": 15.51
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/mapping-flight-480w-v1.384a7961.webp",
+            "storagePath": "mapping-flight-480w-v1.384a7961.webp",
+            "optimizedSizeKb": 7.77
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/agriculture.webp": {
+      "assetId": "storefront-agriculture",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/agriculture-2560w-enh-v1.458d52f5.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/agriculture-2560w-enh-v1.458d52f5.webp",
+            "storagePath": "storefront/agriculture-2560w-enh-v1.458d52f5.webp",
+            "optimizedSizeKb": 161.88
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/agriculture-1920w-enh-v1.b8feca1b.webp",
+            "storagePath": "storefront/agriculture-1920w-enh-v1.b8feca1b.webp",
+            "optimizedSizeKb": 112.11
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/agriculture-1280w-enh-v1.7932ab43.webp",
+            "storagePath": "storefront/agriculture-1280w-enh-v1.7932ab43.webp",
+            "optimizedSizeKb": 68.57
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/agriculture-768w-enh-v1.88f204ee.webp",
+            "storagePath": "storefront/agriculture-768w-enh-v1.88f204ee.webp",
+            "optimizedSizeKb": 28.77
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/agriculture-480w-enh-v1.6d826f70.webp",
+            "storagePath": "storefront/agriculture-480w-enh-v1.6d826f70.webp",
+            "optimizedSizeKb": 13.49
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/mapping.webp": {
+      "assetId": "storefront-mapping",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/mapping-2560w-enh-v1.8ebf410b.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/mapping-2560w-enh-v1.8ebf410b.webp",
+            "storagePath": "storefront/mapping-2560w-enh-v1.8ebf410b.webp",
+            "optimizedSizeKb": 451.45
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/mapping-1920w-enh-v1.19703013.webp",
+            "storagePath": "storefront/mapping-1920w-enh-v1.19703013.webp",
+            "optimizedSizeKb": 285.75
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/mapping-1280w-enh-v1.1f26af3c.webp",
+            "storagePath": "storefront/mapping-1280w-enh-v1.1f26af3c.webp",
+            "optimizedSizeKb": 183.22
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/mapping-768w-enh-v1.dd00792c.webp",
+            "storagePath": "storefront/mapping-768w-enh-v1.dd00792c.webp",
+            "optimizedSizeKb": 76.86
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/mapping-480w-enh-v1.25f22af5.webp",
+            "storagePath": "storefront/mapping-480w-enh-v1.25f22af5.webp",
+            "optimizedSizeKb": 37.23
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/video-drones.webp": {
+      "assetId": "storefront-video-drones",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/video-drones-2560w-enh-v1.ee24c088.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/video-drones-2560w-enh-v1.ee24c088.webp",
+            "storagePath": "storefront/video-drones-2560w-enh-v1.ee24c088.webp",
+            "optimizedSizeKb": 174.87
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/video-drones-1920w-enh-v1.9a877c43.webp",
+            "storagePath": "storefront/video-drones-1920w-enh-v1.9a877c43.webp",
+            "optimizedSizeKb": 126.59
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/video-drones-1280w-enh-v1.7b4b606b.webp",
+            "storagePath": "storefront/video-drones-1280w-enh-v1.7b4b606b.webp",
+            "optimizedSizeKb": 82.03
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/video-drones-768w-enh-v1.de044203.webp",
+            "storagePath": "storefront/video-drones-768w-enh-v1.de044203.webp",
+            "optimizedSizeKb": 39.96
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/video-drones-480w-enh-v1.1c695d84.webp",
+            "storagePath": "storefront/video-drones-480w-enh-v1.1c695d84.webp",
+            "optimizedSizeKb": 21.63
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/creative-drones.webp": {
+      "assetId": "storefront-creative-drones",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/creative-drones-2560w-enh-v1.8e2f0adc.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/creative-drones-2560w-enh-v1.8e2f0adc.webp",
+            "storagePath": "storefront/creative-drones-2560w-enh-v1.8e2f0adc.webp",
+            "optimizedSizeKb": 640.89
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/creative-drones-1920w-enh-v1.3d6eabc1.webp",
+            "storagePath": "storefront/creative-drones-1920w-enh-v1.3d6eabc1.webp",
+            "optimizedSizeKb": 388.03
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/creative-drones-1280w-enh-v1.7ba2001e.webp",
+            "storagePath": "storefront/creative-drones-1280w-enh-v1.7ba2001e.webp",
+            "optimizedSizeKb": 209.82
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/creative-drones-768w-enh-v1.6e2604c3.webp",
+            "storagePath": "storefront/creative-drones-768w-enh-v1.6e2604c3.webp",
+            "optimizedSizeKb": 82.31
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/creative-drones-480w-enh-v1.4586e441.webp",
+            "storagePath": "storefront/creative-drones-480w-enh-v1.4586e441.webp",
+            "optimizedSizeKb": 35.96
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/smart-farming.webp": {
+      "assetId": "storefront-smart-farming",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/smart-farming-2560w-enh-v1.458d52f5.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/smart-farming-2560w-enh-v1.458d52f5.webp",
+            "storagePath": "storefront/smart-farming-2560w-enh-v1.458d52f5.webp",
+            "optimizedSizeKb": 161.88
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/smart-farming-1920w-enh-v1.b8feca1b.webp",
+            "storagePath": "storefront/smart-farming-1920w-enh-v1.b8feca1b.webp",
+            "optimizedSizeKb": 112.11
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/smart-farming-1280w-enh-v1.7932ab43.webp",
+            "storagePath": "storefront/smart-farming-1280w-enh-v1.7932ab43.webp",
+            "optimizedSizeKb": 68.57
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/smart-farming-768w-enh-v1.88f204ee.webp",
+            "storagePath": "storefront/smart-farming-768w-enh-v1.88f204ee.webp",
+            "optimizedSizeKb": 28.77
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/smart-farming-480w-enh-v1.6d826f70.webp",
+            "storagePath": "storefront/smart-farming-480w-enh-v1.6d826f70.webp",
+            "optimizedSizeKb": 13.49
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/defense-security.webp": {
+      "assetId": "interest-defense-security",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/defense-security-1280w-v1.cf47a87c.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/defense-security-1280w-v1.cf47a87c.webp",
+            "storagePath": "defense-security-1280w-v1.cf47a87c.webp",
+            "optimizedSizeKb": 14.18
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/defense-security-768w-v1.ae695198.webp",
+            "storagePath": "defense-security-768w-v1.ae695198.webp",
+            "optimizedSizeKb": 7.56
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/defense-security-480w-v1.8ee8a6ae.webp",
+            "storagePath": "defense-security-480w-v1.8ee8a6ae.webp",
+            "optimizedSizeKb": 4.06
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/industrial-inspection.webp": {
+      "assetId": "interest-industrial-inspection",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/industrial-inspection-1280w-v1.e12a4f5f.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/industrial-inspection-1280w-v1.e12a4f5f.webp",
+            "storagePath": "industrial-inspection-1280w-v1.e12a4f5f.webp",
+            "optimizedSizeKb": 38.04
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/industrial-inspection-768w-v1.a1b58b83.webp",
+            "storagePath": "industrial-inspection-768w-v1.a1b58b83.webp",
+            "optimizedSizeKb": 20.01
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/industrial-inspection-480w-v1.cb530b83.webp",
+            "storagePath": "industrial-inspection-480w-v1.cb530b83.webp",
+            "optimizedSizeKb": 9.94
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/surveillance.webp": {
+      "assetId": "interest-surveillance",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/surveillance-1280w-v1.cf47a87c.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/surveillance-1280w-v1.cf47a87c.webp",
+            "storagePath": "surveillance-1280w-v1.cf47a87c.webp",
+            "optimizedSizeKb": 14.18
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/surveillance-768w-v1.ae695198.webp",
+            "storagePath": "surveillance-768w-v1.ae695198.webp",
+            "optimizedSizeKb": 7.56
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/surveillance-480w-v1.8ee8a6ae.webp",
+            "storagePath": "surveillance-480w-v1.8ee8a6ae.webp",
+            "optimizedSizeKb": 4.06
+          }
+        ]
+      }
+    },
+    "/media/mithron/interests/components.webp": {
+      "assetId": "storefront-components",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/components-1280w-enh-v1.b9c693a5.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/components-1280w-enh-v1.b9c693a5.webp",
+            "storagePath": "storefront/components-1280w-enh-v1.b9c693a5.webp",
+            "optimizedSizeKb": 150.74
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/components-768w-enh-v1.32b39310.webp",
+            "storagePath": "storefront/components-768w-enh-v1.32b39310.webp",
+            "optimizedSizeKb": 75.93
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/components-480w-enh-v1.009b6aa3.webp",
+            "storagePath": "storefront/components-480w-enh-v1.009b6aa3.webp",
+            "optimizedSizeKb": 39.68
+          }
+        ]
+      }
+    },
+    "/media/mithron/story/precision-spray.webp": {
+      "assetId": "story-precision-spray",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/precision-spray-1280w-v1.7823b47d.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/precision-spray-1280w-v1.7823b47d.webp",
+            "storagePath": "precision-spray-1280w-v1.7823b47d.webp",
+            "optimizedSizeKb": 19.23
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/precision-spray-768w-v1.cc4e617c.webp",
+            "storagePath": "precision-spray-768w-v1.cc4e617c.webp",
+            "optimizedSizeKb": 9.16
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/precision-spray-480w-v1.b8bb2120.webp",
+            "storagePath": "precision-spray-480w-v1.b8bb2120.webp",
+            "optimizedSizeKb": 4.24
+          }
+        ]
+      }
+    },
+    "/media/mithron/story/terrain-radar.webp": {
+      "assetId": "story-terrain-radar",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/terrain-radar-1280w-v1.12a6e47b.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/terrain-radar-1280w-v1.12a6e47b.webp",
+            "storagePath": "terrain-radar-1280w-v1.12a6e47b.webp",
+            "optimizedSizeKb": 55.31
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/terrain-radar-768w-v1.debdae09.webp",
+            "storagePath": "terrain-radar-768w-v1.debdae09.webp",
+            "optimizedSizeKb": 25.2
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/terrain-radar-480w-v1.e36b9029.webp",
+            "storagePath": "terrain-radar-480w-v1.e36b9029.webp",
+            "optimizedSizeKb": 11.67
+          }
+        ]
+      }
+    },
+    "/media/mithron/story/mission-planning.webp": {
+      "assetId": "story-mission-planning",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/mission-planning-1280w-v1.44a6b3eb.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/mission-planning-1280w-v1.44a6b3eb.webp",
+            "storagePath": "mission-planning-1280w-v1.44a6b3eb.webp",
+            "optimizedSizeKb": 42.48
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/mission-planning-768w-v1.01b9d083.webp",
+            "storagePath": "mission-planning-768w-v1.01b9d083.webp",
+            "optimizedSizeKb": 25.67
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/mission-planning-480w-v1.3710025d.webp",
+            "storagePath": "mission-planning-480w-v1.3710025d.webp",
+            "optimizedSizeKb": 14.99
+          }
+        ]
+      }
+    },
+    "/media/mithron/story/drone-ecosystem.webp": {
+      "assetId": "story-drone-ecosystem",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/drone-ecosystem-1280w-v1.44a6b3eb.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/drone-ecosystem-1280w-v1.44a6b3eb.webp",
+            "storagePath": "drone-ecosystem-1280w-v1.44a6b3eb.webp",
+            "optimizedSizeKb": 42.48
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/drone-ecosystem-768w-v1.01b9d083.webp",
+            "storagePath": "drone-ecosystem-768w-v1.01b9d083.webp",
+            "optimizedSizeKb": 25.67
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/drone-ecosystem-480w-v1.3710025d.webp",
+            "storagePath": "drone-ecosystem-480w-v1.3710025d.webp",
+            "optimizedSizeKb": 14.99
+          }
+        ]
+      }
+    },
+    "/media/mithron/story/crop-health.webp": {
+      "assetId": "story-crop-health",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/crop-health-1280w-v1.7823b47d.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/crop-health-1280w-v1.7823b47d.webp",
+            "storagePath": "crop-health-1280w-v1.7823b47d.webp",
+            "optimizedSizeKb": 19.23
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/crop-health-768w-v1.cc4e617c.webp",
+            "storagePath": "crop-health-768w-v1.cc4e617c.webp",
+            "optimizedSizeKb": 9.16
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/crop-health-480w-v1.b8bb2120.webp",
+            "storagePath": "crop-health-480w-v1.b8bb2120.webp",
+            "optimizedSizeKb": 4.24
+          }
+        ]
+      }
+    },
+    "/assets/hero/hero-slide-01.webp": {
+      "assetId": "storefront-hero-slide-01",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1534,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+            "storagePath": "storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+            "optimizedSizeKb": 569.78
+          },
+          {
+            "width": 2560,
+            "height": 1023,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-2560w-enh-v1.e870de34.webp",
+            "storagePath": "storefront/hero-slide-01-2560w-enh-v1.e870de34.webp",
+            "optimizedSizeKb": 308.39
+          },
+          {
+            "width": 1920,
+            "height": 767,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-1920w-enh-v1.2cfff0a5.webp",
+            "storagePath": "storefront/hero-slide-01-1920w-enh-v1.2cfff0a5.webp",
+            "optimizedSizeKb": 235.52
+          },
+          {
+            "width": 1280,
+            "height": 511,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-1280w-enh-v1.36559726.webp",
+            "storagePath": "storefront/hero-slide-01-1280w-enh-v1.36559726.webp",
+            "optimizedSizeKb": 123.15
+          },
+          {
+            "width": 768,
+            "height": 307,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-768w-enh-v1.adb9d61f.webp",
+            "storagePath": "storefront/hero-slide-01-768w-enh-v1.adb9d61f.webp",
+            "optimizedSizeKb": 58.6
+          },
+          {
+            "width": 480,
+            "height": 192,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-480w-enh-v1.eb53c63d.webp",
+            "storagePath": "storefront/hero-slide-01-480w-enh-v1.eb53c63d.webp",
+            "optimizedSizeKb": 27.69
+          }
+        ]
+      }
+    },
+    "/assets/hero/hero-slide-02.webp": {
+      "assetId": "storefront-hero-slide-02",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+            "storagePath": "storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+            "optimizedSizeKb": 434.53
+          },
+          {
+            "width": 2560,
+            "height": 1280,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-2560w-enh-v1.6ff20254.webp",
+            "storagePath": "storefront/hero-slide-02-2560w-enh-v1.6ff20254.webp",
+            "optimizedSizeKb": 224.38
+          },
+          {
+            "width": 1920,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-1920w-enh-v1.b24590af.webp",
+            "storagePath": "storefront/hero-slide-02-1920w-enh-v1.b24590af.webp",
+            "optimizedSizeKb": 164.8
+          },
+          {
+            "width": 1280,
+            "height": 640,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-1280w-enh-v1.d463f85e.webp",
+            "storagePath": "storefront/hero-slide-02-1280w-enh-v1.d463f85e.webp",
+            "optimizedSizeKb": 81.46
+          },
+          {
+            "width": 768,
+            "height": 384,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-768w-enh-v1.3d6f8f5f.webp",
+            "storagePath": "storefront/hero-slide-02-768w-enh-v1.3d6f8f5f.webp",
+            "optimizedSizeKb": 38.02
+          },
+          {
+            "width": 480,
+            "height": 240,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-480w-enh-v1.962f27e5.webp",
+            "storagePath": "storefront/hero-slide-02-480w-enh-v1.962f27e5.webp",
+            "optimizedSizeKb": 19.06
+          }
+        ]
+      }
+    },
+    "/assets/hero/hero-slide-03.webp": {
+      "assetId": "storefront-hero-slide-03",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-3840w-enh-v1.15354ab6.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1590,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-3840w-enh-v1.15354ab6.webp",
+            "storagePath": "storefront/hero-slide-03-3840w-enh-v1.15354ab6.webp",
+            "optimizedSizeKb": 418.14
+          },
+          {
+            "width": 2560,
+            "height": 1060,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-2560w-enh-v1.41a074d8.webp",
+            "storagePath": "storefront/hero-slide-03-2560w-enh-v1.41a074d8.webp",
+            "optimizedSizeKb": 226.62
+          },
+          {
+            "width": 1920,
+            "height": 795,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-1920w-enh-v1.f6d65cca.webp",
+            "storagePath": "storefront/hero-slide-03-1920w-enh-v1.f6d65cca.webp",
+            "optimizedSizeKb": 173.58
+          },
+          {
+            "width": 1280,
+            "height": 530,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-1280w-enh-v1.28055f1f.webp",
+            "storagePath": "storefront/hero-slide-03-1280w-enh-v1.28055f1f.webp",
+            "optimizedSizeKb": 87.1
+          },
+          {
+            "width": 768,
+            "height": 318,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-768w-enh-v1.7aad67a8.webp",
+            "storagePath": "storefront/hero-slide-03-768w-enh-v1.7aad67a8.webp",
+            "optimizedSizeKb": 39.2
+          },
+          {
+            "width": 480,
+            "height": 199,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-480w-enh-v1.936bbaf4.webp",
+            "storagePath": "storefront/hero-slide-03-480w-enh-v1.936bbaf4.webp",
+            "optimizedSizeKb": 18.88
+          }
+        ]
+      }
+    },
+    "/assets/hero/hero-slide-04.webp": {
+      "assetId": "storefront-hero-slide-04",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+            "storagePath": "storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+            "optimizedSizeKb": 599.83
+          },
+          {
+            "width": 2560,
+            "height": 1280,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-2560w-enh-v1.761a5219.webp",
+            "storagePath": "storefront/hero-slide-04-2560w-enh-v1.761a5219.webp",
+            "optimizedSizeKb": 298.25
+          },
+          {
+            "width": 1920,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-1920w-enh-v1.ce11523f.webp",
+            "storagePath": "storefront/hero-slide-04-1920w-enh-v1.ce11523f.webp",
+            "optimizedSizeKb": 216.53
+          },
+          {
+            "width": 1280,
+            "height": 640,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-1280w-enh-v1.9ff2d257.webp",
+            "storagePath": "storefront/hero-slide-04-1280w-enh-v1.9ff2d257.webp",
+            "optimizedSizeKb": 101.47
+          },
+          {
+            "width": 768,
+            "height": 384,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-768w-enh-v1.e2c81e7e.webp",
+            "storagePath": "storefront/hero-slide-04-768w-enh-v1.e2c81e7e.webp",
+            "optimizedSizeKb": 44.75
+          },
+          {
+            "width": 480,
+            "height": 240,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-480w-enh-v1.0c722c96.webp",
+            "storagePath": "storefront/hero-slide-04-480w-enh-v1.0c722c96.webp",
+            "optimizedSizeKb": 22.01
+          }
+        ]
+      }
+    },
+    "/media/mithron/categories/defense-security.webp": {
+      "assetId": "storefront-defense-security",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/defense-security-2560w-enh-v1.0ae06686.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/defense-security-2560w-enh-v1.0ae06686.webp",
+            "storagePath": "storefront/defense-security-2560w-enh-v1.0ae06686.webp",
+            "optimizedSizeKb": 163.02
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/defense-security-1920w-enh-v1.2d3c7c70.webp",
+            "storagePath": "storefront/defense-security-1920w-enh-v1.2d3c7c70.webp",
+            "optimizedSizeKb": 109.87
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/defense-security-1280w-enh-v1.c67d55eb.webp",
+            "storagePath": "storefront/defense-security-1280w-enh-v1.c67d55eb.webp",
+            "optimizedSizeKb": 68.79
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/defense-security-768w-enh-v1.60bb90b4.webp",
+            "storagePath": "storefront/defense-security-768w-enh-v1.60bb90b4.webp",
+            "optimizedSizeKb": 30.26
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/defense-security-480w-enh-v1.4e351438.webp",
+            "storagePath": "storefront/defense-security-480w-enh-v1.4e351438.webp",
+            "optimizedSizeKb": 15.23
+          }
+        ]
+      }
+    },
+    "/media/mithron/categories/industrial-inspection.webp": {
+      "assetId": "storefront-industrial-inspection",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/industrial-inspection-2560w-enh-v1.2b8ba1f1.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/industrial-inspection-2560w-enh-v1.2b8ba1f1.webp",
+            "storagePath": "storefront/industrial-inspection-2560w-enh-v1.2b8ba1f1.webp",
+            "optimizedSizeKb": 383.26
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/industrial-inspection-1920w-enh-v1.7b964b05.webp",
+            "storagePath": "storefront/industrial-inspection-1920w-enh-v1.7b964b05.webp",
+            "optimizedSizeKb": 264.33
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/industrial-inspection-1280w-enh-v1.8bff2326.webp",
+            "storagePath": "storefront/industrial-inspection-1280w-enh-v1.8bff2326.webp",
+            "optimizedSizeKb": 161.78
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/industrial-inspection-768w-enh-v1.8511fe74.webp",
+            "storagePath": "storefront/industrial-inspection-768w-enh-v1.8511fe74.webp",
+            "optimizedSizeKb": 75.56
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/industrial-inspection-480w-enh-v1.4fcf43b1.webp",
+            "storagePath": "storefront/industrial-inspection-480w-enh-v1.4fcf43b1.webp",
+            "optimizedSizeKb": 35.77
+          }
+        ]
+      }
+    },
+    "/media/mithron/categories/surveillance.webp": {
+      "assetId": "storefront-surveillance",
+      "bucket": "mithron-interests",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/surveillance-2560w-enh-v1.0ae06686.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1600,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/surveillance-2560w-enh-v1.0ae06686.webp",
+            "storagePath": "storefront/surveillance-2560w-enh-v1.0ae06686.webp",
+            "optimizedSizeKb": 163.02
+          },
+          {
+            "width": 1920,
+            "height": 1200,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/surveillance-1920w-enh-v1.2d3c7c70.webp",
+            "storagePath": "storefront/surveillance-1920w-enh-v1.2d3c7c70.webp",
+            "optimizedSizeKb": 109.87
+          },
+          {
+            "width": 1280,
+            "height": 800,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/surveillance-1280w-enh-v1.c67d55eb.webp",
+            "storagePath": "storefront/surveillance-1280w-enh-v1.c67d55eb.webp",
+            "optimizedSizeKb": 68.79
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/surveillance-768w-enh-v1.60bb90b4.webp",
+            "storagePath": "storefront/surveillance-768w-enh-v1.60bb90b4.webp",
+            "optimizedSizeKb": 30.26
+          },
+          {
+            "width": 480,
+            "height": 300,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-interests/storefront/surveillance-480w-enh-v1.4e351438.webp",
+            "storagePath": "storefront/surveillance-480w-enh-v1.4e351438.webp",
+            "optimizedSizeKb": 15.23
+          }
+        ]
+      }
+    },
+    "/media/mithron/dynamic-scroll/agriculture-flight.webp": {
+      "assetId": "storefront-agriculture-flight",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agriculture-flight-2560w-enh-v1.eb5d6de3.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agriculture-flight-2560w-enh-v1.eb5d6de3.webp",
+            "storagePath": "storefront/agriculture-flight-2560w-enh-v1.eb5d6de3.webp",
+            "optimizedSizeKb": 1117.38
+          },
+          {
+            "width": 1920,
+            "height": 1440,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agriculture-flight-1920w-enh-v1.4a6812ca.webp",
+            "storagePath": "storefront/agriculture-flight-1920w-enh-v1.4a6812ca.webp",
+            "optimizedSizeKb": 696.35
+          },
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agriculture-flight-1280w-enh-v1.db660967.webp",
+            "storagePath": "storefront/agriculture-flight-1280w-enh-v1.db660967.webp",
+            "optimizedSizeKb": 385.87
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agriculture-flight-768w-enh-v1.f44541d7.webp",
+            "storagePath": "storefront/agriculture-flight-768w-enh-v1.f44541d7.webp",
+            "optimizedSizeKb": 149.71
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agriculture-flight-480w-enh-v1.23eb50aa.webp",
+            "storagePath": "storefront/agriculture-flight-480w-enh-v1.23eb50aa.webp",
+            "optimizedSizeKb": 63.46
+          }
+        ]
+      }
+    },
+    "/media/mithron/dynamic-scroll/ecosystem-hardware.webp": {
+      "assetId": "storefront-ecosystem-hardware",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/ecosystem-hardware-2560w-enh-v1.63418829.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1441,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/ecosystem-hardware-2560w-enh-v1.63418829.webp",
+            "storagePath": "storefront/ecosystem-hardware-2560w-enh-v1.63418829.webp",
+            "optimizedSizeKb": 213.06
+          },
+          {
+            "width": 1920,
+            "height": 1081,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/ecosystem-hardware-1920w-enh-v1.dab7d500.webp",
+            "storagePath": "storefront/ecosystem-hardware-1920w-enh-v1.dab7d500.webp",
+            "optimizedSizeKb": 143
+          },
+          {
+            "width": 1280,
+            "height": 720,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/ecosystem-hardware-1280w-enh-v1.61568306.webp",
+            "storagePath": "storefront/ecosystem-hardware-1280w-enh-v1.61568306.webp",
+            "optimizedSizeKb": 80.76
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/ecosystem-hardware-768w-enh-v1.f457459b.webp",
+            "storagePath": "storefront/ecosystem-hardware-768w-enh-v1.f457459b.webp",
+            "optimizedSizeKb": 36.68
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/ecosystem-hardware-480w-enh-v1.bb570ddb.webp",
+            "storagePath": "storefront/ecosystem-hardware-480w-enh-v1.bb570ddb.webp",
+            "optimizedSizeKb": 18.18
+          }
+        ]
+      }
+    },
+    "/media/mithron/dynamic-scroll/global-mission.webp": {
+      "assetId": "storefront-global-mission",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-mission-2560w-enh-v1.0fee3920.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-mission-2560w-enh-v1.0fee3920.webp",
+            "storagePath": "storefront/global-mission-2560w-enh-v1.0fee3920.webp",
+            "optimizedSizeKb": 486.07
+          },
+          {
+            "width": 1920,
+            "height": 1440,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-mission-1920w-enh-v1.133f4144.webp",
+            "storagePath": "storefront/global-mission-1920w-enh-v1.133f4144.webp",
+            "optimizedSizeKb": 335.09
+          },
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-mission-1280w-enh-v1.f0bc7dfc.webp",
+            "storagePath": "storefront/global-mission-1280w-enh-v1.f0bc7dfc.webp",
+            "optimizedSizeKb": 209.59
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-mission-768w-enh-v1.167f3360.webp",
+            "storagePath": "storefront/global-mission-768w-enh-v1.167f3360.webp",
+            "optimizedSizeKb": 89.42
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-mission-480w-enh-v1.cbd1ae45.webp",
+            "storagePath": "storefront/global-mission-480w-enh-v1.cbd1ae45.webp",
+            "optimizedSizeKb": 42.23
+          }
+        ]
+      }
+    },
+    "/media/mithron/dynamic-scroll/night-surveillance.webp": {
+      "assetId": "storefront-night-surveillance",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/night-surveillance-2560w-enh-v1.7e085a05.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1441,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/night-surveillance-2560w-enh-v1.7e085a05.webp",
+            "storagePath": "storefront/night-surveillance-2560w-enh-v1.7e085a05.webp",
+            "optimizedSizeKb": 424.19
+          },
+          {
+            "width": 1920,
+            "height": 1081,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/night-surveillance-1920w-enh-v1.ed926ac8.webp",
+            "storagePath": "storefront/night-surveillance-1920w-enh-v1.ed926ac8.webp",
+            "optimizedSizeKb": 290.36
+          },
+          {
+            "width": 1280,
+            "height": 720,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/night-surveillance-1280w-enh-v1.d563466a.webp",
+            "storagePath": "storefront/night-surveillance-1280w-enh-v1.d563466a.webp",
+            "optimizedSizeKb": 174.57
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/night-surveillance-768w-enh-v1.6d3daf6e.webp",
+            "storagePath": "storefront/night-surveillance-768w-enh-v1.6d3daf6e.webp",
+            "optimizedSizeKb": 73.94
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/night-surveillance-480w-enh-v1.969c3105.webp",
+            "storagePath": "storefront/night-surveillance-480w-enh-v1.969c3105.webp",
+            "optimizedSizeKb": 34.39
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/precision-spray.webp": {
+      "assetId": "storefront-precision-spray",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-spray-2560w-enh-v1.55a3b428.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-spray-2560w-enh-v1.55a3b428.webp",
+            "storagePath": "storefront/precision-spray-2560w-enh-v1.55a3b428.webp",
+            "optimizedSizeKb": 207.29
+          },
+          {
+            "width": 1920,
+            "height": 1440,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-spray-1920w-enh-v1.a9ce7912.webp",
+            "storagePath": "storefront/precision-spray-1920w-enh-v1.a9ce7912.webp",
+            "optimizedSizeKb": 142.68
+          },
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-spray-1280w-enh-v1.3fd15958.webp",
+            "storagePath": "storefront/precision-spray-1280w-enh-v1.3fd15958.webp",
+            "optimizedSizeKb": 89.38
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-spray-768w-enh-v1.15ba14a2.webp",
+            "storagePath": "storefront/precision-spray-768w-enh-v1.15ba14a2.webp",
+            "optimizedSizeKb": 37.81
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/precision-spray-480w-enh-v1.7f479bcc.webp",
+            "storagePath": "storefront/precision-spray-480w-enh-v1.7f479bcc.webp",
+            "optimizedSizeKb": 17.74
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/terrain-radar.webp": {
+      "assetId": "storefront-terrain-radar",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/terrain-radar-2560w-enh-v1.7755b8ad.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/terrain-radar-2560w-enh-v1.7755b8ad.webp",
+            "storagePath": "storefront/terrain-radar-2560w-enh-v1.7755b8ad.webp",
+            "optimizedSizeKb": 545.96
+          },
+          {
+            "width": 1920,
+            "height": 1440,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/terrain-radar-1920w-enh-v1.3fb262e9.webp",
+            "storagePath": "storefront/terrain-radar-1920w-enh-v1.3fb262e9.webp",
+            "optimizedSizeKb": 342.85
+          },
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/terrain-radar-1280w-enh-v1.5481540b.webp",
+            "storagePath": "storefront/terrain-radar-1280w-enh-v1.5481540b.webp",
+            "optimizedSizeKb": 219.59
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/terrain-radar-768w-enh-v1.95f45015.webp",
+            "storagePath": "storefront/terrain-radar-768w-enh-v1.95f45015.webp",
+            "optimizedSizeKb": 91.52
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/terrain-radar-480w-enh-v1.119a336c.webp",
+            "storagePath": "storefront/terrain-radar-480w-enh-v1.119a336c.webp",
+            "optimizedSizeKb": 44.73
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/mission-planning.webp": {
+      "assetId": "storefront-mission-planning",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mission-planning-2560w-enh-v1.debc4eaa.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mission-planning-2560w-enh-v1.debc4eaa.webp",
+            "storagePath": "storefront/mission-planning-2560w-enh-v1.debc4eaa.webp",
+            "optimizedSizeKb": 397.14
+          },
+          {
+            "width": 1920,
+            "height": 1440,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mission-planning-1920w-enh-v1.3b9e9bce.webp",
+            "storagePath": "storefront/mission-planning-1920w-enh-v1.3b9e9bce.webp",
+            "optimizedSizeKb": 276.02
+          },
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mission-planning-1280w-enh-v1.5700cf57.webp",
+            "storagePath": "storefront/mission-planning-1280w-enh-v1.5700cf57.webp",
+            "optimizedSizeKb": 176.87
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mission-planning-768w-enh-v1.a1e551c3.webp",
+            "storagePath": "storefront/mission-planning-768w-enh-v1.a1e551c3.webp",
+            "optimizedSizeKb": 80.88
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mission-planning-480w-enh-v1.7ce71ef3.webp",
+            "storagePath": "storefront/mission-planning-480w-enh-v1.7ce71ef3.webp",
+            "optimizedSizeKb": 42.59
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/drone-ecosystem.webp": {
+      "assetId": "storefront-drone-ecosystem",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-ecosystem-2560w-enh-v1.debc4eaa.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-ecosystem-2560w-enh-v1.debc4eaa.webp",
+            "storagePath": "storefront/drone-ecosystem-2560w-enh-v1.debc4eaa.webp",
+            "optimizedSizeKb": 397.14
+          },
+          {
+            "width": 1920,
+            "height": 1440,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-ecosystem-1920w-enh-v1.3b9e9bce.webp",
+            "storagePath": "storefront/drone-ecosystem-1920w-enh-v1.3b9e9bce.webp",
+            "optimizedSizeKb": 276.02
+          },
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-ecosystem-1280w-enh-v1.5700cf57.webp",
+            "storagePath": "storefront/drone-ecosystem-1280w-enh-v1.5700cf57.webp",
+            "optimizedSizeKb": 176.87
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-ecosystem-768w-enh-v1.a1e551c3.webp",
+            "storagePath": "storefront/drone-ecosystem-768w-enh-v1.a1e551c3.webp",
+            "optimizedSizeKb": 80.88
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone-ecosystem-480w-enh-v1.7ce71ef3.webp",
+            "storagePath": "storefront/drone-ecosystem-480w-enh-v1.7ce71ef3.webp",
+            "optimizedSizeKb": 42.59
+          }
+        ]
+      }
+    },
+    "/media/mithron/mission/crop-health.webp": {
+      "assetId": "storefront-crop-health",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/crop-health-2560w-enh-v1.55a3b428.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/crop-health-2560w-enh-v1.55a3b428.webp",
+            "storagePath": "storefront/crop-health-2560w-enh-v1.55a3b428.webp",
+            "optimizedSizeKb": 207.29
+          },
+          {
+            "width": 1920,
+            "height": 1440,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/crop-health-1920w-enh-v1.a9ce7912.webp",
+            "storagePath": "storefront/crop-health-1920w-enh-v1.a9ce7912.webp",
+            "optimizedSizeKb": 142.68
+          },
+          {
+            "width": 1280,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/crop-health-1280w-enh-v1.3fd15958.webp",
+            "storagePath": "storefront/crop-health-1280w-enh-v1.3fd15958.webp",
+            "optimizedSizeKb": 89.38
+          },
+          {
+            "width": 768,
+            "height": 576,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/crop-health-768w-enh-v1.15ba14a2.webp",
+            "storagePath": "storefront/crop-health-768w-enh-v1.15ba14a2.webp",
+            "optimizedSizeKb": 37.81
+          },
+          {
+            "width": 480,
+            "height": 360,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/crop-health-480w-enh-v1.7f479bcc.webp",
+            "storagePath": "storefront/crop-health-480w-enh-v1.7f479bcc.webp",
+            "optimizedSizeKb": 17.74
+          }
+        ]
+      }
+    },
+    "/media/mithron/showcase/drone_world_hero.png": {
+      "assetId": "storefront-drone_world_hero",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_world_hero-2560w-enh-v1.b380a2dc.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1075,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_world_hero-2560w-enh-v1.b380a2dc.webp",
+            "storagePath": "storefront/drone_world_hero-2560w-enh-v1.b380a2dc.webp",
+            "optimizedSizeKb": 274.55
+          },
+          {
+            "width": 1920,
+            "height": 806,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_world_hero-1920w-enh-v1.beaedce1.webp",
+            "storagePath": "storefront/drone_world_hero-1920w-enh-v1.beaedce1.webp",
+            "optimizedSizeKb": 174.14
+          },
+          {
+            "width": 1280,
+            "height": 538,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_world_hero-1280w-enh-v1.f54acd55.webp",
+            "storagePath": "storefront/drone_world_hero-1280w-enh-v1.f54acd55.webp",
+            "optimizedSizeKb": 90.21
+          },
+          {
+            "width": 768,
+            "height": 323,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_world_hero-768w-enh-v1.7e47a582.webp",
+            "storagePath": "storefront/drone_world_hero-768w-enh-v1.7e47a582.webp",
+            "optimizedSizeKb": 38.12
+          },
+          {
+            "width": 480,
+            "height": 202,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_world_hero-480w-enh-v1.56b5886d.webp",
+            "storagePath": "storefront/drone_world_hero-480w-enh-v1.56b5886d.webp",
+            "optimizedSizeKb": 17.46
+          }
+        ]
+      }
+    },
+    "/media/mithron/showcase/drone_care_hero.png": {
+      "assetId": "storefront-drone_care_hero",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_care_hero-2560w-enh-v1.e335ba45.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 852,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_care_hero-2560w-enh-v1.e335ba45.webp",
+            "storagePath": "storefront/drone_care_hero-2560w-enh-v1.e335ba45.webp",
+            "optimizedSizeKb": 116.68
+          },
+          {
+            "width": 1920,
+            "height": 639,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_care_hero-1920w-enh-v1.ac1deb76.webp",
+            "storagePath": "storefront/drone_care_hero-1920w-enh-v1.ac1deb76.webp",
+            "optimizedSizeKb": 76.16
+          },
+          {
+            "width": 1280,
+            "height": 426,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_care_hero-1280w-enh-v1.264ed58c.webp",
+            "storagePath": "storefront/drone_care_hero-1280w-enh-v1.264ed58c.webp",
+            "optimizedSizeKb": 41.26
+          },
+          {
+            "width": 768,
+            "height": 256,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_care_hero-768w-enh-v1.25943610.webp",
+            "storagePath": "storefront/drone_care_hero-768w-enh-v1.25943610.webp",
+            "optimizedSizeKb": 19.37
+          },
+          {
+            "width": 480,
+            "height": 160,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/drone_care_hero-480w-enh-v1.1864bf67.webp",
+            "storagePath": "storefront/drone_care_hero-480w-enh-v1.1864bf67.webp",
+            "optimizedSizeKb": 10.13
+          }
+        ]
+      }
+    },
+    "/media/mithron/showcase/global_products_hero.png": {
+      "assetId": "storefront-global_products_hero",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global_products_hero-2560w-enh-v1.d6e14154.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 855,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global_products_hero-2560w-enh-v1.d6e14154.webp",
+            "storagePath": "storefront/global_products_hero-2560w-enh-v1.d6e14154.webp",
+            "optimizedSizeKb": 241.06
+          },
+          {
+            "width": 1920,
+            "height": 641,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global_products_hero-1920w-enh-v1.613135ea.webp",
+            "storagePath": "storefront/global_products_hero-1920w-enh-v1.613135ea.webp",
+            "optimizedSizeKb": 158.4
+          },
+          {
+            "width": 1280,
+            "height": 428,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global_products_hero-1280w-enh-v1.bc9f1637.webp",
+            "storagePath": "storefront/global_products_hero-1280w-enh-v1.bc9f1637.webp",
+            "optimizedSizeKb": 86.19
+          },
+          {
+            "width": 768,
+            "height": 257,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global_products_hero-768w-enh-v1.b1318408.webp",
+            "storagePath": "storefront/global_products_hero-768w-enh-v1.b1318408.webp",
+            "optimizedSizeKb": 38.92
+          },
+          {
+            "width": 480,
+            "height": 160,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global_products_hero-480w-enh-v1.a3585f52.webp",
+            "storagePath": "storefront/global_products_hero-480w-enh-v1.a3585f52.webp",
+            "optimizedSizeKb": 16.92
+          }
+        ]
+      }
+    },
+    "/media/mithron/catalog/agri-drone-category.png": {
+      "assetId": "storefront-agri-drone-category",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-category-2560w-enh-v1.1fc2567b.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1098,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-category-2560w-enh-v1.1fc2567b.webp",
+            "storagePath": "storefront/agri-drone-category-2560w-enh-v1.1fc2567b.webp",
+            "optimizedSizeKb": 332.34
+          },
+          {
+            "width": 1920,
+            "height": 824,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-category-1920w-enh-v1.0133ed32.webp",
+            "storagePath": "storefront/agri-drone-category-1920w-enh-v1.0133ed32.webp",
+            "optimizedSizeKb": 228.02
+          },
+          {
+            "width": 1280,
+            "height": 549,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-category-1280w-enh-v1.abc2c1be.webp",
+            "storagePath": "storefront/agri-drone-category-1280w-enh-v1.abc2c1be.webp",
+            "optimizedSizeKb": 133.53
+          },
+          {
+            "width": 768,
+            "height": 329,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-category-768w-enh-v1.9129ba12.webp",
+            "storagePath": "storefront/agri-drone-category-768w-enh-v1.9129ba12.webp",
+            "optimizedSizeKb": 59.86
+          },
+          {
+            "width": 480,
+            "height": 206,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/agri-drone-category-480w-enh-v1.9519aa2a.webp",
+            "storagePath": "storefront/agri-drone-category-480w-enh-v1.9519aa2a.webp",
+            "optimizedSizeKb": 28.86
+          }
+        ]
+      }
+    },
+    "/media/mithron/catalog/video-drone-category.png": {
+      "assetId": "storefront-video-drone-category",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/video-drone-category-2560w-enh-v1.5dbe752a.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1098,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/video-drone-category-2560w-enh-v1.5dbe752a.webp",
+            "storagePath": "storefront/video-drone-category-2560w-enh-v1.5dbe752a.webp",
+            "optimizedSizeKb": 338.95
+          },
+          {
+            "width": 1920,
+            "height": 824,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/video-drone-category-1920w-enh-v1.52222d94.webp",
+            "storagePath": "storefront/video-drone-category-1920w-enh-v1.52222d94.webp",
+            "optimizedSizeKb": 234.57
+          },
+          {
+            "width": 1280,
+            "height": 549,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/video-drone-category-1280w-enh-v1.12c0a044.webp",
+            "storagePath": "storefront/video-drone-category-1280w-enh-v1.12c0a044.webp",
+            "optimizedSizeKb": 135.59
+          },
+          {
+            "width": 768,
+            "height": 329,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/video-drone-category-768w-enh-v1.8edfb625.webp",
+            "storagePath": "storefront/video-drone-category-768w-enh-v1.8edfb625.webp",
+            "optimizedSizeKb": 62.92
+          },
+          {
+            "width": 480,
+            "height": 206,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/video-drone-category-480w-enh-v1.ee90630f.webp",
+            "storagePath": "storefront/video-drone-category-480w-enh-v1.ee90630f.webp",
+            "optimizedSizeKb": 31.07
+          }
+        ]
+      }
+    },
+    "/media/mithron/catalog/creative-drone-category.png": {
+      "assetId": "storefront-creative-drone-category",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/creative-drone-category-2560w-enh-v1.af1113c1.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1098,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/creative-drone-category-2560w-enh-v1.af1113c1.webp",
+            "storagePath": "storefront/creative-drone-category-2560w-enh-v1.af1113c1.webp",
+            "optimizedSizeKb": 197.97
+          },
+          {
+            "width": 1920,
+            "height": 824,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/creative-drone-category-1920w-enh-v1.13f8eabd.webp",
+            "storagePath": "storefront/creative-drone-category-1920w-enh-v1.13f8eabd.webp",
+            "optimizedSizeKb": 133.05
+          },
+          {
+            "width": 1280,
+            "height": 549,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/creative-drone-category-1280w-enh-v1.f9143091.webp",
+            "storagePath": "storefront/creative-drone-category-1280w-enh-v1.f9143091.webp",
+            "optimizedSizeKb": 74.31
+          },
+          {
+            "width": 768,
+            "height": 329,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/creative-drone-category-768w-enh-v1.9a300fe6.webp",
+            "storagePath": "storefront/creative-drone-category-768w-enh-v1.9a300fe6.webp",
+            "optimizedSizeKb": 34.3
+          },
+          {
+            "width": 480,
+            "height": 206,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/creative-drone-category-480w-enh-v1.b39d33ef.webp",
+            "storagePath": "storefront/creative-drone-category-480w-enh-v1.b39d33ef.webp",
+            "optimizedSizeKb": 17.49
+          }
+        ]
+      }
+    },
+    "/media/mithron/catalog/mithron-drone-category.png": {
+      "assetId": "storefront-mithron-drone-category",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-drone-category-2560w-enh-v1.20e7f182.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1138,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-drone-category-2560w-enh-v1.20e7f182.webp",
+            "storagePath": "storefront/mithron-drone-category-2560w-enh-v1.20e7f182.webp",
+            "optimizedSizeKb": 392.47
+          },
+          {
+            "width": 1920,
+            "height": 854,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-drone-category-1920w-enh-v1.bbc7d23d.webp",
+            "storagePath": "storefront/mithron-drone-category-1920w-enh-v1.bbc7d23d.webp",
+            "optimizedSizeKb": 276.82
+          },
+          {
+            "width": 1280,
+            "height": 569,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-drone-category-1280w-enh-v1.2e236cb6.webp",
+            "storagePath": "storefront/mithron-drone-category-1280w-enh-v1.2e236cb6.webp",
+            "optimizedSizeKb": 149.97
+          },
+          {
+            "width": 768,
+            "height": 341,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-drone-category-768w-enh-v1.b2a375d9.webp",
+            "storagePath": "storefront/mithron-drone-category-768w-enh-v1.b2a375d9.webp",
+            "optimizedSizeKb": 66.91
+          },
+          {
+            "width": 480,
+            "height": 213,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-drone-category-480w-enh-v1.8b4f0430.webp",
+            "storagePath": "storefront/mithron-drone-category-480w-enh-v1.8b4f0430.webp",
+            "optimizedSizeKb": 31.98
+          }
+        ]
+      }
+    },
+    "/media/mithron/catalog/survey-drone-category.png": {
+      "assetId": "storefront-survey-drone-category",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/survey-drone-category-2560w-enh-v1.016f234e.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1098,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/survey-drone-category-2560w-enh-v1.016f234e.webp",
+            "storagePath": "storefront/survey-drone-category-2560w-enh-v1.016f234e.webp",
+            "optimizedSizeKb": 284.92
+          },
+          {
+            "width": 1920,
+            "height": 824,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/survey-drone-category-1920w-enh-v1.d3db5cee.webp",
+            "storagePath": "storefront/survey-drone-category-1920w-enh-v1.d3db5cee.webp",
+            "optimizedSizeKb": 192.16
+          },
+          {
+            "width": 1280,
+            "height": 549,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/survey-drone-category-1280w-enh-v1.5a54aa25.webp",
+            "storagePath": "storefront/survey-drone-category-1280w-enh-v1.5a54aa25.webp",
+            "optimizedSizeKb": 103.47
+          },
+          {
+            "width": 768,
+            "height": 329,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/survey-drone-category-768w-enh-v1.8ad1c99f.webp",
+            "storagePath": "storefront/survey-drone-category-768w-enh-v1.8ad1c99f.webp",
+            "optimizedSizeKb": 45.48
+          },
+          {
+            "width": 480,
+            "height": 206,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/survey-drone-category-480w-enh-v1.608bd0a7.webp",
+            "storagePath": "storefront/survey-drone-category-480w-enh-v1.608bd0a7.webp",
+            "optimizedSizeKb": 21.82
+          }
+        ]
+      }
+    },
+    "/media/mithron/catalog/surveillance-drone-category.png": {
+      "assetId": "storefront-surveillance-drone-category",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/surveillance-drone-category-2560w-enh-v1.a2318967.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1098,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/surveillance-drone-category-2560w-enh-v1.a2318967.webp",
+            "storagePath": "storefront/surveillance-drone-category-2560w-enh-v1.a2318967.webp",
+            "optimizedSizeKb": 301.69
+          },
+          {
+            "width": 1920,
+            "height": 824,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/surveillance-drone-category-1920w-enh-v1.4d38e989.webp",
+            "storagePath": "storefront/surveillance-drone-category-1920w-enh-v1.4d38e989.webp",
+            "optimizedSizeKb": 200.82
+          },
+          {
+            "width": 1280,
+            "height": 549,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/surveillance-drone-category-1280w-enh-v1.0d6e9479.webp",
+            "storagePath": "storefront/surveillance-drone-category-1280w-enh-v1.0d6e9479.webp",
+            "optimizedSizeKb": 106.62
+          },
+          {
+            "width": 768,
+            "height": 329,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/surveillance-drone-category-768w-enh-v1.55b048a2.webp",
+            "storagePath": "storefront/surveillance-drone-category-768w-enh-v1.55b048a2.webp",
+            "optimizedSizeKb": 45.86
+          },
+          {
+            "width": 480,
+            "height": 206,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/surveillance-drone-category-480w-enh-v1.1f548221.webp",
+            "storagePath": "storefront/surveillance-drone-category-480w-enh-v1.1f548221.webp",
+            "optimizedSizeKb": 20.76
+          }
+        ]
+      }
+    },
+    "/media/mithron/catalog/global-products-category.png": {
+      "assetId": "storefront-global-products-category",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-products-category-2560w-enh-v1.4fc12d43.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1098,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-products-category-2560w-enh-v1.4fc12d43.webp",
+            "storagePath": "storefront/global-products-category-2560w-enh-v1.4fc12d43.webp",
+            "optimizedSizeKb": 176.26
+          },
+          {
+            "width": 1920,
+            "height": 824,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-products-category-1920w-enh-v1.bd8fc8a2.webp",
+            "storagePath": "storefront/global-products-category-1920w-enh-v1.bd8fc8a2.webp",
+            "optimizedSizeKb": 116.28
+          },
+          {
+            "width": 1280,
+            "height": 549,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-products-category-1280w-enh-v1.7df611a5.webp",
+            "storagePath": "storefront/global-products-category-1280w-enh-v1.7df611a5.webp",
+            "optimizedSizeKb": 64.81
+          },
+          {
+            "width": 768,
+            "height": 329,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-products-category-768w-enh-v1.94bf54ff.webp",
+            "storagePath": "storefront/global-products-category-768w-enh-v1.94bf54ff.webp",
+            "optimizedSizeKb": 31.62
+          },
+          {
+            "width": 480,
+            "height": 206,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/global-products-category-480w-enh-v1.a5651c5a.webp",
+            "storagePath": "storefront/global-products-category-480w-enh-v1.a5651c5a.webp",
+            "optimizedSizeKb": 16.7
+          }
+        ]
+      }
+    },
+    "/media/mithron/shell/mithron-wordmark.png": {
+      "assetId": "storefront-mithron-wordmark",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-wordmark-768w-v6-mithron-only.add15668.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 768,
+            "height": 92,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-wordmark-768w-v6-mithron-only.add15668.webp",
+            "storagePath": "storefront/mithron-wordmark-768w-v6-mithron-only.add15668.webp",
+            "optimizedSizeKb": 30.94
+          },
+          {
+            "width": 480,
+            "height": 58,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-wordmark-480w-v6-mithron-only.d67ed98e.webp",
+            "storagePath": "storefront/mithron-wordmark-480w-v6-mithron-only.d67ed98e.webp",
+            "optimizedSizeKb": 17.11
+          },
+          {
+            "width": 256,
+            "height": 31,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/mithron-wordmark-256w-v6-mithron-only.b07d4e4b.webp",
+            "storagePath": "storefront/mithron-wordmark-256w-v6-mithron-only.b07d4e4b.webp",
+            "optimizedSizeKb": 7.76
+          }
+        ]
+      }
+    },
+    "/media/mithron/operations/operational-ecosystem-infrastructure-source.png": {
+      "assetId": "storefront-operational-ecosystem-infrastructure-source",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/operational-ecosystem-infrastructure-source-2560w-enh-v1.94196065.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 2063,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/operational-ecosystem-infrastructure-source-2560w-enh-v1.94196065.webp",
+            "storagePath": "storefront/operational-ecosystem-infrastructure-source-2560w-enh-v1.94196065.webp",
+            "optimizedSizeKb": 459.88
+          },
+          {
+            "width": 1920,
+            "height": 1547,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/operational-ecosystem-infrastructure-source-1920w-enh-v1.5e036adc.webp",
+            "storagePath": "storefront/operational-ecosystem-infrastructure-source-1920w-enh-v1.5e036adc.webp",
+            "optimizedSizeKb": 309.6
+          },
+          {
+            "width": 1280,
+            "height": 1032,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/operational-ecosystem-infrastructure-source-1280w-enh-v1.f6aa6b9d.webp",
+            "storagePath": "storefront/operational-ecosystem-infrastructure-source-1280w-enh-v1.f6aa6b9d.webp",
+            "optimizedSizeKb": 171.01
+          },
+          {
+            "width": 768,
+            "height": 619,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/operational-ecosystem-infrastructure-source-768w-enh-v1.97b83099.webp",
+            "storagePath": "storefront/operational-ecosystem-infrastructure-source-768w-enh-v1.97b83099.webp",
+            "optimizedSizeKb": 76.11
+          },
+          {
+            "width": 480,
+            "height": 387,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/operational-ecosystem-infrastructure-source-480w-enh-v1.828f4a5b.webp",
+            "storagePath": "storefront/operational-ecosystem-infrastructure-source-480w-enh-v1.828f4a5b.webp",
+            "optimizedSizeKb": 34.04
+          }
+        ]
+      }
+    },
+    "/media/mithron/operations/map-banner.png": {
+      "assetId": "storefront-map-banner",
+      "bucket": "mithron-story",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/map-banner-2560w-enh-v1.ac636b47.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 2560,
+            "height": 1441,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/map-banner-2560w-enh-v1.ac636b47.webp",
+            "storagePath": "storefront/map-banner-2560w-enh-v1.ac636b47.webp",
+            "optimizedSizeKb": 387.92
+          },
+          {
+            "width": 1920,
+            "height": 1081,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/map-banner-1920w-enh-v1.3cbfdfea.webp",
+            "storagePath": "storefront/map-banner-1920w-enh-v1.3cbfdfea.webp",
+            "optimizedSizeKb": 254.15
+          },
+          {
+            "width": 1280,
+            "height": 721,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/map-banner-1280w-enh-v1.f88de070.webp",
+            "storagePath": "storefront/map-banner-1280w-enh-v1.f88de070.webp",
+            "optimizedSizeKb": 129.66
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/map-banner-768w-enh-v1.518b4efa.webp",
+            "storagePath": "storefront/map-banner-768w-enh-v1.518b4efa.webp",
+            "optimizedSizeKb": 50.01
+          },
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/map-banner-480w-enh-v1.863f2549.webp",
+            "storagePath": "storefront/map-banner-480w-enh-v1.863f2549.webp",
+            "optimizedSizeKb": 21.85
+          }
+        ]
+      }
+    },
+    "/media/mithron/banners/ag10-command.webp": {
+      "assetId": "storefront-hero-slide-01",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1534,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+            "storagePath": "storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+            "optimizedSizeKb": 569.78
+          },
+          {
+            "width": 2560,
+            "height": 1023,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-2560w-enh-v1.e870de34.webp",
+            "storagePath": "storefront/hero-slide-01-2560w-enh-v1.e870de34.webp",
+            "optimizedSizeKb": 308.39
+          },
+          {
+            "width": 1920,
+            "height": 767,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-1920w-enh-v1.2cfff0a5.webp",
+            "storagePath": "storefront/hero-slide-01-1920w-enh-v1.2cfff0a5.webp",
+            "optimizedSizeKb": 235.52
+          },
+          {
+            "width": 1280,
+            "height": 511,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-1280w-enh-v1.36559726.webp",
+            "storagePath": "storefront/hero-slide-01-1280w-enh-v1.36559726.webp",
+            "optimizedSizeKb": 123.15
+          },
+          {
+            "width": 768,
+            "height": 307,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-768w-enh-v1.adb9d61f.webp",
+            "storagePath": "storefront/hero-slide-01-768w-enh-v1.adb9d61f.webp",
+            "optimizedSizeKb": 58.6
+          },
+          {
+            "width": 480,
+            "height": 192,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-480w-enh-v1.eb53c63d.webp",
+            "storagePath": "storefront/hero-slide-01-480w-enh-v1.eb53c63d.webp",
+            "optimizedSizeKb": 27.69
+          }
+        ]
+      }
+    },
+    "/media/mithron/banners/mapping-flight.webp": {
+      "assetId": "storefront-hero-slide-02",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+            "storagePath": "storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+            "optimizedSizeKb": 434.53
+          },
+          {
+            "width": 2560,
+            "height": 1280,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-2560w-enh-v1.6ff20254.webp",
+            "storagePath": "storefront/hero-slide-02-2560w-enh-v1.6ff20254.webp",
+            "optimizedSizeKb": 224.38
+          },
+          {
+            "width": 1920,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-1920w-enh-v1.b24590af.webp",
+            "storagePath": "storefront/hero-slide-02-1920w-enh-v1.b24590af.webp",
+            "optimizedSizeKb": 164.8
+          },
+          {
+            "width": 1280,
+            "height": 640,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-1280w-enh-v1.d463f85e.webp",
+            "storagePath": "storefront/hero-slide-02-1280w-enh-v1.d463f85e.webp",
+            "optimizedSizeKb": 81.46
+          },
+          {
+            "width": 768,
+            "height": 384,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-768w-enh-v1.3d6f8f5f.webp",
+            "storagePath": "storefront/hero-slide-02-768w-enh-v1.3d6f8f5f.webp",
+            "optimizedSizeKb": 38.02
+          },
+          {
+            "width": 480,
+            "height": 240,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-480w-enh-v1.962f27e5.webp",
+            "storagePath": "storefront/hero-slide-02-480w-enh-v1.962f27e5.webp",
+            "optimizedSizeKb": 19.06
+          }
+        ]
+      }
+    },
+    "/media/mithron/banners/security-grid.webp": {
+      "assetId": "storefront-hero-slide-04",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+            "storagePath": "storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+            "optimizedSizeKb": 599.83
+          },
+          {
+            "width": 2560,
+            "height": 1280,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-2560w-enh-v1.761a5219.webp",
+            "storagePath": "storefront/hero-slide-04-2560w-enh-v1.761a5219.webp",
+            "optimizedSizeKb": 298.25
+          },
+          {
+            "width": 1920,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-1920w-enh-v1.ce11523f.webp",
+            "storagePath": "storefront/hero-slide-04-1920w-enh-v1.ce11523f.webp",
+            "optimizedSizeKb": 216.53
+          },
+          {
+            "width": 1280,
+            "height": 640,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-1280w-enh-v1.9ff2d257.webp",
+            "storagePath": "storefront/hero-slide-04-1280w-enh-v1.9ff2d257.webp",
+            "optimizedSizeKb": 101.47
+          },
+          {
+            "width": 768,
+            "height": 384,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-768w-enh-v1.e2c81e7e.webp",
+            "storagePath": "storefront/hero-slide-04-768w-enh-v1.e2c81e7e.webp",
+            "optimizedSizeKb": 44.75
+          },
+          {
+            "width": 480,
+            "height": 240,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-480w-enh-v1.0c722c96.webp",
+            "storagePath": "storefront/hero-slide-04-480w-enh-v1.0c722c96.webp",
+            "optimizedSizeKb": 22.01
+          }
+        ]
+      }
+    },
+    "/media/mithron/carousel/ag10-command.webp": {
+      "assetId": "storefront-hero-slide-01",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1534,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+            "storagePath": "storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+            "optimizedSizeKb": 569.78
+          },
+          {
+            "width": 2560,
+            "height": 1023,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-2560w-enh-v1.e870de34.webp",
+            "storagePath": "storefront/hero-slide-01-2560w-enh-v1.e870de34.webp",
+            "optimizedSizeKb": 308.39
+          },
+          {
+            "width": 1920,
+            "height": 767,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-1920w-enh-v1.2cfff0a5.webp",
+            "storagePath": "storefront/hero-slide-01-1920w-enh-v1.2cfff0a5.webp",
+            "optimizedSizeKb": 235.52
+          },
+          {
+            "width": 1280,
+            "height": 511,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-1280w-enh-v1.36559726.webp",
+            "storagePath": "storefront/hero-slide-01-1280w-enh-v1.36559726.webp",
+            "optimizedSizeKb": 123.15
+          },
+          {
+            "width": 768,
+            "height": 307,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-768w-enh-v1.adb9d61f.webp",
+            "storagePath": "storefront/hero-slide-01-768w-enh-v1.adb9d61f.webp",
+            "optimizedSizeKb": 58.6
+          },
+          {
+            "width": 480,
+            "height": 192,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-480w-enh-v1.eb53c63d.webp",
+            "storagePath": "storefront/hero-slide-01-480w-enh-v1.eb53c63d.webp",
+            "optimizedSizeKb": 27.69
+          }
+        ]
+      }
+    },
+    "/media/mithron/carousel/mapping-flight.webp": {
+      "assetId": "storefront-hero-slide-02",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+            "storagePath": "storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+            "optimizedSizeKb": 434.53
+          },
+          {
+            "width": 2560,
+            "height": 1280,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-2560w-enh-v1.6ff20254.webp",
+            "storagePath": "storefront/hero-slide-02-2560w-enh-v1.6ff20254.webp",
+            "optimizedSizeKb": 224.38
+          },
+          {
+            "width": 1920,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-1920w-enh-v1.b24590af.webp",
+            "storagePath": "storefront/hero-slide-02-1920w-enh-v1.b24590af.webp",
+            "optimizedSizeKb": 164.8
+          },
+          {
+            "width": 1280,
+            "height": 640,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-1280w-enh-v1.d463f85e.webp",
+            "storagePath": "storefront/hero-slide-02-1280w-enh-v1.d463f85e.webp",
+            "optimizedSizeKb": 81.46
+          },
+          {
+            "width": 768,
+            "height": 384,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-768w-enh-v1.3d6f8f5f.webp",
+            "storagePath": "storefront/hero-slide-02-768w-enh-v1.3d6f8f5f.webp",
+            "optimizedSizeKb": 38.02
+          },
+          {
+            "width": 480,
+            "height": 240,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-480w-enh-v1.962f27e5.webp",
+            "storagePath": "storefront/hero-slide-02-480w-enh-v1.962f27e5.webp",
+            "optimizedSizeKb": 19.06
+          }
+        ]
+      }
+    },
+    "/media/mithron/carousel/security-grid.webp": {
+      "assetId": "storefront-hero-slide-04",
+      "bucket": "mithron-hero",
+      "primarySrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+      "variants": {
+        "webp": [
+          {
+            "width": 3840,
+            "height": 1920,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+            "storagePath": "storefront/hero-slide-04-3840w-enh-v1.3ae2d28e.webp",
+            "optimizedSizeKb": 599.83
+          },
+          {
+            "width": 2560,
+            "height": 1280,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-2560w-enh-v1.761a5219.webp",
+            "storagePath": "storefront/hero-slide-04-2560w-enh-v1.761a5219.webp",
+            "optimizedSizeKb": 298.25
+          },
+          {
+            "width": 1920,
+            "height": 960,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-1920w-enh-v1.ce11523f.webp",
+            "storagePath": "storefront/hero-slide-04-1920w-enh-v1.ce11523f.webp",
+            "optimizedSizeKb": 216.53
+          },
+          {
+            "width": 1280,
+            "height": 640,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-1280w-enh-v1.9ff2d257.webp",
+            "storagePath": "storefront/hero-slide-04-1280w-enh-v1.9ff2d257.webp",
+            "optimizedSizeKb": 101.47
+          },
+          {
+            "width": 768,
+            "height": 384,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-768w-enh-v1.e2c81e7e.webp",
+            "storagePath": "storefront/hero-slide-04-768w-enh-v1.e2c81e7e.webp",
+            "optimizedSizeKb": 44.75
+          },
+          {
+            "width": 480,
+            "height": 240,
+            "format": "webp",
+            "src": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-04-480w-enh-v1.0c722c96.webp",
+            "storagePath": "storefront/hero-slide-04-480w-enh-v1.0c722c96.webp",
+            "optimizedSizeKb": 22.01
+          }
+        ]
+      }
+    }
+  }
+}

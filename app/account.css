@@ -1,0 +1,52 @@
+.account-hub {
+  --account-ink: var(--ds-ink);
+  --account-ink-muted: var(--ds-ink-2);
+  --account-surface: var(--ds-card);
+  --account-surface-muted: #f7f7f5;
+  --account-border: rgba(17, 17, 17, 0.05);
+  --account-border-strong: rgba(17, 17, 17, 0.1);
+  --account-accent: var(--ds-accent);
+  --account-accent-soft: color-mix(in srgb, var(--ds-accent) 8%, transparent);
+  --account-danger: var(--color-destructive, #df1f2d);
+  --account-warning: #b45309;
+  --account-success: var(--ds-accent);
+
+  /* Premium Tokens */
+  --account-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --account-shadow-md: 0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+  --account-shadow-hover: 0 20px 40px -8px rgba(0, 0, 0, 0.12), 0 8px 16px -4px rgba(0, 0, 0, 0.06);
+  --account-radius-card: 22px;
+  --account-radius-inner: 18px;
+  --account-accent-gradient: linear-gradient(135deg, color-mix(in srgb, var(--ds-accent) 8%, white), white 60%);
+  --account-motion: 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Page background override */
+.account-hub.surface-page {
+  background-color: #f7f7f5;
+}
+
+.account-hub a:focus-visible,
+.account-hub button:focus-visible,
+.account-hub input:focus-visible,
+.account-hub select:focus-visible,
+.account-hub textarea:focus-visible,
+.account-hub summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--account-surface), 0 0 0 4px var(--account-accent);
+}
+
+.account-card-lift {
+  transition: transform var(--account-motion), box-shadow var(--account-motion);
+}
+
+.account-card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--account-shadow-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-hub [data-account-drawer] {
+    transition: none !important;
+  }
+}

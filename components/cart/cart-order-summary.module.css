@@ -1,0 +1,67 @@
+.summary {
+  position: sticky;
+  top: 96px;
+  padding: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.title {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.grandTotal,
+.finalAmount {
+  margin-top: 4px;
+  border-bottom: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.finalAmount strong {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.button {
+  width: 100%;
+}
+
+@media (max-width: 1023px) {
+  .summary {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 32px -16px rgba(15, 23, 42, 0.28);
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}

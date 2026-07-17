@@ -1,0 +1,274 @@
+.section {
+  --section-inline: var(--home-section-inline, clamp(24px, 4vw, 72px));
+  --testimonial-accent: var(--brand-accent, #1f6b46);
+  --testimonial-heading: #0f2a1c;
+  --testimonial-meta: rgba(15, 42, 28, 0.64);
+  --testimonial-dot-muted: rgba(31, 107, 70, 0.28);
+  --testimonial-card-width: calc((100% - (var(--testimonial-gap) * 2)) / 3.15);
+  --testimonial-gap: clamp(18px, 2vw, 28px);
+  position: relative;
+  overflow: hidden;
+  padding: clamp(64px, 8vh, 96px) 0 clamp(72px, 9vh, 108px);
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 0%, rgba(150, 230, 161, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 60% at 90% 100%, rgba(31, 107, 70, 0.06) 0%, transparent 65%),
+    linear-gradient(165deg, #f6f9f7 0%, #e9f2ec 100%);
+  border-top: 1px solid rgba(31, 107, 70, 0.08);
+  border-bottom: 1px solid rgba(31, 107, 70, 0.06);
+}
+
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 18% 28%, rgba(31, 107, 70, 0.04) 0 1px, transparent 1px),
+    radial-gradient(circle at 72% 62%, rgba(31, 107, 70, 0.03) 0 1px, transparent 1px),
+    radial-gradient(circle at 45% 80%, rgba(31, 107, 70, 0.02) 0 1px, transparent 1px),
+    repeating-linear-gradient(
+      0deg,
+      rgba(31, 107, 70, 0.015) 0,
+      rgba(31, 107, 70, 0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(31, 107, 70, 0.01) 0,
+      rgba(31, 107, 70, 0.01) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  background-size: 16px 16px, 22px 22px, 19px 19px, auto, auto;
+}
+
+.section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.55) 35%,
+    rgba(255, 255, 255, 0.15) 70%,
+    transparent 100%
+  );
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, var(--ds-container-wide, 1740px));
+  margin: 0 auto;
+  padding: 0 var(--section-inline);
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(16px, 3vw, 28px);
+  margin-bottom: clamp(28px, 3.5vh, 40px);
+}
+
+.headerCopy {
+  max-width: min(100%, 640px);
+}
+
+.title {
+  margin: 0;
+  color: var(--testimonial-heading);
+  font-family: var(--type-display, inherit);
+  font-size: clamp(1.95rem, 2.8vw, 2.65rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.titleAccent {
+  color: var(--testimonial-accent);
+}
+
+.lead {
+  margin: 14px 0 0;
+  max-width: 42ch;
+  color: var(--testimonial-meta);
+  font-size: 1rem;
+  line-height: 1.55;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.carouselRegion {
+  position: relative;
+}
+
+.carouselViewport {
+  overflow: hidden;
+  width: 100%;
+  min-height: 300px;
+  padding-block: 6px 10px;
+  container-type: inline-size;
+  container-name: testimonial-marquee;
+  --marquee-card-width: calc((100cqw - (var(--testimonial-gap) * 2)) / 3.15);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 40px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 40px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+}
+
+.marqueeTrack {
+  display: flex;
+  gap: var(--testimonial-gap);
+  width: max-content;
+  will-change: transform;
+  animation: testimonialMarquee var(--marquee-duration, 80s) linear infinite;
+}
+
+.marqueeTrack .cardSlot {
+  flex: 0 0 var(--marquee-card-width);
+  width: var(--marquee-card-width);
+  max-width: var(--marquee-card-width);
+  min-width: 0;
+  flex-shrink: 0;
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.marqueePaused {
+  animation-play-state: paused;
+}
+
+@keyframes testimonialMarquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.track {
+  display: flex;
+  gap: var(--testimonial-gap);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.cardSlot {
+  flex: 0 0 var(--testimonial-card-width);
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: clamp(20px, 2.5vh, 28px);
+}
+
+.dotButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dotButton:focus-visible {
+  outline: 2px solid var(--testimonial-accent);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+.dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--testimonial-dot-muted);
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.dotActive {
+  background: var(--testimonial-accent);
+  transform: scale(1.08);
+}
+
+@media (max-width: 1023px) {
+  .section {
+    --testimonial-card-width: calc((100% - var(--testimonial-gap)) / 1.65);
+  }
+
+  .carouselViewport {
+    --marquee-card-width: calc((100cqw - var(--testimonial-gap)) / 1.65);
+  }
+
+  .inner {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+}
+
+@media (max-width: 767px) {
+  .section {
+    --testimonial-card-width: 100%;
+  }
+
+  .carouselViewport {
+    --marquee-card-width: calc((100cqw - var(--testimonial-gap)) / 1.15);
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marqueeTrack {
+    animation: none;
+  }
+
+  .track {
+    scroll-behavior: auto;
+  }
+
+  .dot {
+    transition: none;
+  }
+}

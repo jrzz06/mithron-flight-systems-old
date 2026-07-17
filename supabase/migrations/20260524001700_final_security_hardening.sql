@@ -1,0 +1,68 @@
+-- Final enterprise security hardening.
+-- Additive only: preserves existing Auth/RBAC/RLS while making disabled
+-- governance state and security telemetry queryable.
+
+alter table public.profiles
+  add column if not exists governance_status text not null default 'active',
+  add column if not exists session_revoked_at timestamptz,
+  add column if not exists disabled_at timestamptz,
+  add column if not exists disabled_by uuid references auth.users(id) on delete set null,
+  add column if not exists reactivated_at timestamptz,
+  add column if not exists reactivated_by uuid references auth.users(id) on delete set null;
+
+create index if not exists profiles_governance_status_idx
+  on public.profiles (governance_status, updated_at desc);
+
+create index if not exists profiles_session_revoked_idx
+  on public.profiles (session_revoked_at desc)
+  where session_revoked_at is not null;
+
+create index if not exists security_events_denial_idx
+  on public.security_events (event_type, severity, created_at desc);
+
+create index if not exists security_events_actor_role_idx
+  on public.security_events (actor_role, created_at desc)
+  where actor_role is not null;
+
+create or replace function public.current_enterprise_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with role_priority(role_key, priority) as (
+    values
+      ('super_admin', 10),
+      ('admin', 20),
+      ('operations_manager', 30),
+      ('warehouse_manager', 40),
+      ('warehouse_staff', 50),
+      ('editor', 60),
+      ('support', 70),
+      ('staff', 80),
+      ('reviewer', 90)
+  ),
+  active_profile as (
+    select p.id
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.governance_status is distinct from 'disabled'
+  ),
+  current_roles as (
+    select ur.role_key, coalesce(rp.priority, 999) as priority
+    from public.user_roles ur
+    join active_profile p on p.id = ur.user_id
+    left join role_priority rp on rp.role_key = ur.role_key
+    where ur.user_id = auth.uid()
+  )
+  select role_key
+  from current_roles
+  order by priority, role_key
+  limit 1;
+$$;
+
+revoke all on function public.current_enterprise_role() from public;
+grant execute on function public.current_enterprise_role() to authenticated;
+
+notify pgrst, 'reload schema';

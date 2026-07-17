@@ -1,0 +1,310 @@
+/* Premium glassmorphism for green interactive controls only — not logos, cards, or imagery */
+
+:root {
+  --glass-green-bg: rgba(34, 197, 94, 0.18);
+  --glass-green-bg-hover: rgba(34, 197, 94, 0.28);
+  --glass-green-bg-cart: rgba(34, 197, 94, 0.26);
+  --glass-green-bg-cart-hover: rgba(34, 197, 94, 0.34);
+  --glass-green-border: rgba(255, 255, 255, 0.25);
+  --glass-green-border-hover: rgba(255, 255, 255, 0.35);
+  --glass-green-blur: blur(24px);
+  --glass-green-blur-hover: blur(26px);
+  --glass-green-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --glass-green-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.16);
+  --glass-green-shadow-cart: 0 10px 34px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --glass-green-shadow-cart-hover: 0 14px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --glass-green-radius: 16px;
+  --glass-green-ink: #111111;
+  --glass-green-ink-hover: #111111;
+  --glass-green-ink-strong: #0f172a;
+  --glass-green-motion: 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Decorative card badges keep the legacy solid green */
+  --brand-badge-solid-bg: linear-gradient(180deg, #1f6b46 0%, #174d33 100%);
+  --brand-badge-solid-ink: #f7faf8;
+
+  /* Interactive green controls map to glass tokens */
+  --brand-cta-gradient: var(--glass-green-bg);
+  --brand-cta-gradient-hover: var(--glass-green-bg-hover);
+  --brand-cta-ink: var(--glass-green-ink);
+  --brand-cta-shadow: var(--glass-green-shadow);
+  --brand-cta-shadow-hover: var(--glass-green-shadow-hover);
+  --brand-cta-border: 1px solid var(--glass-green-border);
+}
+
+.glass-button,
+.glass-pill,
+.glass-badge,
+.glass-chip {
+  position: relative;
+  isolation: isolate;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: clip;
+  border: var(--brand-cta-border);
+  background: var(--brand-cta-gradient);
+  color: var(--brand-cta-ink);
+  -webkit-backdrop-filter: var(--glass-green-blur);
+  backdrop-filter: var(--glass-green-blur);
+  box-shadow: var(--brand-cta-shadow);
+  transition:
+    background var(--glass-green-motion),
+    border-color var(--glass-green-motion),
+    box-shadow var(--glass-green-motion),
+    transform var(--glass-green-motion),
+    color var(--glass-green-motion),
+    -webkit-backdrop-filter var(--glass-green-motion),
+    backdrop-filter var(--glass-green-motion);
+}
+
+.glass-button :is(svg, [data-icon]),
+.glass-pill :is(svg, [data-icon]),
+.glass-badge :is(svg, [data-icon]),
+.glass-chip :is(svg, [data-icon]) {
+  color: var(--brand-cta-ink);
+  stroke: currentColor;
+  fill: none;
+}
+
+.glass-button::before,
+.glass-pill::before,
+.glass-badge::before,
+.glass-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    transparent 28%,
+    rgba(255, 255, 255, 0.22) 48%,
+    transparent 68%
+  );
+  transform: translate3d(-130%, 0, 0);
+  transition: transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+}
+
+.glass-button:hover::before,
+.glass-button:focus-visible::before,
+.glass-pill:hover::before,
+.glass-pill:focus-visible::before,
+.glass-badge:hover::before,
+.glass-badge:focus-visible::before,
+.glass-chip:hover::before,
+.glass-chip:focus-visible::before {
+  transform: translate3d(130%, 0, 0);
+}
+
+.glass-button:hover,
+.glass-button:focus-visible,
+.glass-pill:hover,
+.glass-pill:focus-visible,
+.glass-badge:hover,
+.glass-badge:focus-visible,
+.glass-chip:hover,
+.glass-chip:focus-visible {
+  border-color: var(--glass-green-border-hover);
+  background: var(--brand-cta-gradient-hover);
+  color: var(--glass-green-ink-hover);
+  box-shadow: var(--brand-cta-shadow-hover);
+  -webkit-backdrop-filter: var(--glass-green-blur-hover);
+  backdrop-filter: var(--glass-green-blur-hover);
+  transform: translate3d(0, -2px, 0);
+  outline: none;
+}
+
+.glass-button:hover :is(svg, [data-icon]),
+.glass-button:focus-visible :is(svg, [data-icon]),
+.glass-pill:hover :is(svg, [data-icon]),
+.glass-pill:focus-visible :is(svg, [data-icon]),
+.glass-badge:hover :is(svg, [data-icon]),
+.glass-badge:focus-visible :is(svg, [data-icon]),
+.glass-chip:hover :is(svg, [data-icon]),
+.glass-chip:focus-visible :is(svg, [data-icon]) {
+  color: var(--glass-green-ink-hover);
+  stroke: currentColor;
+}
+
+.glass-button:focus-visible,
+.glass-pill:focus-visible,
+.glass-badge:focus-visible,
+.glass-chip:focus-visible {
+  box-shadow:
+    var(--brand-cta-shadow-hover),
+    0 0 0 2px rgba(34, 197, 94, 0.35);
+}
+
+.glass-button {
+  border-radius: var(--glass-green-radius);
+}
+
+.glass-button--cart {
+  background: var(--glass-green-bg-cart);
+  box-shadow: var(--glass-green-shadow-cart);
+}
+
+.glass-button--cart:hover,
+.glass-button--cart:focus-visible {
+  background: var(--glass-green-bg-cart-hover);
+  box-shadow: var(--glass-green-shadow-cart-hover);
+  color: var(--glass-green-ink-hover);
+}
+
+.glass-pill,
+.glass-badge,
+.glass-chip {
+  border-radius: 999px;
+}
+
+.glass-pill,
+.glass-chip {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight-sm);
+  font-feature-settings: var(--font-features-ui);
+}
+
+.glass-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  font-feature-settings: var(--font-features-ui);
+}
+
+/* Global storefront selectors (non-module class names) */
+.enterprise-feature-card__cta,
+.catalog-page-shell .premium-product-card__cta-text,
+.catalog-page-shell .premium-product-card__cta-pill,
+.home-shelf-lead-action {
+  position: relative;
+  isolation: isolate;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: clip;
+  border: var(--brand-cta-border) !important;
+  background: var(--brand-cta-gradient) !important;
+  color: var(--brand-cta-ink) !important;
+  -webkit-backdrop-filter: var(--glass-green-blur);
+  backdrop-filter: var(--glass-green-blur);
+  box-shadow: var(--brand-cta-shadow) !important;
+  transition:
+    background var(--glass-green-motion),
+    border-color var(--glass-green-motion),
+    box-shadow var(--glass-green-motion),
+    transform var(--glass-green-motion),
+    -webkit-backdrop-filter var(--glass-green-motion),
+    backdrop-filter var(--glass-green-motion);
+}
+
+.enterprise-feature-card__cta::before,
+.catalog-page-shell .premium-product-card__cta-text::before,
+.catalog-page-shell .premium-product-card__cta-pill::before,
+.home-shelf-lead-action::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 28%, rgba(255, 255, 255, 0.2) 48%, transparent 68%);
+  transform: translate3d(-130%, 0, 0);
+  transition: transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+}
+
+.enterprise-feature-card__cta:is(:hover, :focus-visible)::before,
+.catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-text::before,
+.catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-pill::before,
+.home-shelf-lead-link:hover .home-shelf-lead-action::before,
+.home-shelf-lead-link:focus-visible .home-shelf-lead-action::before {
+  transform: translate3d(130%, 0, 0);
+}
+
+.enterprise-feature-card__cta:is(:hover, :focus-visible),
+.catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-text,
+.catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-pill,
+.home-shelf-lead-link:hover .home-shelf-lead-action,
+.home-shelf-lead-link:focus-visible .home-shelf-lead-action {
+  border-color: var(--glass-green-border-hover) !important;
+  background: var(--brand-cta-gradient-hover) !important;
+  color: var(--glass-green-ink-hover) !important;
+  box-shadow: var(--brand-cta-shadow-hover) !important;
+  -webkit-backdrop-filter: var(--glass-green-blur-hover);
+  backdrop-filter: var(--glass-green-blur-hover);
+  transform: translate3d(0, -2px, 0);
+}
+
+.enterprise-feature-card__cta :is(svg, [data-icon]),
+.catalog-page-shell .premium-product-card__cta-text :is(svg, [data-icon]),
+.catalog-page-shell .premium-product-card__cta-pill :is(svg, [data-icon]),
+.home-shelf-lead-action :is(svg, [data-icon]) {
+  color: var(--brand-cta-ink);
+  stroke: currentColor;
+  fill: none;
+}
+
+.enterprise-feature-card__cta:is(:hover, :focus-visible) :is(svg, [data-icon]),
+.catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-text :is(svg, [data-icon]),
+.catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-pill :is(svg, [data-icon]),
+.home-shelf-lead-link:hover .home-shelf-lead-action :is(svg, [data-icon]),
+.home-shelf-lead-link:focus-visible .home-shelf-lead-action :is(svg, [data-icon]) {
+  color: var(--glass-green-ink-hover);
+  stroke: currentColor;
+}
+
+/* Dark surfaces: cart drawer, footer, explicit data-surface="dark" */
+.cart-drawer-root,
+[data-surface="dark"],
+.site-footer {
+  --glass-green-bg: rgba(42, 122, 82, 0.88);
+  --glass-green-bg-hover: rgba(49, 138, 93, 0.94);
+  --glass-green-bg-cart: rgba(42, 122, 82, 0.9);
+  --glass-green-bg-cart-hover: rgba(49, 138, 93, 0.96);
+  --glass-green-border: rgba(255, 255, 255, 0.22);
+  --glass-green-border-hover: rgba(255, 255, 255, 0.32);
+  --glass-green-ink: #ffffff;
+  --glass-green-ink-hover: #ffffff;
+  --glass-green-ink-strong: #ffffff;
+  --brand-cta-ink: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-button,
+  .glass-pill,
+  .glass-badge,
+  .glass-chip,
+  .enterprise-feature-card__cta,
+  .catalog-page-shell .premium-product-card__cta-text,
+  .catalog-page-shell .premium-product-card__cta-pill,
+  .home-shelf-lead-action {
+    transition-duration: 1ms;
+  }
+
+  .glass-button::before,
+  .glass-pill::before,
+  .glass-badge::before,
+  .glass-chip::before,
+  .enterprise-feature-card__cta::before,
+  .catalog-page-shell .premium-product-card__cta-text::before,
+  .catalog-page-shell .premium-product-card__cta-pill::before,
+  .home-shelf-lead-action::before {
+    display: none;
+  }
+
+  .glass-button:hover,
+  .glass-button:focus-visible,
+  .glass-pill:hover,
+  .glass-pill:focus-visible,
+  .glass-badge:hover,
+  .glass-badge:focus-visible,
+  .glass-chip:hover,
+  .glass-chip:focus-visible,
+  .enterprise-feature-card__cta:is(:hover, :focus-visible),
+  .catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-text,
+  .catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__cta-pill,
+  .home-shelf-lead-link:hover .home-shelf-lead-action,
+  .home-shelf-lead-link:focus-visible .home-shelf-lead-action {
+    transform: none;
+  }
+}

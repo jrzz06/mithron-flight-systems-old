@@ -1,0 +1,30 @@
+name: Promote canonical Vercel alias
+
+# Keep final-mithron-deploy.vercel.app on the latest production deployment.
+# Without this, the sticky alias can lag behind git-linked deploys and make
+# production look like an older build than localhost.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Wait for Vercel production deployment
+        run: sleep 90
+      - name: Promote canonical alias
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npm run vercel:promote-canonical

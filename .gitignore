@@ -1,0 +1,70 @@
+.env.local
+.env
+.env.*
+!.env.example
+
+# MCP secrets (use mcp.json.example as a template)
+.cursor/mcp.json
+
+# local pipeline state (never commit)
+tools/.enhance-*
+tools/.migrate-*
+public/**/*.enhanced.json
+public/**/*.bak
+tools/load-test-results.json
+
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# logs
+logs/
+*.log
+.audit/
+validation/
+
+# generated reports (keep folder, ignore outputs)
+reports/*.json
+reports/*.md
+reports/*.txt
+reports/*.csv
+!reports/.gitkeep
+
+# test outputs
+test-results/
+test-output/
+playwright-report/
+playwright-report-production/
+tools/e2e-workflow-artifacts/
+tools/_tmp-*
+
+# audit/qa screenshot dumps (regenerate via test scripts)
+tests/screenshots/
+docs/screenshots/
+
+# migration/tool generated reports (regenerate via npm scripts)
+data/*-report.json
+data/*.snapshot.json
+data/full-inventory-scan.json
+data/product-parity-report.json
+data/wix-vs-storefront-gap.json
+docs/dead-code-audit/automated-findings.json
+
+# misc
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+tsconfig.tsbuildinfo
+tools/realesrgan-bin/
+tools/weights/
+
+# supabase
+supabase/.temp/**
+!supabase/.temp/project-ref
+.vercel
+.env*

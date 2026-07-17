@@ -1,0 +1,42 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "mithron-flight-systems-kbkbkh.vercel.app" }],
+      "destination": "https://final-mithron-deploy.vercel.app/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "mithron-flight-systems-jrzz06-kbkbkh.vercel.app" }],
+      "destination": "https://final-mithron-deploy.vercel.app/:path*",
+      "permanent": false
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/admin/prune-logs",
+      "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/admin/archive-movements",
+      "schedule": "0 4 1 * *"
+    },
+    {
+      "path": "/api/admin/archive-operational-data",
+      "schedule": "0 5 1 * *"
+    },
+    {
+      "path": "/api/payments/expire-pending",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/notifications/dispatch",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/admin/publish-scheduled-blog",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

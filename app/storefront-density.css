@@ -1,0 +1,280 @@
+/* Storefront-only visual density layer (~106% browser zoom equivalent).
+
+   Scoped to [data-storefront] — desktop (≥1024px) only.
+
+   Mobile and tablet (≤1023px) inherit unscaled :root tokens from globals.css. */
+
+
+
+.storefront-root {
+
+  min-height: 100vh;
+
+}
+
+
+
+@media (min-width: 1024px) {
+
+  [data-storefront] {
+
+    --storefront-type-scale: 1.06;
+
+    --storefront-space-scale: 1.05;
+
+    --storefront-container-scale: 1.06;
+
+    --storefront-section-space-scale: 1.04;
+
+
+
+    /* Spacing scale */
+
+    --ds-s1: calc(8px * var(--storefront-space-scale));
+
+    --ds-s2: calc(12px * var(--storefront-space-scale));
+
+    --ds-s3: calc(16px * var(--storefront-space-scale));
+
+    --ds-s4: calc(24px * var(--storefront-space-scale));
+
+    --ds-s5: calc(32px * var(--storefront-space-scale));
+
+    --ds-s6: calc(48px * var(--storefront-space-scale));
+
+    --ds-s7: calc(64px * var(--storefront-space-scale));
+
+    --ds-s8: calc(96px * var(--storefront-space-scale));
+
+
+
+    /* Radius scale */
+
+    --ds-r-sm: calc(8px * var(--storefront-space-scale));
+
+    --ds-r-md: calc(12px * var(--storefront-space-scale));
+
+    --ds-r-lg: calc(16px * var(--storefront-space-scale));
+
+    --ds-r-xl: calc(24px * var(--storefront-space-scale));
+
+
+
+    /* Fixed px typography */
+
+    --ds-t-hero: clamp(calc(40px * var(--storefront-type-scale)), 5.5vw, calc(56px * var(--storefront-type-scale)));
+
+    --hero-panel-title-size: clamp(calc(1.45rem * var(--storefront-type-scale)), 3.2cqi, calc(2.65rem * var(--storefront-type-scale)));
+
+    --ds-t-section: clamp(calc(28px * var(--storefront-type-scale)), 3.2vw, calc(36px * var(--storefront-type-scale)));
+
+    --ds-t-card: calc(20px * var(--storefront-type-scale));
+
+    --ds-t-body: calc(16px * var(--storefront-type-scale));
+
+    --ds-t-label: calc(12px * var(--storefront-type-scale));
+
+
+
+    /* Rem typography (base) */
+
+    --type-hero: calc(4.25rem * var(--storefront-type-scale));
+
+    --type-campaign-headline: clamp(calc(56px * var(--storefront-type-scale)), 6vw, calc(96px * var(--storefront-type-scale)));
+
+    --type-campaign-copy: calc(22px * var(--storefront-type-scale));
+
+    --type-campaign-overline: calc(12px * var(--storefront-type-scale));
+
+    --type-page: calc(3rem * var(--storefront-type-scale));
+
+    --type-section: calc(2.35rem * var(--storefront-type-scale));
+
+    --type-card: calc(1.15rem * var(--storefront-type-scale));
+
+    --type-body: calc(1.025rem * var(--storefront-type-scale));
+
+    --type-small: calc(0.875rem * var(--storefront-type-scale));
+
+
+
+    /* Layout containers */
+
+    --ds-page-gutter: clamp(28px, 5.5vw, 88px);
+
+    --ds-container: calc(1440px * var(--storefront-container-scale));
+
+    --ds-container-catalog: calc(1360px * var(--storefront-container-scale));
+
+    --ds-container-showcase: calc(1320px * var(--storefront-container-scale));
+
+    --ds-container-checkout: calc(1180px * var(--storefront-container-scale));
+
+    --ds-container-wide: calc(1740px * var(--storefront-container-scale));
+
+
+
+    /* Navigation + touch */
+
+    --store-topbar-height: calc(34px * var(--storefront-space-scale));
+
+    --store-nav-bar-height: calc(56px * var(--storefront-space-scale));
+
+    --store-nav-bar-height-md: calc(58px * var(--storefront-space-scale));
+
+    --store-nav-offset: calc(var(--store-topbar-height) + var(--store-nav-bar-height-md));
+
+    --mobile-touch-min: calc(44px * var(--storefront-type-scale));
+
+
+
+    /* Buttons */
+
+    --store-button-height: max(44px, calc(42px * var(--storefront-type-scale)));
+
+    --store-button-height-sm: max(44px, calc(36px * var(--storefront-type-scale)));
+
+    --store-button-height-lg: calc(48px * var(--storefront-type-scale));
+
+    --store-button-padding-x: calc(22px * var(--storefront-space-scale));
+
+
+
+    /* Glass controls */
+
+    --glass-green-radius: calc(16px * var(--storefront-space-scale));
+
+  }
+
+
+
+  [data-storefront] .ds-container,
+
+  [data-storefront] .inner-page,
+
+  [data-storefront] .page-gutter,
+
+  [data-storefront] .catalog-grid-section {
+
+    padding-inline: var(--ds-page-gutter);
+
+  }
+
+
+
+  [data-storefront] .type-nav {
+
+    font-size: clamp(calc(0.8125rem * var(--storefront-type-scale)), 0.98cqi, calc(0.875rem * var(--storefront-type-scale)));
+
+  }
+
+
+
+  [data-storefront] .glass-pill,
+
+  [data-storefront] .glass-chip {
+
+    font-size: calc(0.875rem * var(--storefront-type-scale));
+
+  }
+
+
+
+  [data-storefront] .glass-badge {
+
+    font-size: calc(0.75rem * var(--storefront-type-scale));
+
+  }
+
+
+
+  [data-storefront] .catalog-product-grid {
+
+    gap: clamp(calc(0.75rem * var(--storefront-space-scale)), 1.6cqi, calc(1.25rem * var(--storefront-space-scale)));
+
+  }
+
+
+
+  [data-storefront] .catalog-continued-grid__rows {
+
+    gap: calc(var(--mobile-grid-gap, 10px) * var(--storefront-space-scale));
+
+  }
+
+
+
+  [data-storefront] .home-shelf-rail {
+
+    grid-auto-columns: minmax(min(100%, calc(280px * var(--storefront-container-scale))), 1fr);
+
+    gap: clamp(calc(1rem * var(--storefront-space-scale)), 1.7cqi, calc(1.35rem * var(--storefront-space-scale)));
+
+  }
+
+
+
+  [data-storefront] .home-shelf-card-link {
+
+    min-height: calc(432px * var(--storefront-container-scale));
+
+    border-radius: calc(24px * var(--storefront-space-scale));
+
+  }
+
+
+
+  [data-storefront] .home-shelf-image-well {
+
+    border-radius: calc(22px * var(--storefront-space-scale));
+
+  }
+
+}
+
+
+
+@media (min-width: 1280px) {
+
+  [data-storefront] {
+
+    --type-hero: calc(5.15rem * var(--storefront-type-scale));
+
+    --type-campaign-headline: clamp(calc(72px * var(--storefront-type-scale)), 6vw, calc(96px * var(--storefront-type-scale)));
+
+    --type-page: calc(3.55rem * var(--storefront-type-scale));
+
+    --type-section: calc(2.75rem * var(--storefront-type-scale));
+
+    --type-body: calc(1.0625rem * var(--storefront-type-scale));
+
+  }
+
+}
+
+
+
+@media (min-width: 1024px) {
+
+  [data-storefront] .home-shelf-secondary-products .home-shelf-rail {
+
+    grid-auto-columns: minmax(calc(244px * var(--storefront-container-scale)), calc(286px * var(--storefront-container-scale)));
+
+    gap: clamp(calc(0.9rem * var(--storefront-space-scale)), 1.4vw, calc(1.15rem * var(--storefront-space-scale)));
+
+  }
+
+
+
+  [data-storefront] .home-shelf-secondary-products .home-shelf-card-link {
+
+    min-height: calc(486px * var(--storefront-container-scale));
+
+    border-radius: calc(28px * var(--storefront-space-scale));
+
+  }
+
+}
+
+
+

@@ -1,0 +1,173 @@
+.viewAllCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: var(--shelf-card-aspect-ratio, var(--product-card-aspect-ratio));
+  overflow: hidden;
+  border: 1px solid var(--shelf-card-border, rgba(0, 0, 0, 0.04));
+  border-radius: 10px;
+  background-color: #e8eaed;
+  color: var(--home-ink);
+  padding: max(16px, var(--card-pad));
+  text-decoration: none;
+  isolation: isolate;
+  scroll-snap-align: start;
+  box-shadow: var(--shelf-card-shadow);
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.viewAllCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0%, transparent 18%, rgba(148, 163, 184, 0.12) 19%, transparent 20%),
+    radial-gradient(circle at 50% 50%, transparent 0%, transparent 32%, rgba(148, 163, 184, 0.1) 33%, transparent 34%),
+    radial-gradient(circle at 50% 50%, transparent 0%, transparent 46%, rgba(148, 163, 184, 0.08) 47%, transparent 48%),
+    radial-gradient(circle at 50% 50%, transparent 0%, transparent 60%, rgba(148, 163, 184, 0.06) 61%, transparent 62%),
+    linear-gradient(180deg, #eef0f3 0%, #e2e5ea 100%);
+}
+
+.viewAllCard::after {
+  content: none;
+}
+
+.viewAllStage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  height: 100%;
+}
+
+.viewAllImageFrame {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.viewAllImage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: var(--view-all-object-position, 50% 46%);
+  transform: scale(var(--view-all-image-scale, 1));
+  filter: var(--shelf-product-image-shadow);
+  transition:
+    transform 320ms var(--ease-cinematic),
+    filter 320ms var(--ease-cinematic);
+}
+
+.viewAllArrow {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 4px 12px -6px rgba(15, 23, 42, 0.28);
+  transition:
+    background-color 260ms var(--ease-cinematic),
+    box-shadow 260ms var(--ease-cinematic),
+    transform 260ms var(--ease-cinematic);
+}
+
+.viewAllCard:hover,
+.viewAllCard:focus-visible {
+  outline: none;
+  box-shadow: var(--shelf-card-shadow-hover);
+  transform: translateY(var(--shelf-card-lift, -2px));
+}
+
+.viewAllCard:hover .viewAllImage,
+.viewAllCard:focus-visible .viewAllImage {
+  transform: scale(calc(var(--view-all-image-scale, 1) * 1.02));
+  filter: var(--shelf-product-image-shadow-hover);
+}
+
+.viewAllCard:hover .viewAllArrow,
+.viewAllCard:focus-visible .viewAllArrow {
+  background: #111827;
+  box-shadow: 0 6px 16px -6px rgba(15, 23, 42, 0.32);
+  transform: translate3d(2px, 0, 0);
+}
+
+@media (min-width: 1280px) {
+  .viewAllCard {
+    aspect-ratio: var(--shelf-view-all-aspect-ratio, var(--shelf-product-aspect-ratio, var(--product-card-aspect-ratio)));
+  }
+}
+
+@media (max-width: 1279px) {
+  .viewAllCard {
+    aspect-ratio: var(--shelf-view-all-aspect-ratio, var(--shelf-card-aspect-ratio));
+    min-width: var(--shelf-view-all-carousel-width, calc(var(--shelf-card-width) + (var(--card-gap) - var(--shelf-row-gap, clamp(6px, 0.7vw, 12px)))));
+    max-width: var(--shelf-view-all-carousel-width, calc(var(--shelf-card-width) + (var(--card-gap) - var(--shelf-row-gap, clamp(6px, 0.7vw, 12px)))));
+    min-height: var(--shelf-card-min-height);
+    max-height: var(--shelf-card-max-height);
+    flex: 0 0 var(--shelf-view-all-carousel-width, calc(var(--shelf-card-width) + (var(--card-gap) - var(--shelf-row-gap, clamp(6px, 0.7vw, 12px)))));
+    width: var(--shelf-view-all-carousel-width, calc(var(--shelf-card-width) + (var(--card-gap) - var(--shelf-row-gap, clamp(6px, 0.7vw, 12px)))));
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    overflow: hidden;
+    scroll-snap-align: start;
+  }
+
+  .viewAllStage {
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .viewAllCard {
+    padding: max(16px, var(--card-pad));
+  }
+
+  .viewAllArrow {
+    width: 40px;
+    height: 40px;
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewAllCard,
+  .viewAllImage,
+  .viewAllArrow {
+    transition: none;
+  }
+
+  .viewAllCard:hover,
+  .viewAllCard:focus-visible,
+  .viewAllCard:hover .viewAllImage,
+  .viewAllCard:focus-visible .viewAllImage,
+  .viewAllCard:hover .viewAllArrow,
+  .viewAllCard:focus-visible .viewAllArrow {
+    transform: none;
+  }
+}

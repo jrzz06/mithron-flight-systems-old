@@ -1,0 +1,2605 @@
+.root {
+  container-type: inline-size;
+  --home-ink: var(--ds-ink);
+  --home-muted: var(--ds-ink-2);
+  --home-page: var(--ds-bg);
+  --home-card: var(--ds-card);
+  --home-well: var(--ds-bg-2);
+  --home-border: var(--ds-border);
+  --home-border-strong: var(--ds-border-strong);
+  --home-accent: var(--brand-accent);
+  /* --home-section-inline + content shell: see [data-home-composite-root] in globals.css */
+  --shelf-section-field: #f5f5f7;
+  --shelf-card-surface: #ffffff;
+  --shelf-card-surface-hover: #ffffff;
+  --shelf-card-border: rgba(0, 0, 0, 0.04);
+  --shelf-card-shadow-gutter: 12px;
+  --shelf-card-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 0 10px rgba(0, 0, 0, 0.06),
+    0 0 22px rgba(0, 0, 0, 0.04);
+  --shelf-card-shadow-hover:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 4px 14px rgba(0, 0, 0, 0.08),
+    0 10px 28px rgba(0, 0, 0, 0.1);
+  --shelf-product-image-shadow:
+    drop-shadow(0 10px 18px rgba(15, 23, 42, 0.28))
+    drop-shadow(0 2px 6px rgba(15, 23, 42, 0.18));
+  --shelf-product-image-shadow-hover:
+    drop-shadow(0 12px 22px rgba(15, 23, 42, 0.32))
+    drop-shadow(0 3px 8px rgba(15, 23, 42, 0.2));
+  --shelf-card-lift: -2px;
+  --shelf-row-gap: clamp(6px, 0.7vw, 12px);
+  --shelf-product-aspect-ratio: 4 / 5;
+  --shelf-view-all-aspect-ratio: 3 / 4;
+  --shelf-product-col: calc((100% - 4 * var(--card-gap)) / 5);
+  --shelf-view-all-col: calc(var(--shelf-product-col) + 5 * (var(--card-gap) - var(--shelf-row-gap)));
+  --shelf-view-all-carousel-width: calc(var(--shelf-card-width) * 1.18 + (var(--card-gap) - var(--shelf-row-gap)));
+  position: relative;
+  overflow-x: visible;
+  background: var(--ds-bg);
+  color: var(--home-ink);
+  font-family: var(--type-ui);
+}
+
+@media (min-width: 1280px) {
+  .root {
+    overflow-x: clip;
+  }
+}
+
+.container {
+  width: min(100%, var(--ds-container));
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 64px);
+}
+
+.miniCarousel {
+  --mini-carousel-ui-scale: var(--storefront-type-scale, 1);
+  overflow: hidden;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: #ffffff;
+  padding: calc(14px * var(--mini-carousel-ui-scale)) 0 calc(18px * var(--mini-carousel-ui-scale));
+}
+
+.miniCarouselViewport {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.miniCarouselViewport::before,
+.miniCarouselViewport::after {
+  display: none;
+}
+
+.miniCarouselRail {
+  display: flex;
+  gap: clamp(calc(18px * var(--mini-carousel-ui-scale)), 2.6vw, calc(42px * var(--mini-carousel-ui-scale)));
+  align-items: flex-start;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 0 var(--home-section-inline, clamp(16px, 4vw, 64px));
+  scroll-padding-inline: var(--home-section-inline, clamp(16px, 4vw, 64px));
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+
+.miniCarouselRail::-webkit-scrollbar {
+  display: none;
+}
+
+.miniCarouselItem {
+  display: grid;
+  flex: 0 0 clamp(calc(72px * var(--mini-carousel-ui-scale)), 5.6vw, calc(88px * var(--mini-carousel-ui-scale)));
+  gap: calc(12px * var(--mini-carousel-ui-scale));
+  justify-items: center;
+  align-content: start;
+  color: var(--home-ink);
+  text-align: center;
+  text-decoration: none;
+  scroll-snap-align: start;
+}
+
+.miniCarouselImageWell {
+  position: relative;
+  width: 100%;
+  height: clamp(calc(58px * var(--mini-carousel-ui-scale)), 4.75vw, calc(76px * var(--mini-carousel-ui-scale)));
+}
+
+.miniCarouselImage {
+  object-fit: contain;
+  padding: calc(2px * var(--mini-carousel-ui-scale));
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: transform 260ms var(--ease-cinematic);
+}
+
+.miniCarouselBuyNow {
+  composes: glass-button from global;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 1;
+  display: inline-flex;
+  min-height: calc(22px * var(--mini-carousel-ui-scale));
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-family: var(--type-ui);
+  font-size: calc(0.56rem * var(--mini-carousel-ui-scale));
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+  padding: 0 calc(9px * var(--mini-carousel-ui-scale));
+  white-space: nowrap;
+  transform: translate3d(-50%, 22%, 0);
+}
+
+.miniCarouselItem:hover .miniCarouselImage,
+.miniCarouselItem:focus-visible .miniCarouselImage {
+  transform: translate3d(0, 0, 0) scale(1.024);
+}
+
+.miniCarouselItem:hover .miniCarouselBuyNow,
+.miniCarouselItem:focus-visible .miniCarouselBuyNow {
+  transform: translate3d(-50%, 18%, 0);
+}
+
+.miniCarouselLabel {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  color: #0f172a;
+  font-family: var(--type-ui);
+  font-size: clamp(calc(0.62rem * var(--mini-carousel-ui-scale)), 0.76vw, calc(0.78rem * var(--mini-carousel-ui-scale)));
+  font-weight: 430;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniCarouselItem:focus-visible {
+  border-radius: 10px;
+  outline: 2px solid rgba(15, 23, 42, 0.22);
+  outline-offset: 6px;
+}
+
+.promoImageBand {
+  background: var(--home-page);
+  padding: clamp(46px, 5.2vw, 72px) 0 clamp(52px, 6vw, 84px);
+}
+
+.promoImageFrame {
+  width: min(100%, var(--ds-container-wide, 1740px));
+  padding: 0 var(--home-section-inline, clamp(16px, 4vw, 64px));
+  margin: 0 auto;
+}
+
+.promoImageEyebrow {
+  margin: 0 0 clamp(18px, 2vw, 28px);
+  color: #0f172a;
+  font-family: var(--type-display);
+  font-size: clamp(1.75rem, 2.3vw, 2.35rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  text-transform: none;
+}
+
+.promoImageCard {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #dbeafe;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.promoImageCard::before,
+.promoImageCard::after {
+  content: none;
+}
+
+.promoImage {
+  opacity: 1;
+  filter: none;
+  mix-blend-mode: normal;
+  object-fit: cover;
+  object-position: 52% 46%;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: transform 420ms var(--ease-cinematic);
+}
+
+.promoImageCard:hover .promoImage,
+.promoImageCard:focus-visible .promoImage {
+  transform: translate3d(0, 0, 0) scale(1.018);
+}
+
+.promoImageCard:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.28);
+  outline-offset: -6px;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: var(--home-muted);
+  font-family: var(--type-technical);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.missionWorldSection {
+  container-type: inline-size;
+  display: flex;
+  min-height: clamp(760px, 88svh, 980px);
+  align-items: center;
+  overflow: hidden;
+  background: var(--home-page);
+  padding: clamp(calc(88px * var(--storefront-section-space-scale, 1)), 9vh, calc(128px * var(--storefront-section-space-scale, 1))) 0 clamp(calc(96px * var(--storefront-section-space-scale, 1)), 10vh, calc(140px * var(--storefront-section-space-scale, 1)));
+}
+
+.missionWorldSection .container {
+  width: min(100%, var(--ds-container-wide, 1740px));
+  padding: 0 clamp(24px, 4vw, 72px);
+}
+
+.missionWorldLayout {
+  display: grid;
+  gap: clamp(34px, 5vh, 64px);
+  width: 100%;
+}
+
+.missionWorldHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 0.68fr) minmax(0, 0.32fr);
+  gap: clamp(32px, 6vw, 96px);
+  align-items: end;
+}
+
+.missionWorldIntro {
+  display: grid;
+  justify-items: start;
+}
+
+.missionWorldTitle {
+  margin: 0;
+  color: var(--home-ink);
+  font-family: var(--type-display);
+  font-size: clamp(2.45rem, 4.25vw, 5rem);
+  font-weight: 640;
+  letter-spacing: 0;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.missionWorldIntro p:first-child {
+  max-width: 560px;
+  margin: 0;
+  color: var(--home-muted);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.mediaStateNote {
+  max-width: 470px;
+  margin: 12px 0 0;
+  color: var(--home-muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.missionWorldGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  grid-auto-rows: clamp(124px, 9vw, 174px);
+  gap: clamp(20px, 1.7vw, 28px);
+}
+
+.missionWorldTile {
+  --mission-image-reveal-scale: 1;
+  position: relative;
+  grid-column: span 3;
+  grid-row: span 2;
+  min-height: 260px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #ffffff;
+  cursor: default;
+  margin: 0;
+  text-decoration: none;
+  box-shadow: none;
+  isolation: isolate;
+}
+
+.missionWorldTileStandard {
+  grid-column: span 3;
+  grid-row: span 2;
+}
+
+.missionWorldTileHero {
+  min-height: 430px;
+}
+
+.missionWorldTileWide {
+  min-height: 284px;
+}
+
+.missionWorldTileTall {
+  min-height: 430px;
+}
+
+.missionWorldSection[data-composition="agri-field"] .container,
+.missionWorldSection[data-composition="city-urban"] .container {
+  width: min(100%, var(--ds-container-wide, 1740px));
+  padding: 0 clamp(24px, 4vw, 72px);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldGrid,
+.missionWorldSection[data-composition="city-urban"] .missionWorldGrid {
+  grid-template-columns:
+    minmax(0, 0.92fr)
+    minmax(0, 1.04fr)
+    minmax(0, 1.04fr)
+    minmax(0, 0.92fr);
+  grid-template-areas:
+    "mission-left mission-hero mission-hero mission-right"
+    "mission-left mission-small-a mission-small-b mission-right";
+  grid-template-rows:
+    clamp(300px, 33vh, 360px)
+    clamp(220px, 24vh, 270px);
+  grid-auto-flow: row;
+  grid-auto-rows: clamp(220px, 18vw, 280px);
+  gap: clamp(20px, 1.7vw, 28px);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile,
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile {
+  grid-column: auto;
+  grid-row: auto;
+  min-height: 0;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(1),
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(1) {
+  grid-area: mission-left;
+  min-height: 0;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2),
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(2) {
+  grid-area: mission-hero;
+  min-height: 0;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(3),
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(3) {
+  grid-area: mission-right;
+  min-height: 0;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(4),
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(4) {
+  grid-area: mission-small-a;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(5),
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(5) {
+  grid-area: mission-small-b;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(1) .missionWorldImage,
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(1) .missionWorldImage {
+  object-position: 52% 50%;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) .missionWorldImage,
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(2) .missionWorldImage {
+  object-position: 50% 44%;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(3) .missionWorldImage,
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(3) .missionWorldImage {
+  object-position: 54% 50%;
+}
+
+.missionWorldSection[data-composition="agri-field"] {
+  min-height: auto;
+  align-items: flex-start;
+  padding-bottom: clamp(56px, 6vh, 72px);
+}
+
+.missionWorldSection[data-composition="agri-field"] .container {
+  padding: 0 clamp(28px, 3.8vw, 60px);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldLayout {
+  gap: clamp(54px, 6.4vh, 64px);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldHeader {
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 0.38fr);
+  gap: clamp(48px, 5vw, 80px);
+  align-items: start;
+}
+
+.missionWorldSection[data-composition="agri-field"] .eyebrow {
+  margin-bottom: 18px;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTitle {
+  font-size: clamp(3.55rem, 4.1vw, 4.7rem);
+  line-height: 0.98;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldIntro {
+  justify-items: start;
+  padding-top: 4px;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldIntro p:first-child {
+  max-width: 520px;
+  font-size: clamp(1rem, 1.05vw, 1.14rem);
+  line-height: 1.45;
+}
+
+.missionWorldSection[data-composition="agri-field"] .mediaStateNote {
+  max-width: 520px;
+  margin-top: 16px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldGrid {
+  grid-template-columns:
+    minmax(260px, 1.03fr)
+    minmax(0, 0.98fr)
+    minmax(0, 0.98fr)
+    minmax(260px, 1.06fr);
+  grid-template-areas:
+    "mission-left mission-hero mission-hero mission-right"
+    "mission-left mission-small-a mission-small-b mission-right";
+  grid-template-rows:
+    clamp(340px, 38vh, 378px)
+    clamp(286px, 32vh, 318px);
+  gap: 18px;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile {
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 8px;
+  background: #0f172a;
+  box-shadow:
+    0 16px 30px rgba(15, 23, 42, 0.16),
+    0 2px 6px rgba(15, 23, 42, 0.08);
+  transition: box-shadow 220ms var(--ease-cinematic);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:where(a) {
+  cursor: pointer;
+}
+
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:where(a) {
+  cursor: pointer;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:where(a):focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.44);
+  outline-offset: 4px;
+}
+
+.missionWorldSection[data-composition="city-urban"] .missionWorldTile:where(a):focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.44);
+  outline-offset: 4px;
+}
+
+.missionCardExternalIndicator {
+  position: absolute;
+  top: clamp(16px, 1.25vw, 18px);
+  right: clamp(16px, 1.25vw, 18px);
+  display: grid;
+  height: 30px;
+  width: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.94);
+  transition:
+    opacity 180ms var(--ease-system),
+    transform 220ms var(--ease-cinematic);
+  pointer-events: none;
+}
+
+.missionWorldTile:where(a):hover .missionCardExternalIndicator,
+.missionWorldTile:where(a):focus-visible .missionCardExternalIndicator {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:hover,
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:focus-visible {
+  box-shadow:
+    0 18px 34px rgba(15, 23, 42, 0.18),
+    0 3px 8px rgba(15, 23, 42, 0.1);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionTileOverlay {
+  background:
+    linear-gradient(180deg, rgba(7, 15, 29, 0) 26%, rgba(7, 15, 29, 0.2) 54%, rgba(7, 15, 29, 0.9) 100%),
+    linear-gradient(90deg, rgba(7, 15, 29, 0.2), rgba(7, 15, 29, 0.02) 58%);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionTileCopy {
+  right: clamp(22px, 1.8vw, 28px);
+  bottom: clamp(28px, 2.45vw, 40px);
+  left: clamp(22px, 1.8vw, 28px);
+  gap: 8px;
+  max-width: min(88%, 600px);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) .missionTileCopy {
+  bottom: clamp(22px, 1.8vw, 30px);
+  max-width: min(78%, 620px);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionTileCopy strong {
+  font-size: clamp(1.35rem, 1.7vw, 1.95rem);
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1.06;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionTileCopy span {
+  font-size: clamp(0.92rem, 1.02vw, 1.08rem);
+  line-height: 1.38;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionTileCopy small {
+  font-size: clamp(0.76rem, 0.82vw, 0.86rem);
+  line-height: 1.18;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionTileDevice {
+  top: clamp(16px, 1.25vw, 18px);
+  right: auto;
+  left: clamp(16px, 1.25vw, 18px);
+  min-height: 27px;
+  max-width: min(62%, 260px);
+  background: rgba(15, 23, 42, 0.56);
+  font-size: 0.72rem;
+  padding: 7px 13px;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) .missionTileCopy strong {
+  font-size: clamp(1.55rem, 1.95vw, 2.15rem);
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(1) .missionWorldImage {
+  object-position: 49% 50%;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) .missionWorldImage {
+  object-position: 52% 45%;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(3) .missionWorldImage {
+  object-position: 55% 50%;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(4) .missionWorldImage {
+  object-position: 50% 52%;
+}
+
+.missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(5) .missionWorldImage {
+  object-position: 50% 48%;
+}
+
+.missionWorldImage {
+  object-fit: cover;
+  transform: translate3d(0, 0, 0) scale(var(--mission-image-reveal-scale, 1));
+  transition: transform 420ms var(--ease-cinematic);
+}
+
+.missionWorldTile:hover .missionWorldImage {
+  transform: translate3d(0, 0, 0) scale(calc(var(--mission-image-reveal-scale, 1) * 1.024));
+}
+
+.missionTileOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, transparent 26%, rgba(15, 23, 42, 0.72) 100%),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.24), transparent 64%);
+}
+
+.missionTileCopy {
+  position: absolute;
+  right: clamp(14px, 1.6vw, 24px);
+  bottom: clamp(16px, 1.8vw, 26px);
+  left: clamp(14px, 1.6vw, 24px);
+  z-index: 2;
+  display: grid;
+  max-width: min(86%, 560px);
+  gap: 6px;
+}
+
+.missionTileCopy strong {
+  color: #ffffff;
+  font-size: clamp(1.04rem, 1.35vw, 1.48rem);
+  font-weight: 760;
+  line-height: 1.08;
+}
+
+.missionTileCopy span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.78rem;
+  line-height: 1.38;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.missionTileCopy small {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.72rem;
+  font-weight: 720;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.missionTileDevice {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: inline-flex;
+  max-width: min(48%, 250px);
+  min-height: 28px;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.62);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.7rem;
+  font-weight: 720;
+  line-height: 1.1;
+  padding: 7px 11px;
+}
+
+@media (max-width: 980px) {
+  .missionWorldSection {
+    min-height: auto;
+    padding: clamp(70px, 10vh, 104px) 0 clamp(76px, 10vh, 112px);
+  }
+
+  .missionWorldSection .container,
+  .missionWorldSection[data-composition="agri-field"] .container,
+  .missionWorldSection[data-composition="city-urban"] .container {
+    padding: 0 clamp(20px, 4vw, 40px);
+  }
+
+  .missionWorldLayout {
+    gap: clamp(28px, 4vh, 46px);
+  }
+
+  .missionWorldHeader {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldLayout {
+    gap: clamp(32px, 5vh, 44px);
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldHeader {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTitle {
+    max-width: 12ch;
+    font-size: clamp(3rem, 7.8vw, 4.15rem);
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldIntro {
+    padding-top: 0;
+  }
+
+  .missionWorldGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(18px, 2.4vw, 24px);
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldGrid,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas: none;
+    grid-template-rows: none;
+    grid-auto-flow: dense;
+    grid-auto-rows: clamp(150px, 14vw, 190px);
+    gap: clamp(18px, 2.4vw, 24px);
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(n),
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(n) {
+    grid-area: auto;
+    min-height: 300px;
+  }
+
+  .missionWorldTile,
+  .missionWorldTileHero,
+  .missionWorldTileWide,
+  .missionWorldTileTall,
+  .missionWorldTileStandard,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTileHero,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTileWide,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTileTall,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTileHero,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTileWide,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTileTall {
+    grid-column: span 3;
+    grid-row: span 2;
+  }
+
+  .missionWorldTileHero,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTileHero,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTileHero {
+    grid-column: 1 / -1;
+    min-height: 420px;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(1) {
+    order: 2;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) {
+    order: 1;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(3) {
+    order: 3;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(4) {
+    order: 4;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(5) {
+    order: 5;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionTileCopy {
+    bottom: clamp(24px, 3.6vw, 32px);
+  }
+}
+
+@media (max-width: 767px) {
+  .missionWorldSection {
+    min-height: auto;
+    padding: var(--mobile-section-gap, 1.5rem) 0 calc(var(--mobile-section-gap, 1.5rem) + 1rem);
+  }
+
+  .missionWorldSection .container {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+
+  .container {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+}
+
+@media (max-width: 1023px) {
+  .miniCarouselLabel {
+    display: -webkit-box;
+    overflow: hidden;
+    min-height: 2.4em;
+    white-space: normal;
+    text-overflow: clip;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .miniCarousel {
+    padding: calc(12px * var(--mini-carousel-ui-scale)) 0 calc(16px * var(--mini-carousel-ui-scale));
+  }
+
+  .miniCarouselRail {
+    gap: calc(14px * var(--mini-carousel-ui-scale));
+    padding: 0 var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+    scroll-padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+
+  .miniCarouselItem {
+    flex: 0 0 clamp(72px, 22vw, calc(92px * var(--mini-carousel-ui-scale)));
+    gap: calc(10px * var(--mini-carousel-ui-scale));
+  }
+
+  .miniCarouselImageWell {
+    height: calc(58px * var(--mini-carousel-ui-scale));
+  }
+
+  .miniCarouselLabel {
+    display: -webkit-box;
+    overflow: hidden;
+    min-height: 2.5em;
+    font-size: calc(0.7rem * var(--mini-carousel-ui-scale));
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    text-overflow: clip;
+    text-transform: none;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  line-clamp: 2;
+  }
+
+  .shelfTitle {
+    font-family: var(--type-display);
+    font-size: clamp(1.5rem, 6.8vw, 1.85rem);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.12;
+  }
+}
+
+@media (max-width: 640px) {
+  .miniCarouselRail {
+    gap: calc(12px * var(--mini-carousel-ui-scale));
+    padding: 0 var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+    scroll-padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+
+  .miniCarousel {
+    padding: calc(12px * var(--mini-carousel-ui-scale)) 0 calc(16px * var(--mini-carousel-ui-scale));
+  }
+
+  .container {
+    padding: 0 var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+
+  .promoImageBand {
+    padding: 34px 0 46px;
+  }
+
+  .promoImageEyebrow {
+    margin-bottom: 14px;
+    font-size: clamp(1.6rem, 8vw, 2.2rem);
+  }
+
+  .promoImageCard {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+
+  .promoImage {
+    object-position: 58% 50%;
+  }
+
+  .chapter {
+    padding: var(--ds-s6) 0;
+  }
+
+  .productShelfSection {
+    padding: var(--ds-s5) 0;
+  }
+
+  .productShelfSection+.missionWorldSection {
+    padding-top: clamp(36px, 7vh, 52px);
+  }
+
+  .productShelfSection+.agriSection:not(.citySection) {
+    margin-top: clamp(32px, 6vw, 60px);
+  }
+
+  .missionWorldSection {
+    padding: clamp(64px, 12vh, 84px) 0 clamp(72px, 12vh, 92px);
+  }
+
+  .missionWorldSection .container,
+  .missionWorldSection[data-composition="agri-field"] .container,
+  .missionWorldSection[data-composition="city-urban"] .container {
+    padding: 0 var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+
+  .missionWorldLayout {
+    gap: 30px;
+  }
+
+  .missionWorldHeader {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldHeader {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .missionWorldTitle {
+    font-size: clamp(2.45rem, 13vw, 3.9rem);
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTitle {
+    max-width: 9ch;
+    font-size: clamp(2.6rem, 12.6vw, 3.75rem);
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .eyebrow {
+    margin-bottom: 14px;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldIntro p:first-child,
+  .missionWorldSection[data-composition="agri-field"] .mediaStateNote {
+    max-width: 100%;
+  }
+
+  .missionWorldGrid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+    gap: 20px;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldGrid,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldGrid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+    gap: 20px;
+  }
+
+  .missionWorldTile,
+  .missionWorldTileHero,
+  .missionWorldTileWide,
+  .missionWorldTileTall,
+  .missionWorldTileStandard,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTileHero,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTileWide,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTileTall,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTileHero,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTileWide,
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTileTall {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    min-height: 310px;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(n),
+  .missionWorldSection[data-composition="city-urban"] .missionWorldTile:nth-child(n) {
+    min-height: 338px;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) {
+    min-height: 380px;
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionTileCopy,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) .missionTileCopy {
+    right: 22px;
+    bottom: 26px;
+    left: 22px;
+    max-width: calc(100% - 44px);
+  }
+
+  .missionWorldSection[data-composition="agri-field"] .missionTileCopy strong,
+  .missionWorldSection[data-composition="agri-field"] .missionWorldTile:nth-child(2) .missionTileCopy strong {
+    font-size: clamp(1.45rem, 7vw, 1.85rem);
+  }
+
+  .missionTileCopy {
+    max-width: calc(100% - 30px);
+  }
+
+  .missionTileDevice {
+    top: 12px;
+    right: 12px;
+    bottom: auto;
+    max-width: 56%;
+  }
+
+  .productShelfHeader {
+    align-items: start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .shelfHeroCopy {
+    width: calc(100% - 24px);
+    padding: 0 12px;
+    gap: 6px;
+  }
+
+  .shelfHeroHeading {
+    white-space: nowrap;
+    text-wrap: nowrap;
+    overflow-wrap: normal;
+    font-size: clamp(1.2rem, 5vw, 1.55rem);
+    line-height: 1.08;
+  }
+
+  .shelfHeroBody {
+    max-width: 32ch;
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .shelfHeroCta {
+    min-height: 36px;
+    margin-top: 6px;
+    padding: 0 16px;
+    font-size: 0.78rem;
+  }
+
+  .productBody {
+    min-height: 0;
+    padding: 12px 12px 14px;
+  }
+
+}
+
+@media (max-width: 479px) {
+  .container {
+    padding: 0 var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .miniCarouselItem,
+  .miniCarouselImage,
+  .miniCarouselBuyNow,
+  .productCard,
+  .productImageWell,
+  .productImage,
+  .productBody,
+  .productKicker,
+  .productName,
+  .productFooter,
+  .productBuyNow,
+  .productActionDot,
+  .shelfHeroCta,
+  .missionWorldImage {
+    transition: none;
+  }
+
+  .miniCarouselItem:hover .miniCarouselImage,
+  .miniCarouselItem:focus-visible .miniCarouselImage,
+  .miniCarouselItem:hover .miniCarouselBuyNow,
+  .miniCarouselItem:focus-visible .miniCarouselBuyNow,
+  .productCard:hover,
+  .productCard:focus-visible,
+  .productCard:hover .productImage,
+  .productCard:focus-visible .productImage,
+  .productCard:hover .productBody,
+  .productCard:focus-visible .productBody,
+  .missionWorldTile:hover .missionWorldImage {
+    transform: none;
+  }
+
+  .miniCarouselItem:hover .miniCarouselBuyNow,
+  .miniCarouselItem:focus-visible .miniCarouselBuyNow {
+    transform: translate3d(-50%, 22%, 0);
+  }
+}
+
+/* ==========================================
+   AGRI COMMUNITY WORLD REDESIGN
+   ========================================== */
+
+@keyframes missionAuroraDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  40% {
+    transform: translate3d(1.1%, -0.7%, 0) scale(1.015);
+  }
+
+  70% {
+    transform: translate3d(-0.8%, 0.9%, 0) scale(1.008);
+  }
+}
+
+@keyframes missionAuroraDriftReverse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.02);
+    opacity: 0.88;
+  }
+
+  50% {
+    transform: translate3d(-1.2%, 0.5%, 0) scale(1.035);
+    opacity: 1;
+  }
+}
+
+.agriSection {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+  --mission-section-padding-y: clamp(48px, 7vh, 80px);
+  --mission-section-ink: #f5f5f7;
+  --mission-section-muted: rgba(245, 245, 247, 0.62);
+  --mission-aurora-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --mission-bento-gap: clamp(14px, 1.6vw, 22px);
+  --mission-card-radius: 10px;
+  --mission-card-inset: 0;
+  --mission-row-primary: minmax(0, 1.55fr);
+  --mission-row-secondary: minmax(0, 1fr);
+  --mission-col-left: minmax(0, 35fr);
+  --mission-col-right: minmax(0, 65fr);
+  --mission-glass-surface: rgba(255, 255, 255, 0.05);
+  --mission-glass-surface-raised: rgba(248, 250, 252, 0.08);
+  --mission-glass-border: rgba(255, 255, 255, 0.12);
+  --mission-glass-border-soft: rgba(255, 255, 255, 0.08);
+  --mission-glass-blur: blur(40px) saturate(180%);
+  --mission-glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.24);
+  --mission-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  --mission-card-glass-surface: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 255, 255, 0.42) 42%,
+    rgba(255, 255, 255, 0.28) 68%,
+    rgba(248, 250, 252, 0.52) 100%
+  );
+  --mission-card-glass-border: rgba(255, 255, 255, 0.58);
+  --mission-card-glass-blur: blur(24px) saturate(190%) brightness(1.06);
+  --mission-card-glass-shadow:
+    0 10px 36px rgba(15, 23, 42, 0.14),
+    0 2px 8px rgba(15, 23, 42, 0.06);
+  --mission-card-glass-inset:
+    inset 0 1px 1px rgba(255, 255, 255, 0.72),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.18);
+  --mission-card-glass-shine: linear-gradient(
+    118deg,
+    transparent 18%,
+    rgba(255, 255, 255, 0.42) 44%,
+    rgba(255, 255, 255, 0.12) 52%,
+    transparent 72%
+  );
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  min-height: clamp(700px, 95svh, 110svh);
+  padding: var(--mission-section-padding-y) 0;
+  background-color: #02040a;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(15, 66, 108, 0.2) 0%, transparent 65%),
+    radial-gradient(circle at 25% 45%, rgba(10, 34, 64, 0.24) 0%, transparent 70%),
+    radial-gradient(circle at 80% 85%, rgba(46, 43, 84, 0.2) 0%, transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(7, 17, 38, 0.28) 0%, transparent 80%),
+    radial-gradient(circle at 90% 15%, rgba(28, 27, 56, 0.12) 0%, transparent 50%);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100svh;
+  scroll-margin-top: 0;
+}
+
+.agriSection.chapter {
+  padding: var(--mission-section-padding-y) 0;
+}
+
+.agriSection:not(.citySection) + .agriSection.citySection {
+  margin-top: calc(-1 * var(--mission-section-padding-y));
+}
+
+.agriSection::before,
+.agriSection::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.agriSection:not(.citySection)::before {
+  inset: 0;
+  opacity: 0.42;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(15, 66, 108, 0.14) 0%, transparent 65%),
+    radial-gradient(circle at 80% 85%, rgba(46, 43, 84, 0.1) 0%, transparent 60%);
+  filter: none;
+  animation: none;
+  will-change: auto;
+}
+
+.citySection.agriSection::before {
+  inset: 0;
+  opacity: 0.42;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(15, 66, 108, 0.12) 0%, transparent 65%),
+    radial-gradient(circle at 84% 24%, rgba(30, 79, 255, 0.08) 0%, transparent 70%),
+    radial-gradient(circle at 80% 85%, rgba(46, 43, 84, 0.1) 0%, transparent 60%);
+  filter: none;
+  animation: none;
+  will-change: auto;
+}
+
+.agriSection::after {
+  inset: 0;
+  opacity: 0.022;
+  mix-blend-mode: soft-light;
+  background-image: var(--mission-aurora-noise);
+  background-size: 160px 160px;
+}
+
+.agriContainer {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  /* Horizontal alignment via [data-home-content-shell] in globals.css */
+}
+
+/* Shared mission-world bento template (Agri + City) */
+.missionWorldBento {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr) clamp(180px, 26vh, 260px);
+  gap: var(--mission-bento-gap);
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.missionWorldLeftRail,
+.missionWorldRightRail {
+  display: contents;
+}
+
+.missionWorldTextHeader {
+  grid-column: 1 / 5;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-self: end;
+  text-align: left;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 clamp(8px, 1vh, 16px) 0;
+}
+
+.missionWorldSlotTall {
+  grid-column: 1 / 5;
+  grid-row: 2 / 4;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+}
+
+.missionWorldSlotHero {
+  grid-column: 5 / 13;
+  grid-row: 1 / 3;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+}
+
+.missionWorldSupportGrid {
+  grid-column: 5 / 13;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 0.9fr;
+  gap: var(--mission-bento-gap);
+  min-height: 0;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.missionWorldSlotTall > .agriCard,
+.missionWorldSlotHero > .agriCard {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.missionWorldSupportGrid > .agriCard {
+  width: 100%;
+  height: 100%;
+  min-height: clamp(148px, 14vh, 188px);
+  align-self: stretch;
+}
+
+.agriEyebrowRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(10px, 1.2vh, 14px);
+}
+
+.agriEyebrow {
+  margin: 0;
+  color: var(--mission-section-ink);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  opacity: 0.55;
+  text-transform: none;
+}
+
+.agriLeafIcon {
+  color: #4ade80;
+  width: 13px;
+  height: 13px;
+  opacity: 0.8;
+}
+
+.agriHeadline {
+  margin: 0 0 clamp(12px, 1.5vh, 18px) 0;
+  color: var(--mission-section-ink);
+  font-family: var(--type-mission-heading);
+  font-size: clamp(1.9rem, 3.6vw, 3.2rem);
+  font-weight: 660;
+  line-height: 1.06;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+}
+
+.agriIntroBody {
+  margin: 0;
+}
+
+.agriIntroPlainText {
+  color: rgba(245, 245, 247, 0.72);
+  font-size: clamp(0.94rem, 1.4vw, 1.08rem);
+  line-height: 1.62;
+  font-weight: 450;
+  max-width: 38ch;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.glassPanel {
+  --glass-blur: 100px;
+  --glass-frost: rgba(255, 255, 255, 0.32);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    inset 0 -1px 20px rgba(0, 0, 0, 0.04);
+}
+
+.glassPanel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--glass-frost);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.06);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.06);
+  transform: translateZ(0);
+}
+
+.agriCardCopy.glassPanel {
+  --glass-blur: 120px;
+  --glass-frost: rgba(255, 255, 255, 0.62);
+}
+
+.missionWorldTextHeader .agriIntroBody .glassPanel {
+  margin: 0;
+  width: fit-content;
+  max-width: min(100%, 42ch);
+  padding: clamp(12px, 1.6vw, 16px) clamp(14px, 1.8vw, 18px);
+  color: rgba(245, 245, 247, 0.94);
+  font-family: var(--type-mission-body);
+  font-size: clamp(1.06rem, 1.55vw, 1.2rem);
+  font-weight: 500;
+  line-height: 1.62;
+  z-index: 0;
+}
+
+.agriFallbackNote {
+  margin-top: 10px !important;
+  font-size: 0.74rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Card Styling â€” full-bleed product storytelling */
+.agriCard {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--mission-card-radius, 0);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0c1218;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  text-decoration: none;
+  cursor: pointer;
+  isolation: isolate;
+  transition:
+    box-shadow 320ms var(--ease-cinematic),
+    transform 320ms var(--ease-cinematic);
+}
+
+.agriCard::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  height: 42%;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.52) 28%,
+    rgba(0, 0, 0, 0.18) 58%,
+    transparent 100%
+  );
+}
+
+.missionCardFloat {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: clamp(5px, 0.65vh, 8px);
+  padding: clamp(14px, 1.4vh, 20px) clamp(16px, 1.6vh, 20px);
+  pointer-events: none;
+}
+
+.missionCardCopyRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  width: 100%;
+}
+
+.missionCardBrandShield {
+  position: absolute;
+  left: var(--logo-cover-x, 57%);
+  top: var(--logo-cover-y, 28%);
+  width: var(--logo-cover-w, 28px);
+  height: var(--logo-cover-h, 13px);
+  z-index: 2;
+  margin-left: calc(var(--logo-cover-w, 28px) * -0.5);
+  margin-top: calc(var(--logo-cover-h, 13px) * -0.5);
+  transform: rotate(var(--logo-cover-rotate, -6deg));
+  border: none;
+  border-radius: 2px;
+  box-shadow: none;
+  background: rgba(251, 252, 254, 0.98);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+/* City rental card â€” invisible logo cover tuned per viewport */
+.agriCard[data-logo-cover="true"] {
+  --logo-cover-x: 62%;
+  --logo-cover-y: 30%;
+  --logo-cover-w: 22px;
+  --logo-cover-h: 11px;
+  --logo-cover-rotate: -5deg;
+  --rental-object-position: 48% 41%;
+}
+
+.agriCard[data-logo-cover="true"] .agriCardImage {
+  object-position: var(--rental-object-position, 46% 40%);
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .agriCard[data-logo-cover="true"] {
+    --logo-cover-x: 59%;
+    --logo-cover-y: 28%;
+    --logo-cover-w: 26px;
+    --logo-cover-h: 12px;
+    --logo-cover-rotate: -6deg;
+    --rental-object-position: 47% 40%;
+  }
+}
+
+@media (min-width: 1025px) {
+  .agriCard[data-logo-cover="true"] {
+    --logo-cover-x: 56.5%;
+    --logo-cover-y: 26%;
+    --logo-cover-w: 30px;
+    --logo-cover-h: 14px;
+    --logo-cover-rotate: -6deg;
+    --rental-object-position: 45% 38%;
+  }
+
+  .citySection .missionWorldSlotHero .agriCard[data-logo-cover="true"] {
+    --logo-cover-x: 55.5%;
+    --logo-cover-y: 25%;
+    --logo-cover-w: 32px;
+    --logo-cover-h: 15px;
+    --rental-object-position: 44% 37%;
+  }
+}
+
+@media (max-width: 640px) {
+  .agriCard[data-logo-cover="true"] {
+    --logo-cover-x: 64%;
+    --logo-cover-y: 31%;
+    --logo-cover-w: 20px;
+    --logo-cover-h: 10px;
+    --logo-cover-rotate: -4deg;
+    --rental-object-position: 50% 42%;
+  }
+}
+
+.agriCardShowcase {
+  cursor: default;
+}
+
+.agriCardShowcase .agriCardArrow {
+  display: none;
+}
+
+.agriCard:hover,
+.agriCard:focus-visible {
+  outline: none;
+}
+
+.agriSection .agriCard,
+.citySection .agriCard {
+  background: #0c1218;
+  border-radius: var(--mission-card-radius, 0);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+}
+
+.agriSection:not(.citySection) .agriCard {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.citySection .agriCard {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.agriSection .agriCard:hover,
+.agriSection .agriCard:focus-visible,
+.citySection .agriCard:hover,
+.citySection .agriCard:focus-visible {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  transform: translateY(-2px);
+}
+
+.agriCard:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.44);
+  outline-offset: 4px;
+}
+
+.agriSection .agriCard:focus-visible,
+.citySection .agriCard:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.28);
+  outline-offset: 3px;
+}
+
+.agriCard .agriCardImageFrame,
+.agriCard .cityCardImageFrame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  height: 100%;
+  border-radius: var(--mission-card-radius, 0);
+}
+
+.missionCardImageStage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: var(--mission-card-radius, 0);
+}
+
+.missionCardImageStage :global(.mithron-responsive-image-frame) {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  border-radius: var(--mission-card-radius, 0);
+}
+
+.agriCardImage {
+  object-fit: cover;
+  object-position: var(--agri-object-position, 50% 42%);
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0, 0, 0) scale(var(--agri-image-scale, 1.02));
+  transform-origin: center center;
+  backface-visibility: hidden;
+  transition: transform 520ms var(--ease-cinematic);
+}
+
+.agriCardImageFrame {
+  background: #f8fcf9;
+  z-index: 0;
+  position: relative;
+}
+
+.agriCardImageFrame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.04) 0%, rgba(234, 179, 8, 0.03) 100%);
+  mix-blend-mode: soft-light;
+  opacity: 0.65;
+}
+
+.cityCardImageFrame {
+  background: #f7faff;
+  z-index: 0;
+  position: relative;
+}
+
+.cityCardImageFrame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(148, 163, 184, 0.03) 100%);
+  mix-blend-mode: soft-light;
+  opacity: 0.65;
+}
+
+.agriSection :global(.mithron-responsive-image-frame),
+.citySection :global(.mithron-responsive-image-frame) {
+  --mithron-image-blur: none;
+  background-color: transparent;
+}
+
+.agriSection .agriCardImage,
+.citySection .agriCardImage {
+  opacity: 1;
+  filter: none;
+}
+
+.agriSection .agriCard:hover .agriCardImage,
+.citySection .agriCard:hover .agriCardImage {
+  transform: translate3d(0, 0, 0) scale(calc(var(--agri-image-scale, var(--city-image-scale, 1.02)) * 1.012));
+}
+
+.citySection .agriCardImage {
+  transform: translate3d(0, 0, 0) scale(var(--city-image-scale, 1.02));
+  transform-origin: center center;
+}
+
+.missionWorldShowcaseStage {
+  position: relative;
+  isolation: isolate;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.missionWorldShowcaseAtmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background:
+    radial-gradient(ellipse 70% 56% at 30% 42%, rgba(15, 66, 108, 0.08) 0%, transparent 68%),
+    radial-gradient(ellipse 58% 50% at 68% 58%, rgba(52, 211, 153, 0.04) 0%, transparent 70%);
+  animation: none;
+  will-change: auto;
+}
+
+.citySection .missionWorldShowcaseAtmosphere {
+  background:
+    radial-gradient(ellipse 70% 56% at 30% 42%, rgba(15, 66, 108, 0.08) 0%, transparent 68%),
+    radial-gradient(ellipse 58% 50% at 68% 58%, rgba(30, 79, 255, 0.05) 0%, transparent 70%);
+}
+
+/* Per-card atmospheric lighting â€” soft organic blobs, high image visibility */
+.agriSection .agriCard,
+.citySection .agriCard {
+  --mission-asset-stage-height: 100%;
+  --mission-text-scrim-height: 30%;
+}
+
+.agriCardAmbient,
+.cityCardAmbient {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: var(--mission-card-radius, 0);
+}
+
+.agriCardAmbient::after,
+.cityCardAmbient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 65% 55% at var(--zone-4-x, 90%) var(--zone-4-y, 8%),
+      rgba(var(--zone-4-color), 0.1) 0%,
+      rgba(var(--zone-4-color), 0.03) 50%,
+      transparent 85%
+    );
+  filter: blur(54px);
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+}
+
+.agriCardAmbientLayer,
+.cityCardAmbientLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  opacity: 0.85;
+}
+
+.agriCardAmbientBeam,
+.cityCardAmbientBeam {
+  background:
+    radial-gradient(
+      ellipse 100% 80% at var(--zone-1-x, 52%) var(--zone-1-y, 40%),
+      rgba(var(--zone-1-color), 0.14) 0%,
+      rgba(var(--zone-1-color), 0.05) 45%,
+      transparent 80%
+    );
+  filter: blur(54px);
+  opacity: 0.14;
+}
+
+.agriCardAmbientWash,
+.cityCardAmbientWash {
+  background:
+    radial-gradient(
+      ellipse 90% 75% at var(--zone-2-x, 22%) var(--zone-2-y, 62%),
+      rgba(var(--zone-2-color), 0.12) 0%,
+      rgba(var(--zone-2-color), 0.04) 42%,
+      transparent 78%
+    );
+  filter: blur(54px);
+  opacity: 0.12;
+}
+
+.agriCardAmbientAccent,
+.cityCardAmbientAccent {
+  background:
+    radial-gradient(
+      ellipse 85% 70% at var(--zone-3-x, 74%) var(--zone-3-y, 42%),
+      rgba(var(--zone-3-color), 0.12) 0%,
+      rgba(var(--zone-3-color), 0.04) 45%,
+      transparent 80%
+    );
+  filter: blur(54px);
+  opacity: 0.12;
+}
+
+/* Localized readability scrim â€” soft atmospheric fade behind text only */
+.agriCardTextProtection,
+.cityCardTextProtection {
+  position: absolute;
+  left: -16px;
+  bottom: -12px;
+  right: -40px;
+  top: -24px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 90% at 0% 100%,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.05) 45%,
+    transparent 72%
+  );
+  filter: blur(6px);
+}
+
+.agriCard[data-scrim="cool"] .agriCardTextProtection,
+.citySection .agriCard[data-scrim="cool"] .cityCardTextProtection {
+  background: radial-gradient(
+    ellipse 120% 100% at 0% 100%,
+    rgba(248, 252, 255, 0.24) 0%,
+    rgba(248, 252, 255, 0.1) 40%,
+    transparent 70%
+  );
+}
+
+.agriCard[data-scrim="warm"] .agriCardTextProtection,
+.citySection .agriCard[data-scrim="warm"] .cityCardTextProtection {
+  background: radial-gradient(
+    ellipse 120% 100% at 0% 100%,
+    rgba(255, 251, 245, 0.22) 0%,
+    rgba(255, 251, 245, 0.08) 40%,
+    transparent 70%
+  );
+}
+
+/* Hero vs supporting hierarchy */
+.agriSection:not(.citySection) .agriCard_hero,
+.citySection .missionWorldSlotHero .agriCard {
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.07),
+    0 12px 28px rgba(0, 0, 0, 0.09);
+}
+
+.agriSection:not(.citySection) .agriCard_standard .agriCardAmbientLayer,
+.agriSection:not(.citySection) .agriCard_wide .agriCardAmbientLayer {
+  opacity: 0.72;
+}
+
+.citySection .agriCard_standard .cityCardAmbientLayer,
+.citySection .agriCard_wide .cityCardAmbientLayer {
+  opacity: 0.72;
+}
+
+.agriSection:not(.citySection) .agriCard_standard .agriCardAmbientBeam,
+.agriSection:not(.citySection) .agriCard_wide .agriCardAmbientBeam,
+.citySection .agriCard_standard .cityCardAmbientBeam,
+.citySection .agriCard_wide .cityCardAmbientBeam {
+  background:
+    radial-gradient(
+      ellipse 88% 66% at var(--zone-1-x, 52%) var(--zone-1-y, 40%),
+      rgba(var(--zone-1-color), 0.22) 0%,
+      rgba(var(--zone-1-color), 0.08) 42%,
+      transparent 78%
+    );
+}
+
+/* Hero â€” lighter emission so photos stay vivid */
+.agriCardAmbientDominant .agriCardAmbientBeam,
+.cityCardAmbientDominant .cityCardAmbientBeam {
+  opacity: 0.16;
+  filter: blur(46px);
+  background:
+    radial-gradient(
+      ellipse 96% 74% at var(--zone-1-x, 52%) var(--zone-1-y, 40%),
+      rgba(var(--zone-1-color), 0.16) 0%,
+      rgba(var(--zone-1-color), 0.06) 38%,
+      transparent 72%
+    );
+}
+
+.agriCardAmbientDominant .agriCardAmbientWash,
+.cityCardAmbientDominant .cityCardAmbientWash {
+  opacity: 0.14;
+  filter: blur(44px);
+}
+
+.agriCardAmbientDominant .agriCardAmbientAccent,
+.cityCardAmbientDominant .cityCardAmbientAccent {
+  opacity: 0.14;
+  filter: blur(40px);
+}
+
+.agriCardAmbientDominant::after,
+.cityCardAmbientDominant::after {
+  opacity: 0.1;
+  filter: blur(48px);
+}
+
+.agriSection:not(.citySection) .agriCard_tall .agriCardAmbientBeam,
+.citySection .agriCard_tall .cityCardAmbientBeam {
+  opacity: 0.28;
+}
+
+.agriCardCopy {
+  position: relative;
+  z-index: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  border: none;
+  backdrop-filter: none;
+}
+
+.agriCardCopy strong {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  font-family: var(--type-mission-heading);
+  font-size: clamp(1rem, 1.35vw, 1.32rem);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.agriCardCopy strong + span,
+.agriCardCopy strong + .missionTileBody {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: clamp(0.84rem, 1.05vw, 0.98rem);
+  font-weight: 440;
+  line-height: 1.48;
+  display: block;
+  overflow: visible;
+}
+
+/* Support row â€” white bottom fade, title-only black text */
+.missionWorldSupportGrid > .agriCard::after {
+  height: 50%;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(255, 255, 255, 0.9) 20%,
+    rgba(255, 255, 255, 0.65) 45%,
+    rgba(255, 255, 255, 0.22) 68%,
+    transparent 100%
+  );
+}
+
+.missionWorldSupportGrid > .agriCard .agriCardCopy strong {
+  color: #0f172a;
+  font-weight: 520;
+  letter-spacing: -0.015em;
+}
+
+.missionWorldSupportGrid > .agriCard .agriCardCopy strong + span,
+.agriCardCopy strong + .missionTileBody {
+  display: none;
+}
+
+.missionWorldSupportGrid > .agriCard .agriCardTextProtection,
+.missionWorldSupportGrid > .agriCard .cityCardTextProtection {
+  display: none;
+}
+
+.missionWorldSupportGrid > .agriCard .agriCardArrow {
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  border: 0.5px solid rgba(15, 23, 42, 0.14);
+}
+
+.missionWorldSupportGrid > .agriCard:hover .agriCardArrow {
+  background: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+  transform: scale(1.08);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glassPanel::before {
+    display: none;
+  }
+
+  .glassPanel {
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  .agriCardCopy.glassPanel {
+    background: rgba(255, 255, 255, 0.94);
+  }
+
+  .missionWorldTextHeader .agriIntroBody .glassPanel {
+    background: rgba(255, 255, 255, 0.28);
+    color: rgba(245, 245, 247, 0.94);
+  }
+}
+
+.agriCardArrow {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: 
+    background-color 260ms var(--ease-cinematic),
+    transform 260ms var(--ease-cinematic);
+}
+
+.agriSection .agriCardArrow {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 0.5px solid rgba(255, 255, 255, 0.22);
+  box-shadow: none;
+  transition:
+    background-color 260ms var(--ease-cinematic),
+    box-shadow 260ms var(--ease-cinematic),
+    transform 260ms var(--ease-cinematic);
+}
+
+.agriCard:hover .agriCardArrow {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(1.08);
+}
+
+.agriSection .agriCard:hover .agriCardArrow {
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: none;
+  transform: scale(1.08);
+}
+
+/* Card sizes â€” grid-driven, compact within viewport */
+.agriSection .agriCard_tall,
+.agriSection .agriCard_hero,
+.agriSection .agriCard_standard,
+.agriSection .agriCard_wide,
+.citySection .agriCard_tall,
+.citySection .agriCard_hero,
+.citySection .agriCard_standard,
+.citySection .agriCard_wide {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+}
+
+.agriSection .agriCard_tall {
+  flex: 1 1 auto;
+}
+
+/* Desktop: one-viewport mission worlds */
+@media (min-width: 1025px) {
+  .agriSection {
+    min-height: clamp(700px, 95svh, 110svh);
+    height: clamp(700px, 95svh, 110svh);
+  }
+
+  .agriSection .agriContainer {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .missionWorldShowcaseStage {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .missionWorldBento {
+    min-height: 0;
+  }
+
+  .agriSection .agriEyebrowRow {
+    margin-bottom: clamp(8px, 1vh, 12px);
+  }
+
+  .missionWorldSupportGrid .agriCard_standard .agriCardCopy,
+  .missionWorldSupportGrid .agriCard_wide .agriCardCopy {
+    max-width: min(100%, 48ch);
+  }
+}
+
+/* Medium desktop â€” 2-column split */
+@media (max-width: 1280px) and (min-width: 769px) {
+  .missionWorldTextHeader {
+    grid-column: 1 / 7;
+    grid-row: 1;
+  }
+
+  .missionWorldSlotTall {
+    grid-column: 1 / 7;
+    grid-row: 2 / 4;
+  }
+
+  .missionWorldSlotHero {
+    grid-column: 7 / 13;
+    grid-row: 1 / 3;
+  }
+
+  .missionWorldSupportGrid {
+    grid-column: 1 / 13;
+    grid-row: 4;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .missionWorldBento {
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) clamp(160px, 22vh, 220px);
+  }
+}
+
+/* City section â€” accent only (layout shared via missionWorldBento) */
+.citySection {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100svh;
+  --mission-card-glass-surface: linear-gradient(
+    135deg,
+    rgba(248, 252, 255, 0.8) 0%,
+    rgba(241, 248, 255, 0.44) 42%,
+    rgba(236, 242, 248, 0.3) 68%,
+    rgba(248, 252, 255, 0.54) 100%
+  );
+  --mission-card-glass-border: rgba(255, 255, 255, 0.62);
+}
+
+.missionWorldSupportGrid .agriCardCopy {
+  max-width: min(100%, 52ch);
+}
+
+.citySection .agriCardArrow {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 0.5px solid rgba(255, 255, 255, 0.22);
+  box-shadow: none;
+}
+
+.citySection .agriCard:hover .agriCardArrow {
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: none;
+  transform: scale(1.08);
+}
+
+.agriSection .missionWorldSupportGrid > .agriCard .agriCardArrow,
+.citySection .missionWorldSupportGrid > .agriCard .agriCardArrow {
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  border: 0.5px solid rgba(15, 23, 42, 0.14);
+  box-shadow: none;
+}
+
+.agriSection .missionWorldSupportGrid > .agriCard:hover .agriCardArrow,
+.citySection .missionWorldSupportGrid > .agriCard:hover .agriCardArrow {
+  background: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+  box-shadow: none;
+  transform: scale(1.08);
+}
+
+@media (min-width: 1481px) {
+  .missionWorldSupportGrid > .agriCard {
+    min-height: clamp(156px, 13vh, 196px);
+  }
+
+  .missionWorldSupportGrid .agriCardCopy {
+    max-width: min(100%, 48ch);
+  }
+}
+
+/* Tablet + mobile â€” shared mission-world bento */
+@media (max-width: 768px) {
+  .agriSection {
+    min-height: auto;
+    height: auto;
+    --mission-bento-gap: clamp(14px, 3vw, 20px);
+  }
+
+  .agriSection .agriContainer,
+  .missionWorldShowcaseStage {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .missionWorldBento {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: var(--mission-bento-gap);
+    height: auto;
+    flex: none;
+    min-height: 0;
+  }
+
+  .missionWorldTextHeader,
+  .missionWorldSlotTall,
+  .missionWorldSlotHero,
+  .missionWorldSupportGrid {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .missionWorldTextHeader {
+    align-self: start;
+    padding-bottom: 0;
+  }
+
+  .missionWorldSlotTall > .agriCard,
+  .missionWorldSlotHero > .agriCard {
+    min-height: clamp(240px, 52vw, 360px);
+    height: auto;
+    max-height: none;
+  }
+
+  .missionWorldSupportGrid {
+    grid-template-columns: 1fr;
+    gap: var(--mission-bento-gap);
+    align-items: stretch;
+    align-content: start;
+  }
+
+  .missionWorldSupportGrid > .agriCard {
+    aspect-ratio: 2 / 1;
+    min-height: clamp(140px, 32vw, 180px);
+    max-height: none;
+    align-self: stretch;
+  }
+
+  .agriSection .agriCard_tall,
+  .agriSection .agriCard_hero,
+  .agriSection .agriCard_standard,
+  .agriSection .agriCard_wide,
+  .citySection .agriCard_tall,
+  .citySection .agriCard_hero,
+  .citySection .agriCard_standard,
+  .citySection .agriCard_wide {
+    height: auto;
+    max-height: none;
+  }
+
+  .agriSection .agriHeadline {
+    font-size: clamp(1.7rem, 4.6vw, 2.5rem);
+    margin-bottom: 6px;
+    line-height: 1.05;
+  }
+
+  .agriIntroPlainText {
+    font-size: clamp(0.96rem, 2.75vw, 1.08rem);
+    line-height: 1.52;
+    width: 100%;
+    max-width: none;
+  }
+
+  .agriSection .agriEyebrowRow {
+    margin-bottom: 5px;
+  }
+
+  .missionWorldSupportGrid .agriCardCopy {
+    max-width: none;
+  }
+
+  .agriCardArrow {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 767px) {
+  .missionWorldSupportGrid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: var(--mobile-card-gap, 10px);
+    align-items: stretch;
+  }
+
+  .missionWorldSupportGrid > .agriCard {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 1;
+    min-height: clamp(140px, 32vw, 180px);
+    height: auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .missionWorldSupportGrid > .agriCard .missionCardImageStage {
+    position: absolute;
+    inset: 0;
+  }
+
+  .missionWorldSupportGrid > .agriCard .agriCardImage {
+    object-fit: cover;
+  }
+
+  .missionWorldSupportGrid > .agriCard .missionCardFloat {
+    padding: 8px 10px 10px;
+  }
+
+  .missionWorldSupportGrid > .agriCard .agriCardCopy {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .missionWorldSupportGrid > .agriCard .agriCardCopy strong {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    min-height: 0;
+    line-height: 1.12;
+  }
+
+  .missionWorldSupportGrid > .agriCard .missionCardCopyRow {
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .missionWorldSupportGrid > .agriCard .agriCardArrow,
+  .agriSection .missionWorldSupportGrid > .agriCard .agriCardArrow,
+  .citySection .missionWorldSupportGrid > .agriCard .agriCardArrow {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 8px;
+    box-sizing: content-box;
+    flex: 0 0 auto;
+  }
+
+  .missionWorldSlotTall > .agriCard,
+  .missionWorldSlotHero > .agriCard {
+    min-height: clamp(200px, 50vw, 280px);
+  }
+}
+
+@media (max-width: 480px) {
+  .agriSection {
+    --mission-bento-gap: 12px;
+  }
+
+  .missionWorldBento {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .agriSection {
+    --mission-section-padding-y: clamp(32px, 5vh, 48px);
+    padding: var(--mission-section-padding-y) 0;
+    min-height: auto;
+    height: auto;
+    --mission-bento-gap: clamp(16px, 4vw, 22px);
+    --mission-card-inset: 0;
+  }
+
+  .agriHeadline {
+    font-size: clamp(1.55rem, 6.8vw, 1.95rem);
+    line-height: 1.08;
+    letter-spacing: -0.028em;
+    margin-bottom: 4px;
+  }
+
+  .agriIntroPlainText {
+    width: 100%;
+    max-width: none;
+    color: rgba(245, 245, 247, 0.72);
+    font-size: clamp(0.92rem, 3.4vw, 1.04rem);
+    line-height: 1.48;
+  }
+
+  .agriFallbackNote {
+    display: none;
+  }
+
+  .missionCardFloat {
+    padding: 8px 10px 10px;
+    gap: 5px;
+  }
+
+  .agriCardCopy {
+    gap: 6px;
+  }
+
+  .agriCardArrow {
+    width: 26px;
+    height: 26px;
+  }
+
+  .agriCardCopy strong {
+    font-size: clamp(1.04rem, 4vw, 1.2rem);
+    line-height: 1.12;
+  }
+
+  .agriCardCopy strong + span,
+.agriCardCopy strong + .missionTileBody {
+    font-size: clamp(0.86rem, 3.2vw, 0.98rem);
+    line-height: 1.4;
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    -webkit-box-orient: unset;
+  }
+
+  .missionWorldSupportGrid > .agriCard .agriCardCopy strong + span,
+.agriCardCopy strong + .missionTileBody {
+    display: none;
+  }
+
+  .missionWorldSlotTall > .agriCard,
+  .missionWorldSlotHero > .agriCard {
+    min-height: clamp(200px, 50vw, 280px);
+  }
+
+  .missionWorldSupportGrid > .agriCard {
+    aspect-ratio: 2 / 1;
+    min-height: clamp(140px, 32vw, 180px);
+  }
+}
+
+/* Phone touch targets — scoped to composite-only shelf duplicates; shelf footers live in home-shelf-shared */
+
+@media (prefers-reduced-motion: reduce) {
+  .agriSection:not(.citySection)::before,
+  .citySection.agriSection::before {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+
+  .agriShowcaseAtmosphere,
+  .cityShowcaseAtmosphere,
+  .missionWorldShowcaseAtmosphere {
+    animation: none;
+    transform: none;
+    opacity: 1;
+    will-change: auto;
+  }
+
+  .agriCard,
+  .agriCardImage,
+  .agriCardArrow {
+    transition: none;
+  }
+  .agriCard:hover .agriCardImage,
+  .agriCard:hover .agriCardArrow,
+  .agriSection .agriCard:hover,
+  .agriSection .agriCard:focus-visible {
+    transform: none;
+  }
+}
+
+.aboutFooterWrap {
+  background: #0c0d10;
+}
+
+.aboutBand {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.aboutBandInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) auto;
+  gap: clamp(24px, 4vw, 48px);
+  align-items: end;
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding: clamp(56px, 7vh, 88px) clamp(24px, 4vw, 64px) clamp(40px, 5vh, 56px);
+}
+
+.aboutEyebrow {
+  margin: 0 0 10px;
+  color: rgba(255, 255, 255, 0.52);
+  font-family: var(--type-technical);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.aboutTitle {
+  margin: 0 0 14px;
+  color: #ffffff;
+  font-family: var(--type-display);
+  font-size: clamp(1.9rem, 3vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  max-width: 16ch;
+}
+
+.aboutBody {
+  margin: 0;
+  max-width: 56ch;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.aboutActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.aboutPrimaryAction,
+.aboutSecondaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 220ms var(--ease-system),
+    border-color 220ms var(--ease-system),
+    color 220ms var(--ease-system);
+}
+
+.aboutPrimaryAction {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.aboutPrimaryAction:hover,
+.aboutPrimaryAction:focus-visible {
+  background: #f1f5f9;
+  outline: none;
+}
+
+.aboutSecondaryAction {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.aboutSecondaryAction:hover,
+.aboutSecondaryAction:focus-visible {
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #ffffff;
+  outline: none;
+}
+
+.aboutFooterWrap .site-footer {
+  background: transparent;
+}
+
+@media (max-width: 980px) {
+  .aboutBandInner {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .aboutActions {
+    justify-content: flex-start;
+  }
+}

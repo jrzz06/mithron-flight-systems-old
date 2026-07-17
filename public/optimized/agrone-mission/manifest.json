@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-16T16:44:38.329Z",
+  "assets": [
+    {
+      "assetId": "agrone-mission-agrone-drone-owner-registration",
+      "bucket": "mithron-story",
+      "assetRole": "story",
+      "category": "agrone-mission",
+      "generatedPromptId": "local.agrone-mission.agrone-drone-owner-registration",
+      "status": "generated",
+      "fallbackSrc": "/media/mithron/mission/agrone/agrone-drone-owner-registration.png",
+      "fallbackAlt": "AGRONE drone owner registration",
+      "width": 1024,
+      "height": 576,
+      "sourceSizeKb": 66.58,
+      "blurDataUrl": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAADQAwCdASocABAAPwFqrU8rJaQiMAgBYCAJaQAAXBujekEPUfUvTDAA/u/DYAZaIaYhSMxp+wlhrCFpjpujQru77jGMnqZ119IYKdFwwjVVoRKOG0WkDhZvgr3gmMPIAAA=",
+      "dominantColor": "#f8f8f8",
+      "variants": {
+        "webp": [
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agrone-drone-owner-registration/480.webp",
+            "storagePath": "optimized/agrone-mission/agrone-drone-owner-registration/480.webp",
+            "optimizedSizeKb": 19.63
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agrone-drone-owner-registration/768.webp",
+            "storagePath": "optimized/agrone-mission/agrone-drone-owner-registration/768.webp",
+            "optimizedSizeKb": 40.78
+          },
+          {
+            "width": 1024,
+            "height": 576,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agrone-drone-owner-registration/1024.webp",
+            "storagePath": "optimized/agrone-mission/agrone-drone-owner-registration/1024.webp",
+            "optimizedSizeKb": 64.08
+          }
+        ]
+      }
+    },
+    {
+      "assetId": "agrone-mission-agrone-pilot-registration",
+      "bucket": "mithron-story",
+      "assetRole": "story",
+      "category": "agrone-mission",
+      "generatedPromptId": "local.agrone-mission.agrone-pilot-registration",
+      "status": "generated",
+      "fallbackSrc": "/media/mithron/mission/agrone/agrone-pilot-registration.png",
+      "fallbackAlt": "AGRONE pilot registration",
+      "width": 1024,
+      "height": 576,
+      "sourceSizeKb": 103.58,
+      "blurDataUrl": "data:image/webp;base64,UklGRp4AAABXRUJQVlA4IJIAAABQBACdASocABAAPwFqrU8rJiQiMAgBYCAJZwAATv9yPaV7IJCazrV11DSMAP7tYPdqC0isnHn+9AqdsWjB9ZtsWtZsB7wlqS5ZB6yqmDUcrDBz1dnFC2CrnUy2W6uMQ8+KhkzIQnQQmfo8rmAjIty/0UnG/rJyHy3Ua3wvfU8EVhadKQ4wXPIrlTIpLC3/U4HAAA==",
+      "dominantColor": "#f8f8f8",
+      "variants": {
+        "webp": [
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agrone-pilot-registration/480.webp",
+            "storagePath": "optimized/agrone-mission/agrone-pilot-registration/480.webp",
+            "optimizedSizeKb": 34.34
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agrone-pilot-registration/768.webp",
+            "storagePath": "optimized/agrone-mission/agrone-pilot-registration/768.webp",
+            "optimizedSizeKb": 72.34
+          },
+          {
+            "width": 1024,
+            "height": 576,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agrone-pilot-registration/1024.webp",
+            "storagePath": "optimized/agrone-mission/agrone-pilot-registration/1024.webp",
+            "optimizedSizeKb": 111.95
+          }
+        ]
+      }
+    },
+    {
+      "assetId": "agrone-mission-all-india-drone-farmer",
+      "bucket": "mithron-story",
+      "assetRole": "story",
+      "category": "agrone-mission",
+      "generatedPromptId": "local.agrone-mission.all-india-drone-farmer",
+      "status": "generated",
+      "fallbackSrc": "/media/mithron/mission/agrone/all-india-drone-farmer.png",
+      "fallbackAlt": "All India farmer drone booking",
+      "width": 1024,
+      "height": 576,
+      "sourceSizeKb": 82.93,
+      "blurDataUrl": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAABQBACdASocABAAPwFsrU8rJiQiMAgBYCAJaQAD5DoLyKEulWsL+78QZiuYAP7vwtsM1IHBTniKK4T5V68fvnUr5m/mQLB+5WIJ1HUkRwx0QOWUoDgZwjMmlF6w4YS0d7NN0H925i0QbmNWrxPyEQ5pMAAAAA==",
+      "dominantColor": "#f8f8f8",
+      "variants": {
+        "webp": [
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/all-india-drone-farmer/480.webp",
+            "storagePath": "optimized/agrone-mission/all-india-drone-farmer/480.webp",
+            "optimizedSizeKb": 25.71
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/all-india-drone-farmer/768.webp",
+            "storagePath": "optimized/agrone-mission/all-india-drone-farmer/768.webp",
+            "optimizedSizeKb": 53.21
+          },
+          {
+            "width": 1024,
+            "height": 576,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/all-india-drone-farmer/1024.webp",
+            "storagePath": "optimized/agrone-mission/all-india-drone-farmer/1024.webp",
+            "optimizedSizeKb": 84.23
+          }
+        ]
+      }
+    },
+    {
+      "assetId": "agrone-mission-smart-farmer-register",
+      "bucket": "mithron-story",
+      "assetRole": "story",
+      "category": "agrone-mission",
+      "generatedPromptId": "local.agrone-mission.smart-farmer-register",
+      "status": "generated",
+      "fallbackSrc": "/media/mithron/mission/agrone/smart-farmer-register.png",
+      "fallbackAlt": "Smart farmer registration",
+      "width": 1024,
+      "height": 576,
+      "sourceSizeKb": 94.11,
+      "blurDataUrl": "data:image/webp;base64,UklGRqYAAABXRUJQVlA4IJoAAAAwBACdASocABAALsWAwGAjqysrCwDESxgAHzJg4Eq2/3+8inP9UFj8cgAA/vYQkR8aZLmDUysQz/whJjFxn31aIR5Kbmy68Fhb57757Y0j+zWcdZiXg9uoZ56O4/39KZQ3ni4Kfv3R4IRqlY+SDyXBjf8AyQNITA/vkfxeIBI5zdRLcQfrMlDg7GuI/hf9i8TVjJXPuCQHgAAA",
+      "dominantColor": "#f8f8f8",
+      "variants": {
+        "webp": [
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/smart-farmer-register/480.webp",
+            "storagePath": "optimized/agrone-mission/smart-farmer-register/480.webp",
+            "optimizedSizeKb": 28.6
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/smart-farmer-register/768.webp",
+            "storagePath": "optimized/agrone-mission/smart-farmer-register/768.webp",
+            "optimizedSizeKb": 61.61
+          },
+          {
+            "width": 1024,
+            "height": 576,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/smart-farmer-register/1024.webp",
+            "storagePath": "optimized/agrone-mission/smart-farmer-register/1024.webp",
+            "optimizedSizeKb": 99.06
+          }
+        ]
+      }
+    },
+    {
+      "assetId": "agrone-mission-agri-drone-loan",
+      "bucket": "mithron-story",
+      "assetRole": "story",
+      "category": "agrone-mission",
+      "generatedPromptId": "local.agrone-mission.agri-drone-loan",
+      "status": "generated",
+      "fallbackSrc": "/media/mithron/mission/agrone/agri-drone-loan.png",
+      "fallbackAlt": "Agri drone loan and EMI check",
+      "width": 1024,
+      "height": 576,
+      "sourceSizeKb": 68.24,
+      "blurDataUrl": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAACwAwCdASocABAAPwF8sVErKKSisAgBYCAJZwAAW+sXikEivpxQAAD+6mfKMbDRwvF5SbEMRoHSk71Kx4wHtYcton+gy85qgu+BybbejcM1HTIJdZDkqoUdAV/4ZKmojDvCjFyAAAA=",
+      "dominantColor": "#e8e8e8",
+      "variants": {
+        "webp": [
+          {
+            "width": 480,
+            "height": 270,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agri-drone-loan/480.webp",
+            "storagePath": "optimized/agrone-mission/agri-drone-loan/480.webp",
+            "optimizedSizeKb": 21.44
+          },
+          {
+            "width": 768,
+            "height": 432,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agri-drone-loan/768.webp",
+            "storagePath": "optimized/agrone-mission/agri-drone-loan/768.webp",
+            "optimizedSizeKb": 44.45
+          },
+          {
+            "width": 1024,
+            "height": 576,
+            "format": "webp",
+            "src": "/optimized/agrone-mission/agri-drone-loan/1024.webp",
+            "storagePath": "optimized/agrone-mission/agri-drone-loan/1024.webp",
+            "optimizedSizeKb": 69.19
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,2167 @@
+{
+  "generatedAt": "2026-07-11T15:09:46.458Z",
+  "summary": {
+    "unusedFiles": 26,
+    "unusedExports": 118,
+    "unusedDependencies": 0,
+    "unusedDevDependencies": 0,
+    "safeCandidates": 43,
+    "reviewQueue": 100,
+    "runtimeOrGated": 0,
+    "testReferencedUnusedFiles": 5
+  },
+  "routeMap": {
+    "pages": [
+      "app/(storefront)/about/page.tsx",
+      "app/(storefront)/account/addresses/page.tsx",
+      "app/(storefront)/account/enquiries/[id]/page.tsx",
+      "app/(storefront)/account/enquiries/page.tsx",
+      "app/(storefront)/account/orders/[id]/invoice/page.tsx",
+      "app/(storefront)/account/orders/[id]/page.tsx",
+      "app/(storefront)/account/orders/page.tsx",
+      "app/(storefront)/account/page.tsx",
+      "app/(storefront)/account/profile/page.tsx",
+      "app/(storefront)/account/security/page.tsx",
+      "app/(storefront)/blog/[slug]/page.tsx",
+      "app/(storefront)/blog/page.tsx",
+      "app/(storefront)/cancellation-policy/page.tsx",
+      "app/(storefront)/cart/page.tsx",
+      "app/(storefront)/category/[slug]/page.tsx",
+      "app/(storefront)/checkout/page.tsx",
+      "app/(storefront)/checkout/success/page.tsx",
+      "app/(storefront)/contact/page.tsx",
+      "app/(storefront)/interest/[slug]/page.tsx",
+      "app/(storefront)/page.tsx",
+      "app/(storefront)/privacy-policy/page.tsx",
+      "app/(storefront)/product/[slug]/page.tsx",
+      "app/(storefront)/product/mithron-care-plus/page.tsx",
+      "app/(storefront)/products/page.tsx",
+      "app/(storefront)/refund-policy/page.tsx",
+      "app/(storefront)/search/page.tsx",
+      "app/(storefront)/shipping-policy/page.tsx",
+      "app/(storefront)/terms-and-conditions/page.tsx",
+      "app/(storefront)/track-order/page.tsx",
+      "app/admin/archives/page.tsx",
+      "app/admin/audit/page.tsx",
+      "app/admin/blog/page.tsx",
+      "app/admin/cms/[sectionId]/page.tsx",
+      "app/admin/cms/page.tsx",
+      "app/admin/contact-requests/page.tsx",
+      "app/admin/enquiries/page.tsx",
+      "app/admin/inventory/page.tsx",
+      "app/admin/orders/invoice/[orderId]/page.tsx",
+      "app/admin/orders/page.tsx",
+      "app/admin/page.tsx",
+      "app/admin/press/page.tsx",
+      "app/admin/products/page.tsx",
+      "app/admin/reviews/page.tsx",
+      "app/admin/settings/page.tsx",
+      "app/admin/suppliers/page.tsx",
+      "app/admin/suppliers/products/page.tsx",
+      "app/admin/users/page.tsx",
+      "app/admin/warehouses/page.tsx",
+      "app/forbidden/page.tsx",
+      "app/forgot-password/page.tsx",
+      "app/invite/[token]/page.tsx",
+      "app/login/page.tsx",
+      "app/onboarding/page.tsx",
+      "app/operations/deployments/page.tsx",
+      "app/operations/notifications/page.tsx",
+      "app/operations/orders/page.tsx",
+      "app/operations/page.tsx",
+      "app/operations/requests/page.tsx",
+      "app/operations/tasks/page.tsx",
+      "app/reset-password/page.tsx",
+      "app/signup/page.tsx",
+      "app/supplier/inventory/page.tsx",
+      "app/supplier/page.tsx",
+      "app/supplier/products/[slug]/edit/page.tsx",
+      "app/supplier/products/new/page.tsx",
+      "app/supplier/products/page.tsx",
+      "app/supplier/submissions/page.tsx",
+      "app/warehouse/activity/page.tsx",
+      "app/warehouse/allocate/page.tsx",
+      "app/warehouse/dashboard/page.tsx",
+      "app/warehouse/fulfillment/[id]/page.tsx",
+      "app/warehouse/fulfillment/[id]/products/[itemId]/page.tsx",
+      "app/warehouse/fulfillment/page.tsx",
+      "app/warehouse/orders/[id]/page.tsx",
+      "app/warehouse/orders/page.tsx",
+      "app/warehouse/page.tsx",
+      "app/warehouse/transfers/page.tsx"
+    ],
+    "apiRoutes": [
+      "app/admin/archives/export/[entity]/[month]/route.ts",
+      "app/admin/archives/export/all/[entity]/route.ts",
+      "app/admin/inventory/export/route.ts",
+      "app/admin/orders/export/route.ts",
+      "app/api/account/addresses/route.ts",
+      "app/api/account/cart/items/route.ts",
+      "app/api/account/cart/route.ts",
+      "app/api/account/reviews/route.ts",
+      "app/api/admin/archive-movements/route.ts",
+      "app/api/admin/archive-operational-data/route.ts",
+      "app/api/admin/catalog/products/route.ts",
+      "app/api/admin/customers/lookup/route.ts",
+      "app/api/admin/nav-metrics/route.ts",
+      "app/api/admin/orders/[orderId]/enrichment/route.ts",
+      "app/api/admin/prune-logs/route.ts",
+      "app/api/ai/assistant/route.ts",
+      "app/api/auth/audit/route.ts",
+      "app/api/auth/change-email/route.ts",
+      "app/api/auth/forgot-password/route.ts",
+      "app/api/auth/hooks/send-email/route.ts",
+      "app/api/auth/login/route.ts",
+      "app/api/auth/resend-verification/route.ts",
+      "app/api/auth/send-otp/route.ts",
+      "app/api/auth/signup/route.ts",
+      "app/api/auth/verify-otp/route.ts",
+      "app/api/cart/pricing/route.ts",
+      "app/api/catalog/search/route.ts",
+      "app/api/checkout/enquiry/route.ts",
+      "app/api/checkout/route.ts",
+      "app/api/checkout/status/route.ts",
+      "app/api/checkout/success/route.ts",
+      "app/api/client-verification/route.ts",
+      "app/api/contact-requests/route.ts",
+      "app/api/csp-report/route.ts",
+      "app/api/dev/load-test/route.ts",
+      "app/api/editor/ai/route.ts",
+      "app/api/editor/upload-image/route.ts",
+      "app/api/health/route.ts",
+      "app/api/invoices/[orderId]/route.ts",
+      "app/api/notifications/dispatch/route.ts",
+      "app/api/notifications/route.ts",
+      "app/api/orders/track/route.ts",
+      "app/api/payments/expire-pending/route.ts",
+      "app/api/payments/providers/route.ts",
+      "app/api/payments/verify/route.ts",
+      "app/api/payments/webhooks/[provider]/route.ts",
+      "app/api/products/[slug]/reviews/[reviewId]/helpful/route.ts",
+      "app/api/products/[slug]/reviews/route.ts",
+      "app/api/products/enquiry/route.ts",
+      "app/api/products/summary/route.ts",
+      "app/api/security/denials/route.ts",
+      "app/api/upload/route.ts",
+      "app/auth/callback/route.ts",
+      "app/auth/confirm/route.ts",
+      "app/auth/logout/route.ts",
+      "app/logout/route.ts"
+    ]
+  },
+  "knip": {
+    "files": [
+      {
+        "path": "components/admin/cms/use-catalog-products.ts",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/admin/enterprise-realtime-panel.tsx",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": true
+      },
+      {
+        "path": "components/overlays/cart-drawer-loading.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/overlays/mini-cart-popover.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/platform/page-header.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/press/press-editorial-card.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/supplier/supplier-frame.tsx",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": true
+      },
+      {
+        "path": "components/ui/badge.tsx",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": true
+      },
+      {
+        "path": "components/warehouse/start-picking-button.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-barcode-scanner.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-configuration-form.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-frame.tsx",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": true
+      },
+      {
+        "path": "components/warehouse/warehouse-inventory-adjustment-panel.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-inventory-manager.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-order-detail.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-packing-order-card.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-picking-barcode-panel.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-picking-table.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "components/warehouse/warehouse-station-settings-form.tsx",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "features/admin/cms/cms-workspace-shell.tsx",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": false
+      },
+      {
+        "path": "features/admin/cms/homepage-builder-shell.tsx",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": false
+      },
+      {
+        "path": "features/admin/cms/use-cms-section-editor.ts",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": false
+      },
+      {
+        "path": "lib/auth/session-claims.ts",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "lib/gemini.ts",
+        "kind": "unused_file",
+        "tag": "SAFE",
+        "testReferenced": false
+      },
+      {
+        "path": "scripts/migrate-shelf-slugs.ts",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": false
+      },
+      {
+        "path": "sections/product/product-media-viewer.tsx",
+        "kind": "unused_file",
+        "tag": "REVIEW",
+        "testReferenced": true
+      }
+    ],
+    "exports": [
+      {
+        "path": "lib/product-migration/field-audit.ts",
+        "symbol": "TRACKED_FIELDS",
+        "line": 530,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/observability.ts",
+        "symbol": "getObservabilityQueueSnapshot",
+        "line": 198,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/structured-data.ts",
+        "symbol": "buildSearchResultsItemListJsonLd",
+        "line": 174,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/catalog.ts",
+        "symbol": "getProductShellItems",
+        "line": 1006,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/catalog.ts",
+        "symbol": "getRelatedProductShellItems",
+        "line": 1149,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/catalog.ts",
+        "symbol": "getDroneWorldProducts",
+        "line": 2022,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/catalog.ts",
+        "symbol": "getDroneCareProducts",
+        "line": 2026,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/catalog.ts",
+        "symbol": "getProductsByCategory",
+        "line": 2047,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/catalog.ts",
+        "symbol": "searchProducts",
+        "line": 2061,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/catalog.ts",
+        "symbol": "getRelatedProducts",
+        "line": 2179,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin.ts",
+        "symbol": "getAdminSettingsSnapshot",
+        "line": 1064,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "components/admin/orders/order-view-helpers.ts",
+        "symbol": "LIFECYCLE_STATES",
+        "line": 31,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/rate-limit-redis.ts",
+        "symbol": "safeCheckDistributedRateLimit",
+        "line": 179,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/ai/provider-pool.ts",
+        "symbol": "isGroqKeyRetryableStatus",
+        "line": 23,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "config/assets.ts",
+        "symbol": "assetHosts",
+        "line": 3,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin-actions.ts",
+        "symbol": "createHeroBannerDraft",
+        "line": 1005,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin-actions.ts",
+        "symbol": "deleteProductRecordSafely",
+        "line": 1217,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin-actions.ts",
+        "symbol": "adjustWarehouseStock",
+        "line": 1242,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin-actions.ts",
+        "symbol": "createDeploymentTask",
+        "line": 1246,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin-actions.ts",
+        "symbol": "upsertWarehouseStockRecord",
+        "line": 1268,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin-actions.ts",
+        "symbol": "createCustomerCheckoutOrderItemRecord",
+        "line": 1314,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/admin-actions.ts",
+        "symbol": "ProductDeleteOutcome",
+        "line": 1047,
+        "kind": "unused_type",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "store/buy-now-session.ts",
+        "symbol": "useBuyNowActive",
+        "line": 166,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "store/cart.ts",
+        "symbol": "useCartItems",
+        "line": 537,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/checkout-stock.ts",
+        "symbol": "orderHasCheckoutReservations",
+        "line": 122,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/cms.ts",
+        "symbol": "getProductReviewsCmsSlice",
+        "line": 890,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/cms-admin-forms.ts",
+        "symbol": "HERO_MEDIA_FIELD_NAMES",
+        "line": 7,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/homepage-cms.ts",
+        "symbol": "mergeHomepageCmsContentForAdmin",
+        "line": 63,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/utils.ts",
+        "symbol": "STORE_CURRENCY_CODE",
+        "line": 19,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/utils.ts",
+        "symbol": "clamp",
+        "line": 21,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/customer-product-reviews.ts",
+        "symbol": "updateCustomerReviewByOwner",
+        "line": 241,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/customer-product-reviews.ts",
+        "symbol": "deleteCustomerReviewByOwner",
+        "line": 288,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/data-archive.ts",
+        "symbol": "resolveArchiveRetentionDays",
+        "line": 77,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/demo-access-accounts.ts",
+        "symbol": "findDemoAccessAccountByRole",
+        "line": 64,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/enquiries.ts",
+        "symbol": "archiveEnquiry",
+        "line": 1052,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/enquiries.ts",
+        "symbol": "rejectEnquiry",
+        "line": 1071,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/enquiries.ts",
+        "symbol": "restoreEnquiry",
+        "line": 1091,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/enquiries.ts",
+        "symbol": "convertEnquiryToOrder",
+        "line": 1650,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "config/homepage-section-registry.ts",
+        "symbol": "sectionUsesProductPicker",
+        "line": 311,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/admin/conflict-handling.ts",
+        "symbol": "RECORD_CONFLICT_RELOAD_HINT",
+        "line": 1,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/simple-inventory-view.ts",
+        "symbol": "readAdminText",
+        "line": 81,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/simple-inventory-view.ts",
+        "symbol": "readAdminNumber",
+        "line": 85,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/simple-inventory-view.ts",
+        "symbol": "buildWarehouseInventoryRows",
+        "line": 140,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/enterprise-admin-forms.ts",
+        "symbol": "normalizeTimelineEventNote",
+        "line": 607,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/enterprise-admin-forms.ts",
+        "symbol": "isOrderFulfillmentStateDone",
+        "line": 615,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/enterprise-admin-forms.ts",
+        "symbol": "clampNonNegativeInteger",
+        "line": 620,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/enterprise-admin-forms.ts",
+        "symbol": "parseBooleanFlag",
+        "line": 625,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "config/generated-assets.ts",
+        "symbol": "responsiveVariantWidths",
+        "line": 23,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "config/generated-assets.ts",
+        "symbol": "hasMithronSourceHost",
+        "line": 136,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "config/generated-assets.ts",
+        "symbol": "withResponsiveMediaAsset",
+        "line": 148,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/product-admin-forms.ts",
+        "symbol": "PRODUCT_MEDIA_FIELD_NAMES",
+        "line": 11,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/product-admin-forms.ts",
+        "symbol": "applyProductDescriptionSaveNormalization",
+        "line": 560,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/api/product-enquiry-schema.ts",
+        "symbol": "formatProductEnquiryAddress",
+        "line": 194,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/product-inventory-workflow.ts",
+        "symbol": "syncProductInventoryWorkflow",
+        "line": 203,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/product-image-upload.ts",
+        "symbol": "uploadProductImageForDraft",
+        "line": 346,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/search-query.ts",
+        "symbol": "buildProductSearchHaystack",
+        "line": 69,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/search-query.ts",
+        "symbol": "scoreSearchMatch",
+        "line": 76,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/warehouse-movements.ts",
+        "symbol": "fetchOrderItemsByOrderId",
+        "line": 214,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/warehouse-packing.ts",
+        "symbol": "buildPackingSlipLines",
+        "line": 110,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/warehouse-station-config.ts",
+        "symbol": "WAREHOUSE_STATION_CONFIG_STORAGE_KEY",
+        "line": 10,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/warehouse-station-config.ts",
+        "symbol": "serializeWarehouseStationConfig",
+        "line": 52,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "config/storefront-content.ts",
+        "symbol": "homeShelves",
+        "line": 71,
+        "kind": "unused_export",
+        "tag": "GATED"
+      },
+      {
+        "path": "services/auth.ts",
+        "symbol": "getCurrentCmsRole",
+        "line": 50,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "services/auth.ts",
+        "symbol": "requireActiveSession",
+        "line": 119,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "components/admin/module-panel.tsx",
+        "symbol": "OperationalStateStrip",
+        "line": 159,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "components/admin/module-panel.tsx",
+        "symbol": "OperationalRecordGrid",
+        "line": 193,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "config/cms-workspace.ts",
+        "symbol": "getCmsWorkspacePageDefinition",
+        "line": 128,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "config/cms-workspace.ts",
+        "symbol": "CmsWorkspacePageId",
+        "line": 126,
+        "kind": "unused_type",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/contact-requests/actions.ts",
+        "symbol": "linkContactRequestToOrderFormAction",
+        "line": 139,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/enquiries/actions.ts",
+        "symbol": "assignEnquiryFormAction",
+        "line": 166,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "saveWarehouseInventoryFormAction",
+        "line": 496,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "saveSimpleInventoryFormAction",
+        "line": 511,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "deleteInventoryProductFormAction",
+        "line": 799,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "duplicateInventoryProductFormAction",
+        "line": 818,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "completeWarehousePackingFormAction",
+        "line": 1039,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "saveWarehouseConfigurationFormAction",
+        "line": 1103,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "receiveWarehouseOrderFormAction",
+        "line": 1240,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/warehouse/actions.ts",
+        "symbol": "advanceWarehouseOrderStepFormAction",
+        "line": 1286,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/settings/actions.ts",
+        "symbol": "saveAdminSettingsFormAction",
+        "line": 210,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/settings/actions.ts",
+        "symbol": "removeManagedUserRoleAction",
+        "line": 1009,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/warehouse/operational-labels.ts",
+        "symbol": "shipmentStatusLabel",
+        "line": 47,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/warehouse/order-helpers.ts",
+        "symbol": "progressStepIndex",
+        "line": 106,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/warehouse-scope.ts",
+        "symbol": "filterInventoryForWarehouseScope",
+        "line": 112,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/warehouse-scope.ts",
+        "symbol": "filterShipmentsForWarehouseScope",
+        "line": 119,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/category-options.ts",
+        "symbol": "getSupplierCategoryOptions",
+        "line": 16,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "components/admin/operational-action-panel.tsx",
+        "symbol": "OperationalTextField",
+        "line": 102,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/gemini-client.ts",
+        "symbol": "generateGeminiImage",
+        "line": 101,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/payments/config.ts",
+        "symbol": "isPaymentGatewayProductionReady",
+        "line": 70,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/glass-ui.ts",
+        "symbol": "glassPillClassName",
+        "line": 15,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/ui/shell-routes.ts",
+        "symbol": "shouldUseNativeScroll",
+        "line": 32,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "components/admin/orders/order-layout-utils.ts",
+        "symbol": "orderScrollX",
+        "line": 11,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/service-result.ts",
+        "symbol": "isServiceUnavailable",
+        "line": 9,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "services/order-workflow.ts",
+        "symbol": "appendOrderTimelineEntryWorkflow",
+        "line": 536,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "components/platform/data-table.tsx",
+        "symbol": "DataTable",
+        "line": 14,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/cart/cart-actions.ts",
+        "symbol": "isCartMutationPending",
+        "line": 85,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "saveHomepageShelfFormAction",
+        "line": 297,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "saveHomepageFooterLeadFormAction",
+        "line": 489,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "saveHeroBannerDraftAction",
+        "line": 515,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "publishHeroBannerAction",
+        "line": 525,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "archiveHeroBannerAction",
+        "line": 535,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "saveCmsWorkflowDraftAction",
+        "line": 545,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "publishCmsWorkflowRecordAction",
+        "line": 555,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "archiveCmsWorkflowRecordAction",
+        "line": 565,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "saveCmsPageDraftFormAction",
+        "line": 597,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "saveCmsSectionDraftFormAction",
+        "line": 607,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "recordContentRevisionFormAction",
+        "line": 617,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "archiveHeroBannerFormAction",
+        "line": 813,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "publishHomepageV2FormAction",
+        "line": 1026,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "duplicateCmsHomepageSectionFormAction",
+        "line": 1196,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "app/admin/cms/actions.ts",
+        "symbol": "reorderCmsHomepageSectionsFormAction",
+        "line": 1230,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "components/navigation/nav-anchor-context.tsx",
+        "symbol": "useNavAnchorRef",
+        "line": 17,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "features/admin/cms/homepage-builder-context.tsx",
+        "symbol": "useHomepageBuilder",
+        "line": 109,
+        "kind": "unused_export",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/search-recent.ts",
+        "symbol": "clearRecentSearches",
+        "line": 42,
+        "kind": "unused_export",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/assistant/guards.ts",
+        "symbol": "RefusalReason",
+        "line": 61,
+        "kind": "unused_type",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/assistant/rate-limit.ts",
+        "symbol": "AssistantRateLimitResult",
+        "line": 3,
+        "kind": "unused_type",
+        "tag": "SAFE"
+      },
+      {
+        "path": "config/types.ts",
+        "symbol": "MotionPreset",
+        "line": 63,
+        "kind": "unused_type",
+        "tag": "REVIEW"
+      },
+      {
+        "path": "lib/ai/openai-compatible.ts",
+        "symbol": "ChatMessage",
+        "line": 7,
+        "kind": "unused_type",
+        "tag": "SAFE"
+      },
+      {
+        "path": "lib/catalog-search-popular.ts",
+        "symbol": "PopularSearchQuery",
+        "line": 14,
+        "kind": "unused_type",
+        "tag": "SAFE"
+      }
+    ]
+  },
+  "depcheck": {
+    "unusedDependencies": [],
+    "unusedDevDependencies": [],
+    "falsePositives": [
+      {
+        "name": "@tailwindcss/postcss",
+        "reason": "Used via config/CLI; depcheck false positive"
+      },
+      {
+        "name": "supabase",
+        "reason": "Used via config/CLI; depcheck false positive"
+      },
+      {
+        "name": "tailwindcss",
+        "reason": "Used via config/CLI; depcheck false positive"
+      }
+    ],
+    "missing": {
+      "@next/env": [
+        "D:\\mithuuu\\mithuuu\\tools\\audit-rbac-edge-probes.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\backfill-canonical-media.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\backfill-inventory-rows.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\backfill-product-primary-media.ts",
+        "D:\\mithuuu\\mithuuu\\tools\\ingest-external-product-media.ts",
+        "D:\\mithuuu\\mithuuu\\tools\\regenerate-editorial-manifest.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\repair-checkout-warehouse-stock.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\rewire-product-images-to-supabase.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\seed-operational-readiness-data.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\validate-audit-traceability.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\validate-business-workflows.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\validate-inventory-integrity.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\validate-security-boundaries.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\verify-auth-rbac-workflows.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\verify-authenticated-warehouse-session.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\verify-enterprise-remote-workflows.mjs"
+      ],
+      "playwright": [
+        "D:\\mithuuu\\mithuuu\\tools\\audit-rbac-edge-probes.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\collect-image-metrics.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\responsive-audit-probe.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\validate-audit-traceability.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\validate-business-workflows.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\validate-security-boundaries.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\verify-auth-rbac-workflows.mjs",
+        "D:\\mithuuu\\mithuuu\\tools\\verify-authenticated-warehouse-session.mjs"
+      ]
+    }
+  },
+  "safeCandidates": [
+    {
+      "path": "components/admin/cms/use-catalog-products.ts",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/overlays/cart-drawer-loading.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/overlays/mini-cart-popover.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/platform/page-header.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/press/press-editorial-card.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/start-picking-button.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-barcode-scanner.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-configuration-form.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-inventory-adjustment-panel.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-inventory-manager.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-order-detail.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-packing-order-card.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-picking-barcode-panel.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-picking-table.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "components/warehouse/warehouse-station-settings-form.tsx",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "lib/auth/session-claims.ts",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "lib/gemini.ts",
+      "kind": "unused_file",
+      "tag": "SAFE",
+      "testReferenced": false
+    },
+    {
+      "path": "lib/product-migration/field-audit.ts",
+      "symbol": "TRACKED_FIELDS",
+      "line": 530,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/rate-limit-redis.ts",
+      "symbol": "safeCheckDistributedRateLimit",
+      "line": 179,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/ai/provider-pool.ts",
+      "symbol": "isGroqKeyRetryableStatus",
+      "line": 23,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "services/demo-access-accounts.ts",
+      "symbol": "findDemoAccessAccountByRole",
+      "line": 64,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/admin/conflict-handling.ts",
+      "symbol": "RECORD_CONFLICT_RELOAD_HINT",
+      "line": 1,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/api/product-enquiry-schema.ts",
+      "symbol": "formatProductEnquiryAddress",
+      "line": 194,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/search-query.ts",
+      "symbol": "buildProductSearchHaystack",
+      "line": 69,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/search-query.ts",
+      "symbol": "scoreSearchMatch",
+      "line": 76,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "services/warehouse-packing.ts",
+      "symbol": "buildPackingSlipLines",
+      "line": 110,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "services/warehouse-station-config.ts",
+      "symbol": "WAREHOUSE_STATION_CONFIG_STORAGE_KEY",
+      "line": 10,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "services/warehouse-station-config.ts",
+      "symbol": "serializeWarehouseStationConfig",
+      "line": 52,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/warehouse/operational-labels.ts",
+      "symbol": "shipmentStatusLabel",
+      "line": 47,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/warehouse/order-helpers.ts",
+      "symbol": "progressStepIndex",
+      "line": 106,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "services/warehouse-scope.ts",
+      "symbol": "filterInventoryForWarehouseScope",
+      "line": 112,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "services/warehouse-scope.ts",
+      "symbol": "filterShipmentsForWarehouseScope",
+      "line": 119,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "services/category-options.ts",
+      "symbol": "getSupplierCategoryOptions",
+      "line": 16,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/gemini-client.ts",
+      "symbol": "generateGeminiImage",
+      "line": 101,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/glass-ui.ts",
+      "symbol": "glassPillClassName",
+      "line": 15,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/service-result.ts",
+      "symbol": "isServiceUnavailable",
+      "line": 9,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/cart/cart-actions.ts",
+      "symbol": "isCartMutationPending",
+      "line": 85,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "components/navigation/nav-anchor-context.tsx",
+      "symbol": "useNavAnchorRef",
+      "line": 17,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/search-recent.ts",
+      "symbol": "clearRecentSearches",
+      "line": 42,
+      "kind": "unused_export",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/assistant/guards.ts",
+      "symbol": "RefusalReason",
+      "line": 61,
+      "kind": "unused_type",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/assistant/rate-limit.ts",
+      "symbol": "AssistantRateLimitResult",
+      "line": 3,
+      "kind": "unused_type",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/ai/openai-compatible.ts",
+      "symbol": "ChatMessage",
+      "line": 7,
+      "kind": "unused_type",
+      "tag": "SAFE"
+    },
+    {
+      "path": "lib/catalog-search-popular.ts",
+      "symbol": "PopularSearchQuery",
+      "line": 14,
+      "kind": "unused_type",
+      "tag": "SAFE"
+    }
+  ],
+  "reviewQueue": [
+    {
+      "path": "components/admin/enterprise-realtime-panel.tsx",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": true
+    },
+    {
+      "path": "components/supplier/supplier-frame.tsx",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": true
+    },
+    {
+      "path": "components/ui/badge.tsx",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": true
+    },
+    {
+      "path": "components/warehouse/warehouse-frame.tsx",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": true
+    },
+    {
+      "path": "features/admin/cms/cms-workspace-shell.tsx",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": false
+    },
+    {
+      "path": "features/admin/cms/homepage-builder-shell.tsx",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": false
+    },
+    {
+      "path": "features/admin/cms/use-cms-section-editor.ts",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": false
+    },
+    {
+      "path": "scripts/migrate-shelf-slugs.ts",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": false
+    },
+    {
+      "path": "sections/product/product-media-viewer.tsx",
+      "kind": "unused_file",
+      "tag": "REVIEW",
+      "testReferenced": true
+    },
+    {
+      "path": "lib/observability.ts",
+      "symbol": "getObservabilityQueueSnapshot",
+      "line": 198,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "lib/structured-data.ts",
+      "symbol": "buildSearchResultsItemListJsonLd",
+      "line": 174,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/catalog.ts",
+      "symbol": "getProductShellItems",
+      "line": 1006,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/catalog.ts",
+      "symbol": "getRelatedProductShellItems",
+      "line": 1149,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/catalog.ts",
+      "symbol": "getDroneWorldProducts",
+      "line": 2022,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/catalog.ts",
+      "symbol": "getDroneCareProducts",
+      "line": 2026,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/catalog.ts",
+      "symbol": "getProductsByCategory",
+      "line": 2047,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/catalog.ts",
+      "symbol": "searchProducts",
+      "line": 2061,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/catalog.ts",
+      "symbol": "getRelatedProducts",
+      "line": 2179,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin.ts",
+      "symbol": "getAdminSettingsSnapshot",
+      "line": 1064,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "components/admin/orders/order-view-helpers.ts",
+      "symbol": "LIFECYCLE_STATES",
+      "line": 31,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/assets.ts",
+      "symbol": "assetHosts",
+      "line": 3,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin-actions.ts",
+      "symbol": "createHeroBannerDraft",
+      "line": 1005,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin-actions.ts",
+      "symbol": "deleteProductRecordSafely",
+      "line": 1217,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin-actions.ts",
+      "symbol": "adjustWarehouseStock",
+      "line": 1242,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin-actions.ts",
+      "symbol": "createDeploymentTask",
+      "line": 1246,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin-actions.ts",
+      "symbol": "upsertWarehouseStockRecord",
+      "line": 1268,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin-actions.ts",
+      "symbol": "createCustomerCheckoutOrderItemRecord",
+      "line": 1314,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/admin-actions.ts",
+      "symbol": "ProductDeleteOutcome",
+      "line": 1047,
+      "kind": "unused_type",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "store/buy-now-session.ts",
+      "symbol": "useBuyNowActive",
+      "line": 166,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "store/cart.ts",
+      "symbol": "useCartItems",
+      "line": 537,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/checkout-stock.ts",
+      "symbol": "orderHasCheckoutReservations",
+      "line": 122,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/cms.ts",
+      "symbol": "getProductReviewsCmsSlice",
+      "line": 890,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/cms-admin-forms.ts",
+      "symbol": "HERO_MEDIA_FIELD_NAMES",
+      "line": 7,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/homepage-cms.ts",
+      "symbol": "mergeHomepageCmsContentForAdmin",
+      "line": 63,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "lib/utils.ts",
+      "symbol": "STORE_CURRENCY_CODE",
+      "line": 19,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "lib/utils.ts",
+      "symbol": "clamp",
+      "line": 21,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/customer-product-reviews.ts",
+      "symbol": "updateCustomerReviewByOwner",
+      "line": 241,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/customer-product-reviews.ts",
+      "symbol": "deleteCustomerReviewByOwner",
+      "line": 288,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/data-archive.ts",
+      "symbol": "resolveArchiveRetentionDays",
+      "line": 77,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enquiries.ts",
+      "symbol": "archiveEnquiry",
+      "line": 1052,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enquiries.ts",
+      "symbol": "rejectEnquiry",
+      "line": 1071,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enquiries.ts",
+      "symbol": "restoreEnquiry",
+      "line": 1091,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enquiries.ts",
+      "symbol": "convertEnquiryToOrder",
+      "line": 1650,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/homepage-section-registry.ts",
+      "symbol": "sectionUsesProductPicker",
+      "line": 311,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/simple-inventory-view.ts",
+      "symbol": "readAdminText",
+      "line": 81,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/simple-inventory-view.ts",
+      "symbol": "readAdminNumber",
+      "line": 85,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/simple-inventory-view.ts",
+      "symbol": "buildWarehouseInventoryRows",
+      "line": 140,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enterprise-admin-forms.ts",
+      "symbol": "normalizeTimelineEventNote",
+      "line": 607,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enterprise-admin-forms.ts",
+      "symbol": "isOrderFulfillmentStateDone",
+      "line": 615,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enterprise-admin-forms.ts",
+      "symbol": "clampNonNegativeInteger",
+      "line": 620,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/enterprise-admin-forms.ts",
+      "symbol": "parseBooleanFlag",
+      "line": 625,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/generated-assets.ts",
+      "symbol": "responsiveVariantWidths",
+      "line": 23,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/generated-assets.ts",
+      "symbol": "hasMithronSourceHost",
+      "line": 136,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/generated-assets.ts",
+      "symbol": "withResponsiveMediaAsset",
+      "line": 148,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/product-admin-forms.ts",
+      "symbol": "PRODUCT_MEDIA_FIELD_NAMES",
+      "line": 11,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/product-admin-forms.ts",
+      "symbol": "applyProductDescriptionSaveNormalization",
+      "line": 560,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/product-inventory-workflow.ts",
+      "symbol": "syncProductInventoryWorkflow",
+      "line": 203,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/product-image-upload.ts",
+      "symbol": "uploadProductImageForDraft",
+      "line": 346,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/warehouse-movements.ts",
+      "symbol": "fetchOrderItemsByOrderId",
+      "line": 214,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/auth.ts",
+      "symbol": "getCurrentCmsRole",
+      "line": 50,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/auth.ts",
+      "symbol": "requireActiveSession",
+      "line": 119,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "components/admin/module-panel.tsx",
+      "symbol": "OperationalStateStrip",
+      "line": 159,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "components/admin/module-panel.tsx",
+      "symbol": "OperationalRecordGrid",
+      "line": 193,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/cms-workspace.ts",
+      "symbol": "getCmsWorkspacePageDefinition",
+      "line": 128,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/cms-workspace.ts",
+      "symbol": "CmsWorkspacePageId",
+      "line": 126,
+      "kind": "unused_type",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/contact-requests/actions.ts",
+      "symbol": "linkContactRequestToOrderFormAction",
+      "line": 139,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/enquiries/actions.ts",
+      "symbol": "assignEnquiryFormAction",
+      "line": 166,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "saveWarehouseInventoryFormAction",
+      "line": 496,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "saveSimpleInventoryFormAction",
+      "line": 511,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "deleteInventoryProductFormAction",
+      "line": 799,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "duplicateInventoryProductFormAction",
+      "line": 818,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "completeWarehousePackingFormAction",
+      "line": 1039,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "saveWarehouseConfigurationFormAction",
+      "line": 1103,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "receiveWarehouseOrderFormAction",
+      "line": 1240,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/warehouse/actions.ts",
+      "symbol": "advanceWarehouseOrderStepFormAction",
+      "line": 1286,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/settings/actions.ts",
+      "symbol": "saveAdminSettingsFormAction",
+      "line": 210,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/settings/actions.ts",
+      "symbol": "removeManagedUserRoleAction",
+      "line": 1009,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "components/admin/operational-action-panel.tsx",
+      "symbol": "OperationalTextField",
+      "line": 102,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/payments/config.ts",
+      "symbol": "isPaymentGatewayProductionReady",
+      "line": 70,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "lib/ui/shell-routes.ts",
+      "symbol": "shouldUseNativeScroll",
+      "line": 32,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "components/admin/orders/order-layout-utils.ts",
+      "symbol": "orderScrollX",
+      "line": 11,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "services/order-workflow.ts",
+      "symbol": "appendOrderTimelineEntryWorkflow",
+      "line": 536,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "components/platform/data-table.tsx",
+      "symbol": "DataTable",
+      "line": 14,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "saveHomepageShelfFormAction",
+      "line": 297,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "saveHomepageFooterLeadFormAction",
+      "line": 489,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "saveHeroBannerDraftAction",
+      "line": 515,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "publishHeroBannerAction",
+      "line": 525,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "archiveHeroBannerAction",
+      "line": 535,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "saveCmsWorkflowDraftAction",
+      "line": 545,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "publishCmsWorkflowRecordAction",
+      "line": 555,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "archiveCmsWorkflowRecordAction",
+      "line": 565,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "saveCmsPageDraftFormAction",
+      "line": 597,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "saveCmsSectionDraftFormAction",
+      "line": 607,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "recordContentRevisionFormAction",
+      "line": 617,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "archiveHeroBannerFormAction",
+      "line": 813,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "publishHomepageV2FormAction",
+      "line": 1026,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "duplicateCmsHomepageSectionFormAction",
+      "line": 1196,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "app/admin/cms/actions.ts",
+      "symbol": "reorderCmsHomepageSectionsFormAction",
+      "line": 1230,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "features/admin/cms/homepage-builder-context.tsx",
+      "symbol": "useHomepageBuilder",
+      "line": 109,
+      "kind": "unused_export",
+      "tag": "REVIEW"
+    },
+    {
+      "path": "config/types.ts",
+      "symbol": "MotionPreset",
+      "line": 63,
+      "kind": "unused_type",
+      "tag": "REVIEW"
+    }
+  ]
+}

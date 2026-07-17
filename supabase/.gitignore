@@ -1,0 +1,11 @@
+# Supabase
+.branches
+# Keep project-ref tracked so `supabase db push` works without re-linking
+# after a fresh clone (other .temp metadata stays local).
+.temp/*
+!.temp/project-ref
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local

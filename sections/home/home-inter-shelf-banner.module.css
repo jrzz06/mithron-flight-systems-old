@@ -1,0 +1,123 @@
+.section {
+  padding-block: var(--ds-s5);
+  /* Horizontal alignment via [data-home-content-shell] in globals.css */
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  min-height: clamp(220px, 28vw, 360px);
+  overflow: hidden;
+  border-radius: 24px;
+  border: none;
+  box-shadow:
+    0 32px 64px -28px rgba(0, 0, 0, 0.35),
+    0 12px 28px -12px rgba(0, 0, 0, 0.18);
+}
+
+.image {
+  object-fit: cover;
+}
+
+.overlay {
+  display: none;
+}
+
+.copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  max-width: min(640px, 88%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.42) 55%,
+    transparent 100%
+  );
+}
+
+.alignCenter {
+  align-items: center;
+  text-align: center;
+  margin-inline: auto;
+}
+
+.alignRight {
+  align-items: flex-end;
+  text-align: right;
+  margin-left: auto;
+}
+
+.alignLeft {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.heading {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: clamp(0.9375rem, 1.6vw, 1.0625rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 0.25rem;
+  border-radius: 999px;
+  background: #2a7a52;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  transition: background-color 160ms ease;
+}
+
+.cta:hover {
+  background: #318a5d;
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+  .frame {
+    min-height: clamp(240px, 34vw, 400px);
+  }
+
+  .copy {
+    max-width: min(560px, 90%);
+    padding: clamp(1.25rem, 3.6vw, 2.25rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .frame {
+    min-height: clamp(220px, 54vw, 300px);
+    border-radius: 16px;
+  }
+
+  .image {
+    object-fit: cover;
+    object-position: center 40%;
+  }
+
+  .heading {
+    font-size: clamp(1.25rem, 5.4vw, 1.65rem);
+  }
+
+  .subtitle {
+    font-size: clamp(0.82rem, 3.4vw, 0.94rem);
+  }
+}

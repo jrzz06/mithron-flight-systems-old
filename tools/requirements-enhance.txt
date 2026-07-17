@@ -1,0 +1,4 @@
+# Minimal deps for enhance-source-batch.py (Real-ESRGAN runs via ncnn-vulkan binary)
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0

@@ -1,0 +1,524 @@
+.page {
+  min-height: 100vh;
+  background: var(--surface-gradient-cool);
+  color: #0f172a;
+  padding: 5rem 1.5rem 7rem;
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: 1.5rem var(--mobile-page-inline, 1rem) calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .fieldGridTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .paymentOption {
+    min-height: 48px;
+    align-items: center;
+  }
+
+  .invoiceFrame {
+    min-height: min(70svh, 520px);
+  }
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding-left: 4rem;
+    padding-right: 4rem;
+    padding-bottom: 5rem;
+  }
+}
+
+.container {
+  margin-inline: auto;
+  max-width: var(--ds-container-checkout, 1180px);
+}
+
+.pageHeader {
+  margin-bottom: 2.5rem;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.pageTitle {
+  margin-top: 0.5rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: #0f172a;
+}
+
+.pageLead {
+  margin-top: 0.75rem;
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.pageNote {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.pageNote a {
+  color: #166534;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pageNote a:hover {
+  color: #14532d;
+}
+
+.layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 440px);
+    align-items: start;
+  }
+}
+
+.formPanel {
+  order: 2;
+  border-radius: 1.75rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 1.75rem;
+  box-shadow: var(--elevation-card-rest);
+}
+
+@media (min-width: 768px) {
+  .formPanel {
+    padding: 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .formPanel {
+    order: 1;
+  }
+}
+
+.summarySlot {
+  order: 1;
+}
+
+@media (min-width: 1024px) {
+  .summarySlot {
+    order: 2;
+  }
+}
+
+.form {
+  display: grid;
+  gap: 2rem;
+}
+
+.fieldset {
+  display: grid;
+  gap: 1rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.legend {
+  margin-bottom: 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.fieldHint {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.fieldGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .fieldGridTwo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fieldGridFull {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #334155;
+}
+
+.required {
+  color: #dc2626;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 1rem;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #94a3b8;
+}
+
+.input:hover,
+.textarea:hover {
+  border-color: #94a3b8;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #1f6b46;
+  box-shadow: 0 0 0 3px rgba(31, 107, 70, 0.14);
+}
+
+.input {
+  height: 3rem;
+  border-radius: 0.875rem;
+  padding-inline: 1rem;
+}
+
+.textarea {
+  border-radius: 1rem;
+  padding: 0.875rem 1rem;
+  resize: vertical;
+  min-height: 7rem;
+}
+
+.addressCard {
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 1rem;
+  text-align: left;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.addressCard:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31, 107, 70, 0.14);
+  border-color: #1f6b46;
+}
+
+.addressCard:hover {
+  border-color: #cbd5e1;
+}
+
+.addressCardSelected {
+  border-color: #1f6b46;
+  background: #f7faf8;
+  box-shadow: 0 0 0 1px rgba(31, 107, 70, 0.12);
+}
+
+.addressCardTitle {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.addressCardBody {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.addressForm {
+  display: grid;
+  gap: 1rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 1rem;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.checkbox {
+  margin-top: 0.125rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #1f6b46;
+}
+
+.textLink {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #166534;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.textLink:hover {
+  color: #14532d;
+}
+
+.paymentLead {
+  margin: 0 0 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.paymentOptions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.paymentOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.paymentOption:hover {
+  border-color: #94a3b8;
+  background: #fafafa;
+}
+
+.paymentOptionSelected,
+.paymentOption:has(input:checked) {
+  border-color: #1f6b46;
+  background: #f7faf8;
+  box-shadow: 0 0 0 1px rgba(31, 107, 70, 0.12);
+}
+
+.paymentOptionInput {
+  margin-top: 0.2rem;
+  accent-color: #1f6b46;
+  flex-shrink: 0;
+}
+
+.paymentOptionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.paymentOptionTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.paymentOptionHint {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.paymentOption input {
+  accent-color: #1f6b46;
+}
+
+.error {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #dc2626;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.successIcon {
+  margin-bottom: 1.25rem;
+  width: 3rem;
+  height: 3rem;
+  color: #1f6b46;
+}
+
+.successTitle {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #0f172a;
+}
+
+.successBody {
+  margin-top: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.invoiceCard {
+  margin-top: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 1.5rem;
+}
+
+.invoiceHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.invoiceLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.invoiceNumber {
+  margin-top: 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.invoiceMeta {
+  text-align: right;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.invoiceContact {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.invoiceContact strong {
+  color: #0f172a;
+}
+
+.invoiceItems {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.invoiceItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.invoiceItemName {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.invoiceItemMeta {
+  color: #64748b;
+}
+
+.invoiceTotal {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.invoiceFootnote {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.invoiceFrameWrap {
+  margin-top: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.invoiceFrame {
+  display: block;
+  width: 100%;
+  min-height: 720px;
+  border: 0;
+  background: #ffffff;
+}

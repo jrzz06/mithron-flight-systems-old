@@ -1,0 +1,58 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "app/**/{page,layout,loading,error,not-found,template,default,route,opengraph-image,icon,apple-icon,sitemap,robots,manifest}.{js,ts,tsx}",
+    "app/**/route.{js,ts}",
+    "instrumentation.ts",
+    "proxy.ts",
+    "next.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "playwright.production.config.ts",
+    "tests/setup.ts",
+    "tests/e2e/**/*.spec.ts",
+    "tests/**/*.test.ts"
+  ],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "sections/**/*.{ts,tsx}",
+    "features/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "store/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "services/**/*.{ts,tsx}",
+    "config/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,tsx,mjs,js,cjs}"
+  ],
+  "ignore": [
+    "tools/**",
+    "data/**",
+    "docs/**",
+    "supabase/**",
+    ".next/**"
+  ],
+  "ignoreDependencies": [
+    "postcss",
+    "@tailwindcss/postcss",
+    "tailwindcss",
+    "eslint-config-next",
+    "cross-env",
+    "@next/bundle-analyzer",
+    "supabase",
+    "knip",
+    "depcheck"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "next": {
+    "entry": [
+      "app/**/{page,layout,loading,error,not-found,template,default,route}.{js,ts,tsx}"
+    ]
+  },
+  "vitest": {
+    "entry": ["tests/**/*.test.ts", "tests/setup.ts"]
+  },
+  "playwright": {
+    "entry": ["tests/e2e/**/*.spec.ts"]
+  }
+}
