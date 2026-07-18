@@ -1,3 +1,9 @@
+import {
+  formatMissingShippingAddressLabels,
+  getMissingShippingAddressFields,
+  isCompleteShippingAddressFields,
+  resolveShippingAddressForCompleteness
+} from "@/lib/addresses/format";
 import { formatINR } from "@/lib/utils";
 import {
   isOrderArchived,
@@ -5,6 +11,12 @@ import {
   matchesAdminOrderQueue
 } from "@/lib/orders/lifecycle";
 import { isCancellableOrderStatus } from "@/lib/orders/status";
+import {
+  LEAD_SOURCE_BADGE_CLASSES,
+  LEAD_SOURCE_LABELS,
+  normalizeLeadSource,
+  type LeadSource
+} from "@/lib/leads/shared";
 
 export type AdminRow = Record<string, unknown>;
 
@@ -30,24 +42,18 @@ export type OrderFilterState = {
 
 export const LIFECYCLE_STATES = [
   "pending",
-  "processing",
-  "picked",
-  "packed",
-  "ready_to_dispatch",
-  "shipped",
+  "packing",
+  "dispatched",
   "delivered",
   "returned",
   "cancelled"
 ] as const;
 
 const FULFILLMENT_NEXT_STEPS: Record<string, string[]> = {
-  pending: ["processing"],
-  processing: ["picked", "packed"],
-  picked: ["packed"],
-  packed: ["ready_to_dispatch", "shipped"],
-  ready_to_dispatch: ["shipped"],
-  shipped: ["delivered", "returned"],
-  delivered: ["returned"],
+  pending: ["packing"],
+  packing: ["dispatched"],
+  dispatched: ["delivered"],
+  delivered: [],
   returned: [],
   cancelled: []
 };
@@ -478,7 +484,7 @@ export function nextStepForOrder(order: AdminRow) {
       title: "Send to warehouse",
       description: "Order is verified. Assign it to warehouse so picking and packing can begin.",
       action: "assign" as const,
-      button: "Send to Warehouse"
+      button: "Push to Warehouse"
     };
   }
   if (status === "assigned" || fulfillment === "processing") {
@@ -521,9 +527,10 @@ export {
 
 export function canCancelOrder(order: AdminRow | null) {
   if (!order) return false;
+  if (isHandedOffToWarehouse(order)) return false;
   const status = text(order.status, "pending");
   const fulfillment = text(order.fulfillment_status, "pending");
-  const terminalFulfillment = ["cancelled", "delivered", "returned", "shipped"];
+  const terminalFulfillment = ["cancelled", "delivered", "returned"];
   return isCancellableOrderStatus(status) && !terminalFulfillment.includes(fulfillment);
 }
 
@@ -532,26 +539,76 @@ export function canPermanentlyDeleteOrder(order: AdminRow | null) {
   const status = text(order.status, "pending");
   const fulfillment = text(order.fulfillment_status, "pending");
   const channel = text(order.channel, "checkout");
-  const activeFulfillment = ["processing", "picked", "packed", "ready_to_dispatch", "shipped", "delivered", "assigned"];
+  const activeFulfillment = ["packing", "dispatched", "delivered"];
   if (activeFulfillment.includes(fulfillment)) return false;
   if (["assigned", "processing", "packed", "dispatched", "delivered", "confirmed"].includes(status)) return false;
   return status === "cancelled" || channel === "enquiry";
 }
 
+/** True once warehouse owns the order (fulfillment left pending). */
+export function isHandedOffToWarehouse(order: AdminRow | null) {
+  if (!order) return false;
+  const fulfillment = text(order.fulfillment_status, "pending");
+  return fulfillment !== "" && fulfillment !== "pending";
+}
+
+/**
+ * Incomplete pushed/test orders (₹0, no line items, or flagged needs_products/needs_address)
+ * should not look like valid confirmed orders in the list.
+ */
+export function isIncompleteDraftOrder(order: AdminRow | null, hasItems?: boolean) {
+  if (!order) return false;
+  const metadata = orderMetadata(order);
+  if (metadata.needs_products === true || metadata.needs_address === true) return true;
+  if (hasItems === undefined) return false;
+  const total = Number(order.total ?? 0);
+  return Number.isFinite(total) && total <= 0 && !hasItems;
+}
+
+export type OrderSourceBadge = {
+  label: string;
+  className: string;
+  source: LeadSource | "checkout";
+};
+
+/** Color-coded channel badge — mirrors Leads panel source badges when lead_source is present. */
+export function orderSourceBadge(order: AdminRow | null): OrderSourceBadge {
+  if (!order) {
+    return {
+      label: "Checkout",
+      className: "border-zinc-500/40 bg-zinc-500/10 text-zinc-200",
+      source: "checkout"
+    };
+  }
+  const metadata = orderMetadata(order);
+  const leadSourceRaw = metadata.lead_source;
+  const channel = text(order.channel, "checkout");
+  const hasLeadSource =
+    typeof leadSourceRaw === "string" && leadSourceRaw.trim().length > 0;
+  const fromLead =
+    hasLeadSource || channel === "enquiry" || Boolean(text(order.source_lead_id));
+
+  if (fromLead) {
+    const source = normalizeLeadSource(leadSourceRaw ?? "contact_form");
+    return {
+      label: LEAD_SOURCE_LABELS[source],
+      className: LEAD_SOURCE_BADGE_CLASSES[source],
+      source
+    };
+  }
+
+  return {
+    label: "Checkout",
+    className: "border-zinc-500/40 bg-zinc-500/10 text-zinc-200",
+    source: "checkout"
+  };
+}
+
 export function hasCompleteShippingAddress(order: AdminRow) {
   const metadata = orderMetadata(order);
-  const address =
-    metadata.shipping_address && typeof metadata.shipping_address === "object" && !Array.isArray(metadata.shipping_address)
-      ? (metadata.shipping_address as Record<string, unknown>)
-      : null;
+  const address = resolveShippingAddressForCompleteness(metadata);
   if (!address) return metadata.needs_address === false;
-  return Boolean(
-    text(address.line1)
-    && text(address.city)
-    && (text(address.state) || text(address.region))
-    && text(address.country)
-    && (text(address.postal_code) || text(address.postalCode))
-  );
+  return isCompleteShippingAddressFields(address);
 }
 
 export function hasIdentifiedCustomer(order: AdminRow) {
@@ -563,8 +620,18 @@ export function hasIdentifiedCustomer(order: AdminRow) {
 export function fulfillmentReadinessMessage(order: AdminRow, hasItems: boolean) {
   const missing: string[] = [];
   if (!hasIdentifiedCustomer(order)) missing.push("customer details");
-  if (!hasCompleteShippingAddress(order)) missing.push("a shipping address");
   if (!hasItems) missing.push("at least one product");
+
+  if (!hasCompleteShippingAddress(order)) {
+    const metadata = orderMetadata(order);
+    const address = resolveShippingAddressForCompleteness(metadata);
+    const fieldGaps = address ? getMissingShippingAddressFields(address) : [];
+    if (address && fieldGaps.length) {
+      return `Complete shipping address: ${formatMissingShippingAddressLabels(fieldGaps)}.`;
+    }
+    missing.push("a shipping address");
+  }
+
   if (!missing.length) return null;
   if (missing.length === 1) return `Add ${missing[0]} before continuing.`;
   return `Add ${missing.slice(0, -1).join(", ")} and ${missing[missing.length - 1]} before continuing.`;

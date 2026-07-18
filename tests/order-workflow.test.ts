@@ -124,6 +124,8 @@ describe("order workflow hardening", () => {
     expect(helpers).toContain("fulfillmentReadinessMessage");
     expect(helpers).toContain("hasCompleteShippingAddress");
     expect(helpers).toContain("hasIdentifiedCustomer");
+    expect(helpers).toContain("resolveShippingAddressForCompleteness");
+    expect(helpers).toContain("Complete shipping address:");
     expect(rail).toContain("fulfillmentBlockedMessage");
     expect(rail).toContain("disabled={Boolean(fulfillmentBlockedMessage)}");
   });

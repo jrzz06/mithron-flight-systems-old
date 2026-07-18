@@ -13,6 +13,7 @@ import {
 import { orderNestedCardPad, orderRadiusControl, orderSectionStack } from "@/components/admin/orders/order-layout-utils";
 import { OrderStatusBadge } from "@/components/admin/orders/order-status-badge";
 import { moneyText, orderMetadata, text, type AdminRow } from "@/components/admin/orders/order-view-helpers";
+import { paymentStatusLabel } from "@/lib/orders/status";
 
 type PaymentRow = {
   provider?: string;
@@ -71,7 +72,10 @@ export function AdminOrderPaymentSection({ order, orderId }: AdminOrderPaymentSe
   return (
     <OrderDetailSection title="Payment">
       <div className={orderSectionStack}>
-        <OrderStatusBadge status={text(order.payment_status, "not_required")} />
+        <OrderStatusBadge
+          status={text(order.payment_status, "not_required")}
+          label={paymentStatusLabel(text(order.payment_status, "not_required"))}
+        />
         <OrderFieldGrid columns={2}>
         <OrderField label="Method" value={paymentMethod || paymentProvider || "—"} />
         <OrderField label="Provider" value={paymentProvider || "—"} />

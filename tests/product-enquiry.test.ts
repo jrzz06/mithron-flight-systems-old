@@ -210,9 +210,9 @@ describe("product enquiry wiring", () => {
     const modal = readFileSync(join(process.cwd(), "components/product/product-enquiry-modal.tsx"), "utf8");
     const configurator = readFileSync(join(process.cwd(), "sections/product/product-configurator.tsx"), "utf8");
     const enquiries = readFileSync(join(process.cwd(), "services/enquiries.ts"), "utf8");
-    const adminQueue = readFileSync(join(process.cwd(), "components/admin/admin-enquiry-queue.tsx"), "utf8");
+    const adminQueue = readFileSync(join(process.cwd(), "components/admin/admin-lead-queue.tsx"), "utf8");
 
-    expect(route).toContain("submitProductPageEnquiry");
+    expect(route).toContain("submitLead");
     expect(route).toContain("createCustomerCheckoutNotificationRecord");
     expect(form).toContain("preferredContactMethod");
     expect(form).toContain("data-product-enquiry-form");
@@ -222,14 +222,12 @@ describe("product enquiry wiring", () => {
     expect(modal).toContain("createPortal");
     expect(modal).toContain("document.body");
     expect(modal).toContain("data-product-enquiry-modal");
+    expect(adminQueue).toContain("Push to Order");
+    expect(enquiries).toContain("submitProductPageEnquiry");
     expect(configurator).toContain("Send Enquiry");
     expect(configurator).toContain("ProductEnquiryModal");
-    expect(enquiries).toContain('source: "product_page"');
-    expect(enquiries).toContain("cart_lines");
+    expect(enquiries).toContain("product_enquiry");
     expect(enquiries).toContain("preferred_contact_method");
-    expect(enquiries).toContain("shipping_address");
-    expect(enquiries).toContain("billing_address");
-    expect(adminQueue).toContain("enquiryShippingAddress");
-    expect(adminQueue).toContain("Product ID");
+    expect(adminQueue).toContain("leadSourceLabel");
   });
 });

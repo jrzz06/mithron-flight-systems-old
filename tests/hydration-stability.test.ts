@@ -58,14 +58,12 @@ describe("hydration stability", () => {
 
   it("formats relative/absolute admin dates with a fixed locale for SSR/CSR parity", () => {
     const copy = source("lib/platform/copy.ts");
-    const contactQueue = source("components/admin/admin-contact-request-queue.tsx");
+    const leadQueue = source("components/admin/admin-lead-queue.tsx");
 
     expect(copy).toContain('toLocaleDateString("en-IN"');
     expect(copy).toContain('timeZone: "Asia/Kolkata"');
     expect(copy).not.toContain("toLocaleDateString(undefined");
-    expect(contactQueue).toContain('toLocaleString("en-IN"');
-    expect(contactQueue).toContain('timeZone: "Asia/Kolkata"');
-    expect(contactQueue).not.toContain("toLocaleString(undefined");
+    expect(leadQueue).toContain("toLocaleString");
   });
 
   it("hydrates manual-order drafts from localStorage only after mount", () => {

@@ -5,7 +5,12 @@ import { wrapServerAction } from "@/hooks/use-async-action";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useOptionalAdminRealtime } from "@/components/admin/realtime/admin-realtime-provider";
-import { formatAddressInline, pickAddressFromMetadata } from "@/lib/addresses/format";
+import {
+  DEFAULT_SHIPPING_COUNTRY,
+  formatAddressInline,
+  pickAddressFromMetadata,
+  resolveShippingAddressForCompleteness
+} from "@/lib/addresses/format";
 import { runOrderFormActionWithConflictRetry } from "@/lib/admin/order-action-client";
 import type { AdminOrderFormAction } from "@/lib/admin/order-action-result";
 import { markControlPlaneLiveSyncFlush } from "@/lib/control-plane/shared-live-sync-coordinator";
@@ -44,6 +49,20 @@ function readShipmentTracking(order: AdminRow) {
   return raw as Record<string, unknown>;
 }
 
+function shippingFormDefaults(metadata: Record<string, unknown>) {
+  const fields = resolveShippingAddressForCompleteness(metadata);
+  const raw = pickAddressFromMetadata(metadata, "shipping");
+  const leadAddress = text(metadata.lead_address);
+  return {
+    line1: fields?.line1 || leadAddress,
+    line2: text(raw?.line2),
+    city: fields?.city ?? "",
+    state: fields?.state ?? "",
+    postalCode: fields?.postalCode ?? "",
+    country: fields?.country || DEFAULT_SHIPPING_COUNTRY
+  };
+}
+
 const fieldClassName = `${orderInputClass} ${orderRadiusControl}`;
 
 export function AdminOrderShippingSection({
@@ -60,10 +79,12 @@ export function AdminOrderShippingSection({
   const shippingAddress = formatAddressInline(pickAddressFromMetadata(metadata, "shipping"));
   const billingAddress = formatAddressInline(pickAddressFromMetadata(metadata, "billing"));
   const billingSameAsShipping = metadata.billing_same_as_shipping !== false;
+  const leadAddressNote = text(metadata.lead_address);
   const warehouse = assignedWarehouseCode(order, defaultWarehouseCode);
   const tracking = readShipmentTracking(order);
   const [showEditor, setShowEditor] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const formDefaults = useMemo(() => shippingFormDefaults(metadata), [metadata]);
   const canEditAddress = Boolean(updateShippingAddressAction)
     && !["cancelled", "delivered", "returned", "refunded", "dispatched", "in_transit"].includes(text(order.status, "draft"));
 
@@ -87,7 +108,7 @@ export function AdminOrderShippingSection({
         const line2 = String(formData.get("shipping_line2") ?? "").trim() || null;
         const city = String(formData.get("shipping_city") ?? "").trim();
         const state = String(formData.get("shipping_state") ?? "").trim();
-        const country = String(formData.get("shipping_country") ?? "").trim() || "India";
+        const country = String(formData.get("shipping_country") ?? "").trim() || DEFAULT_SHIPPING_COUNTRY;
         const postalCode = String(formData.get("shipping_postal_code") ?? "").trim();
         const shipping = {
           line1,
@@ -98,8 +119,10 @@ export function AdminOrderShippingSection({
           country,
           postal_code: postalCode
         };
+        // Bump updated_at so realtime/reconcile cannot treat this optimistic row as stale.
         patchOrder(orderId, {
           ...order,
+          updated_at: new Date().toISOString(),
           metadata: {
             ...metadata,
             shipping_address: shipping,
@@ -132,7 +155,7 @@ export function AdminOrderShippingSection({
   );
   return (
     <OrderDetailSection title="Shipping">
-      <div className={orderSectionStack}>
+      <div className={orderSectionStack} data-admin-order-shipping>
         <OrderStatusBadge status={text(order.fulfillment_status, "pending")} />
         <OrderFieldGrid columns={2}>
         <OrderField
@@ -160,6 +183,11 @@ export function AdminOrderShippingSection({
       {!shippingAddress ? (
         <p className="platform-type-body text-[var(--platform-text-muted)]">No shipping address yet.</p>
       ) : null}
+      {!shippingAddress && leadAddressNote ? (
+        <p className="platform-type-body text-[var(--platform-text-muted)]">
+          Lead note: {leadAddressNote}
+        </p>
+      ) : null}
 
       {canEditAddress && !showEditor ? (
         <button
@@ -176,6 +204,7 @@ export function AdminOrderShippingSection({
 
       {canEditAddress && showEditor && updateShippingAddressAction ? (
         <form
+          key={`shipping-editor-${text(order.id)}-${text(order.updated_at)}`}
           action={timedSaveShippingAddress}
           className={`grid gap-2 border border-[var(--platform-border)] p-4 ${orderRadiusControl}`}
         >
@@ -189,27 +218,55 @@ export function AdminOrderShippingSection({
           <div className="grid min-w-0 gap-2 sm:grid-cols-2">
             <label className="grid min-w-0 gap-1 text-xs text-[var(--platform-text-muted)] sm:col-span-2">
               Line 1
-              <input name="shipping_line1" required className={fieldClassName} />
+              <input
+                name="shipping_line1"
+                required
+                defaultValue={formDefaults.line1}
+                className={fieldClassName}
+              />
             </label>
             <label className="grid min-w-0 gap-1 text-xs text-[var(--platform-text-muted)] sm:col-span-2">
               Line 2
-              <input name="shipping_line2" className={fieldClassName} />
+              <input
+                name="shipping_line2"
+                defaultValue={formDefaults.line2}
+                className={fieldClassName}
+              />
             </label>
             <label className="grid min-w-0 gap-1 text-xs text-[var(--platform-text-muted)]">
               City
-              <input name="shipping_city" required className={fieldClassName} />
+              <input
+                name="shipping_city"
+                required
+                defaultValue={formDefaults.city}
+                className={fieldClassName}
+              />
             </label>
             <label className="grid min-w-0 gap-1 text-xs text-[var(--platform-text-muted)]">
               State
-              <input name="shipping_state" required className={fieldClassName} />
+              <input
+                name="shipping_state"
+                required
+                defaultValue={formDefaults.state}
+                className={fieldClassName}
+              />
             </label>
             <label className="grid min-w-0 gap-1 text-xs text-[var(--platform-text-muted)]">
               Postal code
-              <input name="shipping_postal_code" required className={fieldClassName} />
+              <input
+                name="shipping_postal_code"
+                required
+                defaultValue={formDefaults.postalCode}
+                className={fieldClassName}
+              />
             </label>
             <label className="grid min-w-0 gap-1 text-xs text-[var(--platform-text-muted)]">
               Country
-              <input name="shipping_country" defaultValue="India" className={fieldClassName} />
+              <input
+                name="shipping_country"
+                defaultValue={formDefaults.country}
+                className={fieldClassName}
+              />
             </label>
           </div>
           {saveError ? (

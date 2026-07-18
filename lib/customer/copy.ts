@@ -32,11 +32,13 @@ const CUSTOMER_STATUS_LABELS: Record<string, string> = {
 
 const CUSTOMER_FULFILLMENT_LABELS: Record<string, string> = {
   pending: "Order Confirmed",
+  packing: "Order Confirmed",
   processing: "Order Confirmed",
   picked: "Order Confirmed",
   packed: "Order Confirmed",
   ready_to_dispatch: "Dispatched",
   shipped: "Dispatched",
+  dispatched: "Dispatched",
   delivered: "Delivered"
 };
 

@@ -50,24 +50,44 @@ async function listWarehouseUserIds(env: EnvSource = process.env) {
   return rows.map((row) => String(row.user_id ?? "")).filter(Boolean);
 }
 
-async function syncLinkedEnquiryStatus(
+async function syncLinkedLeadStatus(
   orderId: string,
-  status: "won" | "lost" | "converted" | "contacted",
+  status: "new" | "converted",
   actorId: string,
   env: EnvSource
 ) {
-  const enquiries = await fetchAdminRecordsByColumn("enquiries", "converted_order_id", orderId, env);
-  for (const enquiry of enquiries) {
-    const enquiryId = String(enquiry.id ?? "");
-    if (!enquiryId) continue;
+  const leads = await fetchAdminRecordsByColumn("leads", "converted_order_id", orderId, env).catch(() => []);
+  for (const lead of leads) {
+    const leadId = String(lead.id ?? "");
+    if (!leadId) continue;
     await updateAdminRecord(
-      "enquiries",
+      "leads",
       "id",
-      enquiryId,
-      { status, updated_at: new Date().toISOString() },
+      leadId,
+      {
+        status,
+        ...(status === "new" ? { converted_order_id: null } : {}),
+        updated_at: new Date().toISOString()
+      },
       actorId,
       env
-    );
+    ).catch(() => undefined);
+  }
+}
+
+/** Admin may mutate order details only before warehouse handoff (fulfillment still pending). */
+export function assertAdminMayMutatePreWarehouseOrder(order: JsonRecord) {
+  const fulfillment = String(order.fulfillment_status ?? "pending").trim() || "pending";
+  if (fulfillment !== "pending") {
+    throw new Error("This order has been handed off to warehouse. Admin can view it read-only; only warehouse can update or delete it.");
+  }
+}
+
+/** Warehouse emergency delete is allowed once the order is in packing/dispatched (or still pending if staff-created). */
+export function assertWarehouseMayDeleteOrder(order: JsonRecord) {
+  const fulfillment = String(order.fulfillment_status ?? "pending").trim() || "pending";
+  if (!["pending", "packing", "dispatched"].includes(fulfillment)) {
+    throw new Error(`Order cannot be deleted from fulfillment status ${fulfillment}.`);
   }
 }
 
@@ -223,7 +243,7 @@ export async function confirmAdminOrderWorkflow(
   });
 
   if (nextStatus === "confirmed") {
-    await syncLinkedEnquiryStatus(input.orderId, "won", input.actorId, env);
+    await syncLinkedLeadStatus(input.orderId, "converted", input.actorId, env);
     await Promise.all([
       notifyCustomerAboutOrder(
         updated,
@@ -391,6 +411,72 @@ export async function markOrderRefundedWorkflow(
   return updated;
 }
 
+const MANUAL_PAYMENT_STATUSES = ["succeeded", "requires_payment", "not_required"] as const;
+type ManualPaymentStatus = (typeof MANUAL_PAYMENT_STATUSES)[number];
+
+export async function setOrderPaymentRequirementWorkflow(
+  input: {
+    orderId: string;
+    actorId: string;
+    paymentStatus: ManualPaymentStatus;
+    note?: string;
+    expectedUpdatedAt?: string | null;
+  },
+  env: EnvSource = process.env
+) {
+  if (!MANUAL_PAYMENT_STATUSES.includes(input.paymentStatus)) {
+    throw new Error(`Unsupported payment status: ${input.paymentStatus}.`);
+  }
+
+  const updated = await transitionOrderWithServerCasRetry(input.orderId, input.actorId, env, (order) => {
+    assertAdminMayMutatePreWarehouseOrder(order);
+    const currentPayment = String(order.payment_status ?? "not_required");
+    if (currentPayment === input.paymentStatus) {
+      throw new Error(`Payment status is already ${input.paymentStatus}.`);
+    }
+
+    const orderStatus = String(order.status ?? "pending");
+    const labels: Record<ManualPaymentStatus, string> = {
+      succeeded: "paid",
+      requires_payment: "required",
+      not_required: "not required"
+    };
+    const idempotencyKey = `admin_set_payment_status:${input.orderId}:${input.paymentStatus}:${String(order.updated_at ?? "")}`;
+    return {
+      timelineEntry: buildOrderTimelineEntry({
+        status: orderStatus,
+        event: "admin_set_payment_status",
+        note:
+          input.note?.trim() ||
+          `Payment status set to ${labels[input.paymentStatus]} by admin.`,
+        actorId: input.actorId,
+        metadata: {
+          idempotency_key: idempotencyKey,
+          previous_payment_status: currentPayment,
+          payment_status: input.paymentStatus
+        }
+      }),
+      paymentStatus: input.paymentStatus,
+      idempotencyKey
+    };
+  });
+
+  await createActivityLogRecord(
+    {
+      actor_id: input.actorId,
+      action: "admin_set_payment_status",
+      entity_table: "orders",
+      entity_id: input.orderId,
+      severity: "info",
+      metadata: { payment_status: input.paymentStatus }
+    },
+    input.actorId,
+    env
+  );
+
+  return updated;
+}
+
 export async function rejectAdminOrderWorkflow(
   input: { orderId: string; actorId: string; reason?: string; expectedUpdatedAt?: string | null },
   env: EnvSource = process.env
@@ -416,7 +502,7 @@ export async function rejectAdminOrderWorkflow(
     };
   });
 
-  await syncLinkedEnquiryStatus(input.orderId, "lost", input.actorId, env);
+  await syncLinkedLeadStatus(input.orderId, "new", input.actorId, env);
   await Promise.all([
     notifyCustomerAboutOrder(
       updated,
@@ -450,11 +536,12 @@ export async function cancelAdminOrderWorkflow(
   if (!reason) throw new Error("A cancellation reason is required.");
 
   const updated = await transitionOrderWithServerCasRetry(input.orderId, input.actorId, env, (order) => {
+    assertAdminMayMutatePreWarehouseOrder(order);
     const currentStatus = String(order.status ?? "");
     const fulfillmentStatus = String(order.fulfillment_status ?? "");
-    const terminalFulfillment = ["cancelled", "delivered", "returned", "shipped"];
+    const terminalFulfillment = ["cancelled", "delivered", "returned", "dispatched"];
     if (!isCancellableOrderStatus(currentStatus) || terminalFulfillment.includes(fulfillmentStatus)) {
-      if (["dispatched", "in_transit", "delivered"].includes(currentStatus) || fulfillmentStatus === "shipped") {
+      if (["dispatched", "in_transit", "delivered"].includes(currentStatus) || fulfillmentStatus === "dispatched") {
         throw new Error("Order cannot be cancelled after dispatch — use return/refund instead.");
       }
       throw new Error(`Order cannot be cancelled in its current state (${currentStatus || "unknown"}).`);
@@ -475,7 +562,7 @@ export async function cancelAdminOrderWorkflow(
     };
   });
 
-  await syncLinkedEnquiryStatus(input.orderId, "lost", input.actorId, env);
+  await syncLinkedLeadStatus(input.orderId, "new", input.actorId, env);
   await Promise.all([
     notifyCustomerAboutOrder(
       updated,
@@ -570,7 +657,7 @@ export async function assignOrderToWarehouseWorkflow(
     env
   );
 
-  await syncLinkedEnquiryStatus(input.orderId, "converted", input.actorId, env);
+  await syncLinkedLeadStatus(input.orderId, "converted", input.actorId, env);
   await Promise.all([
     notifyWarehouseAboutOrder(
       {
@@ -668,6 +755,7 @@ export async function softDeleteAdminOrderWorkflow(
   const rows = await fetchAdminRecordsByColumn("orders", "id", input.orderId, env);
   const order = rows[0];
   if (!order) throw new Error("Order not found.");
+  assertAdminMayMutatePreWarehouseOrder(order);
 
   const status = String(order.status ?? "");
   const channel = String(order.channel ?? "checkout");
@@ -758,6 +846,7 @@ export async function permanentDeleteAdminOrderWorkflow(
   const rows = await fetchAdminRecordsByColumn("orders", "id", input.orderId, env);
   const order = rows[0];
   if (!order) throw new Error("Order not found.");
+  assertAdminMayMutatePreWarehouseOrder(order);
 
   const expectedUpdatedAt = String(input.expectedUpdatedAt ?? order.updated_at ?? "").trim();
   if (expectedUpdatedAt && String(order.updated_at ?? "") !== expectedUpdatedAt) {
@@ -774,27 +863,22 @@ export async function permanentDeleteAdminOrderWorkflow(
   const reason = input.reason.trim();
   if (!reason) throw new Error("A deletion reason is required.");
 
-  const linkedEnquiries = await fetchAdminRecordsByColumn("enquiries", "converted_order_id", input.orderId, env);
-  for (const enquiry of linkedEnquiries) {
-    const enquiryId = String(enquiry.id ?? "");
-    if (!enquiryId) continue;
-    const payload = isPlainRecord(enquiry.payload) ? enquiry.payload : {};
+  const linkedLeads = await fetchAdminRecordsByColumn("leads", "converted_order_id", input.orderId, env).catch(() => []);
+  for (const lead of linkedLeads) {
+    const leadId = String(lead.id ?? "");
+    if (!leadId) continue;
     await updateAdminRecord(
-      "enquiries",
+      "leads",
       "id",
-      enquiryId,
+      leadId,
       {
+        status: "new",
         converted_order_id: null,
-        payload: {
-          ...payload,
-          order_id: null,
-          order_number: null
-        },
         updated_at: new Date().toISOString()
       },
       input.actorId,
       env
-    );
+    ).catch(() => undefined);
   }
 
   await createActivityLogRecord(
@@ -845,7 +929,75 @@ export async function deleteAdminOrderWorkflow(
   input: { orderId: string; actorId: string; reason: string },
   env: EnvSource = process.env
 ) {
-  return softDeleteAdminOrderWorkflow(input, env);
+  return permanentDeleteAdminOrderWorkflow(input, env);
+}
+
+/** Warehouse-only emergency hard delete after handoff (packing / dispatched). */
+export async function warehouseEmergencyDeleteOrderWorkflow(
+  input: { orderId: string; actorId: string; reason: string; expectedUpdatedAt?: string | null },
+  env: EnvSource = process.env
+) {
+  const rows = await fetchAdminRecordsByColumn("orders", "id", input.orderId, env);
+  const order = rows[0];
+  if (!order) throw new Error("Order not found.");
+  assertWarehouseMayDeleteOrder(order);
+
+  const reason = input.reason.trim() || "Emergency warehouse cancellation";
+  const expectedUpdatedAt = String(input.expectedUpdatedAt ?? order.updated_at ?? "").trim();
+
+  const linkedLeads = await fetchAdminRecordsByColumn("leads", "converted_order_id", input.orderId, env).catch(() => []);
+  for (const lead of linkedLeads) {
+    const leadId = String(lead.id ?? "");
+    if (!leadId) continue;
+    await updateAdminRecord(
+      "leads",
+      "id",
+      leadId,
+      {
+        status: "new",
+        converted_order_id: null,
+        updated_at: new Date().toISOString()
+      },
+      input.actorId,
+      env
+    ).catch(() => undefined);
+  }
+
+  await createActivityLogRecord(
+    {
+      actor_id: input.actorId,
+      action: "warehouse_emergency_delete",
+      entity_table: "orders",
+      entity_id: input.orderId,
+      severity: "warning",
+      metadata: {
+        reason,
+        order_number: String(order.order_number ?? ""),
+        fulfillment_status: String(order.fulfillment_status ?? "")
+      }
+    },
+    input.actorId,
+    env
+  );
+
+  const config = assertSupabaseAdminConfig(env);
+  const optimisticQuery = expectedUpdatedAt
+    ? `&updated_at=eq.${encodeURIComponent(expectedUpdatedAt)}`
+    : "";
+  const response = await fetchWithTimeout(
+    `${config.url}/rest/v1/orders?id=eq.${encodeURIComponent(input.orderId)}${optimisticQuery}`,
+    {
+      method: "DELETE",
+      headers: { ...headers(config.serviceRoleKey), Prefer: "return=minimal" },
+      cache: "no-store"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete orders record: ${response.status} ${response.statusText}`);
+  }
+
+  return { deleted: true, orderId: input.orderId };
 }
 
 function readOrderMetadata(order: JsonRecord): JsonRecord {
@@ -942,6 +1094,7 @@ export async function updateOrderShippingAddressWorkflow(
   const rows = await fetchAdminRecordsByColumn("orders", "id", input.orderId, env);
   const order = rows[0];
   if (!order) throw new Error("Order was not found.");
+  assertAdminMayMutatePreWarehouseOrder(order);
 
   const metadata = readOrderMetadata(order);
   const existingItems = await fetchAdminRecordsByColumn("order_items", "order_id", input.orderId, env);
@@ -1014,6 +1167,7 @@ export async function addOrderItemsToOrderWorkflow(
   const rows = await fetchAdminRecordsByColumn("orders", "id", input.orderId, env);
   const order = rows[0];
   if (!order) throw new Error("Order was not found.");
+  assertAdminMayMutatePreWarehouseOrder(order);
 
   const currentStatus = String(order.status ?? "draft");
   if (["cancelled", "delivered", "returned", "refunded"].includes(currentStatus)) {

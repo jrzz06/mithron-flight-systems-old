@@ -6,13 +6,11 @@ import {
   getProductManagerSnapshot
 } from "@/services/admin";
 import { getCsvInventoryRows } from "@/services/csv-inventory-source";
-import { listAdminEnquiries } from "@/services/enquiries";
-import { listAdminContactRequests } from "@/services/contact-requests";
+import { listAdminLeads } from "@/services/leads";
 import { listActiveWarehouses } from "@/services/warehouses";
 import { getUserGovernanceSnapshot, getAdminSuppliersSnapshot, getAuditObservabilitySnapshot } from "@/services/admin";
 import { listAdminPressCoverage } from "@/services/press-coverage";
 import { listAdminProductReviews } from "@/services/customer-product-reviews";
-import { listDataArchiveRuns } from "@/services/data-archive";
 import type { AdminLiveResourceId } from "@/lib/admin/realtime/admin-entity-store";
 import type { AdminLiveResourcePayload } from "@/lib/admin/realtime/admin-resource-registry";
 import type { AdminEntityRow } from "@/lib/admin/realtime/admin-entity-store";
@@ -90,12 +88,12 @@ export async function loadAdminLiveResource(resource: AdminLiveResourceId): Prom
       };
     }
     case "enquiries": {
-      const enquiries = await listAdminEnquiries({ status: "all", q: "" }).catch(() => []);
-      return { resource, generatedAt, data: { enquiries: asRows(enquiries) } };
+      const leads = await listAdminLeads({ status: "all" }).catch(() => []);
+      return { resource, generatedAt, data: { enquiries: asRows(leads), leads: asRows(leads) } };
     }
     case "contact_requests": {
-      const contactRequests = await listAdminContactRequests().catch(() => []);
-      return { resource, generatedAt, data: { contact_requests: asRows(contactRequests) } };
+      const leads = await listAdminLeads({ status: "all" }).catch(() => []);
+      return { resource, generatedAt, data: { contact_requests: asRows(leads), leads: asRows(leads) } };
     }
     case "suppliers": {
       const snapshot = await getAdminSuppliersSnapshot().catch(() => ({ data: { suppliers: [] } }));
@@ -155,8 +153,7 @@ export async function loadAdminLiveResource(resource: AdminLiveResourceId): Prom
       };
     }
     case "archives": {
-      const runs = await listDataArchiveRuns(40).catch(() => []);
-      return { resource, generatedAt, data: { data_archive_runs: asRows(runs) } };
+      return { resource, generatedAt, data: { data_archive_runs: [] } };
     }
     case "cms": {
       const snapshot = await getCmsWorkspaceSnapshot().catch(() => ({ data: { tables: [] as Array<{ table: string; rows: unknown[] }> } }));

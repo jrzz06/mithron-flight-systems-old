@@ -11,7 +11,7 @@ import { AdminOrderShippingSection } from "@/components/admin/orders/admin-order
 import { AdminOrderSummarySection } from "@/components/admin/orders/admin-order-summary-section";
 import { AdminOrderTimeline } from "@/components/admin/orders/admin-order-timeline";
 import { OrderDetailShell, OrderStickyHeader } from "@/components/admin/orders/order-detail-primitives";
-import { orderItemsForOrder, type AdminRow } from "@/components/admin/orders/order-view-helpers";
+import { orderItemsForOrder, isHandedOffToWarehouse, type AdminRow } from "@/components/admin/orders/order-view-helpers";
 import type { AdminOrderFormAction } from "@/lib/admin/order-action-result";
 
 type CatalogProduct = {
@@ -64,6 +64,10 @@ export function AdminOrderDetail({
   const items = orderItemsForOrder(orderId, orderItems);
   const selectedShipments = shipments.filter((shipment) => String(shipment.order_id) === orderId);
   const detailScrollRef = useRef<HTMLDivElement>(null);
+  const handedOffToWarehouse = isHandedOffToWarehouse(order);
+  const editableShippingAction = handedOffToWarehouse ? undefined : updateOrderShippingAddressAction;
+  const editableAddItemsAction = handedOffToWarehouse ? undefined : addOrderItemsAction;
+  const editableRemoveItemAction = handedOffToWarehouse ? undefined : removeOrderItemAction;
 
   useEffect(() => {
     detailScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
@@ -83,6 +87,11 @@ export function AdminOrderDetail({
   return (
     <OrderDetailShell scrollRef={detailScrollRef} header={backHeader}>
       <OrderStickyHeader order={order} defaultWarehouseCode={defaultWarehouseCode} />
+      {handedOffToWarehouse ? (
+        <div className="rounded-[8px] border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+          Handed off to warehouse — admin view is read-only.
+        </div>
+      ) : null}
       <AdminOrderContactRequestBanner order={order} itemCount={items.length} />
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <AdminOrderSummarySection order={order} defaultWarehouseCode={defaultWarehouseCode} />
@@ -101,8 +110,8 @@ export function AdminOrderDetail({
         order={order}
         defaultWarehouseCode={defaultWarehouseCode}
         catalogProducts={catalogProducts}
-        addOrderItemsAction={addOrderItemsAction}
-        removeOrderItemAction={removeOrderItemAction}
+        addOrderItemsAction={editableAddItemsAction}
+        removeOrderItemAction={editableRemoveItemAction}
         queue={queue}
         filtersQuery={filtersQuery}
       />
@@ -110,7 +119,7 @@ export function AdminOrderDetail({
         order={order}
         shipments={selectedShipments}
         defaultWarehouseCode={defaultWarehouseCode}
-        updateShippingAddressAction={updateOrderShippingAddressAction}
+        updateShippingAddressAction={editableShippingAction}
         queue={queue}
         filtersQuery={filtersQuery}
       />

@@ -73,7 +73,7 @@ import {
   buildPackingChecklistFromFormData,
   buildRemainingShipmentItems
 } from "@/services/warehouse-packing";
-import { cancelAdminOrderWorkflow } from "@/services/order-workflow";
+import { warehouseEmergencyDeleteOrderWorkflow } from "@/services/order-workflow";
 
 type JsonRecord = Record<string, unknown>;
 type InventorySourceTable = "inventory" | "warehouse_stock";
@@ -319,12 +319,20 @@ async function revalidateWarehouseFulfillmentPaths() {
 }
 
 const FULFILLMENT_TRANSITION_SEQUENCE: Record<string, string> = {
-  pending: "processing",
-  processing: "picked",
-  picked: "packed",
-  packed: "ready_to_dispatch",
-  ready_to_dispatch: "shipped"
+  pending: "packing",
+  processing: "packing",
+  picked: "packing",
+  packed: "packing",
+  packing: "dispatched",
+  ready_to_dispatch: "dispatched",
+  shipped: "dispatched"
 };
+
+function normalizeWarehouseFulfillmentStatus(status: string) {
+  if (["processing", "picked", "packed"].includes(status)) return "packing";
+  if (["ready_to_dispatch", "shipped", "in_transit"].includes(status)) return "dispatched";
+  return status || "pending";
+}
 
 async function advanceOrderFulfillmentStep(input: {
   orderId: string;
@@ -1176,9 +1184,13 @@ export async function updateWarehouseOrderLifecycleFormAction(
   const nextPayment = input.paymentStatus ?? String(current.payment_status ?? "not_required");
   const previousStatus = String(current.status ?? "draft");
   const previousPayment = String(current.payment_status ?? "not_required");
-  const previousFulfillment = String(current.fulfillment_status ?? "pending");
+  const previousFulfillmentRaw = String(current.fulfillment_status ?? "pending");
+  const previousFulfillment = normalizeWarehouseFulfillmentStatus(previousFulfillmentRaw);
+  const requestedFulfillment = input.fulfillmentStatus
+    ? normalizeWarehouseFulfillmentStatus(input.fulfillmentStatus)
+    : previousFulfillment;
   const nextFulfillment = input.fulfillmentStatus
-    ? assertOrderFulfillmentTransition(previousFulfillment, input.fulfillmentStatus)
+    ? assertOrderFulfillmentTransition(previousFulfillment, requestedFulfillment)
     : previousFulfillment;
   if (input.fulfillmentStatus) {
     nextStatus = syncOrderStatusFromFulfillment(nextStatus, nextFulfillment);
@@ -1288,9 +1300,9 @@ export async function completeWarehousePackingFormAction(formData: FormData) {
   const checklist = buildPackingChecklistFromFormData(formData);
   const requireItemScan = formData.get("require_item_scan") === "on";
   const order = await fetchOrderRecord(checklist.orderId);
-  const previousFulfillment = String(order.fulfillment_status ?? "pending");
-  if (!["picked", "packed"].includes(previousFulfillment)) {
-    throw new Error(`Order must be picked before packing. Current fulfillment status is "${previousFulfillment}".`);
+  const previousFulfillment = normalizeWarehouseFulfillmentStatus(String(order.fulfillment_status ?? "pending"));
+  if (!["packing", "pending"].includes(previousFulfillment)) {
+    throw new Error(`Order must be in packing before completing packing checklist. Current fulfillment status is "${previousFulfillment}".`);
   }
 
   const orderItems = await fetchShipmentOrderItems(checklist.orderId);
@@ -1502,28 +1514,22 @@ export async function receiveWarehouseOrderFormAction(formData: FormData) {
   await advanceOrderFulfillmentStep({
     orderId,
     warehouseCode,
-    nextFulfillment: "processing",
-    note: "Order received at warehouse",
-    changeSummary: `Mark order ${orderId} received`
+    nextFulfillment: "packing",
+    note: "Order received at warehouse — packing",
+    changeSummary: `Mark order ${orderId} packing`
   });
 }
 
 export async function cancelWarehouseOrderFormAction(formData: FormData) {
   const actorId = await currentActorId();
   const orderId = readInventoryString(formData, "order_id");
-  const reason = readInventoryString(formData, "cancel_reason") || readInventoryString(formData, "reason");
+  const reason = readInventoryString(formData, "cancel_reason")
+    || readInventoryString(formData, "reason")
+    || "Emergency warehouse cancellation";
   if (!orderId) throw new Error("Order is required.");
-  if (!reason) throw new Error("A cancellation reason is required.");
-
-  const order = await fetchOrderRecord(orderId);
-  const fulfillment = String(order.fulfillment_status ?? "pending");
-  const terminal = ["shipped", "delivered", "cancelled", "returned"];
-  if (terminal.includes(fulfillment)) {
-    throw new Error(`Order cannot be cancelled after dispatch. Current status is "${fulfillment}".`);
-  }
 
   const expectedUpdatedAt = readOptionalExpectedUpdatedAt(formData, "expected_updated_at");
-  await cancelAdminOrderWorkflow({
+  await warehouseEmergencyDeleteOrderWorkflow({
     orderId,
     actorId: actorId!,
     reason,
@@ -1531,7 +1537,8 @@ export async function cancelWarehouseOrderFormAction(formData: FormData) {
   });
 
   await revalidateWarehouseFulfillmentPaths();
-  revalidatePath(`/warehouse/fulfillment/${orderId}`);
+  revalidatePath("/warehouse/fulfillment");
+  revalidatePath("/warehouse/orders");
 }
 
 export async function advanceWarehouseOrderStepFormAction(formData: FormData) {
@@ -1550,52 +1557,22 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
   const trackingNumber = readInventoryString(formData, "tracking_number") || null;
 
   let order = await fetchOrderRecord(orderId);
-  let fulfillment = String(order.fulfillment_status ?? "pending");
-  const terminal = ["shipped", "delivered", "cancelled", "returned"];
-  if (terminal.includes(fulfillment)) {
+  let fulfillment = normalizeWarehouseFulfillmentStatus(String(order.fulfillment_status ?? "pending"));
+  if (["dispatched", "delivered", "cancelled", "returned"].includes(fulfillment)) {
     throw new Error(`Order is already ${fulfillment}.`);
   }
 
-  const dispatchableFrom = ["processing", "picked", "packed", "ready_to_dispatch"];
   if (fulfillment === "pending") {
     await advanceOrderFulfillmentStep({
       orderId,
       warehouseCode,
-      nextFulfillment: "processing",
+      nextFulfillment: "packing",
       note: "Order received and prepared for dispatch",
       changeSummary: `Receive order ${orderId} for dispatch`,
       skipRevalidate: true
     });
     order = await fetchOrderRecord(orderId);
-    fulfillment = String(order.fulfillment_status ?? "processing");
-  }
-
-  while (dispatchableFrom.includes(fulfillment) && fulfillment !== "ready_to_dispatch") {
-    const nextFulfillment = FULFILLMENT_TRANSITION_SEQUENCE[fulfillment];
-    if (!nextFulfillment || nextFulfillment === "shipped") break;
-    await advanceOrderFulfillmentStep({
-      orderId,
-      warehouseCode,
-      nextFulfillment,
-      note: "Prepared for dispatch",
-      changeSummary: `Advance order ${orderId} toward dispatch`,
-      skipRevalidate: true
-    });
-    order = await fetchOrderRecord(orderId);
-    fulfillment = String(order.fulfillment_status ?? "pending");
-  }
-
-  if (fulfillment === "packed") {
-    await advanceOrderFulfillmentStep({
-      orderId,
-      warehouseCode,
-      nextFulfillment: "ready_to_dispatch",
-      note: "Ready for dispatch",
-      changeSummary: `Queue order ${orderId} for dispatch`,
-      skipRevalidate: true
-    });
-    order = await fetchOrderRecord(orderId);
-    fulfillment = String(order.fulfillment_status ?? "pending");
+    fulfillment = normalizeWarehouseFulfillmentStatus(String(order.fulfillment_status ?? "packing"));
   }
 
   const shipmentId = await ensurePackedShipmentForOrder({
@@ -1622,18 +1599,14 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
   shipmentForm.set("change_summary", `Dispatch order ${orderId}`);
   await updateShipmentLifecycleFormAction(shipmentForm, { skipRevalidate: true });
 
-  order = await fetchOrderRecord(orderId);
-  fulfillment = String(order.fulfillment_status ?? "pending");
-  if (["packed", "ready_to_dispatch"].includes(fulfillment)) {
-    await advanceOrderFulfillmentStep({
-      orderId,
-      warehouseCode,
-      nextFulfillment: "shipped",
-      note: "Order dispatched from warehouse fulfillment",
-      changeSummary: `Dispatch order ${orderId}`,
-      skipRevalidate: true
-    });
-  }
+  await advanceOrderFulfillmentStep({
+    orderId,
+    warehouseCode,
+    nextFulfillment: "dispatched",
+    note: "Order dispatched from warehouse fulfillment",
+    changeSummary: `Dispatch order ${orderId}`,
+    skipRevalidate: true
+  });
 
   await revalidateWarehouseFulfillmentPaths();
   revalidatePath("/warehouse/inventory");

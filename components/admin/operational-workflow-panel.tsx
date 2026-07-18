@@ -118,8 +118,8 @@ export function OperationalWorkflowPanel({
           {warehouseEligible && assignWarehouseAction && warehouseCode ? (
             <OperationalSecondaryAction
               action={assignWarehouseAction}
-              buttonLabel="Assign to warehouse"
-              pendingLabel="Assigning..."
+              buttonLabel="Push to Warehouse"
+              pendingLabel="Pushing..."
             >
               <input type="hidden" name="order_id" value={linkedOrder.id} />
               <input type="hidden" name="warehouse_code" value={warehouseCode} />

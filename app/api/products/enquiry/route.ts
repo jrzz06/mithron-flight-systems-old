@@ -1,10 +1,24 @@
 import { NextResponse } from "next/server";
 import { parseProductEnquiryRequestBody } from "@/lib/api/product-enquiry-schema";
 import { requireClientAuditToken } from "@/lib/api/require-client-audit-token";
+import { formatLeadReference } from "@/lib/leads/shared";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { createClient } from "@/lib/server";
 import { createCustomerCheckoutNotificationRecord } from "@/services/admin-actions";
-import { formatEnquiryReference, submitProductPageEnquiry } from "@/services/enquiries";
+import { submitLead } from "@/services/leads";
+
+function formatAddress(address?: {
+  line1?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+} | null) {
+  if (!address) return null;
+  return [address.line1, address.city, address.region, address.postalCode]
+    .map((part) => (typeof part === "string" ? part.trim() : ""))
+    .filter(Boolean)
+    .join(", ") || null;
+}
 
 export async function POST(request: Request) {
   try {
@@ -16,7 +30,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
     if (!body.productSlug && !body.email) {
-      return NextResponse.json({ ok: true, enquiryId: null });
+      return NextResponse.json({ ok: true, enquiryId: null, leadId: null });
     }
 
     const supabase = await createClient();
@@ -36,42 +50,40 @@ export async function POST(request: Request) {
       }
     }
 
-    const enquiry = await submitProductPageEnquiry(
+    const lead = await submitLead(
       {
         customerUserId: userId,
-        customerEmail: body.email,
-        customerPhone: body.phone,
-        customerFullName: body.fullName,
-        customerCompany: body.company ?? null,
-        subject: `Product enquiry: ${body.productName}`,
-        body: body.message ?? "",
-        relatedProductSlug: body.productSlug,
-        region: body.region,
+        email: body.email,
+        phone: body.phone,
+        name: body.fullName,
+        address: formatAddress(body.shippingAddress),
+        productSlug: body.productSlug,
         productName: body.productName,
-        productSku: body.productSku,
-        preferredContactMethod: body.preferredContactMethod,
-        sku: body.productSku,
-        image: body.image ?? null,
-        productUrl: body.productUrl ?? null,
-        quantity: body.quantity,
-        ...(body.shippingAddress ? { shippingAddress: body.shippingAddress } : {}),
-        ...(body.billingAddress ? { billingAddress: body.billingAddress } : {}),
-        ...(body.billingSameAsShipping !== undefined
-          ? { billingSameAsShipping: body.billingSameAsShipping }
-          : {})
+        message: body.message ?? `Product enquiry: ${body.productName}`,
+        source: "product_enquiry",
+        payload: {
+          company: body.company ?? null,
+          region: body.region,
+          product_sku: body.productSku,
+          preferred_contact_method: body.preferredContactMethod,
+          quantity: body.quantity,
+          image: body.image ?? null,
+          product_url: body.productUrl ?? null,
+          shipping_address: body.shippingAddress ?? null,
+          billing_address: body.billingAddress ?? null,
+          billing_same_as_shipping: body.billingSameAsShipping ?? null
+        }
       },
       null
     );
 
-    const enquiryId = String(enquiry.id ?? "");
-    const enquiryNumber = typeof enquiry.enquiry_number === "number"
-      ? enquiry.enquiry_number
-      : Number(enquiry.enquiry_number);
-    const enquiryReference = formatEnquiryReference(
-      Number.isFinite(enquiryNumber) && enquiryNumber > 0 ? enquiryNumber : null
+    const leadId = String(lead.id ?? "");
+    const leadNumber = typeof lead.lead_number === "number" ? lead.lead_number : Number(lead.lead_number);
+    const enquiryReference = formatLeadReference(
+      Number.isFinite(leadNumber) && leadNumber > 0 ? leadNumber : null
     );
 
-    if (userId && enquiryId) {
+    if (userId && leadId) {
       try {
         await createCustomerCheckoutNotificationRecord({
           recipient_id: userId,
@@ -79,8 +91,8 @@ export async function POST(request: Request) {
           title: "Product enquiry received",
           body: `We received ${enquiryReference} for ${body.productName}. Our team will contact you shortly.`,
           status: "unread",
-          entity_table: "enquiries",
-          entity_id: enquiryId,
+          entity_table: "leads",
+          entity_id: leadId,
           metadata: { recipient_email: body.email, order_type: "enquiry" }
         });
       } catch {
@@ -90,7 +102,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      enquiryId: enquiryId || null,
+      enquiryId: leadId || null,
+      leadId: leadId || null,
       enquiryReference
     });
   } catch (error) {

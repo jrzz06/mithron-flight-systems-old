@@ -34,11 +34,8 @@ export function isCancellableOrderStatus(status: string): status is CancellableO
 
 export const FULFILLMENT_STATUSES = [
   "pending",
-  "processing",
-  "picked",
-  "packed",
-  "ready_to_dispatch",
-  "shipped",
+  "packing",
+  "dispatched",
   "delivered"
 ] as const;
 
@@ -57,10 +54,45 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 const FULFILLMENT_STATUS_LABELS: Record<FulfillmentStatus, string> = {
   pending: "Pending",
-  processing: "Processing",
-  picked: "Picked",
-  packed: "Packed",
-  ready_to_dispatch: "Ready to dispatch",
-  shipped: "Shipped",
+  packing: "Packing",
+  dispatched: "Dispatched",
   delivered: "Delivered"
 };
+
+/** Extra fulfillment values that may still appear on legacy/terminal rows. */
+const EXTRA_FULFILLMENT_LABELS: Record<string, string> = {
+  returned: "Returned",
+  cancelled: "Cancelled"
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  not_required: "Not required",
+  requires_payment: "Requires payment",
+  processing: "Processing",
+  succeeded: "Paid",
+  paid: "Paid",
+  failed: "Failed",
+  refunded: "Refunded",
+  pending: "Pending"
+};
+
+export function fulfillmentStatusLabel(status: string): string {
+  const normalized = status.toLowerCase().trim();
+  if (normalized in FULFILLMENT_STATUS_LABELS) {
+    return FULFILLMENT_STATUS_LABELS[normalized as FulfillmentStatus];
+  }
+  if (EXTRA_FULFILLMENT_LABELS[normalized]) return EXTRA_FULFILLMENT_LABELS[normalized];
+  return status.replaceAll("_", " ") || "Pending";
+}
+
+export function paymentStatusLabel(status: string): string {
+  const normalized = status.toLowerCase().trim();
+  return PAYMENT_STATUS_LABELS[normalized] ?? (status.replaceAll("_", " ") || "Pending");
+}
+
+/** Filter options for admin orders — canonical fulfillment + terminal extras. */
+export const FULFILLMENT_FILTER_STATUSES = [
+  ...FULFILLMENT_STATUSES,
+  "returned",
+  "cancelled"
+] as const;

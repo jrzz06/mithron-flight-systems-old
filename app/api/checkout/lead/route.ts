@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { validateCheckoutLeadRequestBody } from "@/lib/api/checkout-schema";
 import { requireClientAuditToken } from "@/lib/api/require-client-audit-token";
-import { formatContactRequestReference } from "@/lib/contact-requests/shared";
+import { formatLeadReference } from "@/lib/leads/shared";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { createClient } from "@/lib/server";
-import { submitContactRequest } from "@/services/contact-requests";
+import { submitLead } from "@/services/leads";
 
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -48,42 +48,41 @@ export async function POST(request: Request) {
     const productName = primaryProduct?.productName?.trim()
       || (body.items.length > 1 ? productSummary : primaryProduct?.productSlug)
       || null;
-    const subject = body.source === "buy_now"
-      ? `Buy Now lead${productName ? `: ${productName}` : ""}`
-      : `Checkout lead${productName ? `: ${productName}` : ""}`;
     const message = body.source === "buy_now"
       ? `Buy Now lead submitted for ${productSummary}.`
       : `Checkout lead submitted for ${productSummary}.`;
 
-    const contactRequest = await submitContactRequest(
+    const lead = await submitLead(
       {
         customerUserId: userId,
-        customerEmail: body.email,
-        customerPhone: body.phone,
-        customerFullName: body.fullName,
-        customerCompany: body.company ?? null,
-        subject,
-        body: message,
-        region: body.region ?? null,
-        source: body.source,
+        email: body.email,
+        phone: body.phone,
+        name: body.fullName,
+        productSlug: primaryProduct?.productSlug ?? null,
         productName,
-        relatedProductSlug: primaryProduct?.productSlug ?? null,
-        idempotencyKey
+        message,
+        source: "checkout_enquiry",
+        idempotencyKey,
+        payload: {
+          company: body.company ?? null,
+          region: body.region ?? null,
+          checkout_source: body.source,
+          items: body.items
+        }
       },
       null
     );
 
-    const contactRequestId = String(contactRequest.id ?? "");
-    const requestNumber = typeof contactRequest.request_number === "number"
-      ? contactRequest.request_number
-      : Number(contactRequest.request_number);
+    const leadId = String(lead.id ?? "");
+    const leadNumber = typeof lead.lead_number === "number" ? lead.lead_number : Number(lead.lead_number);
 
     return NextResponse.json({
       ok: true,
-      contactRequestId: contactRequestId || null,
-      requestNumber: Number.isFinite(requestNumber) && requestNumber > 0 ? requestNumber : null,
-      reference: formatContactRequestReference(
-        Number.isFinite(requestNumber) && requestNumber > 0 ? requestNumber : null
+      contactRequestId: leadId || null,
+      leadId: leadId || null,
+      requestNumber: Number.isFinite(leadNumber) && leadNumber > 0 ? leadNumber : null,
+      reference: formatLeadReference(
+        Number.isFinite(leadNumber) && leadNumber > 0 ? leadNumber : null
       )
     });
   } catch (error) {

@@ -101,11 +101,8 @@ export type NotificationWorkflowInput = {
 
 export const ORDER_FULFILLMENT_STATES = [
   "pending",
-  "processing",
-  "picked",
-  "packed",
-  "ready_to_dispatch",
-  "shipped",
+  "packing",
+  "dispatched",
   "delivered",
   "returned",
   "cancelled"
@@ -114,12 +111,9 @@ export const ORDER_FULFILLMENT_STATES = [
 export type OrderFulfillmentState = (typeof ORDER_FULFILLMENT_STATES)[number];
 
 const orderFulfillmentTransitions: Record<OrderFulfillmentState, OrderFulfillmentState[]> = {
-  pending: ["processing", "cancelled"],
-  processing: ["picked", "packed", "cancelled"],
-  picked: ["packed", "cancelled"],
-  packed: ["ready_to_dispatch", "shipped", "cancelled"],
-  ready_to_dispatch: ["shipped", "cancelled"],
-  shipped: ["delivered", "returned"],
+  pending: ["packing", "cancelled"],
+  packing: ["dispatched", "cancelled"],
+  dispatched: ["delivered"],
   delivered: ["returned"],
   returned: [],
   cancelled: []

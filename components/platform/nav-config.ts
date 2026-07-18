@@ -32,8 +32,7 @@ const adminNavGroups: AdminNavGroupDef[] = [
     label: "Fulfillment",
     items: [
       { label: "Orders", href: "/admin/orders", section: "orders", icon: "orders" },
-      { label: "Contact Requests", href: "/admin/contact-requests", section: "enquiries", icon: "enquiries" },
-      { label: "Enquiries", href: "/admin/enquiries", section: "enquiries", icon: "enquiries" }
+      { label: "Leads", href: "/admin/leads", section: "enquiries", icon: "enquiries" }
     ]
   },
   {
@@ -59,7 +58,6 @@ const adminNavGroups: AdminNavGroupDef[] = [
       { label: "Warehouses", href: "/admin/warehouses", section: "warehouse", icon: "inventory" },
       { label: "Users", href: "/admin/users", section: "overview", icon: "operations" },
       { label: "Operations", href: "/operations", section: "operations", icon: "operations" },
-      { label: "Archives", href: "/admin/archives", section: "audit", icon: "audit" },
       { label: "System Diagnostics", href: "/admin/audit", section: "audit", icon: "audit" }
     ]
   }
@@ -89,7 +87,7 @@ export function buildAdminSearchItems(groups: PlatformNavGroup[]): PlatformSearc
 export const adminRouteTitles: PlatformRouteTitle[] = [
   { href: "/admin/products", title: "Products", kicker: "Catalog" },
   { href: "/admin/orders", title: "Orders", kicker: "Fulfillment" },
-  { href: "/admin/contact-requests", title: "Contact Requests", kicker: "Fulfillment" },
+  { href: "/admin/leads", title: "Leads", kicker: "Fulfillment" },
   { href: "/admin/reviews", title: "Reviews", kicker: "Content" },
   { href: "/admin/inventory", title: "Inventory", kicker: "Catalog" },
   { href: "/admin/cms", title: "Website", kicker: "Content" },
@@ -97,7 +95,6 @@ export const adminRouteTitles: PlatformRouteTitle[] = [
   { href: "/admin/press", title: "Articles", kicker: "Content" },
   { href: "/admin/suppliers", title: "Suppliers", kicker: "Partners" },
   { href: "/admin/suppliers/products", title: "Submissions", kicker: "Partners" },
-  { href: "/admin/enquiries", title: "Enquiries", kicker: "Partners" },
   { href: "/admin/audit", title: "System Diagnostics", kicker: "System" },
   { href: "/admin/users", title: "Users", kicker: "System" },
   { href: "/admin/warehouses", title: "Warehouses", kicker: "Fulfillment" },

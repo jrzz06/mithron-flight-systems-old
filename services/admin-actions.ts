@@ -82,6 +82,7 @@ const mutableTables = new Set([
   "user_roles",
   "enquiries",
   "contact_requests",
+  "leads",
   "customer_addresses",
   "payments",
   "blog_posts",
@@ -126,6 +127,7 @@ const tablePermissions: Record<string, EnterprisePermission> = {
   user_roles: "settings.write",
   enquiries: "enquiries.write",
   contact_requests: "enquiries.write",
+  leads: "enquiries.write",
   customer_addresses: "enquiries.write",
   payments: "payments.write",
   customer_order_reviews: "enquiries.write"
@@ -170,6 +172,7 @@ const adminReadColumnsByTable: Record<string, string> = {
   roles: "key,label,description,sort_order",
   enquiries: "id,customer_user_id,customer_email,subject,body,status,region,related_product_slug,assigned_to,converted_order_id,enquiry_kind,enquiry_number,payload,archived_at,deleted_at,created_at,updated_at",
   contact_requests: "id,request_number,customer_user_id,customer_email,customer_phone,customer_full_name,customer_company,subject,body,status,assigned_to,converted_order_id,created_at,updated_at",
+  leads: "id,lead_number,name,phone,email,address,product_slug,product_name,message,source,status,converted_order_id,customer_user_id,payload,created_at,updated_at",
   customer_addresses: "id,user_id,label,line1,city,region,postal_code,country,phone,is_default,is_billing,is_shipping,created_at,updated_at",
   payments: "id,order_id,provider,provider_intent_id,provider_payment_id,amount,currency,status,verified_at,created_at,updated_at",
   customer_order_reviews:
@@ -303,7 +306,7 @@ export async function assertAdminMutationPermission(table: string, actorId: stri
     if (options.allowSystemActor) {
       return getRequiredPermissionForAdminTable(table);
     }
-    if (options.allowGuest && table === "enquiries") {
+    if (options.allowGuest && (table === "enquiries" || table === "leads" || table === "contact_requests")) {
       return getRequiredPermissionForAdminTable(table);
     }
     throw new Error(`Admin mutation against ${table} requires an authenticated actor id.`);

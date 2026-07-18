@@ -414,22 +414,24 @@ export function deriveOrderFulfillmentStatusFromShipments(
 
   const requiredQuantity = orderItems.reduce((sum, item) => sum + rowQuantity(item), 0);
   const shippedQuantity = shipmentItems.reduce((sum, item) => sum + rowQuantity(item), 0);
-  if (shippedQuantity < requiredQuantity) return "processing";
+  if (shippedQuantity < requiredQuantity) return "packing";
   if (statuses.every((status) => status === "delivered")) return "delivered";
-  if (statuses.some((status) => status === "in_transit" || status === "shipped")) return "shipped";
-  if (statuses.some((status) => status === "ready_for_pickup")) return "ready_to_dispatch";
-  return "packed";
+  if (statuses.some((status) => status === "in_transit" || status === "shipped")) return "dispatched";
+  if (statuses.some((status) => status === "ready_for_pickup")) return "dispatched";
+  return "packing";
 }
 
 const fulfillmentProgressRank: Record<string, number> = {
   pending: 0,
+  packing: 1,
   processing: 1,
-  picked: 2,
-  packed: 3,
-  ready_to_dispatch: 4,
-  shipped: 5,
-  delivered: 6,
-  fulfilled: 6,
+  picked: 1,
+  packed: 1,
+  ready_to_dispatch: 2,
+  shipped: 2,
+  dispatched: 2,
+  delivered: 3,
+  fulfilled: 3,
   cancelled: -1,
   returned: -1
 };

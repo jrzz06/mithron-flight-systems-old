@@ -103,7 +103,7 @@ function OrderRowCard({
           <OperationalMoreActions>
             <OperationalDangerAction
               action={cancelAction}
-              buttonLabel="Cancel order"
+              buttonLabel="Cancel & Delete Order"
               pendingLabel="Cancelling"
             >
               <input name="order_id" type="hidden" value={order.orderId} />
@@ -220,7 +220,7 @@ export function WarehouseOrderQueueTable({ rows, cancelAction }: WarehouseOrderQ
                       <OperationalMoreActions>
                         <OperationalDangerAction
                           action={cancelAction}
-                          buttonLabel="Cancel order"
+                          buttonLabel="Cancel & Delete Order"
                           pendingLabel="Cancelling"
                         >
                           <input name="order_id" type="hidden" value={order.orderId} />

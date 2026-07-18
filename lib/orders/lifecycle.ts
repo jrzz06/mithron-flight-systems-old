@@ -1,4 +1,4 @@
-import type { FulfillmentStatus, OrderStatus, PaymentStatus } from "@/lib/orders/status";
+import type { OrderStatus, PaymentStatus } from "@/lib/orders/status";
 
 export type EnterpriseOrderStage =
   | "draft"
@@ -46,18 +46,24 @@ export function resolveEnterpriseStage(order: OrderLike): EnterpriseOrderStage {
   if (isOrderArchived(order)) return "archived";
 
   const status = text(order.status) as OrderStatus;
-  const fulfillmentRaw = text(order.fulfillment_status, "pending");
-  const fulfillment = fulfillmentRaw as FulfillmentStatus;
+  const fulfillment = text(order.fulfillment_status, "pending");
 
-  if (status === "cancelled" || fulfillmentRaw === "cancelled") return "cancelled";
-  if (status === "refunded" || fulfillmentRaw === "returned") return "returned";
+  if (status === "cancelled" || fulfillment === "cancelled") return "cancelled";
+  if (status === "refunded" || fulfillment === "returned") return "returned";
   if (status === "draft") return "draft";
   if (status === "paid" || status === "admin_review" || status === "pending_payment") return "pending_verification";
   if (status === "confirmed") return "verified";
   if (status === "assigned") return "ready_for_warehouse";
-  if (status === "processing" || fulfillment === "processing" || fulfillment === "picked") return "picking";
+  if (status === "processing" || fulfillment === "packing" || fulfillment === "processing" || fulfillment === "picked") {
+    return "picking";
+  }
   if (status === "packed" || fulfillment === "packed") return "packed";
-  if (status === "dispatched" || fulfillment === "ready_to_dispatch" || fulfillment === "shipped") {
+  if (
+    status === "dispatched"
+    || fulfillment === "dispatched"
+    || fulfillment === "ready_to_dispatch"
+    || fulfillment === "shipped"
+  ) {
     return status === "in_transit" ? "in_transit" : "dispatched";
   }
   if (status === "in_transit") return "in_transit";
@@ -114,7 +120,7 @@ export function matchesAdminOrderQueue(order: OrderLike, queue: AdminOrderQueue)
   if (queue === "verified") return status === "confirmed";
   if (queue === "warehouse") {
     return status === "assigned"
-      || ["processing", "picked", "packed", "ready_to_dispatch", "shipped"].includes(fulfillment);
+      || ["packing", "processing", "picked", "packed", "ready_to_dispatch", "shipped", "dispatched"].includes(fulfillment);
   }
   if (queue === "completed") return status === "delivered" || fulfillment === "delivered";
   if (queue === "cancelled") return status === "cancelled" || status === "refunded";
@@ -187,7 +193,7 @@ const CONFIRMED_STATUSES = new Set([
 ]);
 
 const DISPATCHED_STATUSES = new Set(["dispatched", "in_transit", "delivered"]);
-const DISPATCHED_FULFILLMENT = new Set(["ready_to_dispatch", "shipped", "delivered"]);
+const DISPATCHED_FULFILLMENT = new Set(["dispatched", "ready_to_dispatch", "shipped", "delivered"]);
 
 function orderMetadata(order: OrderLike) {
   const metadata = order.metadata;

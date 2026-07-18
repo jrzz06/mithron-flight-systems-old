@@ -1,6 +1,37 @@
 {
-  "generated_at": "2026-07-17T12:47:23.037Z",
+  "generated_at": "2026-07-18T07:24:10.755Z",
   "product_count": 141,
-  "violation_count": 0,
-  "violations": []
+  "violation_count": 6,
+  "violations": [
+    {
+      "slug": "source-10-liter-dual-agri-drone",
+      "code": "orphan_supabase_url",
+      "detail": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-10-liter-dual-agri-drone-28c94ac80a8a.webp"
+    },
+    {
+      "slug": "source-10-liter-dual-agri-drone-with-spreader",
+      "code": "orphan_supabase_url",
+      "detail": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-10-liter-dual-agri-drone-with-spreader-28c94ac80a8a.webp"
+    },
+    {
+      "slug": "source-a10e-agri-drone-10-liters-base",
+      "code": "orphan_supabase_url",
+      "detail": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-a10e-agri-drone-10-liters-base-e993db5c6436.webp"
+    },
+    {
+      "slug": "source-a10e-10-liters-agri-dronever2",
+      "code": "orphan_supabase_url",
+      "detail": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-a10e-10-liters-agri-dronever2-e993db5c6436.webp"
+    },
+    {
+      "slug": "source-16l-type-certified-agri-drone",
+      "code": "orphan_supabase_url",
+      "detail": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-16l-type-certified-agri-drone-d7860e0bc92c.webp"
+    },
+    {
+      "slug": "source-10l-agri-drone-best-price",
+      "code": "orphan_supabase_url",
+      "detail": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-10l-agri-drone-best-price-3b550657cbf7.webp"
+    }
+  ]
 }

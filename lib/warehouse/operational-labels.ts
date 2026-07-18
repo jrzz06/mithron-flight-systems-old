@@ -1,11 +1,12 @@
 const FULFILLMENT_STEP_LABELS: Record<string, string> = {
   pending: "Waiting",
-  processing: "Picking",
+  packing: "Packing",
+  processing: "Packing",
   picked: "Packing",
-  packed: "Ready for Dispatch",
-  ready_to_dispatch: "Ready for Dispatch",
-  ready_for_pickup: "Ready for Dispatch",
+  packed: "Packing",
+  ready_to_dispatch: "Dispatched",
   shipped: "Dispatched",
+  dispatched: "Dispatched",
   in_transit: "Dispatched",
   delivered: "Completed",
   cancelled: "Cancelled"
@@ -13,12 +14,13 @@ const FULFILLMENT_STEP_LABELS: Record<string, string> = {
 
 const EMPLOYEE_FULFILLMENT_LABELS: Record<string, string> = {
   pending: "Awaiting Receipt",
-  processing: "Received",
-  picked: "Received",
-  packed: "Received",
-  ready_to_dispatch: "Received",
-  ready_for_pickup: "Received",
+  packing: "Packing",
+  processing: "Packing",
+  picked: "Packing",
+  packed: "Packing",
+  ready_to_dispatch: "Dispatched",
   shipped: "Dispatched",
+  dispatched: "Dispatched",
   in_transit: "Dispatched",
   delivered: "Delivered",
   cancelled: "Cancelled"
@@ -51,36 +53,22 @@ export function shipmentStatusLabel(status: string) {
 export const ORDER_STEP_FILTER_OPTIONS = [
   { value: "", label: "All" },
   { value: "pending", label: "Awaiting Receipt" },
-  { value: "received", label: "Received" },
-  { value: "shipped", label: "Dispatched" },
+  { value: "packing", label: "Packing" },
+  { value: "dispatched", label: "Dispatched" },
   { value: "cancelled", label: "Cancelled" }
 ] as const;
 
-export const RECEIVED_FULFILLMENT_STATUSES = ["processing", "picked", "packed", "ready_to_dispatch"] as const;
+export const RECEIVED_FULFILLMENT_STATUSES = ["packing"] as const;
 
 export function matchesEmployeeFulfillmentFilter(fulfillmentStatus: string, filter: string) {
   if (!filter) return true;
-  if (filter === "received") return RECEIVED_FULFILLMENT_STATUSES.includes(fulfillmentStatus as typeof RECEIVED_FULFILLMENT_STATUSES[number]);
+  if (filter === "received" || filter === "packing") {
+    return fulfillmentStatus === "packing"
+      || ["processing", "picked", "packed"].includes(fulfillmentStatus);
+  }
+  if (filter === "dispatched" || filter === "shipped") {
+    return fulfillmentStatus === "dispatched"
+      || ["ready_to_dispatch", "shipped"].includes(fulfillmentStatus);
+  }
   return fulfillmentStatus === filter;
 }
-
-function inventoryStatusLabel(status: string, reservedQuantity = 0) {
-  if (reservedQuantity > 0 && status === "available") return "Reserved";
-  if (status === "available") return "In Stock";
-  if (status === "low_stock") return "Low Stock";
-  if (status === "out_of_stock") return "Out of Stock";
-  if (status === "archived") return "Archived";
-  if (status === "discontinued") return "Discontinued";
-  if (status === "reserved") return "Reserved";
-  return status.replaceAll("_", " ");
-}
-
-const ORDER_STEP_FORM_OPTIONS = [
-  { value: "pending", label: "Waiting" },
-  { value: "processing", label: "Picking" },
-  { value: "picked", label: "Packing" },
-  { value: "packed", label: "Ready for Dispatch" },
-  { value: "ready_to_dispatch", label: "Ready for Dispatch" },
-  { value: "shipped", label: "Dispatched" },
-  { value: "cancelled", label: "Cancelled" }
-] as const;

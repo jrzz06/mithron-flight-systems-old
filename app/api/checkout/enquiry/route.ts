@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import { validateCheckoutEnquiryRequestBody } from "@/lib/api/checkout-schema";
 import { requireClientAuditToken } from "@/lib/api/require-client-audit-token";
+import { formatLeadReference } from "@/lib/leads/shared";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { createClient } from "@/lib/server";
 import { assertCustomerAddressBelongsToUser } from "@/services/customer-addresses";
 import { createCustomerCheckoutNotificationRecord } from "@/services/admin-actions";
 import { getCheckoutPricingBySlugs } from "@/services/catalog";
-import {
-  findCheckoutEnquiryByIdempotencyKey,
-  formatEnquiryReference,
-  submitCheckoutProductEnquiry
-} from "@/services/enquiries";
+import { submitLead } from "@/services/leads";
 import { resolveCheckoutStockSkus } from "@/services/checkout-stock";
 
 const UUID_V4 =
@@ -21,23 +18,17 @@ function readIdempotencyKey(request: Request) {
   return UUID_V4.test(header) ? header : null;
 }
 
-function replayCheckoutEnquiryResponse(enquiry: Record<string, unknown>) {
-  const enquiryId = String(enquiry.id ?? "");
-  const enquiryNumber = typeof enquiry.enquiry_number === "number"
-    ? enquiry.enquiry_number
-    : Number(enquiry.enquiry_number);
-  const enquiryReference = formatEnquiryReference(
-    Number.isFinite(enquiryNumber) && enquiryNumber > 0 ? enquiryNumber : null
-  );
-
-  return NextResponse.json({
-    ok: true,
-    enquiryId,
-    enquiryNumber: Number.isFinite(enquiryNumber) && enquiryNumber > 0 ? enquiryNumber : null,
-    enquiryReference,
-    mode: "enquiry" as const,
-    replayed: true
-  });
+function formatGuestAddress(address?: {
+  line1?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+} | null) {
+  if (!address) return null;
+  return [address.line1, address.city, address.region, address.postalCode]
+    .map((part) => (typeof part === "string" ? part.trim() : ""))
+    .filter(Boolean)
+    .join(", ") || null;
 }
 
 export async function POST(request: Request) {
@@ -79,18 +70,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in to use a saved address, or enter a shipping address below." }, { status: 400 });
     }
 
-    if (idempotencyKey) {
-      const existing = await findCheckoutEnquiryByIdempotencyKey(
-        idempotencyKey,
-        userId
-          ? { userId }
-          : { guestEmail: body.email, guestPhone: body.phone }
-      );
-      if (existing) {
-        return replayCheckoutEnquiryResponse(existing);
-      }
-    }
-
     let stockItems;
     try {
       stockItems = await resolveCheckoutStockSkus(body.items);
@@ -111,59 +90,70 @@ export async function POST(request: Request) {
       };
     });
 
-    const enquiry = await submitCheckoutProductEnquiry(
+    const primary = cartLines[0];
+    const productSummary = cartLines
+      .map((line) => `${line.product_name} × ${line.quantity}`)
+      .join(", ");
+
+    const lead = await submitLead(
       {
         customerUserId: userId,
-        customerEmail: body.email,
-        customerPhone: body.phone,
-        customerFullName: body.fullName,
-        customerCompany: body.company ?? null,
-        enquiryMessage: body.message,
-        region: body.region,
-        relatedProductSlug: cartLines[0]?.product_slug ?? null,
-        cartLines,
-        guestAddress: body.guestAddress ?? null,
-        addressId: body.addressId ?? null,
-        idempotencyKey
+        email: body.email,
+        phone: body.phone,
+        name: body.fullName,
+        address: formatGuestAddress(body.guestAddress),
+        productSlug: primary?.product_slug ?? null,
+        productName: primary?.product_name ?? null,
+        message: body.message || `Checkout enquiry for ${productSummary}`,
+        source: "checkout_enquiry",
+        idempotencyKey,
+        payload: {
+          company: body.company ?? null,
+          region: body.region ?? null,
+          cart_lines: cartLines,
+          address_id: body.addressId ?? null,
+          guest_address: body.guestAddress ?? null,
+          guest_billing_address: body.guestBillingAddress ?? null,
+          billing_same_as_shipping: body.billingSameAsShipping ?? null
+        }
       },
       null
     );
 
-    const enquiryId = String(enquiry.id ?? "");
-    const enquiryNumber = typeof enquiry.enquiry_number === "number"
-      ? enquiry.enquiry_number
-      : Number(enquiry.enquiry_number);
-    const enquiryReference = formatEnquiryReference(
-      Number.isFinite(enquiryNumber) && enquiryNumber > 0 ? enquiryNumber : null
+    const leadId = String(lead.id ?? "");
+    const leadNumber = typeof lead.lead_number === "number" ? lead.lead_number : Number(lead.lead_number);
+    const enquiryReference = formatLeadReference(
+      Number.isFinite(leadNumber) && leadNumber > 0 ? leadNumber : null
     );
 
-    if (userId && enquiryId) {
+    if (userId && leadId) {
       try {
         await createCustomerCheckoutNotificationRecord({
           recipient_id: userId,
           channel: "customer",
-          title: "Product enquiry received",
+          title: "Checkout enquiry received",
           body: `We received ${enquiryReference}. Our team will contact you shortly.`,
           status: "unread",
-          entity_table: "enquiries",
-          entity_id: enquiryId,
+          entity_table: "leads",
+          entity_id: leadId,
           metadata: { recipient_email: body.email, order_type: "enquiry" }
         });
       } catch {
-        // Notification failures should not block enquiry submissions.
+        // ignore
       }
     }
 
     return NextResponse.json({
       ok: true,
-      enquiryId,
-      enquiryNumber: Number.isFinite(enquiryNumber) && enquiryNumber > 0 ? enquiryNumber : null,
+      enquiryId: leadId || null,
+      leadId: leadId || null,
+      enquiryNumber: Number.isFinite(leadNumber) && leadNumber > 0 ? leadNumber : null,
       enquiryReference,
       mode: "enquiry" as const
     });
   } catch (error) {
-    console.error("[checkout-enquiry] failed", error);
-    const message = error instanceof Error ? error.message : "Could not send enquiry.";
+    console.error("[checkout/enquiry] failed", error);
+    const message = error instanceof Error ? error.message : "Could not submit checkout enquiry.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

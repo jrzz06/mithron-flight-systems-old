@@ -17,10 +17,13 @@ import {
   moneyText,
   nextStepForOrder,
   orderPriorityBadge,
+  orderSourceBadge,
+  isIncompleteDraftOrder,
   publicOrderLabel,
   text,
   type AdminRow
 } from "@/components/admin/orders/order-view-helpers";
+import { fulfillmentStatusLabel, paymentStatusLabel } from "@/lib/orders/status";
 
 export function orderPanelEnterClass(reducedMotion: boolean, visible: boolean) {
   if (reducedMotion) return "opacity-100";
@@ -264,17 +267,33 @@ export function OrderStatusStrip({ order, defaultWarehouseCode }: OrderStatusStr
   const invoiceStatus = hasInvoice ? "generated" : text(order.payment_status) === "succeeded" ? "pending" : "not_required";
   const warehouse = assignedWarehouseCode(order, defaultWarehouseCode);
   const priority = priorityLabel(orderPriorityBadge(order));
+  const source = orderSourceBadge(order);
+  const paymentRaw = text(order.payment_status, "not_required");
+  const fulfillmentRaw = text(order.fulfillment_status, "pending");
+  const incomplete = isIncompleteDraftOrder(order);
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-      <OrderStatusBadge status={text(order.status, "pending")} />
-      <OrderStatusBadge status={text(order.payment_status, "not_required")} />
-      <OrderStatusBadge status={text(order.fulfillment_status, "pending")} />
+      {incomplete ? (
+        <span
+          className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border border-amber-500/40 bg-amber-500/10 px-2.5 text-xs font-medium text-amber-200 ${orderRadiusControl}`}
+          title="Order is missing products or address"
+        >
+          Needs setup
+        </span>
+      ) : (
+        <OrderStatusBadge status={text(order.status, "pending")} />
+      )}
+      <OrderStatusBadge status={paymentRaw} label={paymentStatusLabel(paymentRaw)} />
+      <OrderStatusBadge status={fulfillmentRaw} label={fulfillmentStatusLabel(fulfillmentRaw)} />
       <span className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border border-[var(--platform-border)] px-2.5 text-xs text-[var(--platform-text-secondary)] ${orderRadiusControl}`}>
         Invoice: {invoiceStatus.replaceAll("_", " ")}
       </span>
       <span className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border border-[var(--platform-border)] px-2.5 text-xs text-[var(--platform-text-secondary)] ${orderRadiusControl}`}>
         WH {warehouse}
+      </span>
+      <span className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border px-2.5 text-xs font-medium ${orderRadiusControl} ${source.className}`}>
+        {source.label}
       </span>
       {priority ? (
         <span className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border px-2.5 text-xs font-medium ${orderRadiusControl} ${priority.className}`}>

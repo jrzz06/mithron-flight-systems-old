@@ -37,11 +37,11 @@ type WarehouseFulfillmentDetailProps = {
 };
 
 function canCancelFulfillment(status: string) {
-  return !["shipped", "delivered", "cancelled", "returned"].includes(status);
+  return !["dispatched", "shipped", "delivered", "cancelled", "returned"].includes(status);
 }
 
 function canDispatch(status: string) {
-  return ["pending", "processing", "picked", "packed", "ready_to_dispatch"].includes(status);
+  return ["pending", "packing", "processing", "picked", "packed", "ready_to_dispatch"].includes(status);
 }
 
 export function WarehouseFulfillmentDetail({
@@ -78,7 +78,7 @@ export function WarehouseFulfillmentDetail({
               title="Dispatch order"
               description="One click receives, prepares, and dispatches this order."
               action={dispatchAction}
-              buttonLabel="Dispatch"
+              buttonLabel="Mark Dispatched"
               pendingLabel="Dispatching"
             >
               <input name="order_id" type="hidden" value={orderRow.orderId} />
@@ -90,7 +90,7 @@ export function WarehouseFulfillmentDetail({
             <OperationalMoreActions>
               <OperationalDangerAction
                 action={cancelAction}
-                buttonLabel="Cancel order"
+                buttonLabel="Cancel & Delete Order"
                 pendingLabel="Cancelling"
               >
                 <input name="order_id" type="hidden" value={orderRow.orderId} />

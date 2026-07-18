@@ -18,6 +18,7 @@ import {
   createAdminManualOrderFormAction,
   markOrderPaidFormAction,
   markOrderRefundedFormAction,
+  setOrderPaymentRequirementFormAction,
   permanentDeleteAdminOrderFormAction,
   rejectAdminOrderFormAction,
   updateOrderShippingAddressFormAction
@@ -202,6 +203,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
         assignAdminWarehouseAction={assignOrderToWarehouseFormAction}
         markOrderPaidAdminOrderAction={markOrderPaidFormAction}
         markOrderRefundedAdminOrderAction={markOrderRefundedFormAction}
+        setOrderPaymentRequirementAdminOrderAction={setOrderPaymentRequirementFormAction}
         updateAdminOrderLifecycleAction={updateAdminOrderLifecycleAction}
         confirmAdminWarehouseHandoffAction={confirmAdminWarehouseHandoffAction}
         updateOrderShippingAddressAction={updateOrderShippingAddressFormAction}

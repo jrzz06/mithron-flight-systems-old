@@ -2,13 +2,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  assignEnquiry,
-  convertEnquiryToOrderAtomic,
-  markEnquiryContacted,
+  formatEnquiryReference,
+  listAdminEnquiries,
   submitCheckoutProductEnquiry,
-  submitEnquiry,
   submitProductPageEnquiry
 } from "@/services/enquiries";
+import { pushLeadToOrder, submitLead } from "@/services/leads";
 import { buildValidatedOrderDraft } from "@/services/orders";
 
 const root = process.cwd();
@@ -31,72 +30,23 @@ describe("enquiry workflow", () => {
     expect(draft.orderItems).toHaveLength(1);
   });
 
-  it("exports enquiry service operations", () => {
+  it("exports lead-backed enquiry service operations", () => {
     const enquiries = source("services/enquiries.ts");
-    expect(typeof submitEnquiry).toBe("function");
+    const leads = source("services/leads.ts");
     expect(typeof submitCheckoutProductEnquiry).toBe("function");
     expect(typeof submitProductPageEnquiry).toBe("function");
-    expect(typeof assignEnquiry).toBe("function");
-    expect(typeof markEnquiryContacted).toBe("function");
-    expect(typeof convertEnquiryToOrderAtomic).toBe("function");
-    expect(enquiries).toContain("markEnquiryInProgress");
-    expect(enquiries).toContain("markEnquiryComplete");
-    expect(enquiries).toContain("requestEnquiryMissingInfo");
-    const requestInfoBlock = enquiries.slice(
-      enquiries.indexOf("export async function requestEnquiryMissingInfo"),
-      enquiries.indexOf("export async function addEnquiryNote")
-    );
-    expect(requestInfoBlock).toContain("enquiries.info_requested");
-    expect(requestInfoBlock).not.toContain("notifyCustomerAboutEnquiry");
+    expect(typeof listAdminEnquiries).toBe("function");
+    expect(typeof submitLead).toBe("function");
+    expect(typeof pushLeadToOrder).toBe("function");
+    expect(typeof formatEnquiryReference).toBe("function");
+    expect(enquiries).toContain("leads");
+    expect(leads).toContain("convert_lead_to_order");
   });
 
-  it("invalidates enquiry cache after address and workflow mutations", () => {
-    const actions = source("app/admin/enquiries/actions.ts");
-    expect(actions).toContain('revalidateAfterMutation("enquiries")');
-    expect(actions).toContain("updateEnquiryAddressFormAction");
-    const addressBlock = actions.slice(
-      actions.indexOf("export async function updateEnquiryAddressFormAction"),
-      actions.length
-    );
-    expect(addressBlock).toContain('revalidateAfterMutation("enquiries")');
-    expect(actions).toContain("Missing information noted internally.");
-    expect(actions).not.toContain("Customer notified to provide missing information.");
-  });
-
-  it("keeps product page enquiries visible in admin queue", () => {
-    const enquiries = source("services/enquiries.ts");
-    expect(enquiries).toContain('source: "product_page"');
-    expect(enquiries).toContain('text(payload.source) === "product_page"');
-    expect(enquiries).toContain('!== "contact"');
-  });
-
-  it("routes enquiry conversion through atomic RPC with idempotency", () => {
-    const migration = source("supabase/migrations/20260702000100_enterprise_order_lifecycle.sql");
-    const enquiries = source("services/enquiries.ts");
-    expect(migration).toContain("convert_enquiry_to_order_atomic");
-    expect(migration).toContain("converted_order_id");
-    expect(enquiries).toContain("rpc/convert_enquiry_to_order_atomic");
-    expect(enquiries).toContain("convertEnquiryToOrderAtomic");
-    expect(enquiries).toContain("return convertEnquiryToOrderAtomic");
-  });
-
-  it("does not hard-block enquiry conversion without product or address", () => {
-    const enquiries = source("services/enquiries.ts");
-    expect(enquiries).toContain("needs_products: true");
-    expect(enquiries).toContain("needs_address: !hasAddress");
-    expect(enquiries).not.toContain("Add a related product before converting.");
-    expect(enquiries).not.toContain("Save the customer's shipping address before creating this order.");
-  });
-
-  it("accepts override line items during enquiry conversion", () => {
-    const actions = source("app/admin/enquiries/actions.ts");
-    expect(actions).toContain("readOrderItemsFromFormData");
-    expect(actions).toContain("overrideItems");
-  });
-
-  it("defers redis invalidation after tag/path revalidation", () => {
-    const revalidate = source("lib/control-plane/revalidate-realtime.ts");
-    expect(revalidate).toContain('import { after } from "next/server"');
-    expect(revalidate).toContain("after(async () => {");
+  it("keeps admin leads page and API entry points", () => {
+    expect(source("app/admin/leads/page.tsx")).toContain("AdminLeadQueue");
+    expect(source("app/api/contact-requests/route.ts")).toContain("submitLead");
+    expect(source("app/api/products/enquiry/route.ts")).toContain("submitLead");
+    expect(source("app/api/checkout/enquiry/route.ts")).toContain("submitLead");
   });
 });

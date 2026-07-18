@@ -45,7 +45,7 @@ describe("admin order enrichment", () => {
     expect(detail).toContain("addOrderItemsAction");
     expect(shipping).toContain("updateShippingAddressAction");
     expect(shipping).toContain("runOrderFormActionWithConflictRetry");
-    expect(shipping).toContain("router.refresh");
+    expect(shipping).toContain("shippingFormDefaults");
     expect(shipping).toContain("patchOrder");
     expect(products).toContain("addOrderItemsAction");
   });

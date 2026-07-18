@@ -3,7 +3,7 @@ import { parseEnquiryRequestBody } from "@/lib/api/enquiries-schema";
 import { requireClientAuditToken } from "@/lib/api/require-client-audit-token";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { createClient } from "@/lib/server";
-import { submitContactRequest } from "@/services/contact-requests";
+import { submitLead } from "@/services/leads";
 import { createCustomerCheckoutNotificationRecord } from "@/services/admin-actions";
 
 export async function POST(request: Request) {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Full name, email, phone, subject, and message are required." }, { status: 400 });
     }
     if (!body.subject && !body.message && !body.email) {
-      return NextResponse.json({ ok: true, contactRequestId: null });
+      return NextResponse.json({ ok: true, leadId: null, contactRequestId: null });
     }
 
     const supabase = await createClient();
@@ -34,16 +34,19 @@ export async function POST(request: Request) {
       }
     }
 
-    const contactRequest = await submitContactRequest(
+    const lead = await submitLead(
       {
         customerUserId: userId,
-        customerEmail: body.email,
-        customerPhone: body.phone,
-        customerFullName: body.fullName,
-        customerCompany: body.company ?? null,
-        subject: body.subject,
-        body: body.message,
-        region: body.region ?? null
+        email: body.email,
+        phone: body.phone,
+        name: body.fullName,
+        message: [body.subject, body.message].filter(Boolean).join("\n\n"),
+        source: "contact_form",
+        payload: {
+          company: body.company ?? null,
+          region: body.region ?? null,
+          subject: body.subject
+        }
       },
       null
     );
@@ -56,8 +59,8 @@ export async function POST(request: Request) {
           title: "Consultation request received",
           body: `We received your request: ${body.subject}`,
           status: "unread",
-          entity_table: "contact_requests",
-          entity_id: String(contactRequest.id ?? ""),
+          entity_table: "leads",
+          entity_id: String(lead.id ?? ""),
           metadata: { recipient_email: body.email }
         });
       } catch {
@@ -65,7 +68,11 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true, contactRequestId: contactRequest.id ?? null });
+    return NextResponse.json({
+      ok: true,
+      leadId: lead.id ?? null,
+      contactRequestId: lead.id ?? null
+    });
   } catch (error) {
     console.error("[contact-requests] failed", error);
     const message = error instanceof Error ? error.message : "Could not send contact request.";

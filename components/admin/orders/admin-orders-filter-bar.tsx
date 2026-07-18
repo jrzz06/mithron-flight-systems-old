@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Input, Select } from "@/components/platform";
 import type { OrderFilterState, OrderSortKey } from "@/components/admin/orders/order-view-helpers";
 import { orderRadiusCard, orderRadiusControl } from "@/components/admin/orders/order-layout-utils";
+import {
+  FULFILLMENT_FILTER_STATUSES,
+  PAYMENT_STATUSES,
+  fulfillmentStatusLabel,
+  paymentStatusLabel
+} from "@/lib/orders/status";
 
 type AdminOrdersFilterBarProps = {
   filters: OrderFilterState;
@@ -19,8 +25,8 @@ const sortOptions: Array<{ value: OrderSortKey; label: string }> = [
   { value: "needs_action", label: "Needs action first" }
 ];
 
-const paymentOptions = ["", "succeeded", "pending", "failed", "not_required", "processing", "requires_payment"];
-const fulfillmentOptions = ["", "pending", "processing", "picked", "packed", "ready_to_dispatch", "shipped", "delivered", "cancelled", "returned"];
+const paymentOptions = ["", ...PAYMENT_STATUSES];
+const fulfillmentOptions = ["", ...FULFILLMENT_FILTER_STATUSES];
 
 export function AdminOrdersFilterBar({ filters, warehouses, onChange }: AdminOrdersFilterBarProps) {
   const [localQuery, setLocalQuery] = useState(filters.query);
@@ -106,7 +112,7 @@ export function AdminOrdersFilterBar({ filters, warehouses, onChange }: AdminOrd
             <option value="">All payment statuses</option>
             {paymentOptions.filter(Boolean).map((status) => (
               <option key={status} value={status}>
-                {status.replaceAll("_", " ")}
+                {paymentStatusLabel(status)}
               </option>
             ))}
           </Select>
@@ -118,7 +124,7 @@ export function AdminOrdersFilterBar({ filters, warehouses, onChange }: AdminOrd
             <option value="">All fulfillment statuses</option>
             {fulfillmentOptions.filter(Boolean).map((status) => (
               <option key={status} value={status}>
-                {status.replaceAll("_", " ")}
+                {fulfillmentStatusLabel(status)}
               </option>
             ))}
           </Select>

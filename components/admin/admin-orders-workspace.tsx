@@ -56,6 +56,7 @@ type AdminOrdersWorkspaceProps = {
   assignAdminWarehouseAction: AdminOrderFormAction;
   markOrderPaidAdminOrderAction: AdminOrderFormAction;
   markOrderRefundedAdminOrderAction: AdminOrderFormAction;
+  setOrderPaymentRequirementAdminOrderAction: AdminOrderFormAction;
   updateAdminOrderLifecycleAction: AdminOrderFormAction;
   confirmAdminWarehouseHandoffAction: AdminOrderFormAction;
   updateOrderShippingAddressAction: AdminOrderFormAction;
@@ -120,6 +121,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
     assignAdminWarehouseAction,
     markOrderPaidAdminOrderAction,
     markOrderRefundedAdminOrderAction,
+    setOrderPaymentRequirementAdminOrderAction,
     updateAdminOrderLifecycleAction,
     confirmAdminWarehouseHandoffAction,
     updateOrderShippingAddressAction,
@@ -431,6 +433,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
                   assignAdminWarehouseAction={assignAdminWarehouseAction}
                   markOrderPaidAdminOrderAction={markOrderPaidAdminOrderAction}
                   markOrderRefundedAdminOrderAction={markOrderRefundedAdminOrderAction}
+                  setOrderPaymentRequirementAdminOrderAction={setOrderPaymentRequirementAdminOrderAction}
                   updateAdminOrderLifecycleAction={updateAdminOrderLifecycleAction}
                   confirmAdminWarehouseHandoffAction={confirmAdminWarehouseHandoffAction}
                 />

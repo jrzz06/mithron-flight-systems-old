@@ -314,11 +314,8 @@ export function appendOrderTimeline(currentTimeline: unknown, nextEntry: OrderTi
 }
 
 const fulfillmentToOrderStatus: Partial<Record<string, OrderStatus>> = {
-  processing: "processing",
-  picked: "processing",
-  packed: "packed",
-  ready_to_dispatch: "packed",
-  shipped: "dispatched",
+  packing: "processing",
+  dispatched: "dispatched",
   delivered: "delivered"
 };
 
@@ -367,7 +364,7 @@ export function buildWarehouseAssignmentUpdate(
     throw new Error(`Order cannot be assigned to warehouse from status ${orderStatus}.`);
   }
 
-  const nextFulfillment = fulfillmentStatus === "pending" ? "processing" : fulfillmentStatus;
+  const nextFulfillment = fulfillmentStatus === "pending" ? "packing" : fulfillmentStatus;
   let nextStatus = transitionOrderStatus(orderStatus, "assigned");
   nextStatus = syncOrderStatusFromFulfillment(nextStatus, nextFulfillment) as OrderStatus;
 

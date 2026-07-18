@@ -140,7 +140,7 @@ export const getAdminNavMetricsPayload = cache(async (): Promise<AdminNavMetrics
 
 export const getWarehouseNavMetricsPayload = cache(async (): Promise<WarehouseNavMetricsPayload> => {
   return readThroughCache(REDIS_CACHE_KEYS.warehouseNavMetrics, 30, async () => ({
-    fulfillmentPending: await countRows("fulfillment_status=in.(pending,processing,picked,packed,ready_to_dispatch)&status=in.(confirmed,assigned,processing,packed,dispatched,in_transit)")
+    fulfillmentPending: await countRows("fulfillment_status=in.(pending,packing)&status=in.(confirmed,assigned,processing,packed,dispatched,in_transit)")
   }));
 });
 

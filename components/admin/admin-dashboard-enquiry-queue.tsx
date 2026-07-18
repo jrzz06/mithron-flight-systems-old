@@ -45,7 +45,7 @@ export async function AdminDashboardEnquiryQueue() {
   const queueEnquiries = openEnquiries(enquiries).slice(0, 8);
 
   return (
-    <QueuePanel title="Customer enquiries" href="/admin/enquiries" emptyLabel="No open enquiries.">
+    <QueuePanel title="Customer leads" href="/admin/leads" emptyLabel="No open leads.">
       {queueEnquiries.length ? (
         <table className="min-w-full text-sm">
           <thead className="border-b border-[var(--platform-border)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">

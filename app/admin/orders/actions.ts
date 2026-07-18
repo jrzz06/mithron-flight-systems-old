@@ -21,6 +21,7 @@ import {
   deleteAdminOrderWorkflow,
   markOrderPaidWorkflow,
   markOrderRefundedWorkflow,
+  setOrderPaymentRequirementWorkflow,
   permanentDeleteAdminOrderWorkflow,
   rejectAdminOrderWorkflow,
   removeOrderItemFromOrderWorkflow,
@@ -132,6 +133,32 @@ export async function markOrderRefundedFormAction(formData: FormData): Promise<A
     await markOrderRefundedWorkflow({
       orderId,
       actorId: context.userId!,
+      note,
+      expectedUpdatedAt
+    });
+
+    await revalidateAdminOrderSurfaces();
+  });
+}
+
+export async function setOrderPaymentRequirementFormAction(formData: FormData): Promise<AdminOrderActionResult> {
+  return runAdminOrderAction(formData, async () => {
+    const context = await requireAdminPermission("orders.write");
+    const orderId = String(formData.get("order_id") ?? "").trim();
+    if (!orderId) throw new Error("Order id is required.");
+
+    const paymentStatus = String(formData.get("payment_status") ?? "").trim();
+    if (!["succeeded", "requires_payment", "not_required"].includes(paymentStatus)) {
+      throw new Error("Invalid payment status. Use paid, required, or not required.");
+    }
+
+    const expectedUpdatedAt = String(formData.get("expected_updated_at") ?? "").trim() || null;
+    const note = String(formData.get("note") ?? "").trim() || undefined;
+
+    await setOrderPaymentRequirementWorkflow({
+      orderId,
+      actorId: context.userId!,
+      paymentStatus: paymentStatus as "succeeded" | "requires_payment" | "not_required",
       note,
       expectedUpdatedAt
     });

@@ -78,7 +78,7 @@ export const ROLE_WORKFLOWS: Record<WorkflowRole, RoleWorkflow> = {
       { path: "/admin/inventory", label: "Inventory", description: "Stock levels and adjustments" },
       { path: "/admin/orders", label: "Orders", description: "Order lifecycle" },
       { path: "/admin/suppliers", label: "Suppliers", description: "Supplier approvals" },
-      { path: "/admin/enquiries", label: "Enquiries", description: "Customer enquiries" },
+      { path: "/admin/leads", label: "Leads", description: "Customer leads" },
       { path: "/admin/cms", label: "CMS", description: "Content and merchandising" },
       { path: "/admin/audit", label: "System Diagnostics", description: "Operational diagnostics" }
     ],
@@ -138,20 +138,17 @@ export const ROLE_WORKFLOWS: Record<WorkflowRole, RoleWorkflow> = {
       { path: "/warehouse/activity", label: "History", description: "Dispatched order history" }
     ],
     actions: [
-      { id: "order.receive", label: "Mark received", permission: "orders.lifecycle", auditEvent: "order.received", notification: "order.processing" },
-      { id: "order.dispatch", label: "Dispatch order", permission: "orders.lifecycle", auditEvent: "order.dispatched", notification: "order.shipped" },
-      { id: "order.cancel", label: "Cancel order", permission: "orders.lifecycle", auditEvent: "order.cancelled" }
+      { id: "order.receive", label: "Start packing", permission: "orders.lifecycle", auditEvent: "order.packing", notification: "order.processing" },
+      { id: "order.dispatch", label: "Mark Dispatched", permission: "orders.lifecycle", auditEvent: "order.dispatched", notification: "order.shipped" },
+      { id: "order.cancel", label: "Cancel & Delete Order", permission: "orders.lifecycle", auditEvent: "order.cancelled" }
     ],
     stateMachines: {
       fulfillment: {
-        states: ["pending", "processing", "picked", "packed", "ready_to_dispatch", "shipped", "delivered"],
+        states: ["pending", "packing", "dispatched", "delivered"],
         transitions: [
-          { from: "pending", to: "processing", action: "warehouse.allocate", actor: "warehouse" },
-          { from: "processing", to: "picked", action: "warehouse.pick", actor: "warehouse" },
-          { from: "picked", to: "packed", action: "warehouse.pack", actor: "warehouse" },
-          { from: "packed", to: "ready_to_dispatch", action: "warehouse.ready", actor: "warehouse" },
-          { from: "ready_to_dispatch", to: "shipped", action: "warehouse.dispatch", actor: "warehouse" },
-          { from: "shipped", to: "delivered", action: "shipment.delivered", actor: "warehouse" }
+          { from: "pending", to: "packing", action: "warehouse.pack", actor: "warehouse" },
+          { from: "packing", to: "dispatched", action: "warehouse.dispatch", actor: "warehouse" },
+          { from: "dispatched", to: "delivered", action: "shipment.delivered", actor: "warehouse" }
         ]
       }
     }

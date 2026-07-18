@@ -22,6 +22,7 @@ import {
   canPermanentlyDeleteOrder,
   fulfillmentNextSteps,
   fulfillmentReadinessMessage,
+  isHandedOffToWarehouse,
   isOrderArchived,
   isOrderDeleted,
   nextStepForOrder,
@@ -30,6 +31,7 @@ import {
   text,
   type AdminRow
 } from "@/components/admin/orders/order-view-helpers";
+import { fulfillmentStatusLabel, paymentStatusLabel } from "@/lib/orders/status";
 
 type AdminOrderActionsRailProps = {
   order: AdminRow;
@@ -47,6 +49,7 @@ type AdminOrderActionsRailProps = {
   assignAdminWarehouseAction: AdminOrderFormAction;
   markOrderPaidAdminOrderAction: AdminOrderFormAction;
   markOrderRefundedAdminOrderAction: AdminOrderFormAction;
+  setOrderPaymentRequirementAdminOrderAction: AdminOrderFormAction;
   updateAdminOrderLifecycleAction: AdminOrderFormAction;
   confirmAdminWarehouseHandoffAction: AdminOrderFormAction;
 };
@@ -79,6 +82,7 @@ export function AdminOrderActionsRail({
   assignAdminWarehouseAction,
   markOrderPaidAdminOrderAction,
   markOrderRefundedAdminOrderAction,
+  setOrderPaymentRequirementAdminOrderAction,
   updateAdminOrderLifecycleAction,
   confirmAdminWarehouseHandoffAction
 }: AdminOrderActionsRailProps) {
@@ -90,13 +94,42 @@ export function AdminOrderActionsRail({
   const archived = isOrderArchived(order);
   const deleted = isOrderDeleted(order);
   const isClosed = archived || deleted;
+  const fulfillment = text(order.fulfillment_status, "pending");
+  const handedOffToWarehouse = isHandedOffToWarehouse(order);
   const hasItems = Boolean(firstItem);
   const fulfillmentBlockedMessage = fulfillmentReadinessMessage(order, hasItems);
+  const paymentRaw = text(order.payment_status, "not_required");
 
   const timedPermanentDelete = useMemo(
     () => wrapServerAction(permanentDeleteAdminOrderAction, { label: "Permanently delete order" }),
     [permanentDeleteAdminOrderAction]
   );
+
+  if (handedOffToWarehouse && !isClosed) {
+    return (
+      <aside
+        data-admin-order-actions-rail
+        className={`grid w-full min-w-0 gap-4 border border-[var(--platform-border)] bg-[var(--platform-surface)] shadow-sm ${orderRadiusCard} ${orderCardPad}`}
+      >
+        <div className="min-w-0">
+          <h3 className={orderSectionLabel}>Actions</h3>
+          <p className={`platform-type-body leading-relaxed text-[var(--platform-text-secondary)] ${orderLongText}`}>
+            Handed off to warehouse. Admin view is read-only. Only warehouse can update details or cancel &amp; delete this order.
+          </p>
+        </div>
+        <ActionGroup title="Status">
+          <p className="platform-type-body text-[var(--platform-text-secondary)]">
+            Fulfillment: <span className="font-medium text-[var(--platform-text-primary)]">{fulfillmentStatusLabel(fulfillment)}</span>
+          </p>
+          {warehouseCode ? (
+            <p className="platform-type-body text-[var(--platform-text-secondary)]">
+              Warehouse: <span className="font-medium text-[var(--platform-text-primary)]">{warehouseName}</span>
+            </p>
+          ) : null}
+        </ActionGroup>
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -171,7 +204,7 @@ export function AdminOrderActionsRail({
                   <option value="">Next fulfillment status</option>
                   {fulfillmentNextSteps(text(order.fulfillment_status, "pending")).map((state) => (
                     <option key={state} value={state}>
-                      {state.replaceAll("_", " ")}
+                      {fulfillmentStatusLabel(state)}
                     </option>
                   ))}
                 </select>
@@ -271,41 +304,100 @@ export function AdminOrderActionsRail({
         </div>
       ) : null}
 
-      {text(order.status) === "pending_payment" ? (
+      {!isClosed && !handedOffToWarehouse ? (
         <div className={orderRailDivider}>
-          <ActionGroup title="Payment">
-            <AdminOrderActionForm orderId={orderId} action={markOrderPaidAdminOrderAction} nextStatus="paid" className="grid gap-2">
-              <input type="hidden" name="order_id" value={orderId} />
-              <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
-              <FormContextFields queue={queue} query={query} />
-              <textarea
-                name="note"
-                rows={2}
-                placeholder="Payment note (optional): UPI ref / bank transfer id"
-                className={`w-full border px-3 py-2 text-sm ${orderRadiusControl}`}
-              />
-              <OperationalSubmitButton
-                pendingLabel="Saving..."
-                className={`${buttonClass} border border-emerald-600 bg-emerald-600 text-white`}
-              >
-                Mark as paid
-              </OperationalSubmitButton>
-              <p className="platform-type-caption">
-                For offline payments only.
-              </p>
-            </AdminOrderActionForm>
-            <AdminOrderActionForm orderId={orderId} action={cancelAdminOrderAction} nextStatus="cancelled" className="grid gap-2">
-              <input type="hidden" name="order_id" value={orderId} />
-              <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
-              <FormContextFields queue={queue} query={query} />
-              <input name="cancel_reason" required placeholder="Cancellation reason" className={inputClass} />
-              <OperationalSubmitButton
-                pendingLabel="Cancelling..."
-                className={`${buttonClass} border border-rose-700 bg-rose-900/40 text-rose-100`}
-              >
-                Cancel order
-              </OperationalSubmitButton>
-            </AdminOrderActionForm>
+          <ActionGroup title="Payment status">
+            <p className="platform-type-body text-[var(--platform-text-secondary)]">
+              Current:{" "}
+              <span className="font-medium text-[var(--platform-text-primary)]">
+                {paymentStatusLabel(paymentRaw)}
+              </span>
+            </p>
+            {text(order.status) === "pending_payment" ? (
+              <>
+                <AdminOrderActionForm orderId={orderId} action={markOrderPaidAdminOrderAction} nextStatus="paid" className="grid gap-2">
+                  <input type="hidden" name="order_id" value={orderId} />
+                  <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
+                  <FormContextFields queue={queue} query={query} />
+                  <textarea
+                    name="note"
+                    rows={2}
+                    placeholder="Payment note (optional): UPI ref / bank transfer id"
+                    className={`w-full border px-3 py-2 text-sm ${orderRadiusControl}`}
+                  />
+                  <OperationalSubmitButton
+                    pendingLabel="Saving..."
+                    className={`${buttonClass} border border-emerald-600 bg-emerald-600 text-white`}
+                  >
+                    Mark as paid
+                  </OperationalSubmitButton>
+                  <p className="platform-type-caption">For offline payments only — also advances order status.</p>
+                </AdminOrderActionForm>
+                <AdminOrderActionForm orderId={orderId} action={cancelAdminOrderAction} nextStatus="cancelled" className="grid gap-2">
+                  <input type="hidden" name="order_id" value={orderId} />
+                  <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
+                  <FormContextFields queue={queue} query={query} />
+                  <input name="cancel_reason" required placeholder="Cancellation reason" className={inputClass} />
+                  <OperationalSubmitButton
+                    pendingLabel="Cancelling..."
+                    className={`${buttonClass} border border-rose-700 bg-rose-900/40 text-rose-100`}
+                  >
+                    Cancel order
+                  </OperationalSubmitButton>
+                </AdminOrderActionForm>
+              </>
+            ) : (
+              <>
+                {paymentRaw !== "succeeded" ? (
+                  <AdminOrderActionForm orderId={orderId} action={setOrderPaymentRequirementAdminOrderAction} className="grid gap-2">
+                    <input type="hidden" name="order_id" value={orderId} />
+                    <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
+                    <input type="hidden" name="payment_status" value="succeeded" />
+                    <FormContextFields queue={queue} query={query} />
+                    <textarea
+                      name="note"
+                      rows={2}
+                      placeholder="Optional note"
+                      className={`w-full border px-3 py-2 text-sm ${orderRadiusControl}`}
+                    />
+                    <OperationalSubmitButton
+                      pendingLabel="Saving..."
+                      className={`${buttonClass} border border-emerald-600 bg-emerald-600 text-white`}
+                    >
+                      Mark payment paid
+                    </OperationalSubmitButton>
+                  </AdminOrderActionForm>
+                ) : null}
+                {paymentRaw !== "requires_payment" ? (
+                  <AdminOrderActionForm orderId={orderId} action={setOrderPaymentRequirementAdminOrderAction} className="grid gap-2">
+                    <input type="hidden" name="order_id" value={orderId} />
+                    <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
+                    <input type="hidden" name="payment_status" value="requires_payment" />
+                    <FormContextFields queue={queue} query={query} />
+                    <OperationalSubmitButton
+                      pendingLabel="Saving..."
+                      className={`${buttonClass} border border-amber-600 bg-amber-600 text-white`}
+                    >
+                      Mark payment required
+                    </OperationalSubmitButton>
+                  </AdminOrderActionForm>
+                ) : null}
+                {paymentRaw !== "not_required" ? (
+                  <AdminOrderActionForm orderId={orderId} action={setOrderPaymentRequirementAdminOrderAction} className="grid gap-2">
+                    <input type="hidden" name="order_id" value={orderId} />
+                    <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
+                    <input type="hidden" name="payment_status" value="not_required" />
+                    <FormContextFields queue={queue} query={query} />
+                    <OperationalSubmitButton
+                      pendingLabel="Saving..."
+                      className={`${buttonClass} border border-[var(--platform-border-strong)] text-[var(--platform-text-primary)] hover:bg-[var(--platform-surface-muted)]`}
+                    >
+                      Mark not required
+                    </OperationalSubmitButton>
+                  </AdminOrderActionForm>
+                ) : null}
+              </>
+            )}
           </ActionGroup>
         </div>
       ) : null}
