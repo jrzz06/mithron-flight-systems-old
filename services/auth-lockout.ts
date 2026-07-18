@@ -3,7 +3,8 @@ import {
   checkDistributedRateLimit,
   deleteDistributedRateLimitKey,
   peekDistributedRateLimits,
-  checkDistributedRateLimits
+  checkDistributedRateLimits,
+  type RateLimitResult
 } from "@/lib/rate-limit-redis";
 
 const FAILURE_LIMIT = 5;
@@ -17,6 +18,19 @@ function failureKey(identifier: string) {
   return `auth-failures:${normalizeIdentifier(identifier)}`;
 }
 
+/** Deduped normalized identifiers (same keys/thresholds as before). */
+function uniqueIdentifiers(identifiers: string[]) {
+  return [...new Set(identifiers.map(normalizeIdentifier).filter(Boolean))];
+}
+
+function lockoutEntries(identifiers: string[]) {
+  return uniqueIdentifiers(identifiers).map((key) => ({
+    key: failureKey(key),
+    maxRequests: FAILURE_LIMIT,
+    windowMs: FAILURE_WINDOW_MS
+  }));
+}
+
 export async function assertLoginNotLocked(identifier: string) {
   const normalized = normalizeIdentifier(identifier);
   if (!normalized) return;
@@ -27,32 +41,38 @@ export async function assertLoginNotLocked(identifier: string) {
   }
 }
 
+/**
+ * Pre-auth lockout gate: batched peeks only (no bump).
+ * Same keys and FAILURE_LIMIT / FAILURE_WINDOW_MS as single-identifier helpers.
+ */
 export async function assertLoginNotLockedForIdentifiers(identifiers: string[]) {
-  const keys = identifiers.map(normalizeIdentifier).filter(Boolean);
-  if (!keys.length) return;
+  const entries = lockoutEntries(identifiers);
+  if (!entries.length) return;
 
-  const states = await peekDistributedRateLimits(
-    keys.map((key) => ({ key: failureKey(key), maxRequests: FAILURE_LIMIT, windowMs: FAILURE_WINDOW_MS }))
-  );
+  const states = await peekDistributedRateLimits(entries);
   if (states.some((state) => !state.allowed)) {
     throw new LoginLockedOutError();
   }
 }
 
-export async function recordLoginFailure(identifier: string) {
+export async function recordLoginFailure(identifier: string): Promise<RateLimitResult | undefined> {
   const normalized = normalizeIdentifier(identifier);
-  if (!normalized) return;
+  if (!normalized) return undefined;
 
-  await checkDistributedRateLimit(failureKey(normalized), FAILURE_LIMIT, FAILURE_WINDOW_MS);
+  // Bump only — callers must not peek again on the failure path.
+  return checkDistributedRateLimit(failureKey(normalized), FAILURE_LIMIT, FAILURE_WINDOW_MS);
 }
 
-export async function recordLoginFailures(identifiers: string[]) {
-  const keys = identifiers.map(normalizeIdentifier).filter(Boolean);
-  if (!keys.length) return;
+/**
+ * Post-auth-failure bump only (no peek). Returns bump results so the login
+ * route can soft-deny when the increment crosses the ceiling without a
+ * second round-trip.
+ */
+export async function recordLoginFailures(identifiers: string[]): Promise<RateLimitResult[]> {
+  const entries = lockoutEntries(identifiers);
+  if (!entries.length) return [];
 
-  await checkDistributedRateLimits(
-    keys.map((key) => ({ key: failureKey(key), maxRequests: FAILURE_LIMIT, windowMs: FAILURE_WINDOW_MS }))
-  );
+  return checkDistributedRateLimits(entries);
 }
 
 export async function clearLoginFailures(identifier: string) {
@@ -62,7 +82,9 @@ export async function clearLoginFailures(identifier: string) {
 }
 
 export async function clearLoginFailuresForIdentifiers(identifiers: string[]) {
-  await Promise.all(identifiers.map((identifier) => clearLoginFailures(identifier)));
+  const keys = uniqueIdentifiers(identifiers);
+  if (!keys.length) return;
+  await Promise.all(keys.map((identifier) => clearLoginFailures(identifier)));
 }
 
 export class LoginLockedOutError extends Error {

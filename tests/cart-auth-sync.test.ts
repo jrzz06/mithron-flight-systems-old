@@ -15,7 +15,7 @@ function source(path: string) {
 
 describe("cart auth sync wiring", () => {
   it("uses auth-aware cart initialization in the storefront shell", () => {
-    const storeShell = source("components/layout/store-shell-client.tsx");
+    const storeShell = source("components/layout/storefront-shell-streaming.tsx");
     expect(storeShell).toContain("useCartAuthSync");
     expect(storeShell).not.toContain("useCartStore.persist.rehydrate()");
   });

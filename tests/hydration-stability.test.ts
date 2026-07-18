@@ -29,7 +29,7 @@ describe("hydration stability", () => {
 
   it("rehydrates cart state safely before purchase actions are enabled", () => {
     const cartStore = source("store/cart.ts");
-    const storeShell = source("components/layout/store-shell-client.tsx");
+    const storeShell = source("components/layout/storefront-shell-streaming.tsx");
     const configurator = source("sections/product/product-configurator.tsx");
     const stickyPurchase = source("sections/product/showcase/product-sticky-purchase.tsx");
 

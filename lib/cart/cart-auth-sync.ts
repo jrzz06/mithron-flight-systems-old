@@ -7,6 +7,7 @@ import {
   flushAuthenticatedCartSync,
   mergeCartItemLists
 } from "@/lib/cart/cart-server-sync";
+import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 import { rehydrateBuyNowSession, useBuyNowStore } from "@/store/buy-now-session";
 import { useCartPricingStore } from "@/store/cart-pricing";
 import {
@@ -20,6 +21,9 @@ import {
   useCartStore
 } from "@/store/cart";
 import type { CheckoutDraft, PersistedCartItem } from "@/config/types";
+
+/** Bound auth/session bootstrap so a hung Supabase client cannot leave cart/checkout spinning forever. */
+const CART_SESSION_AUTH_TIMEOUT_MS = 8_000;
 
 function readLegacyGuestCart(): { items: unknown[]; checkout?: unknown } | null {
   if (typeof window === "undefined") return null;
@@ -154,9 +158,18 @@ async function loadGuestCartSession() {
 let sessionInitPromise: Promise<void> | null = null;
 
 async function resolveAuthCartSource() {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getSession();
-  return Boolean(data.session?.user) ? "authenticated" as const : "guest" as const;
+  try {
+    const supabase = createClient();
+    const { data } = await raceWithTimeout(
+      supabase.auth.getSession(),
+      CART_SESSION_AUTH_TIMEOUT_MS,
+      "Cart auth session"
+    );
+    return Boolean(data.session?.user) ? ("authenticated" as const) : ("guest" as const);
+  } catch (error) {
+    console.warn("[cart] Auth session lookup timed out; defaulting to guest cart.", error);
+    return "guest" as const;
+  }
 }
 
 export async function initializeCartSession() {
@@ -178,15 +191,24 @@ export async function initializeCartSession() {
 
   sessionInitPromise = (async () => {
     markCartSessionPending();
-
-    if (expectedSource === "authenticated") {
-      await loadAuthenticatedCartSession();
-    } else {
-      await loadGuestCartSession();
+    try {
+      if (expectedSource === "authenticated") {
+        await loadAuthenticatedCartSession();
+      } else {
+        await loadGuestCartSession();
+      }
+      await rehydrateBuyNowSession();
+    } catch (error) {
+      console.error("[cart] Cart session init failed; marking ready with guest fallback.", error);
+      try {
+        await loadGuestCartSession();
+        await rehydrateBuyNowSession();
+      } catch (fallbackError) {
+        console.error("[cart] Guest cart fallback also failed.", fallbackError);
+      }
+    } finally {
+      markCartSessionReady();
     }
-
-    await rehydrateBuyNowSession();
-    markCartSessionReady();
   })();
 
   try {
@@ -198,21 +220,27 @@ export async function initializeCartSession() {
 
 export async function handleCartAuthSignedIn() {
   markCartSessionPending();
-  const guestSnapshot = readGuestCartSnapshot();
-  await loadAuthenticatedCartSession({
-    mergeGuestItems: guestSnapshot.items,
-    preserveCheckout: guestSnapshot.checkout
-  });
-  await rehydrateBuyNowSession();
-  markCartSessionReady();
+  try {
+    const guestSnapshot = readGuestCartSnapshot();
+    await loadAuthenticatedCartSession({
+      mergeGuestItems: guestSnapshot.items,
+      preserveCheckout: guestSnapshot.checkout
+    });
+    await rehydrateBuyNowSession();
+  } finally {
+    markCartSessionReady();
+  }
 }
 
 export async function handleCartAuthSignedOut() {
   useBuyNowStore.getState().clearBuyNow();
   markCartSessionPending();
-  clearGuestCartStorage();
-  await loadGuestCartSession();
-  markCartSessionReady();
+  try {
+    clearGuestCartStorage();
+    await loadGuestCartSession();
+  } finally {
+    markCartSessionReady();
+  }
 }
 
 export function registerAuthenticatedCartUnloadSync() {

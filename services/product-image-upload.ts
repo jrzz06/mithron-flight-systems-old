@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import { autoCutoutIfNeeded } from "@/lib/catalog/auto-cutout";
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import { mapWithConcurrency } from "@/lib/fetch-with-timeout";
 import { upsertMediaAssetRecord } from "@/services/admin-actions";
 import {
   assertAllowedMediaMimeType,
@@ -171,19 +172,16 @@ async function deleteProductStorageObjects(bucket: string, paths: string[]) {
 async function uploadProductOptimizedVariants(bucket: string, storagePath: string, buffer: Buffer, mimeType: string) {
   const config = assertSupabaseAdminConfig();
   const variants = await createOptimizedImageVariants(buffer, mimeType);
-  const storedVariants: StoredOptimizedImageVariant[] = [];
 
-  for (const variant of variants) {
+  return mapWithConcurrency(variants, 3, async (variant) => {
     const variantStoragePath = buildOptimizedVariantStoragePath(storagePath, variant);
     await uploadProductStorageObject(bucket, variantStoragePath, variant.mimeType, variant.buffer);
-    storedVariants.push({
+    return {
       ...variant,
       storagePath: variantStoragePath,
       publicUrl: buildSupabasePublicObjectUrl(config.url, bucket, variantStoragePath)
-    });
-  }
-
-  return storedVariants;
+    } satisfies StoredOptimizedImageVariant;
+  });
 }
 
 function validateUploadFile(file: File) {

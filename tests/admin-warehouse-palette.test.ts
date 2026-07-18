@@ -30,6 +30,6 @@ describe("admin and warehouse dark enterprise palette", () => {
     expect(warehouseLoading).toContain("ControlPlaneContentLoading");
 
     expect(globals).not.toContain('body[data-control-plane-theme="dark"]');
-    expect(source("components/layout/store-shell.tsx")).not.toContain("data-control-plane-theme");
+    expect(source("components/layout/storefront-shell-streaming.tsx")).not.toContain("data-control-plane-theme");
   });
 });

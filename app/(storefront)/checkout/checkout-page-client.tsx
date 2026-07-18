@@ -1088,7 +1088,15 @@ export function CheckoutPageClient() {
       logRazorpayClientEvent("checkout_opened", { orderId: input.orderId });
 
       stopCheckoutStatusPolling();
+      let pollAttempts = 0;
+      const MAX_CHECKOUT_POLL_ATTEMPTS = 45; // ~90s at 2s interval
       checkoutPollRef.current = setInterval(() => {
+        pollAttempts += 1;
+        if (pollAttempts > MAX_CHECKOUT_POLL_ATTEMPTS) {
+          stopCheckoutStatusPolling();
+          logRazorpayClientEvent("payment_poll_exhausted", { orderId: input.orderId });
+          return;
+        }
         void waitForCheckoutPaymentConfirmation({
           orderId: input.orderId,
           email: input.email,

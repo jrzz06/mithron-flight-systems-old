@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import type { CartItem, PersistedCartItem } from "@/config/types";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export type CartPricingSnapshot = {
   lines: CartItem[];
@@ -85,7 +86,7 @@ export const useCartPricingStore = create<CartPricingStore>((set, get) => ({
       }));
 
       try {
-        const response = await fetch("/api/cart/pricing", {
+        const response = await fetchWithTimeout("/api/cart/pricing", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items }),

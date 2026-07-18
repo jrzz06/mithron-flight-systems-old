@@ -34,7 +34,6 @@ export function LoginHeroBackground({ priority = true }: LoginHeroBackgroundProp
 
   const showSkyMotion = tier !== "lite";
   const showNearLayer = tier === "premium";
-  const skyBackgroundStyle = { backgroundImage: `url("${LOGIN_BG_SRC}")` } as const;
 
   return (
     <div className={styles.heroLayer} data-hero-tier={tier} aria-hidden="true">
@@ -54,11 +53,11 @@ export function LoginHeroBackground({ priority = true }: LoginHeroBackgroundProp
       {showSkyMotion ? (
         <div className={styles.heroSkyBlur} aria-hidden="true">
           <div className={`${styles.heroSkyDrift} ${styles.heroSkyDriftFar}`}>
-            <div className={styles.heroImageSky} style={skyBackgroundStyle} />
+            <div className={styles.heroImageSky} />
           </div>
           {showNearLayer ? (
             <div className={`${styles.heroSkyDrift} ${styles.heroSkyDriftNear}`}>
-              <div className={`${styles.heroImageSky} ${styles.heroImageSkyNear}`} style={skyBackgroundStyle} />
+              <div className={`${styles.heroImageSky} ${styles.heroImageSkyNear}`} />
             </div>
           ) : null}
           {showNearLayer ? <div className={styles.heroSkyHaze} /> : null}

@@ -27,8 +27,14 @@ export const REDIS_CACHE_KEYS = {
   warehouseNavMetrics: "metrics:warehouse-nav:v1",
   supplierNavMetrics: (supplierId: string) => `metrics:supplier-nav:${supplierId}:v1`,
   controlPlaneAdminDashboard: "cp:admin-dashboard:v1",
-  controlPlaneWarehouseSnapshot: (scope: string, ordersFilter: string) =>
-    `cp:warehouse-snapshot:${scope}:${ordersFilter}:v1`,
+  controlPlaneWarehouseSnapshot: (
+    scope: string,
+    ordersFilter: string,
+    limit = 80,
+    offset = 0,
+    status = "all"
+  ) =>
+    `cp:warehouse-snapshot:${scope}:${ordersFilter}:v2:${limit}:${offset}:${status}`,
   controlPlaneInventoryMetrics: "cp:inventory-metrics:v1",
   controlPlaneProductManagerSnapshot: "cp:product-manager:v1",
   controlPlaneProductManagerCatalogMetrics: "cp:product-manager:v1:catalog-metrics",
@@ -64,12 +70,16 @@ export const WAREHOUSE_SNAPSHOT_SCOPES = [
 export const WAREHOUSE_ORDERS_FILTERS = ["all", "warehouse"] as const;
 
 export function warehouseSnapshotRedisKeys() {
+  // Default pagination key only — custom limit/offset/status keys share the same prefix and are
+  // cleared via pattern invalidation in invalidateControlPlaneRedisCaches.
   return WAREHOUSE_SNAPSHOT_SCOPES.flatMap((scope) =>
     WAREHOUSE_ORDERS_FILTERS.map((ordersFilter) =>
       REDIS_CACHE_KEYS.controlPlaneWarehouseSnapshot(scope, ordersFilter)
     )
   );
 }
+
+const WAREHOUSE_SNAPSHOT_CACHE_PREFIX = "cp:warehouse-snapshot:";
 
 export async function invalidateControlPlaneRedisCaches(options?: {
   adminDashboard?: boolean;
@@ -88,7 +98,6 @@ export async function invalidateControlPlaneRedisCaches(options?: {
 }) {
   const keys: string[] = [];
   if (options?.adminDashboard) keys.push(REDIS_CACHE_KEYS.controlPlaneAdminDashboard);
-  if (options?.warehouseSnapshots) keys.push(...warehouseSnapshotRedisKeys());
   if (options?.inventoryMetrics) keys.push(REDIS_CACHE_KEYS.controlPlaneInventoryMetrics);
   if (options?.productManagerSnapshot) {
     keys.push(
@@ -118,6 +127,7 @@ export async function invalidateControlPlaneRedisCaches(options?: {
   // cannot serialize the entire mutation revalidation path to 10–20s.
   const tasks: Promise<void>[] = [];
   if (keys.length) tasks.push(deleteCachedKeys(keys));
+  if (options?.warehouseSnapshots) tasks.push(invalidateRedisKeyPattern(WAREHOUSE_SNAPSHOT_CACHE_PREFIX));
   if (options?.supplierNavMetrics) tasks.push(invalidateSupplierNavMetricCaches());
   if (options?.adminEnquiries) tasks.push(invalidateRedisKeyPattern("cp:admin-enquiries:"));
   if (options?.adminReviews) tasks.push(invalidateRedisKeyPattern("cp:admin-reviews:"));
@@ -340,15 +350,23 @@ export async function releaseRedisLock(key: string): Promise<void> {
   await deleteCachedKeys([key]);
 }
 
+/** Compare-and-delete: only the owner token may release the lock (atomic Lua). */
+const RELEASE_OWNED_LOCK_LUA = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+end
+return 0
+`;
+
 /** Delete a lock key only when the stored value matches the owner token. */
 export async function releaseRedisLockOwned(key: string, token: string): Promise<void> {
   const redis = getRedisClient();
   if (!redis || !token) return;
   try {
-    const current = await withRedisTimeout(`LOCK_OWNED_GET ${key}`, () => redis.get<string>(key));
-    if (current === token) {
-      await withRedisTimeout(`LOCK_OWNED_DEL ${key}`, () => redis.del(key));
-    }
+    await withRedisTimeout(
+      `LOCK_OWNED_CAS_DEL ${key}`,
+      () => redis.eval(RELEASE_OWNED_LOCK_LUA, [key], [token])
+    );
   } catch (error) {
     console.warn(`[mithron-cache] Redis owned lock release failed for ${key}.`, error);
   }

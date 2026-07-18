@@ -1,3 +1,9 @@
+/**
+ * H8 / Stage 5: Do NOT add `import "server-only"`.
+ * This module is imported by client components (e.g. mithron-thumb-image,
+ * mithron-mission-tile-image, mithron-brand-mark, hero-carousel). Splitting the
+ * remote map fully server-side needs a dedicated follow-up pass.
+ */
 import pathAliases from "@/config/storefront-path-aliases.json";
 import { resolvePublicMediaUrl } from "@/lib/media/storage-provider";
 import remoteMapData from "@/data/mithron-storefront-remote-map.generated.json";

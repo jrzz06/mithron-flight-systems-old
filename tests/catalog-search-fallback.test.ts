@@ -45,7 +45,7 @@ describe("catalog search fallback and resilience", () => {
   it("prefetches the search index in the overlay (deferred from nav/shell)", () => {
     const searchOverlay = source("components/overlays/search-overlay.tsx");
     const storeNav = source("components/navigation/store-nav.tsx");
-    const storeShell = source("components/layout/store-shell-client.tsx");
+    const storeShell = source("components/layout/storefront-shell-streaming.tsx");
 
     expect(searchOverlay).toContain("intent=index");
     expect(searchOverlay).toContain("catalogSearchIndexPromise");

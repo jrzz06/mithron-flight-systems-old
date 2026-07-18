@@ -57,7 +57,7 @@ export function useResolvedCart(options: UseResolvedCartOptions = {}) {
     return summarizeCartPricingBreakdown(linesForPricing);
   }, [items]);
   const itemCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
-  const pricesPending = persistedItems.length > 0 && !hasResolvedPricing;
+  const pricesPending = persistedItems.length > 0 && !hasResolvedPricing && !error;
 
   const refreshPricing = async () => {
     if (!enabled) return true;

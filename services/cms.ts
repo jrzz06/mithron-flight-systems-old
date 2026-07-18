@@ -891,12 +891,42 @@ export type StorefrontShellCms = {
   footer: FooterContent;
 };
 
-async function loadStorefrontShellCms(): Promise<StorefrontShellCms> {
-  const snapshot = await getPublicCmsSnapshot();
+/**
+ * Slim shell CMS: nav + footer (+ footer lead from admin_settings) only.
+ * Avoids the full public snapshot fan-out used by getPublicCmsSnapshot.
+ */
+export async function getStorefrontShellCmsLight(): Promise<StorefrontShellCms> {
+  if (!(await hasCmsSchema())) {
+    if (process.env.MITHRON_CMS_STRICT === "true") {
+      throw new Error("Supabase CMS schema is not available. Apply 20260523000100_enterprise_cms_rbac.sql before enabling strict CMS mode.");
+    }
+    return {
+      navigation: fallbackSnapshot.navigation,
+      footer: fallbackSnapshot.footer
+    };
+  }
+
+  const [navRows, footerColumns, footerLinks, footerLead] = await Promise.all([
+    getCachedCmsTableRows("site_navigation", publicCmsQueries.siteNavigation),
+    getCachedCmsTableRows("footer_columns", publicCmsQueries.footerColumns),
+    getCachedCmsTableRows("footer_links", publicCmsQueries.footerLinks),
+    fetchFooterLeadSettings()
+  ]);
+
+  const snapshot = buildPublicCmsSnapshotFromRows({
+    site_navigation: navRows,
+    footer_columns: footerColumns,
+    footer_links: footerLinks
+  });
+
   return {
     navigation: snapshot.navigation,
-    footer: snapshot.footer
+    footer: mergeFooterContent(snapshot.footer, footerLead)
   };
+}
+
+async function loadStorefrontShellCms(): Promise<StorefrontShellCms> {
+  return getStorefrontShellCmsLight();
 }
 
 export const getStorefrontShellCms = cache(async () => loadStorefrontShellCms());

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ChevronRight, Home } from "lucide-react";
 import { BlogArticleCard } from "@/components/blog/blog-article-card";
 import { listPublishedBlogPosts } from "@/services/blog-posts";
@@ -13,7 +14,11 @@ export const metadata: Metadata = {
     "Insights on drone technology, agriculture, aerial intelligence, precision farming, maintenance, and industry practice from Mithron."
 };
 
-export default async function BlogIndexPage() {
+function BlogIndexFallback() {
+  return <div className="min-h-[60vh] animate-pulse bg-[#eef0f3]" aria-hidden="true" />;
+}
+
+async function BlogIndexContent() {
   const posts = await listPublishedBlogPosts({ limit: 24 });
 
   return (
@@ -50,5 +55,13 @@ export default async function BlogIndexPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function BlogIndexPage() {
+  return (
+    <Suspense fallback={<BlogIndexFallback />}>
+      <BlogIndexContent />
+    </Suspense>
   );
 }

@@ -12,12 +12,13 @@ const oldDraftCollectionName = ["draft", "Testimonials"].join("");
 describe("final CMS cutover and real-data cleanup", () => {
   it("keeps the homepage scoped to navigation, hero carousel, and one composite post-hero section", () => {
     const page = source("app/(storefront)/page.tsx");
+    const homePageContent = source("sections/home/home-page-content.tsx");
     const heroCarousel = source("sections/home/hero-carousel.tsx");
     const homeComposite = source("sections/home/home-landing-composite.tsx");
     const compositeSection = source("sections/home/home-composite-section.tsx");
     const homeCompositeCss = `${source("sections/home/home-landing-composite.module.css")}\n${source("sections/home/home-shelf-shared.module.css")}`;
-    const storeShell = source("components/layout/store-shell.tsx");
-    const storeShellClient = source("components/layout/store-shell-client.tsx");
+    const storeShell = source("components/layout/storefront-shell-chrome.tsx");
+    const storeShellClient = source("components/layout/storefront-shell-streaming.tsx");
     const globals = source("app/globals.css");
     const cms = source("services/cms.ts");
     const cmsWorkspace = source("features/admin/cms/cms-visual-workspace.tsx");
@@ -29,10 +30,12 @@ describe("final CMS cutover and real-data cleanup", () => {
     const resolution = source("lib/home/homepage-resolution.ts");
     const belowHero = source("sections/home/home-below-hero.tsx");
 
-    expect(page).toContain("HomeHeroSection");
-    expect(page).toContain("HomeBelowHero");
-    expect(page).toContain("getHomepageBundle");
-    expect(page).not.toContain("productReviews=");
+    expect(homePageContent).toContain("HomeHeroSection");
+    expect(homePageContent).toContain("HomeBelowHero");
+    expect(homePageContent).toContain("getHomepageHeroBanners");
+    expect(homePageContent).toContain("getHomepageBelowFoldData");
+    expect(page).toContain("HomePageContent");
+    expect(homePageContent).not.toContain("productReviews=");
     expect(belowHero).toContain("HomeLandingComposite");
     expect(belowHero).toContain("footer={cms.footer}");
     expect(belowHero).toContain("listFeaturedHomeReviews");
@@ -107,8 +110,8 @@ describe("final CMS cutover and real-data cleanup", () => {
     expect(storeShellClient).not.toContain("NAV_HERO_CAROUSEL_WITH_SHOWCASE");
     expect(storeShellClient).not.toContain("NAV_HERO_CAROUSEL_OPTICAL_ECOSYSTEM");
     expect(storeShellClient).not.toContain("NAV_HERO_CAROUSEL_ECOSYSTEM_EXPERIENCE");
-    expect(storeShell).toContain("siteFooter={<SiteFooter content={footer} />}");
-    expect(storeShellClient).toContain("isHome ? null : siteFooter");
+    expect(storeShell).toContain("<SiteFooter content={shell.footer} />");
+    expect(storeShellClient).toContain("isHome ? null : footerChrome");
     expect(globals).not.toContain("@import \"./storefront-showcase.css\"");
     expect(globals).not.toContain("hero-banner-extension");
     expect(globals).not.toContain("drone-world-panel");

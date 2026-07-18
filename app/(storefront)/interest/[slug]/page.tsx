@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import {
   getCatalogCategoryDefinition,
@@ -28,8 +29,11 @@ export async function generateMetadata({ params }: InterestPageProps): Promise<M
   };
 }
 
-export default async function InterestPage({ params }: InterestPageProps) {
-  const { slug } = await params;
+function CatalogPageFallback() {
+  return <div className="min-h-[60vh] animate-pulse bg-[#eef0f3]" aria-hidden="true" />;
+}
+
+async function InterestPageContent({ slug }: { slug: string }) {
   const categorySlug = interestSlugToCategorySlug[slug];
   if (categorySlug) {
     redirect(getCatalogCategoryDefinition(categorySlug).href);
@@ -47,5 +51,15 @@ export default async function InterestPage({ params }: InterestPageProps) {
       products={products}
       heroImage={interest.image.src}
     />
+  );
+}
+
+export default async function InterestPage({ params }: InterestPageProps) {
+  const { slug } = await params;
+
+  return (
+    <Suspense fallback={<CatalogPageFallback />}>
+      <InterestPageContent slug={slug} />
+    </Suspense>
   );
 }

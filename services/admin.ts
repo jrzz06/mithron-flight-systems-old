@@ -52,6 +52,12 @@ type WarehouseSnapshotInput = EnvSource | {
   env?: EnvSource;
   scope?: WarehouseSnapshotScope;
   ordersFilter?: "all" | "warehouse";
+  /** Orders list page size. Defaults to WAREHOUSE_SNAPSHOT_ROW_LIMIT (80). */
+  limit?: number;
+  /** Orders list offset for pagination. Defaults to 0. */
+  offset?: number;
+  /** Optional orders.status equality filter (e.g. "confirmed"). */
+  status?: string;
 };
 
 type CountMetric = {
@@ -99,6 +105,7 @@ export function orderNeedsAdminReview(order: AdminRow) {
 }
 
 const ADMIN_LIST_LIMIT = 80;
+const WAREHOUSE_SNAPSHOT_ROW_LIMIT = 80;
 const ADMIN_FETCH_TIMEOUT_MS = 30_000;
 const MEDIA_LIBRARY_LIMIT = 96;
 const PRODUCT_MANAGER_LIMIT = 120;
@@ -363,14 +370,41 @@ function isWarehouseSnapshotScope(value: unknown): value is WarehouseSnapshotSco
 }
 
 function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.env) {
-  const isOptions = Boolean(input && typeof input === "object" && ("scope" in input || "env" in input || "ordersFilter" in input));
-  const options = isOptions ? input as { env?: EnvSource; scope?: unknown; ordersFilter?: "all" | "warehouse" } : null;
+  const isOptions = Boolean(
+    input
+    && typeof input === "object"
+    && ("scope" in input || "env" in input || "ordersFilter" in input || "limit" in input || "offset" in input || "status" in input)
+  );
+  const options = isOptions
+    ? input as {
+      env?: EnvSource;
+      scope?: unknown;
+      ordersFilter?: "all" | "warehouse";
+      limit?: number;
+      offset?: number;
+      status?: string;
+    }
+    : null;
   const scope = isWarehouseSnapshotScope(options?.scope) ? options.scope : "full";
+  const rawLimit = options?.limit;
+  const limit = typeof rawLimit === "number" && Number.isFinite(rawLimit) && rawLimit > 0
+    ? Math.min(Math.floor(rawLimit), 500)
+    : WAREHOUSE_SNAPSHOT_ROW_LIMIT;
+  const rawOffset = options?.offset;
+  const offset = typeof rawOffset === "number" && Number.isFinite(rawOffset) && rawOffset > 0
+    ? Math.floor(rawOffset)
+    : 0;
+  const status = typeof options?.status === "string" && options.status.trim()
+    ? options.status.trim()
+    : undefined;
   return {
     env: options ? (options.env ?? process.env) : (input as EnvSource),
     scope,
     tables: warehouseSnapshotScopes[scope],
-    ordersFilter: options?.ordersFilter ?? "warehouse"
+    ordersFilter: options?.ordersFilter ?? "warehouse",
+    limit,
+    offset,
+    status
   };
 }
 
@@ -1279,29 +1313,34 @@ export async function fetchProductEditorDetail(productSlug: string, env: EnvSour
   return rows.rows[0] ?? null;
 }
 
-const WAREHOUSE_SNAPSHOT_ROW_LIMIT = 80;
-
 function withOperationalHotWindow(query: string) {
   const cutoff = encodeURIComponent(operationalArchiveHotCutoffIso());
   return `${query}&created_at=gte.${cutoff}`;
 }
 
-function warehouseSnapshotLimitWarning(tables: Array<{ table: string; rows: AdminRow[] }>) {
+function warehouseSnapshotLimitWarning(
+  tables: Array<{ table: string; rows: AdminRow[] }>,
+  rowLimit = WAREHOUSE_SNAPSHOT_ROW_LIMIT
+) {
   const truncated = tables
-    .filter((table) => table.rows.length >= WAREHOUSE_SNAPSHOT_ROW_LIMIT)
+    .filter((table) => table.rows.length >= rowLimit)
     .map((table) => table.table);
   if (!truncated.length) return undefined;
-  return `Snapshot capped at ${WAREHOUSE_SNAPSHOT_ROW_LIMIT} rows for: ${truncated.join(", ")}. Older records may be hidden — use filtered views or reports for full history.`;
+  return `Snapshot capped at ${rowLimit} rows for: ${truncated.join(", ")}. Older records may be hidden — use filtered views or reports for full history.`;
 }
 
 const loadWarehouseSnapshot = cache(async (
   scope: WarehouseSnapshotScope,
   ordersFilter: "all" | "warehouse",
-  env: EnvSource
+  env: EnvSource,
+  limit: number,
+  offset: number,
+  status: string | undefined
 ) => {
   const tables = warehouseSnapshotScopes[scope];
   const resolvedEnv = env;
   const config = getSupabaseAdminConfig(resolvedEnv);
+  const ordersRowLimit = limit > 0 ? limit : WAREHOUSE_SNAPSHOT_ROW_LIMIT;
 
   const emptyData = {
     products: [] as AdminRow[],
@@ -1329,7 +1368,7 @@ const loadWarehouseSnapshot = cache(async (
   );
 
   const scopeOrderRelations = scope === "orders";
-  const inventoryRowLimit = scopeOrderRelations ? WAREHOUSE_SNAPSHOT_ROW_LIMIT : 500;
+  const inventoryRowLimit = scopeOrderRelations ? ordersRowLimit : 500;
   const inventorySelectColumns =
     "product_slug,sku,variant_id,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at";
   const inventoryCatalogQuery =
@@ -1340,12 +1379,17 @@ const loadWarehouseSnapshot = cache(async (
     "select=id,order_id,product_slug,product_name,sku,quantity,line_total,metadata,created_at";
   const shipmentsSelect =
     "select=id,shipment_number,shipment_status,order_id,warehouse_id,carrier_name,tracking_number,updated_at,created_at";
+  // Keep metadata/timeline on list fetch — detail pages and list helpers (eligibility, shipping UI) read them from the snapshot.
+  const ordersStatusFilter = status ? `&status=eq.${encodeURIComponent(status)}` : "";
+  const ordersOffset = offset > 0 ? `&offset=${offset}` : "";
+  const ordersListQuery =
+    `select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,metadata,timeline,shipment_tracking,invoice_url,archived_at,deleted_at,created_at,updated_at&created_at=gte.${encodeURIComponent(operationalArchiveHotCutoffIso())}${ordersStatusFilter}&order=created_at.desc&limit=${ordersRowLimit}${ordersOffset}`;
   const [products, inventory, stock, movements, orders, shipmentItems, shipmentTimeline, activityLogs] = await Promise.all([
     maybeFetch("products", "mithron_products", `select=slug,name,category,price,image,hero,workflow_status,archived_at,is_visible,updated_at&order=sort_order.asc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
     maybeFetch("inventory", "inventory", inventoryCatalogQuery),
     maybeFetch("stock", "warehouse_stock", warehouseStockQuery),
     maybeFetch("movements", "inventory_movements", `select=id,movement_type,product_slug,sku,quantity_before,quantity_after,quantity_delta,reason_code,actor_user_id,related_order_id,related_shipment_id,created_at&order=created_at.desc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
-    maybeFetch("orders", "orders", `select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,metadata,timeline,shipment_tracking,invoice_url,archived_at,deleted_at,created_at,updated_at&created_at=gte.${encodeURIComponent(operationalArchiveHotCutoffIso())}&order=created_at.desc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
+    maybeFetch("orders", "orders", ordersListQuery),
     maybeFetch("shipmentItems", "shipment_items", `select=id,shipment_id,order_item_id,product_id,variant_id,quantity,created_at&order=created_at.desc&limit=120`),
     maybeFetch("shipmentTimeline", "shipment_timeline", `select=id,shipment_id,event_type,previous_status,next_status,actor_user_id,created_at&order=created_at.desc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
     maybeFetch("activityLogs", "activity_logs", `select=id,actor_id,action,entity_table,entity_id,severity,metadata,created_at&entity_table=in.(orders,shipments,inventory,warehouse_stock,inventory_movements)&order=created_at.desc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`)
@@ -1377,11 +1421,11 @@ const loadWarehouseSnapshot = cache(async (
   } else {
     [orderItems, shipments] = await Promise.all([
       maybeFetch("orderItems", "order_items", `${orderItemsSelect}&order=created_at.desc&limit=120`),
-      maybeFetch("shipments", "shipments", `${shipmentsSelect}&order=updated_at.desc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`)
+      maybeFetch("shipments", "shipments", `${shipmentsSelect}&order=updated_at.desc&limit=${ordersRowLimit}`)
     ]);
   }
 
-  // Orders snapshot caps inventory at 80 newest rows — enrich with rows for products on loaded order lines.
+  // Orders snapshot caps inventory at newest rows — enrich with rows for products on loaded order lines.
   let inventoryRows = inventory.rows;
   if (scopeOrderRelations && tables.has("inventory") && orderItems.rows.length) {
     const orderSlugs = collectOrderItemProductSlugs(orderItems.rows);
@@ -1426,7 +1470,7 @@ const loadWarehouseSnapshot = cache(async (
     status: fetchedTables.every((table) => table.status === "LIVE") ? "LIVE" as const : "PARTIAL" as const,
     source: "supabase-admin" as const,
     blockedReason: blockedTable?.error,
-    snapshotLimitWarning: warehouseSnapshotLimitWarning(snapshotTables),
+    snapshotLimitWarning: warehouseSnapshotLimitWarning(snapshotTables, ordersRowLimit),
     data: {
       products: products.rows,
       inventory: inventoryRows,
@@ -1443,16 +1487,17 @@ const loadWarehouseSnapshot = cache(async (
 });
 
 export async function getWarehouseSnapshot(input: WarehouseSnapshotInput = process.env) {
-  const { env, scope, ordersFilter } = resolveWarehouseSnapshotInput(input);
+  const { env, scope, ordersFilter, limit, offset, status } = resolveWarehouseSnapshotInput(input);
   const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
+  const statusKey = status ?? "all";
   return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneWarehouseSnapshot(scope, ordersFilter),
+    REDIS_CACHE_KEYS.controlPlaneWarehouseSnapshot(scope, ordersFilter, limit, offset, statusKey),
     30,
     () =>
       cacheControlPlaneRead(
-        ["admin-warehouse-snapshot", scope, ordersFilter],
-        () => loadWarehouseSnapshot(scope, ordersFilter, env),
+        ["admin-warehouse-snapshot", scope, ordersFilter, String(limit), String(offset), statusKey],
+        () => loadWarehouseSnapshot(scope, ordersFilter, env, limit, offset, status),
         {
           revalidate: 30,
           tags: [

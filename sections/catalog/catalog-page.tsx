@@ -1,7 +1,7 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Suspense, type CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
-import { CatalogFilteredListing } from "@/sections/catalog/catalog-filtered-listing";
 import { StorefrontRevealImage } from "@/components/media/storefront-reveal-image";
 import { MithronPageHeroImage } from "@/components/media/mithron-page-hero-image";
 import type { Product } from "@/config/types";
@@ -11,6 +11,34 @@ import { resolveNavbarInkFromShowcase } from "@/lib/navbar-ink-sampling";
 import { catalogCinematicBannerFrame } from "@/config/catalog-routes";
 import type { CatalogProductGroup } from "@/lib/catalog-product-listing";
 import styles from "./catalog-page.module.css";
+
+function CatalogListingSkeleton() {
+  return (
+    <div className="min-h-[40vh]" aria-hidden="true" data-catalog-listing-skeleton>
+      <div className="mb-6 h-10 max-w-md animate-pulse rounded-md bg-[#eef0f3]" />
+      <div className="catalog-product-grid min-w-0 grid gap-[var(--mobile-grid-gap,10px)] grid-cols-2 md:grid-cols-3">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={index} className="animate-pulse overflow-hidden rounded-2xl bg-[#eef0f3]">
+            <div className="aspect-[4/5] w-full bg-[#e4e7eb]" />
+            <div className="space-y-2 p-3">
+              <div className="h-3 w-2/3 rounded bg-[#dde1e6]" />
+              <div className="h-3 w-1/2 rounded bg-[#dde1e6]" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const CatalogFilteredListing = dynamic(
+  () =>
+    import("@/sections/catalog/catalog-filtered-listing").then((mod) => mod.CatalogFilteredListing),
+  {
+    ssr: true,
+    loading: () => <CatalogListingSkeleton />
+  }
+);
 
 type CatalogShowcaseImage = {
   src: string;
@@ -167,7 +195,7 @@ export function CatalogPage({
         className={isShowroom ? styles.gridSection : "catalog-grid-section mx-auto max-w-[min(100%,var(--ds-container-catalog))] scroll-mt-28 page-gutter"}
         data-navbar-ink="dark"
       >
-        <Suspense fallback={<div className="min-h-[40vh] animate-pulse bg-[#eef0f3]" aria-hidden="true" />}>
+        <Suspense fallback={<CatalogListingSkeleton />}>
           <CatalogFilteredListing
             products={products}
             mode={listingMode}

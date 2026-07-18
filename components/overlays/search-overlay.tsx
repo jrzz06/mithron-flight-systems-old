@@ -22,6 +22,7 @@ import { SEARCH_DEBOUNCE_MS, mergeSearchResultsBySlug } from "@/lib/search-query
 import type { CatalogSearchResult } from "@/services/catalog";
 import { useUiStore } from "@/store/ui";
 import { cn, formatINR } from "@/lib/utils";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import styles from "./search-overlay.module.css";
 
 type IndexResponse = {
@@ -48,7 +49,7 @@ function loadCatalogSearchIndex(): Promise<CatalogSearchIndexEntry[]> {
   }
 
   if (!catalogSearchIndexPromise) {
-    catalogSearchIndexPromise = fetch("/api/catalog/search?intent=index", {
+    catalogSearchIndexPromise = fetchWithTimeout("/api/catalog/search?intent=index", {
       cache: "force-cache"
     })
       .then(async (response) => {

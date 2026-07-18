@@ -30,6 +30,10 @@ const ACTIVE_PRODUCT_QUERY =
 const ARCHIVED_PRODUCT_QUERY =
   "select=slug&or=(workflow_status.eq.archived,archived_at.not.is.null)";
 
+/** Opt-in row scan fallback when parity RPC is missing. Default is a capped HEAD/count path. */
+const PARITY_ROW_SCAN_LIMIT = 500;
+const ENABLE_PARITY_ROW_SCAN = process.env.INVENTORY_PARITY_ROW_SCAN === "1";
+
 function adminHeaders(serviceRoleKey: string) {
   return {
     apikey: serviceRoleKey,
@@ -143,28 +147,50 @@ async function resolveInventoryStockMetrics(env: EnvSource = process.env): Promi
   };
 }
 
-export async function assertInventoryProductParity(env: EnvSource = process.env): Promise<InventoryParityReport> {
-  const config = getSupabaseAdminConfig(env);
-  if (!config.configured) {
-    return {
-      synchronized: true,
-      productCount: 0,
-      inventoryCount: 0,
-      missingInventory: 0,
-      duplicateInventorySlugs: 0,
-      orphanInventory: 0
-    };
-  }
+function emptyParityReport(): InventoryParityReport {
+  return {
+    synchronized: true,
+    productCount: 0,
+    inventoryCount: 0,
+    missingInventory: 0,
+    duplicateInventorySlugs: 0,
+    orphanInventory: 0
+  };
+}
 
+function finalizeParityReport(partial: Partial<InventoryParityReport>): InventoryParityReport {
+  const productCount = Number(partial.productCount ?? 0);
+  const inventoryCount = Number(partial.inventoryCount ?? 0);
+  const missingInventory = Number(partial.missingInventory ?? 0);
+  const duplicateInventorySlugs = Number(partial.duplicateInventorySlugs ?? 0);
+  const orphanInventory = Number(partial.orphanInventory ?? 0);
+  return {
+    synchronized:
+      productCount === inventoryCount
+      && missingInventory === 0
+      && duplicateInventorySlugs === 0
+      && orphanInventory === 0,
+    productCount,
+    inventoryCount,
+    missingInventory,
+    duplicateInventorySlugs,
+    orphanInventory
+  };
+}
+
+async function assertInventoryProductParityViaRowScan(
+  config: Extract<ReturnType<typeof getSupabaseAdminConfig>, { configured: true }>
+): Promise<InventoryParityReport> {
   const headers = {
     apikey: config.serviceRoleKey,
     Authorization: `Bearer ${config.serviceRoleKey}`,
     "Content-Type": "application/json"
   };
+  const limit = ENABLE_PARITY_ROW_SCAN ? 5000 : PARITY_ROW_SCAN_LIMIT;
 
   const [productsResponse, inventoryResponse] = await Promise.all([
-    fetch(`${config.url}/rest/v1/mithron_products?select=slug&limit=5000`, { headers, cache: "no-store" }),
-    fetch(`${config.url}/rest/v1/inventory?select=product_slug&limit=5000`, { headers, cache: "no-store" })
+    fetch(`${config.url}/rest/v1/mithron_products?select=slug&limit=${limit}`, { headers, cache: "no-store" }),
+    fetch(`${config.url}/rest/v1/inventory?select=product_slug&limit=${limit}`, { headers, cache: "no-store" })
   ]);
 
   const products = productsResponse.ok ? (await productsResponse.json() as Array<{ slug?: string }>) : [];
@@ -183,19 +209,36 @@ export async function assertInventoryProductParity(env: EnvSource = process.env)
   const duplicateInventorySlugs = [...inventorySlugCounts.values()].filter((count) => count > 1).length;
   const orphanInventory = [...inventorySlugs].filter((slug) => !productSlugs.has(slug)).length;
 
-  const productCount = productSlugs.size;
-  const inventoryCount = inventory.length;
-
-  return {
-    synchronized:
-      productCount === inventoryCount
-      && missingInventory === 0
-      && duplicateInventorySlugs === 0
-      && orphanInventory === 0,
-    productCount,
-    inventoryCount,
+  return finalizeParityReport({
+    productCount: productSlugs.size,
+    inventoryCount: inventory.length,
     missingInventory,
     duplicateInventorySlugs,
     orphanInventory
-  };
+  });
+}
+
+export async function assertInventoryProductParity(env: EnvSource = process.env): Promise<InventoryParityReport> {
+  const config = getSupabaseAdminConfig(env);
+  if (!config.configured) {
+    return emptyParityReport();
+  }
+
+  const rpcResponse = await fetch(`${config.url}/rest/v1/rpc/get_inventory_parity_counts`, {
+    method: "POST",
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      "Content-Type": "application/json"
+    },
+    body: "{}",
+    cache: "no-store"
+  });
+
+  if (rpcResponse.ok) {
+    const payload = (await rpcResponse.json()) as Partial<InventoryParityReport>;
+    return finalizeParityReport(payload);
+  }
+
+  return assertInventoryProductParityViaRowScan(config);
 }

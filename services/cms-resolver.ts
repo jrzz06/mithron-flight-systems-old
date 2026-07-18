@@ -112,24 +112,24 @@ export async function resolveCmsPageOrchestration(
   env: EnvSource = process.env
 ): Promise<CmsPageOrchestration> {
   const normalizedRoute = routePath.startsWith("/") ? routePath : `/${routePath}`;
-  const [pages, allSections] = await Promise.all([
-    fetchAdminRows(
-      "cms_pages",
-      `select=id,slug,title,route_path,sort_order,is_visible,status&route_path=eq.${encodeURIComponent(normalizedRoute)}&limit=1`,
-      env
-    ),
-    fetchAdminRows(
-      "cms_sections",
-      "select=id,page_id,section_key,component_key,title,sort_order,is_visible,status&order=sort_order.asc&limit=80",
-      env
-    )
-  ]);
+  const pages = await fetchAdminRows(
+    "cms_pages",
+    `select=id,slug,title,route_path,sort_order,is_visible,status&route_path=eq.${encodeURIComponent(normalizedRoute)}&limit=1`,
+    env
+  );
 
   const page = pages?.[0] ?? null;
   const pageId = optionalString(page?.id);
-  const sections = (allSections ?? [])
-    .filter((row) => !pageId || optionalString(row.page_id) === pageId)
-    .filter(publishedSection);
+
+  const allSections = pageId
+    ? await fetchAdminRows(
+        "cms_sections",
+        `select=id,page_id,section_key,component_key,title,sort_order,is_visible,status&page_id=eq.${encodeURIComponent(pageId)}&order=sort_order.asc&limit=80`,
+        env
+      )
+    : null;
+
+  const sections = (allSections ?? []).filter(publishedSection);
 
   const contentSources = pinHomepageSources(normalizedRoute, resolveContentSources(sections));
 

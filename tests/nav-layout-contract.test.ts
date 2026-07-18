@@ -10,7 +10,7 @@ describe("storefront nav layout contract", () => {
   const globals = source("app/globals.css");
   const density = source("app/storefront-density.css");
   const hook = source("hooks/use-adaptive-navbar-tone.ts");
-  const shell = source("components/layout/store-shell-client.tsx");
+  const shell = source("components/layout/storefront-shell-streaming.tsx");
 
   it("defines nav height primitives and derives offset from them", () => {
     expect(globals).toContain("--store-topbar-height: 34px");

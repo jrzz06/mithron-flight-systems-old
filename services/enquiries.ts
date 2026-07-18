@@ -120,24 +120,26 @@ export async function notifyAdminsAboutEnquiry(
   if (!policy.orderAlertsEnabled) return;
 
   const adminIds = await listAdminRecipientIds("admin", env);
-  for (const recipientId of adminIds) {
-    await createNotificationRecord(
-      {
-        recipient_id: recipientId,
-        channel: "in_app",
-        title: input.title,
-        body: input.body,
-        status: "unread",
-        priority: "high",
-        entity_table: "enquiries",
-        entity_id: input.enquiryId,
-        dedupe_key: notificationDedupeKey("enquiry-new", input.enquiryId, recipientId)
-      },
-      input.actorId,
-      env,
-      input.actorId ? {} : { allowSystemActor: true }
-    ).catch(() => undefined);
-  }
+  await Promise.all(
+    adminIds.map((recipientId) =>
+      createNotificationRecord(
+        {
+          recipient_id: recipientId,
+          channel: "in_app",
+          title: input.title,
+          body: input.body,
+          status: "unread",
+          priority: "high",
+          entity_table: "enquiries",
+          entity_id: input.enquiryId,
+          dedupe_key: notificationDedupeKey("enquiry-new", input.enquiryId, recipientId)
+        },
+        input.actorId,
+        env,
+        input.actorId ? {} : { allowSystemActor: true }
+      ).catch(() => undefined)
+    )
+  );
 }
 
 export async function notifyAdminsAboutPaidOrder(

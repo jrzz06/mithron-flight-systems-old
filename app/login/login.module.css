@@ -111,16 +111,19 @@
 .heroImageSky {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: var(--login-hero-focus-x) 20%;
+  /* Atmospheric parallax only — no backgroundImage so LOGIN_BG_SRC is fetched once via next/image. */
+  background:
+    radial-gradient(ellipse 90% 55% at var(--login-hero-focus-x) 18%, rgb(210 228 245 / 16%), transparent 62%),
+    linear-gradient(to bottom, rgb(176 206 236 / 10%), transparent 58%);
   filter: blur(4px);
   transform: scale(1.06);
   transform-origin: var(--login-hero-focus-x) 20%;
 }
 
 .heroImageSkyNear {
-  background-position: var(--login-hero-focus-x) 16%;
+  background:
+    radial-gradient(ellipse 80% 48% at var(--login-hero-focus-x) 14%, rgb(255 255 255 / 14%), transparent 58%),
+    linear-gradient(to bottom, rgb(176 206 236 / 12%), transparent 52%);
   filter: blur(7px);
   opacity: 0.36;
   transform: scale(1.09);

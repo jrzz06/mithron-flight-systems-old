@@ -223,19 +223,34 @@ export async function confirmAdminOrderWorkflow(
 
   if (nextStatus === "confirmed") {
     await syncLinkedEnquiryStatus(input.orderId, "won", input.actorId, env);
-    await notifyCustomerAboutOrder(
-      updated,
-      "Order confirmed",
-      "Your order has been approved. We will notify you when it ships.",
-      input.actorId,
-      env
-    );
+    await Promise.all([
+      notifyCustomerAboutOrder(
+        updated,
+        "Order confirmed",
+        "Your order has been approved. We will notify you when it ships.",
+        input.actorId,
+        env
+      ).catch((error) => console.error("[order-workflow] Failed to notify customer about confirmation.", error)),
+      createActivityLogRecord(
+        {
+          actor_id: input.actorId,
+          action: "admin_confirm",
+          entity_table: "orders",
+          entity_id: input.orderId,
+          severity: "info",
+          metadata: { status: nextStatus }
+        },
+        input.actorId,
+        env
+      )
+    ]);
+    return updated;
   }
 
   await createActivityLogRecord(
     {
       actor_id: input.actorId,
-      action: nextStatus === "confirmed" ? "admin_confirm" : "admin_review",
+      action: "admin_review",
       entity_table: "orders",
       entity_id: input.orderId,
       severity: "info",
@@ -293,26 +308,27 @@ export async function markOrderPaidWorkflow(
     env
   ).catch(() => undefined);
 
-  await notifyCustomerAboutOrder(
-    updated,
-    "Payment received",
-    "We have confirmed your payment. Your order will now be reviewed for processing.",
-    input.actorId,
-    env
-  );
-
-  await createActivityLogRecord(
-    {
-      actor_id: input.actorId,
-      action: "admin_mark_paid",
-      entity_table: "orders",
-      entity_id: input.orderId,
-      severity: "info",
-      metadata: { status: nextStatus }
-    },
-    input.actorId,
-    env
-  );
+  await Promise.all([
+    notifyCustomerAboutOrder(
+      updated,
+      "Payment received",
+      "We have confirmed your payment. Your order will now be reviewed for processing.",
+      input.actorId,
+      env
+    ).catch((error) => console.error("[order-workflow] Failed to notify customer about payment.", error)),
+    createActivityLogRecord(
+      {
+        actor_id: input.actorId,
+        action: "admin_mark_paid",
+        entity_table: "orders",
+        entity_id: input.orderId,
+        severity: "info",
+        metadata: { status: nextStatus }
+      },
+      input.actorId,
+      env
+    )
+  ]);
 
   return updated;
 }
@@ -400,26 +416,27 @@ export async function rejectAdminOrderWorkflow(
   });
 
   await syncLinkedEnquiryStatus(input.orderId, "lost", input.actorId, env);
-  await notifyCustomerAboutOrder(
-    updated,
-    "Order not approved",
-    input.reason?.trim() || "Your enquiry/order request was not approved. Contact support for details.",
-    input.actorId,
-    env
-  );
-
-  await createActivityLogRecord(
-    {
-      actor_id: input.actorId,
-      action: "admin_reject",
-      entity_table: "orders",
-      entity_id: input.orderId,
-      severity: "warning",
-      metadata: { reason: input.reason ?? null }
-    },
-    input.actorId,
-    env
-  );
+  await Promise.all([
+    notifyCustomerAboutOrder(
+      updated,
+      "Order not approved",
+      input.reason?.trim() || "Your enquiry/order request was not approved. Contact support for details.",
+      input.actorId,
+      env
+    ).catch((error) => console.error("[order-workflow] Failed to notify customer about rejection.", error)),
+    createActivityLogRecord(
+      {
+        actor_id: input.actorId,
+        action: "admin_reject",
+        entity_table: "orders",
+        entity_id: input.orderId,
+        severity: "warning",
+        metadata: { reason: input.reason ?? null }
+      },
+      input.actorId,
+      env
+    )
+  ]);
 
   return updated;
 }
@@ -458,26 +475,27 @@ export async function cancelAdminOrderWorkflow(
   });
 
   await syncLinkedEnquiryStatus(input.orderId, "lost", input.actorId, env);
-  await notifyCustomerAboutOrder(
-    updated,
-    "Order cancelled",
-    reason,
-    input.actorId,
-    env
-  );
-
-  await createActivityLogRecord(
-    {
-      actor_id: input.actorId,
-      action: "admin_cancel",
-      entity_table: "orders",
-      entity_id: input.orderId,
-      severity: "warning",
-      metadata: { reason }
-    },
-    input.actorId,
-    env
-  );
+  await Promise.all([
+    notifyCustomerAboutOrder(
+      updated,
+      "Order cancelled",
+      reason,
+      input.actorId,
+      env
+    ).catch((error) => console.error("[order-workflow] Failed to notify customer about cancellation.", error)),
+    createActivityLogRecord(
+      {
+        actor_id: input.actorId,
+        action: "admin_cancel",
+        entity_table: "orders",
+        entity_id: input.orderId,
+        severity: "warning",
+        metadata: { reason }
+      },
+      input.actorId,
+      env
+    )
+  ]);
 
   return updated;
 }
@@ -552,30 +570,31 @@ export async function assignOrderToWarehouseWorkflow(
   );
 
   await syncLinkedEnquiryStatus(input.orderId, "converted", input.actorId, env);
-  await notifyWarehouseAboutOrder(
-    {
-      ...updated,
-      metadata: {
-        ...(isPlainRecord(updated.metadata) ? updated.metadata : existingMetadata),
-        assigned_warehouse_code: warehouseCode
-      }
-    },
-    input.actorId,
-    env
-  );
-
-  await createActivityLogRecord(
-    {
-      actor_id: input.actorId,
-      action: "warehouse_assigned",
-      entity_table: "orders",
-      entity_id: input.orderId,
-      severity: "info",
-      metadata: { fulfillment_status: nextFulfillment, warehouse_code: warehouseCode }
-    },
-    input.actorId,
-    env
-  );
+  await Promise.all([
+    notifyWarehouseAboutOrder(
+      {
+        ...updated,
+        metadata: {
+          ...(isPlainRecord(updated.metadata) ? updated.metadata : existingMetadata),
+          assigned_warehouse_code: warehouseCode
+        }
+      },
+      input.actorId,
+      env
+    ).catch((error) => console.error("[order-workflow] Failed to notify warehouse about assignment.", error)),
+    createActivityLogRecord(
+      {
+        actor_id: input.actorId,
+        action: "warehouse_assigned",
+        entity_table: "orders",
+        entity_id: input.orderId,
+        severity: "info",
+        metadata: { fulfillment_status: nextFulfillment, warehouse_code: warehouseCode }
+      },
+      input.actorId,
+      env
+    )
+  ]);
 
   return updated;
 }

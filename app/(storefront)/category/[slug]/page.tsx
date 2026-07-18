@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
   CATALOG_CATEGORY_SLUGS,
@@ -32,8 +33,11 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = await params;
+function CatalogPageFallback() {
+  return <div className="min-h-[60vh] animate-pulse bg-[#eef0f3]" aria-hidden="true" />;
+}
+
+async function CategoryPageContent({ slug }: { slug: string }) {
   if (!isCatalogCategorySlug(slug)) notFound();
 
   const definition = getCatalogCategoryDefinition(slug);
@@ -52,5 +56,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       listingMode="category"
       showBack
     />
+  );
+}
+
+export default async function CategoryPage({ params }: CategoryPageProps) {
+  const { slug } = await params;
+
+  return (
+    <Suspense fallback={<CatalogPageFallback />}>
+      <CategoryPageContent slug={slug} />
+    </Suspense>
   );
 }

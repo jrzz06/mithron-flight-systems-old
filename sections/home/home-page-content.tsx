@@ -1,24 +1,24 @@
 import { Suspense } from "react";
 import { HomeBelowHero } from "@/sections/home/home-below-hero";
 import { HomeHeroFallback, HomeHeroSection } from "@/sections/home/home-hero-section";
-import { getHomepageBundle } from "@/services/homepage-bundle";
+import { getHomepageBelowFoldData, getHomepageHeroBanners } from "@/services/homepage-bundle";
 
 function HomeBelowHeroFallback() {
   return <div className="min-h-[40vh] animate-pulse bg-[#eef0f3]" aria-hidden="true" />;
 }
 
 async function HomeHeroAsync({ cmsDraftPreview }: { cmsDraftPreview: boolean }) {
-  const bundle = await getHomepageBundle(cmsDraftPreview);
+  const heroBanners = await getHomepageHeroBanners(cmsDraftPreview);
   return (
     <HomeHeroSection
       cmsDraftPreview={cmsDraftPreview}
-      heroBanners={bundle.heroBanners}
+      heroBanners={heroBanners}
     />
   );
 }
 
 async function HomeBelowHeroAsync({ cmsDraftPreview }: { cmsDraftPreview: boolean }) {
-  const bundle = await getHomepageBundle(cmsDraftPreview);
+  const bundle = await getHomepageBelowFoldData(cmsDraftPreview);
   return (
     <HomeBelowHero
       cmsDraftPreview={cmsDraftPreview}

@@ -72,14 +72,18 @@ describe("blog system wiring", () => {
     const list = source("app/(storefront)/blog/page.tsx");
     const detail = source("app/(storefront)/blog/[slug]/page.tsx");
     const card = source("components/blog/blog-article-card.tsx");
+    const service = source("services/blog-posts.ts");
 
     expect(list).toContain("listPublishedBlogPosts");
+    expect(list).toContain("Suspense");
     expect(list).toContain("BlogArticleCard");
     expect(detail).toContain("getBlogPostBySlug");
     expect(detail).toContain("EditorRenderedContent");
     expect(detail).toContain("related_product_slugs");
     expect(card).toContain("`/blog/${post.slug}`");
     expect(card).toContain('loading="lazy"');
+    expect(service).toContain("BLOG_TEASER_SELECT");
+    expect(service).toContain("BLOG_LIST_SELECT");
   });
 
   it("inserts Related Articles after testimonials and prefers Articles CMS press cards", () => {
@@ -87,7 +91,7 @@ describe("blog system wiring", () => {
     const section = source("sections/home/home-related-articles-section.tsx");
     const bundle = source("services/homepage-bundle.ts");
     const belowHero = source("sections/home/home-below-hero.tsx");
-    const homePage = source("app/(storefront)/page.tsx");
+    const homePage = source("sections/home/home-page-content.tsx");
 
     expect(section).toContain('data-testid="home-related-articles"');
     expect(section).toContain("EditorialCoverCard");

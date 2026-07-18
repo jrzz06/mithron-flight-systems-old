@@ -1,12 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { glassButtonClassName } from "@/lib/glass-ui";
 import { cn } from "@/lib/utils";
-import { MithronAssistantPanel } from "@/components/assistant/mithron-assistant-panel";
 import styles from "./mithron-assistant-launcher.module.css";
+
+const MithronAssistantPanel = dynamic(
+  () =>
+    import("@/components/assistant/mithron-assistant-panel").then(
+      (mod) => mod.MithronAssistantPanel
+    ),
+  { ssr: false, loading: () => null }
+);
 
 function useJitteredInterval(callback: () => void, baseMs: number, jitterMs: number) {
   useEffect(() => {
@@ -79,11 +87,13 @@ export function MithronAssistantLauncher() {
         </div>
       ) : null}
 
-      <MithronAssistantPanel
-        open={open}
-        onClose={() => setOpen(false)}
-        selectedProductSlug={selectedProductSlug}
-      />
+      {open ? (
+        <MithronAssistantPanel
+          open={open}
+          onClose={() => setOpen(false)}
+          selectedProductSlug={selectedProductSlug}
+        />
+      ) : null}
     </>
   );
 }

@@ -21,18 +21,20 @@ const oldDraftCollectionName = ["draft", "Testimonials"].join("");
 describe("home landing composite contract", () => {
   it("renders the current hero followed by exactly one composite post-hero section", () => {
     const page = source("app/(storefront)/page.tsx");
+    const homePageContent = source("sections/home/home-page-content.tsx");
     const belowHero = source("sections/home/home-below-hero.tsx");
 
-    expect(page).toContain("HomeBelowHero");
-    expect(page).toContain("HomeHeroSection");
+    expect(homePageContent).toContain("HomeBelowHero");
+    expect(homePageContent).toContain("HomeHeroSection");
+    expect(page).toContain("HomePageContent");
     expect(page).not.toContain("dynamic(");
     expect(belowHero).toContain("listFeaturedHomeReviews");
     expect(belowHero).toContain("productReviews={homepageReviews}");
     expect(belowHero).toContain("footer={cms.footer}");
     expect(belowHero).toContain("homepageCms={homepageCms}");
     expect(belowHero).toContain("getHomepageProducts");
-    expect(page).not.toContain("HomeProductShelves");
-    expect(page).not.toContain("homeShelves");
+    expect(homePageContent).not.toContain("HomeProductShelves");
+    expect(homePageContent).not.toContain("homeShelves");
   });
 
   it("defines the requested chapter order and proof states without fake verified testimonials", () => {

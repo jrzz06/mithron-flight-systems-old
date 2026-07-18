@@ -64,7 +64,10 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
-    await recordLoginFailures([email, rateKey]);
+    // Bump only (no peek) — combined email + IP keys; use bump remaining/locked
+    // so a raced ceiling cross can 429 without an extra round-trip.
+    const failureStates = await recordLoginFailures([email, rateKey]);
+    const lockedAfterBump = failureStates.some((state) => !state.allowed);
     const clientToken = request.headers.get("x-auth-audit-token")
       ?? request.headers.get("x-turnstile-token");
     if (verifyAuthAuditClientToken(clientToken)) {
@@ -77,6 +80,9 @@ export async function POST(request: Request) {
         severity: "warning",
         metadata: { email, error: signInError.message, provider: "supabase" }
       }, request);
+    }
+    if (lockedAfterBump) {
+      return NextResponse.json({ error: mapAuthErrorForClient(new LoginLockedOutError()) }, { status: 429 });
     }
     return NextResponse.json({ error: mapAuthErrorForClient(signInError) }, { status: 401 });
   }

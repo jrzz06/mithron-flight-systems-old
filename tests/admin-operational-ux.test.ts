@@ -277,7 +277,7 @@ describe("admin operational UX", () => {
   });
 
   it("keeps storefront chrome out of admin and role control-plane routes", () => {
-    const shell = source("components/layout/store-shell-client.tsx");
+    const shell = source("components/layout/storefront-shell-streaming.tsx");
     const routes = source("lib/ui/shell-routes.ts");
 
     expect(shell).toContain("shouldSkipStorefrontChrome");
@@ -289,7 +289,7 @@ describe("admin operational UX", () => {
   });
 
   it("keeps storefront chrome off auth entry routes so login controls stay clickable", () => {
-    const shell = source("components/layout/store-shell-client.tsx");
+    const shell = source("components/layout/storefront-shell-streaming.tsx");
     const routes = source("lib/ui/shell-routes.ts");
 
     expect(routes).toContain("isAuthEntryRoute");

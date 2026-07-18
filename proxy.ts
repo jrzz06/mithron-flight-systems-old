@@ -171,6 +171,8 @@ async function loadProfileGateRow(
 type CachedAuthRoleContext = {
   role: ReturnType<typeof normalizeCmsRole>;
   disabled?: boolean;
+  /** When true, public storefront identity gate can skip a profiles round-trip. */
+  profileComplete?: boolean;
 };
 
 const AUTH_ROLE_CACHE_TTL_SECONDS = 30;
@@ -184,6 +186,24 @@ function resolveClaimsRoleFromClaims(claims: Record<string, unknown>) {
   );
 }
 
+function buildAuthRoleCachePayload(
+  role: NonNullable<ReturnType<typeof normalizeCmsRole>>,
+  profileLookup: ProfileGateLookup | null
+): CachedAuthRoleContext {
+  if (!profileLookup) {
+    // Staff / no identity gate — treat as complete so public storefront skips profiles.
+    return { role, disabled: false, profileComplete: true };
+  }
+  if (profileLookup.errorMessage || !profileLookup.row) {
+    return { role, disabled: false, profileComplete: false };
+  }
+  return {
+    role,
+    disabled: false,
+    profileComplete: isProfileIdentityComplete(profileLookup.row)
+  };
+}
+
 async function resolveRoleAndProfileWithAuthRoleCache(params: {
   supabase: ReturnType<typeof createSupabaseOnRequest>;
   claims: Record<string, unknown>;
@@ -195,6 +215,7 @@ async function resolveRoleAndProfileWithAuthRoleCache(params: {
   profileLookup: ProfileGateLookup | null;
   usedAuthRoleCache: boolean;
   authCacheKey: string | null;
+  profileCompleteFromCache: boolean;
 }> {
   const { supabase, claims, pathname, userId, sessionIat } = params;
   const authCacheKey = userId && sessionIat ? REDIS_CACHE_KEYS.authRoleContext(userId, sessionIat) : null;
@@ -211,20 +232,29 @@ async function resolveRoleAndProfileWithAuthRoleCache(params: {
           resolveRequestRole(supabase, claims),
           userId ? loadProfileGateRow(supabase, userId) : Promise.resolve(null as ProfileGateLookup | null)
         ]);
-        return { roleResolution, profileLookup, usedAuthRoleCache: false, authCacheKey };
+        return {
+          roleResolution,
+          profileLookup,
+          usedAuthRoleCache: false,
+          authCacheKey,
+          profileCompleteFromCache: false
+        };
       }
 
       const role = cached.role;
       const needIdentityGate = role === "user" && !isProfileCompletionExemptPath(pathname);
-      const profileLookup = userId && needIdentityGate
-        ? await loadProfileGateRow(supabase, userId)
-        : null;
+      // Skip profiles when Redis already confirmed a complete customer profile.
+      const profileLookup =
+        userId && needIdentityGate && cached.profileComplete !== true
+          ? await loadProfileGateRow(supabase, userId)
+          : null;
 
       return {
         roleResolution: { role, claimsRole, roleError: null },
         profileLookup,
         usedAuthRoleCache: true,
-        authCacheKey
+        authCacheKey,
+        profileCompleteFromCache: cached.profileComplete === true
       };
     }
   }
@@ -234,7 +264,13 @@ async function resolveRoleAndProfileWithAuthRoleCache(params: {
     userId ? loadProfileGateRow(supabase, userId) : Promise.resolve(null as ProfileGateLookup | null)
   ]);
 
-  return { roleResolution, profileLookup, usedAuthRoleCache: false, authCacheKey };
+  return {
+    roleResolution,
+    profileLookup,
+    usedAuthRoleCache: false,
+    authCacheKey,
+    profileCompleteFromCache: false
+  };
 }
 
 function validateActiveProfile(gate: ProfileGateLookup, sessionIat: number | null) {
@@ -522,7 +558,7 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
         if (!usedAuthRoleCache && authCacheKey && roleResolution.role) {
           void setCachedJson(
             authCacheKey,
-            { role: roleResolution.role, disabled: false },
+            buildAuthRoleCachePayload(roleResolution.role, profileLookup),
             AUTH_ROLE_CACHE_TTL_SECONDS
           );
         }
@@ -553,7 +589,11 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
     }
 
     if (!usedAuthRoleCache && authCacheKey && roleResolution.role) {
-      void setCachedJson(authCacheKey, { role: roleResolution.role, disabled: false }, AUTH_ROLE_CACHE_TTL_SECONDS);
+      void setCachedJson(
+        authCacheKey,
+        buildAuthRoleCachePayload(roleResolution.role, profileLookup),
+        AUTH_ROLE_CACHE_TTL_SECONDS
+      );
     }
 
     if (apiPolicy.kind === "admin" && !isStrictAdminRole(roleResolution.role)) {
@@ -599,7 +639,13 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
       const userId = typeof claims.sub === "string" ? claims.sub : null;
       const sessionIat = typeof claims.iat === "number" ? claims.iat : null;
       const authLookupsStartedAt = Date.now();
-      const { roleResolution, profileLookup, usedAuthRoleCache, authCacheKey } = await resolveRoleAndProfileWithAuthRoleCache({
+      const {
+        roleResolution,
+        profileLookup,
+        usedAuthRoleCache,
+        authCacheKey,
+        profileCompleteFromCache
+      } = await resolveRoleAndProfileWithAuthRoleCache({
         supabase,
         claims,
         pathname,
@@ -613,14 +659,25 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
       const role = roleResolution.role;
 
       if (!usedAuthRoleCache && authCacheKey && role) {
-        void setCachedJson(authCacheKey, { role, disabled: false }, AUTH_ROLE_CACHE_TTL_SECONDS);
+        void setCachedJson(
+          authCacheKey,
+          buildAuthRoleCachePayload(role, profileLookup),
+          AUTH_ROLE_CACHE_TTL_SECONDS
+        );
       }
 
       if (shouldConfineRoleToControlPanel(role, pathname)) {
         return redirectToRoleHome(request, role, "access_status", "control_panel_only");
       }
 
-      if (userId && role === "user" && !isProfileCompletionExemptPath(pathname) && profileLookup) {
+      // Skip identity gate when Redis already confirmed profileComplete=true.
+      if (
+        userId
+        && role === "user"
+        && !isProfileCompletionExemptPath(pathname)
+        && !profileCompleteFromCache
+        && profileLookup
+      ) {
         const identityGate = validateProfileIdentityGate(profileLookup, pathname, role);
         if (identityGate.incomplete) {
           return redirectToProfileCompletion(request);
@@ -711,7 +768,7 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
   const role = roleResolution.role;
 
   if (!usedAuthRoleCache && authCacheKey && role) {
-    void setCachedJson(authCacheKey, { role, disabled: false }, AUTH_ROLE_CACHE_TTL_SECONDS);
+    void setCachedJson(authCacheKey, buildAuthRoleCachePayload(role, profileLookup), AUTH_ROLE_CACHE_TTL_SECONDS);
   }
 
   if (profileLookup) {

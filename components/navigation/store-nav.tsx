@@ -1,19 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { CartNavButton } from "@/components/navigation/cart-nav-button";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
-import { ArrowRight, ChevronDown, Eye, Globe2, Map as MapIcon, Menu, Palette, Search, Sprout, UserRound, Video, Wrench, X } from "lucide-react";
+import { ChevronDown, Eye, Globe2, Map as MapIcon, Menu, Palette, Search, Sprout, UserRound, Video, Wrench } from "lucide-react";
 import { useAdaptiveNavbarTone } from "@/hooks/use-adaptive-navbar-tone";
 import { useNavAnchor } from "@/hooks/use-nav-anchor";
 import { normalizeStorefrontPath, resolveInitialNavbarTone } from "@/lib/navbar-ink-sampling";
-import { MithronCardImage } from "@/components/media/mithron-card-image";
-import { MithronThumbImage } from "@/components/media/mithron-thumb-image";
 import { MithronBrandMark } from "@/components/brand/mithron-brand-mark";
-import { EditorRenderedHtml } from "@/components/editor/editor-rendered-html";
 import type { NavigationNode } from "@/config/types";
-import type { EnterpriseMenuConfig, EnterpriseMenuOption, FeaturedMenuCard, MegaMenuConfig } from "@/lib/nav-menu-types";
+import type { EnterpriseMenuConfig } from "@/lib/nav-menu-types";
 import { catalogCategoryDefinitions, ACCESSORIES_CATALOG_HREF } from "@/lib/catalog-categories";
 import { isStorefrontGuestOnly } from "@/lib/storefront/guest-demo";
 import { useUiStore } from "@/store/ui";
@@ -21,6 +19,20 @@ import { useUiStore } from "@/store/ui";
 const MENU_CLOSE_DELAY_MS = 200;
 const MENU_EXIT_MS = 260;
 const NAV_DESKTOP_PREFETCH_MIN_WIDTH = 1280;
+
+const EnterpriseMegaMenuPanel = dynamic(
+  () =>
+    import("@/components/navigation/enterprise-mega-menu-panel").then(
+      (mod) => mod.EnterpriseMegaMenuPanel
+    ),
+  { ssr: false, loading: () => null }
+);
+
+const MobileNavDrawer = dynamic(
+  () =>
+    import("@/components/navigation/mobile-nav-drawer").then((mod) => mod.MobileNavDrawer),
+  { ssr: false, loading: () => null }
+);
 
 const NAV_LABEL_ALIASES: Record<string, string> = {
   "Our Franchise": "Global Products",
@@ -54,10 +66,6 @@ function shouldSkipAggressivePrefetch() {
   if (connection?.saveData) return true;
   if (typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency <= 2) return true;
   return false;
-}
-
-function getFeaturedCard(menu: MegaMenuConfig, featureKey: string | undefined) {
-  return menu.featured.find((card) => card.key === featureKey) ?? menu.featured.find((card) => card.key === menu.defaultFeatureKey) ?? menu.featured[0];
 }
 
 export const StoreNav = forwardRef(function StoreNav(
@@ -100,6 +108,7 @@ export const StoreNav = forwardRef(function StoreNav(
   const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
   const [renderedMenuKey, setRenderedMenuKey] = useState<string | null>(null);
   const [featuredByMenu, setFeaturedByMenu] = useState<Record<string, string>>({});
+  const [mobileDrawerMounted, setMobileDrawerMounted] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
   const prefetchDebounceRef = useRef<Map<string, number>>(new Map());
   const activeNavIndex = useMemo(() => {
@@ -245,6 +254,18 @@ export const StoreNav = forwardRef(function StoreNav(
     return () => window.clearTimeout(hideTimer);
   }, [activeMenuKey, renderedMenuKey]);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      setMobileDrawerMounted(true);
+      return;
+    }
+    if (!mobileDrawerMounted) return;
+    const hideTimer = window.setTimeout(() => {
+      setMobileDrawerMounted(false);
+    }, MENU_EXIT_MS);
+    return () => window.clearTimeout(hideTimer);
+  }, [mobileMenuOpen, mobileDrawerMounted]);
+
   const renderedMenu = renderedMenuKey ? enterpriseMenuByKey.get(renderedMenuKey) : undefined;
 
   const isLoginNav = variant === "login";
@@ -371,7 +392,7 @@ export const StoreNav = forwardRef(function StoreNav(
         </div>
       </header>
       {renderedMenu ? (
-        <EnterpriseMenuPanel
+        <EnterpriseMegaMenuPanel
           menu={renderedMenu}
           open={activeMenuKey === renderedMenu.key}
           featuredKey={featuredByMenu[renderedMenu.key]}
@@ -380,17 +401,20 @@ export const StoreNav = forwardRef(function StoreNav(
           onClose={closeEnterpriseMenu}
         />
       ) : null}
-      <MobileMenu
-        navigationItems={displayedNavigationItems}
-        enterpriseMenuConfigs={enterpriseMenuConfigs}
-        open={mobileMenuOpen}
-        onClose={() => setOverlay(null)}
-        onSearch={isLoginNav ? undefined : () => setOverlay("search")}
-        onSearchIntent={isLoginNav ? undefined : preloadSearchOverlay}
-      />
+      {mobileDrawerMounted ? (
+        <MobileNavDrawer
+          navigationItems={displayedNavigationItems}
+          enterpriseMenuConfigs={enterpriseMenuConfigs}
+          open={mobileMenuOpen}
+          onClose={() => setOverlay(null)}
+          onSearch={isLoginNav ? undefined : () => setOverlay("search")}
+          onSearchIntent={isLoginNav ? undefined : preloadSearchOverlay}
+        />
+      ) : null}
     </div>
   );
 });
+
 function NavLinkItem({
   item,
   index,
@@ -441,450 +465,5 @@ function NavLinkItem({
         <span aria-hidden="true" className="adaptive-navbar__underline pointer-events-none absolute bottom-[3px] left-0 h-px w-full origin-center" />
       </Link>
     </div>
-  );
-}
-
-function EnterpriseMenuPanel({
-  menu,
-  open,
-  featuredKey,
-  onFeatureIntent,
-  onRouteIntent,
-  onClose
-}: {
-  menu: EnterpriseMenuConfig;
-  open: boolean;
-  featuredKey?: string;
-  onFeatureIntent: (featureKey: string | undefined) => void;
-  onRouteIntent: (href: string) => void;
-  onClose: () => void;
-}) {
-  if (menu.type === "compact") {
-    return (
-      <div
-        id={`enterprise-menu-${menu.key}`}
-        role="region"
-        aria-label={`${menu.label} dropdown`}
-        aria-hidden={!open}
-        className={`enterprise-mega-menu-shell enterprise-mega-menu-shell--compact ${open ? "is-open" : ""}`}
-      >
-        <div className="enterprise-mega-menu enterprise-mega-menu--compact">
-          <p className="enterprise-mega-menu__eyebrow">{menu.eyebrow}</p>
-          <div className="enterprise-compact-menu__grid">
-            {menu.items.map((item) => (
-              <EnterpriseMenuLink
-                key={item.label}
-                item={item}
-                interactive={open}
-                onRouteIntent={onRouteIntent}
-                onFeatureIntent={onFeatureIntent}
-                onClose={onClose}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (menu.type === "franchise") {
-    return (
-      <div
-        id={`enterprise-menu-${menu.key}`}
-        role="region"
-        aria-label={`${menu.label} dropdown`}
-        aria-hidden={!open}
-        className={`enterprise-mega-menu-shell enterprise-mega-menu-shell--franchise ${open ? "is-open" : ""}`}
-      >
-        <div className="enterprise-mega-menu enterprise-mega-menu--franchise">
-          <div className="enterprise-franchise-menu__copy">
-            <p className="enterprise-mega-menu__eyebrow">{menu.eyebrow}</p>
-            <h2>{menu.headline}</h2>
-            <EditorRenderedHtml html={menu.body} className="enterprise-franchise-menu__body" />
-            <div className="enterprise-franchise-menu__links">
-              {menu.items.map((item) => (
-                <EnterpriseMenuLink
-                  key={item.label}
-                  item={item}
-                  interactive={open}
-                  onRouteIntent={onRouteIntent}
-                  onFeatureIntent={onFeatureIntent}
-                  onClose={onClose}
-                />
-              ))}
-            </div>
-          </div>
-          <EnterpriseFeaturedCard card={menu.card} interactive={open} onRouteIntent={onRouteIntent} onClose={onClose} />
-        </div>
-      </div>
-    );
-  }
-
-  const feature = getFeaturedCard(menu, featuredKey);
-  if (!feature) return null;
-
-  return (
-    <div
-      id={`enterprise-menu-${menu.key}`}
-      role="region"
-      aria-label={`${menu.label} mega menu`}
-      aria-hidden={!open}
-      className={`enterprise-mega-menu-shell ${open ? "is-open" : ""}`}
-    >
-      <div className="enterprise-mega-menu" data-menu-kind="mega">
-        <div className="enterprise-mega-menu__catalog">
-          <div className="enterprise-mega-menu__column">
-            <p className="enterprise-mega-menu__eyebrow">{menu.eyebrow}</p>
-            <h2>{menu.columnOneTitle}</h2>
-            <div className="enterprise-mega-menu__links">
-              {menu.columnOne.map((item) => (
-                <EnterpriseMenuLink
-                  key={item.label}
-                  item={item}
-                  interactive={open}
-                  activeFeatureKey={feature.key}
-                  onRouteIntent={onRouteIntent}
-                  onFeatureIntent={onFeatureIntent}
-                  onClose={onClose}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="enterprise-mega-menu__column">
-            <h2>{menu.columnTwoTitle}</h2>
-            <div className="enterprise-mega-menu__links">
-              {menu.columnTwo.map((item) => (
-                <EnterpriseMenuLink
-                  key={item.label}
-                  item={item}
-                  interactive={open}
-                  activeFeatureKey={feature.key}
-                  onRouteIntent={onRouteIntent}
-                  onFeatureIntent={onFeatureIntent}
-                  onClose={onClose}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <EnterpriseFeaturedCard
-          card={feature}
-          variant="preview"
-          interactive={open}
-          onRouteIntent={onRouteIntent}
-          onClose={onClose}
-        />
-      </div>
-    </div>
-  );
-}
-
-function EnterpriseMenuThumb({ src, eager }: { src: string; eager: boolean }) {
-  return (
-    <span className="enterprise-mega-menu__link-thumb-wrap" aria-hidden="true">
-      <MithronThumbImage
-        src={src}
-        alt=""
-        width={48}
-        height={48}
-        sizes="48px"
-        fill={false}
-        loading={eager ? "eager" : "lazy"}
-        priority={eager}
-        wrapperClassName="enterprise-mega-menu__link-thumb-frame"
-        className="enterprise-mega-menu__link-thumb"
-      />
-    </span>
-  );
-}
-
-function EnterpriseMenuLink({
-  item,
-  interactive,
-  activeFeatureKey,
-  onFeatureIntent,
-  onRouteIntent,
-  onClose
-}: {
-  item: EnterpriseMenuOption;
-  interactive: boolean;
-  activeFeatureKey?: string;
-  onFeatureIntent: (featureKey: string | undefined) => void;
-  onRouteIntent: (href: string) => void;
-  onClose: () => void;
-}) {
-  const isActive = Boolean(activeFeatureKey && item.featureKey === activeFeatureKey);
-
-  return (
-    <Link
-      href={item.href}
-      prefetch={false}
-      tabIndex={interactive ? undefined : -1}
-      className={`enterprise-mega-menu__link${isActive ? " is-active" : ""}`}
-      aria-current={isActive ? "true" : undefined}
-      onFocus={() => {
-        onFeatureIntent(item.featureKey);
-        onRouteIntent(item.href);
-      }}
-      onPointerEnter={() => {
-        onFeatureIntent(item.featureKey);
-        onRouteIntent(item.href);
-      }}
-      onClick={onClose}
-    >
-      <span className="enterprise-mega-menu__link-content">
-        {item.thumbnail ? <EnterpriseMenuThumb src={item.thumbnail} eager={interactive} /> : null}
-        <span className="enterprise-mega-menu__link-label">{item.label}</span>
-      </span>
-      <ArrowRight className="enterprise-mega-menu__link-arrow size-3.5" aria-hidden="true" />
-    </Link>
-  );
-}
-
-function EnterpriseFeaturedCard({
-  card,
-  variant = "full",
-  interactive,
-  onRouteIntent,
-  onClose
-}: {
-  card: FeaturedMenuCard;
-  variant?: "preview" | "full";
-  interactive: boolean;
-  onRouteIntent: (href: string) => void;
-  onClose: () => void;
-}) {
-  const isPreview = variant === "preview";
-  const ctaLabel = isPreview ? "View Product" : card.ctaLabel;
-
-  return (
-    <div className={`enterprise-feature-card${isPreview ? " enterprise-feature-card--preview" : ""}`}>
-      <div key={card.key} className="enterprise-feature-card__anim">
-        <div className="enterprise-feature-card__media" aria-hidden="true">
-          <MithronCardImage
-            src={card.image}
-            alt=""
-            fill
-            sizes={isPreview ? "(max-width: 1200px) 28vw, 300px" : "(max-width: 1200px) 30vw, 320px"}
-            className="object-contain"
-            priority={interactive}
-          />
-        </div>
-        <div className="enterprise-feature-card__body">
-          {!isPreview ? <p className="enterprise-mega-menu__eyebrow">{card.eyebrow}</p> : null}
-          <h3>{card.name}</h3>
-          <EditorRenderedHtml html={card.body} className="enterprise-feature-card__description" />
-          {card.price ? (
-            <p className="enterprise-feature-card__price">
-              {isPreview ? `From ${card.price}` : card.price}
-            </p>
-          ) : null}
-          {!isPreview ? (
-            <dl className="enterprise-feature-card__specs">
-              {card.specs.map((spec) => (
-                <div key={`${card.key}-${spec.label}`}>
-                  <dt>{spec.label}</dt>
-                  <dd>{spec.value}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : null}
-          <Link
-            href={card.href}
-            prefetch={false}
-            tabIndex={interactive ? undefined : -1}
-            className={isPreview ? "enterprise-mega-menu__preview-cta" : "enterprise-feature-card__cta"}
-            onFocus={() => onRouteIntent(card.href)}
-            onPointerEnter={() => onRouteIntent(card.href)}
-            onClick={onClose}
-          >
-            {ctaLabel}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        </div>
-        <span className="sr-only">{card.imageAlt}</span>
-      </div>
-    </div>
-  );
-}
-
-function getEnterpriseMenuSubLinks(menu: EnterpriseMenuConfig): EnterpriseMenuOption[] {
-  if (menu.type === "mega") {
-    return [...menu.columnOne, ...menu.columnTwo];
-  }
-  if (menu.type === "franchise") {
-    return menu.items;
-  }
-  return menu.items;
-}
-
-function MobileMenu({
-  navigationItems,
-  enterpriseMenuConfigs,
-  open,
-  onClose,
-  onSearch,
-  onSearchIntent
-}: {
-  navigationItems: NavigationNode[];
-  enterpriseMenuConfigs: EnterpriseMenuConfig[];
-  open: boolean;
-  onClose: () => void;
-  onSearch?: () => void;
-  onSearchIntent?: () => void;
-}) {
-  const enterpriseMenuByLabel = useMemo(
-    () => new Map(enterpriseMenuConfigs.map((menu) => [menu.label, menu])),
-    [enterpriseMenuConfigs]
-  );
-  const [expandedLabels, setExpandedLabels] = useState<Set<string>>(() => new Set());
-
-  useEffect(() => {
-    if (!open) {
-      setExpandedLabels(new Set());
-    }
-  }, [open]);
-
-  const toggleExpanded = (label: string) => {
-    setExpandedLabels((current) => {
-      const next = new Set(current);
-      if (next.has(label)) {
-        next.delete(label);
-      } else {
-        next.add(label);
-      }
-      return next;
-    });
-  };
-
-  return (
-    <>
-      <button
-        aria-label="Close navigation menu"
-        className={`adaptive-mobile-menu__backdrop fixed inset-0 z-[var(--z-dropdown)] cursor-default bg-black/45 ${open ? "is-open" : ""}`}
-        tabIndex={open ? 0 : -1}
-        onClick={onClose}
-      />
-      <div
-        data-testid="mobile-menu"
-        aria-hidden={!open}
-        className={`adaptive-mobile-menu fixed inset-x-4 top-[calc(var(--nav-anchor-bottom,var(--store-nav-offset))+8px)] z-[var(--z-dropdown-panel)] max-h-[calc(100dvh-var(--nav-anchor-bottom,var(--store-nav-offset))-16px)] overflow-y-auto rounded-[20px] border p-4 md:top-[calc(var(--nav-anchor-bottom,var(--store-nav-offset))+8px)] ${open ? "is-open" : ""}`}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <p className="adaptive-mobile-menu__label text-[11px] font-medium uppercase tracking-[0.14em]">Navigation</p>
-          <button
-            type="button"
-            tabIndex={open ? 0 : -1}
-            aria-label="Close menu"
-            className="adaptive-mobile-menu__control nav-interactive nav-interactive--subtle inline-flex min-h-11 min-w-11 items-center justify-center rounded-full"
-            onClick={onClose}
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-
-        <ul className="space-y-1.5">
-          {navigationItems.map((item) => {
-            const menu = enterpriseMenuByLabel.get(item.label);
-            const subLinks = menu ? getEnterpriseMenuSubLinks(menu) : [];
-            const isExpanded = expandedLabels.has(item.label);
-
-            return (
-              <li key={item.label}>
-                {subLinks.length > 0 ? (
-                  <div className="adaptive-mobile-menu__accordion">
-                    <div className="flex items-stretch gap-1.5">
-                      <Link
-                        href={item.href}
-                        tabIndex={open ? 0 : -1}
-                        onClick={onClose}
-                        className="adaptive-mobile-menu__link nav-interactive inline-flex min-h-11 min-w-0 flex-1 items-center rounded-2xl border px-4 py-3.5 text-[14px] font-medium tracking-[0.01em]"
-                      >
-                        {item.label}
-                      </Link>
-                      <button
-                        type="button"
-                        tabIndex={open ? 0 : -1}
-                        aria-expanded={isExpanded}
-                        aria-controls={`mobile-menu-panel-${menu?.key ?? item.label}`}
-                        className="adaptive-mobile-menu__control nav-interactive inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-2xl border"
-                        onClick={() => toggleExpanded(item.label)}
-                      >
-                        <ChevronDown
-                          className={`size-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-                    <div
-                      id={`mobile-menu-panel-${menu?.key ?? item.label}`}
-                      hidden={!isExpanded}
-                      className="adaptive-mobile-menu__accordion-panel"
-                    >
-                      <ul className="mt-1.5 space-y-1">
-                        {subLinks.map((subLink) => (
-                          <li key={`${item.label}-${subLink.label}`}>
-                            <Link
-                              href={subLink.href}
-                              tabIndex={open && isExpanded ? 0 : -1}
-                              onClick={onClose}
-                              className="adaptive-mobile-menu__sublink nav-interactive inline-flex min-h-10 w-full items-center rounded-xl border px-3.5 py-2.5 text-[13px] font-medium tracking-[0.01em]"
-                            >
-                              {subLink.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    href={item.href}
-                    tabIndex={open ? 0 : -1}
-                    onClick={onClose}
-                    className="adaptive-mobile-menu__link nav-interactive inline-flex min-h-11 w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-[14px] font-medium tracking-[0.01em]"
-                  >
-                    {item.label}
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-
-        {onSearch ? (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              tabIndex={open ? 0 : -1}
-              onFocus={onSearchIntent}
-              onPointerDown={onSearchIntent}
-              onPointerEnter={onSearchIntent}
-              onClick={() => {
-                onClose();
-                onSearch();
-              }}
-              className="adaptive-mobile-menu__action nav-interactive inline-flex h-11 items-center justify-center rounded-full border"
-              aria-label="Search"
-            >
-              <Search className="size-[18px]" />
-            </button>
-            {!isStorefrontGuestOnly() ? (
-              <Link
-                href="/account"
-                tabIndex={open ? 0 : -1}
-                onClick={onClose}
-                className="adaptive-mobile-menu__action nav-interactive inline-flex h-11 items-center justify-center rounded-full border"
-                aria-label="Account"
-              >
-                <UserRound className="size-[18px]" />
-              </Link>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    </>
   );
 }

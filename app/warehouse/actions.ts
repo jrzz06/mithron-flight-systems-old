@@ -332,6 +332,7 @@ async function advanceOrderFulfillmentStep(input: {
   nextFulfillment: string;
   note: string;
   changeSummary: string;
+  skipRevalidate?: boolean;
 }) {
   const lifecycleForm = new FormData();
   lifecycleForm.set("order_id", input.orderId);
@@ -339,7 +340,9 @@ async function advanceOrderFulfillmentStep(input: {
   lifecycleForm.set("warehouse_code", input.warehouseCode);
   lifecycleForm.set("note", input.note);
   lifecycleForm.set("change_summary", input.changeSummary);
-  await updateWarehouseOrderLifecycleFormAction(lifecycleForm);
+  await updateWarehouseOrderLifecycleFormAction(lifecycleForm, {
+    skipRevalidate: input.skipRevalidate
+  });
 }
 
 async function ensurePackedShipmentForOrder(input: {
@@ -1159,7 +1162,10 @@ export async function createWarehouseOrderFormAction(formData: FormData) {
   await revalidateWarehouseFulfillmentPaths();
 }
 
-export async function updateWarehouseOrderLifecycleFormAction(formData: FormData) {
+export async function updateWarehouseOrderLifecycleFormAction(
+  formData: FormData,
+  options?: { skipRevalidate?: boolean }
+) {
   const input = buildOrderLifecycleUpdateFromFormData(formData);
   const actorId = await currentActorId();
   const now = new Date().toISOString();
@@ -1270,8 +1276,10 @@ export async function updateWarehouseOrderLifecycleFormAction(formData: FormData
     })
   ]);
 
-  await revalidateWarehouseFulfillmentPaths();
-  revalidatePath("/warehouse/inventory");
+  if (!options?.skipRevalidate) {
+    await revalidateWarehouseFulfillmentPaths();
+    revalidatePath("/warehouse/inventory");
+  }
 }
 
 export async function completeWarehousePackingFormAction(formData: FormData) {
@@ -1550,7 +1558,8 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
       warehouseCode,
       nextFulfillment: "processing",
       note: "Order received and prepared for dispatch",
-      changeSummary: `Receive order ${orderId} for dispatch`
+      changeSummary: `Receive order ${orderId} for dispatch`,
+      skipRevalidate: true
     });
     order = await fetchOrderRecord(orderId);
     fulfillment = String(order.fulfillment_status ?? "processing");
@@ -1564,7 +1573,8 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
       warehouseCode,
       nextFulfillment,
       note: "Prepared for dispatch",
-      changeSummary: `Advance order ${orderId} toward dispatch`
+      changeSummary: `Advance order ${orderId} toward dispatch`,
+      skipRevalidate: true
     });
     order = await fetchOrderRecord(orderId);
     fulfillment = String(order.fulfillment_status ?? "pending");
@@ -1576,7 +1586,8 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
       warehouseCode,
       nextFulfillment: "ready_to_dispatch",
       note: "Ready for dispatch",
-      changeSummary: `Queue order ${orderId} for dispatch`
+      changeSummary: `Queue order ${orderId} for dispatch`,
+      skipRevalidate: true
     });
     order = await fetchOrderRecord(orderId);
     fulfillment = String(order.fulfillment_status ?? "pending");
@@ -1614,7 +1625,11 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
       warehouseCode,
       nextFulfillment: "shipped",
       note: "Order dispatched from warehouse fulfillment",
-      changeSummary: `Dispatch order ${orderId}`
+      changeSummary: `Dispatch order ${orderId}`,
+      skipRevalidate: true
     });
   }
+
+  await revalidateWarehouseFulfillmentPaths();
+  revalidatePath("/warehouse/inventory");
 }

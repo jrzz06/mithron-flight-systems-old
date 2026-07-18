@@ -33,12 +33,15 @@ describe("CMS resolver orchestration", () => {
 
   it("resolves published cms_sections into a content source list", async () => {
     const originalFetch = global.fetch;
+    const requestedUrls: string[] = [];
     global.fetch = async (input) => {
       const url = String(input);
+      requestedUrls.push(url);
       if (url.includes("cms_pages")) {
         return new Response(JSON.stringify([{ id: "page-home", route_path: "/", status: "published", is_visible: true }]), { status: 200 });
       }
       if (url.includes("cms_sections")) {
+        expect(url).toContain("page_id=eq.page-home");
         return new Response(JSON.stringify([
           { page_id: "page-home", component_key: "HeroCarousel", status: "published", is_visible: true, sort_order: 1 },
           { page_id: "page-home", component_key: "ProductReviews", status: "published", is_visible: true, sort_order: 2 },
@@ -63,6 +66,8 @@ describe("CMS resolver orchestration", () => {
       expect(shouldLoadCmsSource(orchestration, "hero_banners")).toBe(true);
       expect(shouldLoadCmsSource(orchestration, "admin_settings")).toBe(true);
       expect(shouldLoadCmsSource(orchestration, "faqs")).toBe(false);
+      expect(requestedUrls.some((url) => url.includes("cms_pages"))).toBe(true);
+      expect(requestedUrls.some((url) => url.includes("cms_sections") && url.includes("page_id=eq.page-home"))).toBe(true);
     } finally {
       global.fetch = originalFetch;
     }

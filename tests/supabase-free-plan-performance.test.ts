@@ -90,6 +90,8 @@ describe("Supabase free-plan performance contract", () => {
     expect(cms).toContain("productReviews: \"select=id,reviewer_name,body,product_slug,rating,sort_order,is_visible,status");
     expect(cms).toContain("getStorefrontShellCms");
     expect(cms).toContain("loadStorefrontShellCms");
+    expect(cms).toContain("getStorefrontShellCmsLight");
+    expect(cms).not.toMatch(/async function loadStorefrontShellCms[\s\S]*?getPublicCmsSnapshot/);
   });
 
   it("keeps operations command-center reads on shallow operational columns", () => {
@@ -275,18 +277,18 @@ describe("Supabase free-plan performance contract", () => {
   });
 
   it("defers storefront search index preload until overlay intent", () => {
-    const shell = source("components/layout/store-shell-client.tsx");
+    const shell = source("components/layout/storefront-shell-streaming.tsx");
     const searchOverlay = source("components/overlays/search-overlay.tsx");
 
     expect(shell).not.toContain('fetch("/api/catalog/search?intent=index")');
-    expect(searchOverlay).toContain('fetch("/api/catalog/search?intent=index"');
+    expect(searchOverlay).toContain('fetchWithTimeout("/api/catalog/search?intent=index"');
   });
 
   it("keeps the shared storefront shell on lightweight product summaries", () => {
     const rootLayout = source("app/layout.tsx");
     const layout = source("app/(storefront)/layout.tsx");
     const shellChrome = source("components/layout/storefront-shell-chrome.tsx");
-    const storeShell = source("components/layout/store-shell.tsx");
+    const storeShell = source("components/layout/storefront-shell-streaming.tsx");
     const searchOverlay = source("components/overlays/search-overlay.tsx");
     const cartDrawer = source("components/overlays/cart-drawer.tsx");
     const checkoutRoute = source("app/api/checkout/route.ts");
@@ -344,14 +346,17 @@ describe("Supabase free-plan performance contract", () => {
   it("dedupes homepage and CMS settings reads through shared cached loaders", () => {
     const cms = source("services/cms.ts");
     const homepageBundle = source("services/homepage-bundle.ts");
-    const homepagePage = source("app/(storefront)/page.tsx");
+    const homepageContent = source("sections/home/home-page-content.tsx");
     const adminSettingsCache = source("services/admin-settings-cache.ts");
 
     expect(cms).toContain("getCachedCmsTableRows");
     expect(adminSettingsCache).toContain("getCachedAdminSettingsPayload");
     expect(homepageBundle).toContain("getHomepageBundle");
-    expect(homepagePage).toContain("getHomepageBundle");
-    expect(homepagePage).toContain("heroBanners={bundle.heroBanners}");
+    expect(homepageBundle).toContain("getHomepageHeroBanners");
+    expect(homepageBundle).toContain("getHomepageBelowFoldData");
+    expect(homepageContent).toContain("getHomepageHeroBanners");
+    expect(homepageContent).toContain("getHomepageBelowFoldData");
+    expect(homepageContent).toContain("heroBanners={heroBanners}");
   });
 
   it("keeps featured product reads off the full-catalog getProducts() scan", () => {

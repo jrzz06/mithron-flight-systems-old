@@ -1,10 +1,11 @@
 import { PlatformSidebar } from "@/components/platform/platform-sidebar";
 import { PlatformTopbar } from "@/components/platform/platform-topbar";
 import { adminRouteTitles, buildAdminNavGroups, buildAdminSearchItems } from "@/components/platform/nav-config";
-import { assertRouteAccessOrRedirect } from "@/services/auth";
+import { getCurrentAuthContext } from "@/services/auth";
 
 export default async function AdminShellSlot() {
-  const context = await assertRouteAccessOrRedirect("/admin");
+  // Auth redirect is enforced once in app/admin/layout.tsx — shell only reads context for chrome.
+  const context = await getCurrentAuthContext();
   const groups = buildAdminNavGroups(context.role, 0);
   const searchItems = buildAdminSearchItems(groups);
 

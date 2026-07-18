@@ -69,6 +69,23 @@ async function countSupplierProducts(supplierId: string, filter: string): Promis
 
 async function countSupplierInventoryAlerts(supplierId: string): Promise<number> {
   const config = assertSupabaseAdminConfig(process.env);
+
+  const rpcResponse = await fetch(`${config.url}/rest/v1/rpc/get_supplier_inventory_alert_count`, {
+    method: "POST",
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ p_supplier_id: supplierId }),
+    cache: "no-store"
+  });
+  if (rpcResponse.ok) {
+    const payload = await rpcResponse.json();
+    const count = typeof payload === "number" ? payload : Number(payload);
+    if (Number.isFinite(count)) return count;
+  }
+
   const productsResponse = await fetch(
     `${config.url}/rest/v1/mithron_products?select=slug&supplier_id=eq.${encodeURIComponent(supplierId)}&limit=500`,
     {

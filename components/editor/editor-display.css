@@ -1,0 +1,21 @@
+/* Read-only display styles for .editor-rendered-content (storefront / CMS surfaces).
+   Full TipTap/ProseMirror editor chrome lives in RichTextEditor/editor.css. */
+
+.editor-rendered-content h1,
+.editor-rendered-content h2,
+.editor-rendered-content h3,
+.editor-rendered-content h4 { color: inherit; }
+.editor-rendered-content p { margin: 0; }
+.editor-rendered-content p + p { margin-top: 0.75em; }
+.editor-rendered-content ul,
+.editor-rendered-content ol { margin: 0.75em 0; padding-left: 1.25em; }
+.editor-rendered-content a { color: inherit; text-decoration: underline; text-underline-offset: 0.12em; }
+.editor-rendered-content strong,
+.editor-rendered-content b { font-weight: 700; }
+.editor-rendered-content em,
+.editor-rendered-content i { font-style: italic; }
+.editor-rendered-content mark { padding: 0 0.15em; border-radius: 0.15em; }
+.editor-rendered-content mark:not([style*="background-color"]) { background-color: #fef08a; }
+.editor-rendered-content .editor-callout[data-variant="warning"] { border-color: color-mix(in srgb, var(--platform-warning) 40%, transparent); background: var(--platform-warning-soft); }
+.editor-rendered-content .editor-callout[data-variant="information"] { border-color: color-mix(in srgb, var(--platform-info) 40%, transparent); background: var(--platform-info-soft); }
+.editor-rendered-content .editor-callout[data-variant="success"] { border-color: color-mix(in srgb, var(--platform-success) 40%, transparent); background: var(--platform-success-soft); }

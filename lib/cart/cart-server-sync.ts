@@ -1,6 +1,7 @@
 "use client";
 
 import type { PersistedCartItem } from "@/config/types";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 const SYNC_DEBOUNCE_MS = 300;
 
@@ -66,7 +67,7 @@ async function putAuthenticatedCartItems(items: PersistedCartItem[]): Promise<
   | { ok: true; payload: RemoteCartPayload }
   | { ok: false; conflict: true; payload: RemoteCartPayload }
 > {
-  const response = await fetch("/api/account/cart", {
+  const response = await fetchWithTimeout("/api/account/cart", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -103,7 +104,7 @@ async function putAuthenticatedCartItems(items: PersistedCartItem[]): Promise<
 }
 
 export async function fetchAuthenticatedCartItems(): Promise<RemoteCartPayload> {
-  const response = await fetch("/api/account/cart", { cache: "no-store" });
+  const response = await fetchWithTimeout("/api/account/cart", { cache: "no-store" });
   if (response.status === 401) {
     lastKnownUpdatedAt = null;
     return { items: [], updatedAt: null };

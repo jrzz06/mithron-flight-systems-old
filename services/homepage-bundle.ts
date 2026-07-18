@@ -14,7 +14,13 @@ import { listFeaturedHomeReviews, type CustomerProductReview } from "@/services/
 import { listPublishedBlogPosts, type BlogPost } from "@/services/blog-posts";
 import { listPublishedPressCoverage, type PressCoverageItem } from "@/services/press-coverage";
 import { getHomepageProducts, getPublishedProductsBySlugs } from "@/services/catalog";
-import { fallbackSnapshot, getPublicCmsSnapshot, type PublicCmsSnapshot } from "@/services/cms";
+import {
+  fallbackSnapshot,
+  getPublicCmsSnapshot,
+  getPublicHeroBanners,
+  getPublicHeroBannersForCmsPreview,
+  type PublicCmsSnapshot
+} from "@/services/cms";
 import { getHomepageCmsContent, getHomepageCmsDraftPreviewContent } from "@/services/homepage-cms";
 import { getHomepageCmsV2Content, getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
 
@@ -28,6 +34,8 @@ export type HomepageBundle = {
   pressCoverage: PressCoverageItem[];
   customerReviews: CustomerProductReview[];
 };
+
+export type HomepageBelowFoldData = Omit<HomepageBundle, "heroBanners">;
 
 const HOMEPAGE_BUNDLE_LOCK_KEY = "lock:cms:homepage:v1";
 const HOMEPAGE_BUNDLE_LOCK_TTL_SECONDS = 8;
@@ -87,6 +95,18 @@ export const getHomepageBundle = cache(async (cmsDraftPreview = false): Promise<
     return loadHomepageBundleUncached(true);
   }
   return readThroughCache(REDIS_CACHE_KEYS.cmsHomepage, 60, loadHomepageBundleSingleFlight);
+});
+
+/** Hero-only loader so Suspense can resolve independently of the below-fold bundle. */
+export const getHomepageHeroBanners = cache(async (cmsDraftPreview = false): Promise<HeroSlide[]> => {
+  return cmsDraftPreview ? getPublicHeroBannersForCmsPreview() : getPublicHeroBanners();
+});
+
+/** Below-fold homepage data (shares getHomepageBundle / Redis cache). */
+export const getHomepageBelowFoldData = cache(async (cmsDraftPreview = false): Promise<HomepageBelowFoldData> => {
+  const bundle = await getHomepageBundle(cmsDraftPreview);
+  const { heroBanners: _heroBanners, ...rest } = bundle;
+  return rest;
 });
 
 async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<HomepageBundle> {

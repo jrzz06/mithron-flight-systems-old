@@ -237,19 +237,6 @@ export async function checkDistributedRateLimit(
   }
 }
 
-/**
- * Explicit fail-open variant for low-risk routes that must not 429/500 when the
- * limiter backend is degraded. Abuse-sensitive routes should use the default
- * (fail-closed) `checkDistributedRateLimit` instead.
- */
-export async function safeCheckDistributedRateLimit(
-  key: string,
-  maxRequests: number,
-  windowMs: number
-): Promise<RateLimitResult> {
-  return checkDistributedRateLimit(key, maxRequests, windowMs, "fail_open");
-}
-
 export async function deleteDistributedRateLimitKey(key: string): Promise<void> {
   const redis = getRedisClient();
   if (redis) {

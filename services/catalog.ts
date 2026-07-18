@@ -186,8 +186,24 @@ export type CatalogSearchResult = {
 
 export type { CatalogSearchIndexEntry } from "@/lib/catalog-search-index";
 
-type CatalogSearchIndexRow = MithronProductShellRow &
-  Pick<MithronProductRow, "sort_order" | "description" | "source_availability" | "specs" | "anchors" | "badge_text">;
+type CatalogSearchIndexRow = Pick<
+  MithronProductRow,
+  | "slug"
+  | "name"
+  | "tagline"
+  | "price"
+  | "badge"
+  | "badge_enabled"
+  | "badge_text"
+  | "badge_style"
+  | "category"
+  | "interests"
+  | "image"
+  | "source_catalog_id"
+  | "source_description"
+  | "source_availability"
+  | "sort_order"
+>;
 
 type CatalogSearchRow = {
   slug: string;
@@ -253,7 +269,7 @@ const PRODUCT_MEDIA_LIMIT = 2000;
 const CHECKOUT_PRICING_SELECT = "slug,name,price,compare_at,on_sale,discount_type,discount_value,category,charge_tax,tax_group,tax_rate,tax_included";
 const CART_PRICING_SELECT =
   "slug,name,price,compare_at,on_sale,discount_type,discount_value,category,charge_tax,tax_group,tax_rate,tax_included,bundles,image,specs";
-const catalogSearchIndexSelect = "slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,source_catalog_id,source_description,description,source_availability,specs,anchors,sort_order";
+const catalogSearchIndexSelect = "slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,source_catalog_id,source_description,source_availability,sort_order";
 import { publishedCatalogFilter } from "@/lib/catalog/filters";
 
 const enterpriseMenuSelect = [
@@ -337,6 +353,56 @@ const productSelect = [
   "variants",
   "bundles",
   "story",
+  "specs",
+  "anchors",
+  "sort_order",
+  "source_url",
+  "source_catalog_id",
+  "source_description",
+  "source_images",
+  "source_availability",
+  "source_currency"
+].join(",");
+
+/**
+ * Core PDP / card fields without below-fold JSON blobs (gallery, hotspots, variants, bundles, story).
+ * PDP first paint currently needs gallery + variants + bundles via productSelect — leave loadProductForPage
+ * on productSelect this pass. Prefer productCoreSelect for summary/core-cache paths.
+ */
+const productCoreSelect = [
+  "slug",
+  "product_url",
+  "workflow_status",
+  "published_at",
+  "archived_at",
+  "is_visible",
+  "name",
+  "tagline",
+  "seo_title",
+  "seo_description",
+  "og_title",
+  "og_description",
+  "og_image",
+  "price",
+  "compare_at",
+  "badge",
+  "badge_enabled",
+  "badge_text",
+  "badge_style",
+  "description",
+  "on_sale",
+  "discount_type",
+  "discount_value",
+  "cost_of_goods",
+  "show_price_per_unit",
+  "charge_tax",
+  "tax_group",
+  "tax_rate",
+  "tax_included",
+  "category",
+  "interests",
+  "image",
+  "hero",
   "specs",
   "anchors",
   "sort_order",
@@ -993,7 +1059,12 @@ function mapProductShellRowOrNull(row: MithronProductShellRow, linkedPrimaryImag
 }
 
 function mapSearchIndexEntry(row: CatalogSearchIndexRow): CatalogSearchIndexEntry | null {
-  const item = mapProductShellRowOrNull(row);
+  const item = mapProductShellRowOrNull({
+    ...row,
+    hero: null,
+    gallery: null,
+    source_images: null
+  });
   if (!item) return null;
 
   return {
@@ -2087,7 +2158,12 @@ export type ProductCoreCacheEntry = {
 };
 
 async function buildProductCoreEntry(slug: string): Promise<ProductCoreCacheEntry | null> {
-  const row = await getProductRowBySlug(slug);
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return null;
+  const rows = await fetchCatalogRows<MithronProductRow>(
+    `select=${productCoreSelect}&slug=eq.${encodeURIComponent(normalizedSlug)}&${publishedCatalogFilter}&limit=1`
+  );
+  const row = rows[0];
   if (!row) return null;
   const item = mapProductShellRowOrNull(row);
   if (!item) return null;

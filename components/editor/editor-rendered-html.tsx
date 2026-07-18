@@ -1,7 +1,7 @@
 import { prepareEditorHtmlForDisplay } from "@/lib/editor/prepare-html";
 import { cn } from "@/lib/utils";
 import type { CSSProperties } from "react";
-import "@/components/editor/RichTextEditor/editor.css";
+import "@/components/editor/editor-display.css";
 
 export function EditorRenderedHtml({
   html,

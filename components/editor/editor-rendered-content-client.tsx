@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { hydrateEditorAtomBlocks } from "@/lib/editor/hydrate-rendered-content";
 import { cn } from "@/lib/utils";
-import "@/components/editor/RichTextEditor/editor.css";
+import "@/components/editor/editor-display.css";
 
 export function EditorRenderedContentClient({
   safeHtml,

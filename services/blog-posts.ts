@@ -66,6 +66,12 @@ export type BlogPostInput = {
 const BLOG_SELECT =
   "id,slug,title,excerpt,body,body_json,cover_image,category,tags,author,reading_time_minutes,is_featured,published_at,seo_title,meta_description,related_product_slugs,status,is_visible,revision,archived_at,created_at,updated_at";
 
+/** List/teaser rows — omits heavy body fields used only on article pages. */
+const BLOG_LIST_SELECT =
+  "id,slug,title,excerpt,cover_image,category,tags,author,reading_time_minutes,is_featured,published_at,seo_title,meta_description,related_product_slugs,status,is_visible,revision,archived_at,created_at,updated_at";
+
+const BLOG_TEASER_SELECT = BLOG_LIST_SELECT;
+
 function text(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
@@ -298,7 +304,7 @@ export async function listPublishedBlogPosts(
   const now = new Date().toISOString();
   const rows = await fetchBlogRowsPublic(
     [
-      `select=${BLOG_SELECT}`,
+      `select=${BLOG_TEASER_SELECT}`,
       "status=eq.published",
       "is_visible=eq.true",
       "archived_at=is.null",

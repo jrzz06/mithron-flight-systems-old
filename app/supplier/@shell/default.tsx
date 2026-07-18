@@ -1,10 +1,11 @@
 import { PlatformSidebar } from "@/components/platform/platform-sidebar";
 import { PlatformTopbar } from "@/components/platform/platform-topbar";
 import { supplierNavGroups, supplierRouteTitles } from "@/components/platform/nav-config";
-import { assertRouteAccessOrRedirect } from "@/services/auth";
+import { getCurrentAuthContext } from "@/services/auth";
 
 export default async function SupplierShellSlot() {
-  const context = await assertRouteAccessOrRedirect("/supplier");
+  // Auth redirect is enforced once in app/supplier/layout.tsx — shell only reads context for chrome.
+  const context = await getCurrentAuthContext();
   const searchItems = supplierNavGroups.flatMap((group) =>
     group.items.map((item) => ({ label: item.label, href: item.href, group: group.label }))
   );

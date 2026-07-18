@@ -20,7 +20,8 @@ describe("login hero performance tiers", () => {
     expect(hero).toContain('data-hero-tier={tier}');
     expect(hero).toContain("useSyncExternalStore");
     expect(hero).toContain('sizes="(max-width: 1280px) 100vw, 1920px"');
-    expect(hero).toContain("backgroundImage");
+    expect(hero).not.toContain("backgroundImage");
+    expect(hero).toContain("styles.heroImageSky");
     expect(hero).not.toContain("unoptimized");
   });
 
@@ -31,7 +32,8 @@ describe("login hero performance tiers", () => {
     expect(css).toContain(".heroSubjectLift");
     expect(css).toContain('data-hero-tier="premium"');
     expect(css).toContain("saturate(1.08)");
-    expect(css).toContain("background-size: cover");
+    expect(css).toContain("object-fit: cover");
     expect(css).toContain("contain: layout paint style");
+    expect(css).toContain("no backgroundImage so LOGIN_BG_SRC is fetched once");
   });
 });

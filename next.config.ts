@@ -120,6 +120,21 @@ const nextConfig: NextConfig = {
       "@tiptap/react",
       "@tiptap/starter-kit",
       "@tiptap/core",
+      "@tiptap/extension-character-count",
+      "@tiptap/extension-color",
+      "@tiptap/extension-highlight",
+      "@tiptap/extension-image",
+      "@tiptap/extension-link",
+      "@tiptap/extension-placeholder",
+      "@tiptap/extension-table",
+      "@tiptap/extension-table-cell",
+      "@tiptap/extension-table-header",
+      "@tiptap/extension-table-row",
+      "@tiptap/extension-task-item",
+      "@tiptap/extension-task-list",
+      "@tiptap/extension-text-align",
+      "@tiptap/extension-text-style",
+      "@tiptap/extension-underline",
       "zustand",
       "@radix-ui/react-slot",
       "sanitize-html"
@@ -198,7 +213,7 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
-  widenClientFileUpload: true,
+  widenClientFileUpload: false,
   webpack: {
     treeshake: {
       removeDebugLogging: true

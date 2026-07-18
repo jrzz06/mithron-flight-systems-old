@@ -24,19 +24,23 @@ describe("store navigation mega menu", () => {
 
   it("keeps the interaction accessible and performance-oriented", () => {
     const nav = source("components/navigation/store-nav.tsx");
+    const mega = source("components/navigation/enterprise-mega-menu-panel.tsx");
 
     expect(nav).toContain('aria-haspopup={menu ? "true" : undefined}');
     expect(nav).toContain("aria-expanded={menu ? isMenuActive : undefined}");
     expect(nav).toContain("onMouseLeave={scheduleEnterpriseMenuClose}");
-    expect(nav).toContain("MithronCardImage");
-    expect(nav).toContain("MithronResponsiveImage");
-    expect(nav).toContain("tabIndex={interactive ? undefined : -1}");
+    expect(nav).toContain("EnterpriseMegaMenuPanel");
+    expect(nav).toContain("MobileNavDrawer");
+    expect(nav).toContain("ssr: false");
     expect(nav).toContain("setFeaturedByMenu");
-    expect(nav).toContain("onPointerEnter={() => {");
-    expect(nav).toContain('variant="preview"');
-    expect(nav).toContain("activeFeatureKey={feature.key}");
-    expect(nav).toContain("enterprise-mega-menu__preview-cta");
-    expect(nav).toContain('is-active"');
+    expect(mega).toContain("MithronCardImage");
+    expect(mega).toContain("MithronThumbImage");
+    expect(mega).toContain("tabIndex={interactive ? undefined : -1}");
+    expect(mega).toContain("onPointerEnter={() => {");
+    expect(mega).toContain('variant="preview"');
+    expect(mega).toContain("activeFeatureKey={feature.key}");
+    expect(mega).toContain("enterprise-mega-menu__preview-cta");
+    expect(mega).toContain('is-active"');
   });
 
   it("uses the requested premium light overlay motion and geometry", () => {

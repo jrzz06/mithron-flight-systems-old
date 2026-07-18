@@ -44,25 +44,48 @@ function reserveTokenBudgetMemory(key: string, needed: number, maxTpm: number) {
   return { allowed: true, retryAfterMs: 0 };
 }
 
+/**
+ * Atomic TPM reserve: refuse without INCR when already over ceiling; otherwise
+ * INCRBY then EXPIRE if key has no TTL. Soft-denies on post-incr overshoot.
+ * Returns { nextTokens, ttlSeconds, allowedFlag } where allowedFlag is 1/0.
+ */
+const GEMINI_TPM_RESERVE_LUA = `
+local current = tonumber(redis.call('GET', KEYS[1]) or '0')
+local needed = tonumber(ARGV[1])
+local windowSec = tonumber(ARGV[2])
+local maxTpm = tonumber(ARGV[3])
+local ttl = redis.call('TTL', KEYS[1])
+if current + needed > maxTpm then
+  if ttl < 0 then ttl = windowSec end
+  return { current, ttl, 0 }
+end
+local next = redis.call('INCRBY', KEYS[1], needed)
+ttl = redis.call('TTL', KEYS[1])
+if ttl < 0 then
+  redis.call('EXPIRE', KEYS[1], windowSec)
+  ttl = windowSec
+end
+if next > maxTpm then
+  return { next, ttl, 0 }
+end
+return { next, ttl, 1 }
+`;
+
 async function reserveTokenBudget(key: string, needed: number, maxTpm: number) {
   const redis = getRedisClient();
   if (redis) {
     try {
-      const currentRaw = await withRedisTimeout(`GEMINI_TPM_GET ${key}`, () => redis.get<number | string>(key));
-      const current = Number(currentRaw ?? 0);
-      if (Number.isFinite(current) && current + needed > maxTpm) {
-        const ttl = await withRedisTimeout(`GEMINI_TPM_TTL ${key}`, () => redis.ttl(key));
-        const retryAfterMs = ttl > 0 ? ttl * 1000 : 60_000;
-        return { allowed: false, retryAfterMs: Math.max(250, retryAfterMs) };
-      }
-
-      const next = await withRedisTimeout(`GEMINI_TPM_INCR ${key}`, () => redis.incrby(key, needed));
-      if (next === needed) {
-        await withRedisTimeout(`GEMINI_TPM_EXPIRE ${key}`, () => redis.expire(key, 60));
-      }
-      if (next > maxTpm) {
-        // Another instance raced past the ceiling — soft-deny subsequent callers.
-        const ttl = await withRedisTimeout(`GEMINI_TPM_TTL ${key}`, () => redis.ttl(key));
+      const result = await withRedisTimeout(
+        `GEMINI_TPM_EVAL ${key}`,
+        () => redis.eval<[number, number, number], [number, number, number]>(
+          GEMINI_TPM_RESERVE_LUA,
+          [key],
+          [needed, 60, maxTpm]
+        )
+      );
+      const ttl = Number(Array.isArray(result) ? result[1] : 60);
+      const allowed = Number(Array.isArray(result) ? result[2] : 0) === 1;
+      if (!allowed) {
         const retryAfterMs = ttl > 0 ? ttl * 1000 : 60_000;
         return { allowed: false, retryAfterMs: Math.max(250, retryAfterMs) };
       }

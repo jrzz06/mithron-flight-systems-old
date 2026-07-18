@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { hydrateEditorAtomBlocks } from "@/lib/editor/hydrate-rendered-content";
 import { prepareEditorHtmlForDisplay } from "@/lib/editor/prepare-html";
 import { cn } from "@/lib/utils";
-import "@/components/editor/RichTextEditor/editor.css";
+import "@/components/editor/editor-display.css";
 
 /** Client-only rich text renderer for admin interactive surfaces. */
 export function EditorRenderedContentInteractive({
