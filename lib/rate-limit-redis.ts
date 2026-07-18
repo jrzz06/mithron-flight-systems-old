@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { createClient } from "@supabase/supabase-js";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getSupabaseAdminConfig } from "@/lib/env";
+import { supabaseFetch } from "@/lib/fetch-with-timeout";
 import { getRedisClient, withRedisTimeout } from "@/lib/redis-client";
 
 export type RateLimitResult = {
@@ -50,10 +51,16 @@ function isProductionRuntime() {
 const rateLimiterCache = new Map<string, Ratelimit>();
 
 function warnInMemoryRateLimitFallback() {
-  if (warnedAboutInMemoryRateLimit || process.env.NODE_ENV !== "production") return;
+  if (warnedAboutInMemoryRateLimit) return;
   warnedAboutInMemoryRateLimit = true;
+  if (process.env.NODE_ENV === "production") {
+    console.error(
+      "[mithron] ALARM: in-memory rate-limit fallback invoked in production — distributed limits are broken; requests must fail closed."
+    );
+    return;
+  }
   console.warn(
-    "[mithron] Distributed rate limiting unavailable — falling back to in-memory counters (not shared across instances)."
+    "[mithron] Distributed rate limiting unavailable — falling back to in-memory counters (dev/test only; not shared across instances)."
   );
 }
 
@@ -78,7 +85,8 @@ function createServiceRoleClient() {
     return null;
   }
   serviceRoleClient = createClient(config.url, config.serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: supabaseFetch() }
   }) as unknown as RateLimitSupabaseClient;
   return serviceRoleClient;
 }

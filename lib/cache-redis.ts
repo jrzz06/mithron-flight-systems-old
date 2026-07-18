@@ -37,6 +37,12 @@ export const REDIS_CACHE_KEYS = {
     `cp:warehouse-snapshot:${scope}:${ordersFilter}:v2:${limit}:${offset}:${status}`,
   controlPlaneInventoryMetrics: "cp:inventory-metrics:v1",
   controlPlaneProductManagerSnapshot: "cp:product-manager:v1",
+  controlPlaneProductManagerList: (
+    limit: number,
+    offset: number,
+    workflowStatus: string,
+    q: string
+  ) => `cp:product-manager:v2:${limit}:${offset}:${workflowStatus}:${q}`,
   controlPlaneProductManagerCatalogMetrics: "cp:product-manager:v1:catalog-metrics",
   controlPlaneSuppliersSnapshot: "cp:suppliers-snapshot:v1",
   controlPlaneCmsCoreSnapshot: "cp:cms-core:v1",
@@ -45,6 +51,7 @@ export const REDIS_CACHE_KEYS = {
   controlPlaneAdminWarehouses: "cp:admin-warehouses:v1",
   controlPlaneAdminWarehousesActive: "cp:admin-warehouses:v1:active",
   controlPlaneAdminEnquiries: (status: string, q: string) => `cp:admin-enquiries:${status}:${q}:v1`,
+  controlPlaneAuditObservability: "cp:audit-observability:v1",
   controlPlaneAdminReviews: (status: string, productSlug: string, rating: string, q: string) =>
     `cp:admin-reviews:${status}:${productSlug}:${rating}:${q}:v1`,
   controlPlaneAdminBlogPosts: (status: string, q: string) => `cp:admin-blog:${status}:${q}:v1`,

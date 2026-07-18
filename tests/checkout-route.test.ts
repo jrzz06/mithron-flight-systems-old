@@ -29,6 +29,14 @@ describe("checkout route hardening", () => {
     expect(route).toContain("23505");
   });
 
+  it("uses fail-closed Redis lock for checkout idempotency keys", () => {
+    const route = source("app/api/checkout/route.ts");
+    expect(route).toContain("acquireRedisLockStrict");
+    expect(route).toContain('lockOutcome === "unavailable"');
+    expect(route).toContain("status: 503");
+    expect(route).not.toMatch(/acquireRedisLock\(/);
+  });
+
   it("defines database idempotency unique index in migration", () => {
     const migration = source("supabase/migrations/20260626000100_commerce_system_hardening.sql");
     expect(migration).toContain("orders_idempotency_key_uidx");

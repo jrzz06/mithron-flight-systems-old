@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { acquireRedisLock, releaseRedisLock } from "@/lib/cache-redis";
+import { acquireRedisLockStrict, releaseRedisLock } from "@/lib/cache-redis";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { parseCheckoutRequestBody } from "@/lib/api/checkout-schema";
 import { buildCheckoutAddressMetadata } from "@/lib/addresses/resolve-server";
@@ -204,8 +204,14 @@ export async function POST(request: Request) {
   let redisLockKey: string | null = null;
   if (idempotencyKey) {
     redisLockKey = `idempotency:checkout:${idempotencyKey}`;
-    const acquired = await acquireRedisLock(redisLockKey, 120);
-    if (!acquired) {
+    const lockOutcome = await acquireRedisLockStrict(redisLockKey, 120);
+    if (lockOutcome === "unavailable") {
+      return NextResponse.json(
+        { error: "Checkout temporarily unavailable. Please try again in a moment." },
+        { status: 503 }
+      );
+    }
+    if (lockOutcome === "held") {
       const existing = userId
         ? await findCheckoutByIdempotencyKey(idempotencyKey, { userId })
         : await findCheckoutByIdempotencyKey(idempotencyKey, { guestEmail: body.email, guestPhone: body.phone });

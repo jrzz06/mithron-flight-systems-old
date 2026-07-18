@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "./fetch-with-timeout.ts";
 import { acquireGeminiTextSlot } from "./gemini-rate-limit.ts";
 import {
   DEFAULT_GEMINI_IMAGE_MODEL,
@@ -68,7 +69,7 @@ export async function generateGeminiText(input: {
     });
   }
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
       method: "POST",
@@ -78,7 +79,8 @@ export async function generateGeminiText(input: {
         contents: [{ role: "user", parts: [{ text: input.prompt }] }],
         generationConfig: { temperature: input.temperature ?? 0.4 }
       })
-    }
+    },
+    60_000
   );
 
   const payload = (await response.json()) as GeminiGenerateContentResponse;
@@ -117,7 +119,7 @@ export async function generateGeminiImage(input: {
     maxWaitMs: Number(env.GEMINI_IMAGE_RATE_LIMIT_MAX_WAIT_MS ?? "60000")
   });
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
       method: "POST",
@@ -126,7 +128,8 @@ export async function generateGeminiImage(input: {
         contents: [{ role: "user", parts: [{ text: input.prompt }] }],
         generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
       })
-    }
+    },
+    60_000
   );
 
   const payload = (await response.json()) as GeminiGenerateContentResponse;

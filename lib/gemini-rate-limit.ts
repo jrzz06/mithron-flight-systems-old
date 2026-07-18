@@ -23,7 +23,13 @@ function utcDayKey(date = new Date()) {
 async function reserveCounter(key: string, maxRequests: number, windowMs: number) {
   try {
     return await checkDistributedRateLimit(key, maxRequests, windowMs);
-  } catch {
+  } catch (error) {
+    // checkDistributedRateLimit already fail-closes in production; only use
+    // in-memory as a last resort outside production so local Gemini still works.
+    if (process.env["NODE_ENV"] === "production") {
+      console.error("[mithron] Gemini request rate limit backend threw; denying (fail-closed).", error);
+      return { allowed: false, remaining: 0, retryAfterMs: windowMs, degraded: true };
+    }
     return checkRateLimit(key, maxRequests, windowMs);
   }
 }

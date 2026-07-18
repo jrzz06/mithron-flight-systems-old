@@ -37,6 +37,16 @@ describe("cache-redis fail-soft", () => {
     vi.unstubAllEnvs();
   });
 
+  it("checkout idempotency lock rejects when Redis is unavailable in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const { acquireRedisLockStrict } = await import("@/lib/cache-redis");
+    const outcome = await acquireRedisLockStrict("idempotency:checkout:test-key", 120);
+    expect(outcome).toBe("unavailable");
+    // Checkout route maps unavailable → 503 so duplicate checkouts cannot slip through.
+    expect(outcome === "unavailable").toBe(true);
+    vi.unstubAllEnvs();
+  });
+
   it("withSingleFlight loads once and returns the value when redis is unavailable", async () => {
     const { withSingleFlight } = await import("@/lib/cache-redis");
     let loads = 0;
