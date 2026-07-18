@@ -2,8 +2,6 @@ import Link from "next/link";
 import { TrackOrderClient } from "@/components/customer/track-order-client";
 import "@/app/account.css";
 
-export const dynamic = "force-dynamic";
-
 export default function TrackOrderPage() {
   return (
     <main className="account-hub surface-page min-h-screen px-4 py-20 sm:px-6 md:py-24 lg:px-8">

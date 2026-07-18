@@ -2110,7 +2110,9 @@ export async function getProductCoreBySlug(slug: string): Promise<ProductCoreCac
 }
 
 async function mapLiveProductRow(row: MithronProductRow): Promise<Product> {
-  const [liveRow] = await overlayLiveInventoryAvailability([row], { freshness: "checkout" });
+  // Storefront PDP uses catalog-fresh inventory (60s ISR tags) so product pages
+  // stay statically regenerable. Checkout paths still request freshness:"checkout".
+  const [liveRow] = await overlayLiveInventoryAvailability([row], { freshness: "catalog" });
   const slug = liveRow.slug;
   const [primaryMedia, catalogCutouts, galleryMedia] = await Promise.all([
     getPrimaryProductMediaForSlugs([slug]),

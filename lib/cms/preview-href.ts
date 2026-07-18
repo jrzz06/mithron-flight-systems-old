@@ -4,11 +4,31 @@ export type CmsPreviewOptions = {
   basePath?: string;
 };
 
-export function buildCmsPreviewHref({ draft = true, anchor, basePath = "/" }: CmsPreviewOptions = {}) {
+function normalizePreviewBasePath(basePath: string) {
   const path = basePath.startsWith("/") ? basePath : `/${basePath}`;
-  const query = draft ? "?cms_preview=draft" : "";
+  return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
+}
+
+function resolveDraftPreviewPath(basePath: string) {
+  const path = normalizePreviewBasePath(basePath);
+  if (path === "/" || path === "") {
+    return "/preview/home";
+  }
+  if (path.startsWith("/blog/")) {
+    const slug = path.slice("/blog/".length).split("/").filter(Boolean)[0];
+    return slug ? `/preview/blog/${slug}` : "/preview/home";
+  }
+  if (path.startsWith("/preview/")) {
+    return path;
+  }
+  // Non-home/blog targets never consumed cms_preview; keep the live path.
+  return path;
+}
+
+export function buildCmsPreviewHref({ draft = true, anchor, basePath = "/" }: CmsPreviewOptions = {}) {
+  const path = draft ? resolveDraftPreviewPath(basePath) : normalizePreviewBasePath(basePath);
   const hash = anchor ? (anchor.startsWith("#") ? anchor : `#${anchor}`) : "";
-  return `${path}${query}${hash}`;
+  return `${path}${hash}`;
 }
 
 export function appendPreviewRefreshParam(href: string, nonce: number) {
@@ -20,10 +40,8 @@ export function appendPreviewRefreshParam(href: string, nonce: number) {
 }
 
 export function buildBlogPreviewHref(slug: string, draft = true) {
-  return buildCmsPreviewHref({ draft, basePath: `/blog/${slug}` });
-}
-
-function isCmsDraftPreviewParam(value: string | string[] | undefined) {
-  if (Array.isArray(value)) return value.includes("draft");
-  return value === "draft";
+  if (!draft) {
+    return `/blog/${slug}`;
+  }
+  return `/preview/blog/${slug}`;
 }

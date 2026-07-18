@@ -1,50 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { SearchQueryRedirect } from "@/components/search/search-query-redirect";
 import { catalogCategoryDefinitions } from "@/lib/catalog-categories";
 
-type SearchPageProps = {
-  searchParams: Promise<{ q?: string }>;
+export const metadata: Metadata = {
+  title: "Search Products",
+  description:
+    "Search Mithron for agriculture drones, mapping drones, site monitoring, flight controllers, batteries, and accessories.",
+  alternates: {
+    canonical: "/search"
+  },
+  openGraph: {
+    title: "Search Mithron Products",
+    description:
+      "Find professional drone aircraft, spares, and work-ready equipment across agriculture, mapping, and site monitoring."
+  }
 };
 
-export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
-  const { q } = await searchParams;
-  const query = q?.trim() ?? "";
-
-  if (query) {
-    return {
-      title: `Search results for "${query}"`,
-      description: `Mithron product matches for ${query}: agriculture drones, mapping drones, site monitoring, and accessories.`,
-      robots: {
-        index: false,
-        follow: true
-      }
-    };
-  }
-
-  return {
-    title: "Search Products",
-    description: "Search Mithron for agriculture drones, mapping drones, site monitoring, flight controllers, batteries, and accessories.",
-    alternates: {
-      canonical: "/search"
-    },
-    openGraph: {
-      title: "Search Mithron Products",
-      description: "Find professional drone aircraft, spares, and work-ready equipment across agriculture, mapping, and site monitoring."
-    }
-  };
-}
-
-export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const { q } = await searchParams;
-  const query = q?.trim() ?? "";
-
-  if (query) {
-    redirect(`/products?q=${encodeURIComponent(query)}`);
-  }
-
+export default function SearchPage() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
+      <Suspense fallback={null}>
+        <SearchQueryRedirect />
+      </Suspense>
+
       <header className="max-w-2xl">
         <p className="type-meta text-sm text-[#5f6b7a]">Product search</p>
         <h1 className="type-display mt-2 text-4xl font-semibold tracking-tight text-[#101828]">

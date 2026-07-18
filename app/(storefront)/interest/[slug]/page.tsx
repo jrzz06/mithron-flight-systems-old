@@ -12,6 +12,8 @@ type InterestPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   const cms = await getPublicCmsSnapshot();
   return cms.home.interests.map((interest) => ({ slug: interest.slug }));

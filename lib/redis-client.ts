@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import https from "node:https";
-import { Redis } from "@upstash/redis";
+import { Redis, type Requester } from "@upstash/redis";
 
 let redisClient: Redis | null | undefined;
 
@@ -12,7 +12,6 @@ let redisClient: Redis | null | undefined;
 export const REDIS_OP_TIMEOUT_MS = 4_000;
 
 const redisAbortStore = new AsyncLocalStorage<AbortController>();
-const neverAbortSignal = new AbortController().signal;
 
 const keepAliveAgent = new https.Agent({
   keepAlive: true,
@@ -39,6 +38,105 @@ export function isRedisConfigured() {
   return getRedisRestCredentials() !== null;
 }
 
+type UpstashRestRequest = {
+  path?: string[];
+  body?: unknown;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+};
+
+type UpstashRestResponse<TResult> = {
+  result?: TResult;
+  error?: string;
+};
+
+/**
+ * Node https-based Upstash REST transport.
+ *
+ * Critical for storefront ISR/SSG: the default @upstash/redis client uses
+ * global `fetch({ cache: "no-store" })`, which Next.js App Router treats as a
+ * dynamic data dependency and forces every route that touches Redis (including
+ * the storefront shell layout) into full dynamic rendering. Speaking HTTPS
+ * directly bypasses Next's fetch instrumentation while preserving Redis TTLs.
+ */
+function createUpstashHttpsRequester(baseUrl: string, token: string): Requester {
+  const normalizedBase = baseUrl.replace(/\/$/, "");
+
+  return {
+    async request<TResult>(req: UpstashRestRequest): Promise<UpstashRestResponse<TResult>> {
+      const requestUrl = [normalizedBase, ...(req.path ?? [])].join("/");
+      const payload = JSON.stringify(req.body ?? null);
+      const url = new URL(requestUrl);
+      const signal = req.signal ?? redisAbortStore.getStore()?.signal ?? undefined;
+
+      const rawBody = await new Promise<string>((resolve, reject) => {
+        const request = https.request(
+          {
+            protocol: url.protocol,
+            hostname: url.hostname,
+            port: url.port || undefined,
+            path: `${url.pathname}${url.search}`,
+            method: "POST",
+            agent: keepAliveAgent,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              "Content-Length": Buffer.byteLength(payload),
+              ...(req.headers ?? {})
+            }
+          },
+          (response) => {
+            const chunks: Buffer[] = [];
+            response.on("data", (chunk) => {
+              chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+            });
+            response.on("end", () => {
+              const text = Buffer.concat(chunks).toString("utf8");
+              const status = response.statusCode ?? 500;
+              if (status >= 400) {
+                reject(new Error(`[mithron-cache] Upstash Redis HTTP ${status}: ${text}`));
+                return;
+              }
+              resolve(text);
+            });
+          }
+        );
+
+        if (signal) {
+          if (signal.aborted) {
+            request.destroy(
+              signal.reason instanceof Error ? signal.reason : new Error("Aborted")
+            );
+            reject(signal.reason instanceof Error ? signal.reason : new Error("Aborted"));
+            return;
+          }
+          const onAbort = () => {
+            request.destroy(
+              signal.reason instanceof Error ? signal.reason : new Error("Aborted")
+            );
+          };
+          signal.addEventListener("abort", onAbort, { once: true });
+          request.on("close", () => signal.removeEventListener("abort", onAbort));
+        }
+
+        request.on("error", reject);
+        request.write(payload);
+        request.end();
+      });
+
+      try {
+        return JSON.parse(rawBody) as UpstashRestResponse<TResult>;
+      } catch (error) {
+        throw new Error(
+          `[mithron-cache] Upstash Redis returned non-JSON body: ${rawBody.slice(0, 200)}`,
+          { cause: error }
+        );
+      }
+    }
+  };
+}
+
 export function getRedisClient(): Redis | null {
   if (redisClient !== undefined) return redisClient;
   const credentials = getRedisRestCredentials();
@@ -46,19 +144,15 @@ export function getRedisClient(): Redis | null {
     redisClient = null;
     return redisClient;
   }
-  redisClient = new Redis({
-    url: credentials.url,
-    token: credentials.token,
-    keepAlive: true,
-    agent: keepAliveAgent,
-    enableAutoPipelining: true,
-    retry: {
-      retries: 2,
-      backoff: (retryCount) => Math.min(75 * 2 ** retryCount, 400)
-    },
-    // Per-operation abort from withRedisTimeout (never-abort fallback when unset).
-    signal: () => redisAbortStore.getStore()?.signal ?? neverAbortSignal
-  });
+
+  const requester = createUpstashHttpsRequester(credentials.url, credentials.token);
+  const client = new Redis(requester);
+
+  // Requester ctor skips the nodejs wrapper's autoPipeline return; re-enable when available.
+  redisClient =
+    typeof (client as Redis & { autoPipeline?: () => Redis }).autoPipeline === "function"
+      ? (client as Redis & { autoPipeline: () => Redis }).autoPipeline()
+      : client;
   return redisClient;
 }
 

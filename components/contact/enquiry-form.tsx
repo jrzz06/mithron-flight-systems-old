@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { isValidCustomerEmail, isValidCustomerPhone, CUSTOMER_CONTACT_REQUIRED_MESSAGE } from "@/lib/api/customer-contact";
 import { buildGuestRequestHeaders } from "@/lib/api/client-audit-token-client";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,16 @@ type EnquiryFormProps = {
   defaultRegion?: string;
   isGuest?: boolean;
   auditToken?: string | null;
+  /** When true (default), fetch signed-in contact defaults from the API. */
+  autoPrefill?: boolean;
 };
 
 export function EnquiryForm({
   defaultEmail = "",
   defaultPhone = "",
   defaultRegion = "India",
-  isGuest = true
+  isGuest: isGuestProp,
+  autoPrefill = true
 }: EnquiryFormProps) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState(defaultEmail);
@@ -29,8 +32,44 @@ export function EnquiryForm({
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [region, setRegion] = useState(defaultRegion);
+  const [isGuest, setIsGuest] = useState(isGuestProp ?? true);
   const { status, pending, run, setStatus, reset } = useAsyncAction({ label: "Submit contact enquiry" });
   const [error, setError] = useState("");
+  const shouldAutoPrefill =
+    autoPrefill && !defaultEmail && !defaultPhone && isGuestProp !== false;
+
+  useEffect(() => {
+    if (!shouldAutoPrefill) return;
+
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const response = await fetchWithTimeout("/api/account/contact-defaults", {
+          method: "GET",
+          signal: controller.signal,
+          cache: "no-store"
+        });
+        if (!response.ok) return;
+        const body = (await response.json().catch(() => null)) as
+          | { email?: string; phone?: string; isGuest?: boolean }
+          | null;
+        if (!body || controller.signal.aborted) return;
+        if (typeof body.email === "string" && body.email.trim()) {
+          setEmail((current) => current || body.email!.trim());
+        }
+        if (typeof body.phone === "string" && body.phone.trim()) {
+          setPhone((current) => current || body.phone!.trim());
+        }
+        if (typeof body.isGuest === "boolean") {
+          setIsGuest(body.isGuest);
+        }
+      } catch {
+        // Prefill is best-effort; guests continue with an empty form.
+      }
+    })();
+
+    return () => controller.abort();
+  }, [shouldAutoPrefill]);
 
   function validateContact() {
     const trimmedName = fullName.trim();

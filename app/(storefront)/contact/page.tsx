@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { EnquiryForm } from "@/components/contact/enquiry-form";
 import { EditorRenderedContent } from "@/components/editor/editor-rendered-content";
 import { footerOfficialLinks } from "@/config/footer-links";
-import { createClient } from "@/lib/server";
 import { getPublicCmsSnapshot } from "@/services/cms";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Contact Us – Mithron",
@@ -14,20 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const [cms, supabase] = await Promise.all([getPublicCmsSnapshot(), createClient()]);
-  const { data } = await supabase.auth.getClaims();
-  const email = typeof data?.claims?.email === "string" ? data.claims.email : "";
-  const userId = typeof data?.claims?.sub === "string" ? data.claims.sub : null;
-
-  let profilePhone = "";
-  if (userId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("phone")
-      .eq("id", userId)
-      .maybeSingle();
-    profilePhone = typeof profile?.phone === "string" ? profile.phone.trim() : "";
-  }
+  const cms = await getPublicCmsSnapshot();
 
   const contactEmail = cms.footer.contactEmail?.trim() || footerOfficialLinks.contactEmail;
   const contactPhone =
@@ -76,7 +64,7 @@ export default async function ContactPage() {
               ))}
             </div>
           </div>
-          <EnquiryForm defaultEmail={email} defaultPhone={profilePhone} isGuest={!userId} />
+          <EnquiryForm />
         </div>
       </section>
     </main>

@@ -100,7 +100,7 @@ describe("cms modernization contracts — phase 0", () => {
 
   it("draft preview helper builds admin-gated storefront preview URLs", () => {
     const href = buildCmsPreviewHref({ anchor: "hero", draft: true });
-    expect(href).toContain("cms_preview=draft");
+    expect(href).toContain("/preview/home");
     expect(href).toContain("#hero");
   });
 

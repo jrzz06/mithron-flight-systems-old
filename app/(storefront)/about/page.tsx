@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { EditorRenderedContent } from "@/components/editor/editor-rendered-content";
 import { getPublicCmsSnapshot } from "@/services/cms";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "About Us – Mithron",
   description: "Learn more about Mithron's technology and team building reliable drones and services."

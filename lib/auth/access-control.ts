@@ -124,6 +124,8 @@ export function shouldConfineRoleToControlPanel(role: CmsRole | string | null | 
   // Incomplete staff profiles are sent here by the identity gate. Confining them
   // back to /admin|/warehouse|/supplier creates Admin ↔ Complete-Profile loops.
   if (matchesPrefix(normalized, STAFF_PROFILE_COMPLETION_PATH)) return false;
+  // Admin CMS draft preview routes render storefront content for staff only.
+  if (matchesPrefix(normalized, "/preview")) return false;
 
   return true;
 }

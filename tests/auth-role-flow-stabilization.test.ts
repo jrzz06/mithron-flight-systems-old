@@ -45,6 +45,8 @@ describe("phase 1 auth and role flow stabilization", () => {
     expect(shouldConfineRoleToControlPanel("admin", "/products")).toBe(true);
     expect(shouldConfineRoleToControlPanel("admin", "/checkout")).toBe(true);
     expect(shouldConfineRoleToControlPanel("admin", "/account")).toBe(true);
+    expect(shouldConfineRoleToControlPanel("admin", "/preview/home")).toBe(false);
+    expect(shouldConfineRoleToControlPanel("admin", "/preview/blog/example")).toBe(false);
     expect(shouldConfineRoleToControlPanel("admin", "/admin")).toBe(false);
     expect(shouldConfineRoleToControlPanel("admin", "/account/security")).toBe(false);
     expect(shouldConfineRoleToControlPanel("admin", "/account/complete-profile")).toBe(false);

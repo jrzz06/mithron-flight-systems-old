@@ -6,8 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/config/types";
 import {
+  getCatalogCategoryDefinition,
+  parseProductsCategoryParam
+} from "@/lib/catalog-categories";
+import {
   applyCatalogProductListing,
   buildProductsCatalogHref,
+  parseCatalogProductGroupParam,
+  parseCatalogSearchQueryParam,
   type CatalogProductGroup,
   type CatalogSortKey
 } from "@/lib/catalog-product-listing";
@@ -32,14 +38,26 @@ type CatalogFilteredListingProps = {
   backFallbackHref?: string;
 };
 
+function resolveLegacyProductsCategoryRedirect(categoryParam: string | null): string | null {
+  const categorySlug = parseProductsCategoryParam(categoryParam ?? undefined);
+  if (!categorySlug) return null;
+  if (categorySlug === "accessories") {
+    return buildProductsCatalogHref({ group: "accessories-spare-parts" });
+  }
+  if (categorySlug === "global-products") {
+    return buildProductsCatalogHref({ group: "global-products" });
+  }
+  return getCatalogCategoryDefinition(categorySlug).href;
+}
+
 export function CatalogFilteredListing({
   products,
   mode,
   presentation,
   title,
   eyebrow = "Catalog",
-  initialGroup = "all",
-  initialQuery = "",
+  initialGroup,
+  initialQuery,
   showBack = false,
   backFallbackHref = "/products"
 }: CatalogFilteredListingProps) {
@@ -47,14 +65,21 @@ export function CatalogFilteredListing({
   const searchParams = useSearchParams();
   const isInternalNavigation = useRef(false);
   const isShowroom = presentation === "showroom";
-  const [query, setQuery] = useState(initialQuery);
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
+  const urlGroup = parseCatalogProductGroupParam(searchParams.get("filter") ?? undefined);
+  const urlQuery = parseCatalogSearchQueryParam(searchParams.get("q") ?? undefined);
+  const group: CatalogProductGroup =
+    mode === "global" ? (initialGroup ?? urlGroup) : "all";
+  const [query, setQuery] = useState(initialQuery ?? urlQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery ?? urlQuery);
   const [sort, setSort] = useState<CatalogSortKey>("featured");
-  const [group, setGroup] = useState<CatalogProductGroup>(initialGroup);
 
   useEffect(() => {
-    setGroup(initialGroup);
-  }, [initialGroup]);
+    if (mode !== "global") return;
+    const redirectHref = resolveLegacyProductsCategoryRedirect(searchParams.get("category"));
+    if (redirectHref) {
+      router.replace(redirectHref);
+    }
+  }, [mode, router, searchParams]);
 
   useEffect(() => {
     if (isInternalNavigation.current) {
@@ -62,9 +87,9 @@ export function CatalogFilteredListing({
       return;
     }
 
-    const urlQuery = searchParams.get("q")?.trim() ?? "";
-    setQuery((current) => (current === urlQuery ? current : urlQuery));
-    setDebouncedQuery((current) => (current === urlQuery ? current : urlQuery));
+    const nextQuery = searchParams.get("q")?.trim() ?? "";
+    setQuery((current) => (current === nextQuery ? current : nextQuery));
+    setDebouncedQuery((current) => (current === nextQuery ? current : nextQuery));
   }, [searchParams]);
 
   useEffect(() => {
@@ -140,7 +165,6 @@ export function CatalogFilteredListing({
     setQuery("");
     setDebouncedQuery("");
     setSort("featured");
-    setGroup("all");
     if (mode === "global") {
       isInternalNavigation.current = true;
       router.replace(buildProductsCatalogHref({ group: "all" }), { scroll: false });
@@ -160,7 +184,6 @@ export function CatalogFilteredListing({
     setQuery("");
     setDebouncedQuery("");
     setSort("featured");
-    setGroup("all");
     if (mode === "global") {
       isInternalNavigation.current = true;
       router.replace(buildProductsCatalogHref({ group: "all" }), { scroll: false });
@@ -168,7 +191,6 @@ export function CatalogFilteredListing({
   };
 
   const handleGroupChange = (value: CatalogProductGroup) => {
-    setGroup(value);
     if (mode === "global") {
       isInternalNavigation.current = true;
       router.replace(
