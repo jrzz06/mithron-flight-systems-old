@@ -59,28 +59,55 @@ export function buildCheckoutPaymentResponse(input: {
   };
 }
 
-export async function recordWebhookEvent(provider: string, eventId: string, payload: unknown) {
+/**
+ * Claim a webhook event id for idempotency.
+ * @returns `"claimed"` when this call inserted the row,
+ * `"duplicate"` when the (provider, event_id) already exists,
+ * `"unavailable"` when the insert could not be confirmed (network/5xx).
+ */
+export async function recordWebhookEvent(
+  provider: string,
+  eventId: string,
+  payload: unknown
+): Promise<"claimed" | "duplicate" | "unavailable"> {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/payment_webhook_events`,
-    {
-      method: "POST",
-      headers: {
-        apikey: config.serviceRoleKey,
-        Authorization: `Bearer ${config.serviceRoleKey}`,
-        "Content-Type": "application/json",
-        Prefer: "resolution=ignore-duplicates,return=minimal"
+  try {
+    const response = await fetchWithTimeout(
+      `${config.url}/rest/v1/payment_webhook_events`,
+      {
+        method: "POST",
+        headers: {
+          apikey: config.serviceRoleKey,
+          Authorization: `Bearer ${config.serviceRoleKey}`,
+          "Content-Type": "application/json",
+          // Intentionally no ignore-duplicates: we need 409 to detect duplicates.
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify({
+          provider,
+          event_id: eventId,
+          payload,
+          processed_at: new Date().toISOString()
+        })
       },
-      body: JSON.stringify({
-        provider,
-        event_id: eventId,
-        payload,
-        processed_at: new Date().toISOString()
-      })
-    },
-    SUPABASE_FETCH_TIMEOUT_MS
-  );
-  return response.status === 201 || response.status === 409;
+      SUPABASE_FETCH_TIMEOUT_MS
+    );
+    if (response.status === 201) return "claimed";
+    if (response.status === 409) return "duplicate";
+    logPaymentWarning("webhook_event_claim_unexpected_status", {
+      provider,
+      eventId,
+      status: response.status
+    });
+    return "unavailable";
+  } catch (error) {
+    logPaymentWarning("webhook_event_claim_failed", {
+      provider,
+      eventId,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return "unavailable";
+  }
 }
 
 async function createCustomerPaymentNotification(input: {
@@ -288,6 +315,7 @@ export async function applyPaymentEvent(input: {
 }): Promise<ApplyPaymentEventResult> {
   const { provider, event, source } = input;
   const eventId = input.eventId ?? `${event.intentId}:${event.status}:${event.paymentId ?? "unknown"}`;
+  let webhookEventClaimed = false;
 
   const payments = await resolvePaymentRecordForEvent(provider, event);
   const payment = payments;
@@ -322,6 +350,18 @@ export async function applyPaymentEvent(input: {
   }
 
   if (event.status === "failed") {
+    // Claim the webhook event BEFORE gateway reconcile / order mutations so
+    // duplicate failed deliveries cannot double-write. Succeeded events still
+    // dedupe inside confirm_verified_payment RPC (do not claim here).
+    if (source === "webhook") {
+      const claim = await recordWebhookEvent(provider, eventId, input.rawPayload ?? event.raw);
+      if (claim === "duplicate") {
+        return { ok: true, status: event.status, skipped: true, reason: "duplicate_event" };
+      }
+      if (claim === "claimed") webhookEventClaimed = true;
+      // On "unavailable", continue processing once — better than dropping a real failure.
+    }
+
     const reconciled = await reconcilePaymentWithGateway({
       provider,
       intentId: event.intentId || String(payment.provider_intent_id ?? ""),
@@ -392,9 +432,11 @@ export async function applyPaymentEvent(input: {
     });
   }
 
-  if (source === "webhook") {
-    const inserted = await recordWebhookEvent(provider, eventId, input.rawPayload ?? event.raw);
-    if (!inserted) {
+  if (source === "webhook" && !webhookEventClaimed) {
+    // Non-failed, non-succeeded statuses (e.g. processing) claim here.
+    // Failed events already claimed above; succeeded events claim in RPC.
+    const claim = await recordWebhookEvent(provider, eventId, input.rawPayload ?? event.raw);
+    if (claim === "duplicate") {
       return { ok: true, status: event.status, skipped: true, reason: "duplicate_event" };
     }
   }

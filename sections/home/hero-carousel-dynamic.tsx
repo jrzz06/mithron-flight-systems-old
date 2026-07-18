@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import type { HeroSlide } from "@/config/types";
+import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 
 export function HeroCarouselSkeleton() {
   return (
@@ -28,5 +29,9 @@ export function HeroCarouselDynamic({
   slides?: HeroSlide[];
   cmsSectionKey?: string;
 }) {
-  return <HeroCarouselClient slides={slides} cmsSectionKey={cmsSectionKey} />;
+  return (
+    <SoftErrorBoundary label="Hero">
+      <HeroCarouselClient slides={slides} cmsSectionKey={cmsSectionKey} />
+    </SoftErrorBoundary>
+  );
 }

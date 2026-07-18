@@ -5,6 +5,7 @@ import {
   HomeClientTestimonialsCarousel
 } from "@/sections/home/home-client-testimonials-carousel";
 import type { TestimonialCarouselCardItem } from "@/components/editorial/testimonial-carousel-card";
+import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import styles from "./home-client-testimonials-section.module.css";
 
 export const HOME_TESTIMONIAL_SHOWCASE_COUNT = 6;
@@ -57,12 +58,14 @@ export function HomeClientTestimonialsSection({
       data-mission-motion="skip"
       aria-labelledby="home-client-testimonials-title"
     >
-      <HomeClientTestimonialsCarousel
-        items={items}
-        title={header.title}
-        titleAccent={header.titleAccent}
-        lead={header.lead}
-      />
+      <SoftErrorBoundary label="Testimonials">
+        <HomeClientTestimonialsCarousel
+          items={items}
+          title={header.title}
+          titleAccent={header.titleAccent}
+          lead={header.lead}
+        />
+      </SoftErrorBoundary>
     </section>
   );
 }

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { NavAnchorProvider } from "@/components/navigation/nav-anchor-context";
 import { LogoutNoticeToastBridge } from "@/components/notifications/logout-notice-toast-bridge";
 import { ToastProvider } from "@/components/notifications/toast-provider";
+import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import { shouldSkipStorefrontChrome } from "@/lib/ui/shell-routes";
 import { useCartAuthSync } from "@/hooks/use-cart-auth-sync";
 import { useOnlineStatus } from "@/hooks/use-online-status";
@@ -157,9 +158,19 @@ export function StorefrontShellStreamingLayout({
           {children}
         </main>
         {isHome ? null : footerChrome}
-        {searchPrewarmed || hasOpenedSearch ? <SearchOverlay /> : null}
-        {cartPrewarmed || hasOpenedCart ? <CartDrawer /> : null}
-        <MithronAssistantWidget />
+        {searchPrewarmed || hasOpenedSearch ? (
+          <SoftErrorBoundary label="Search">
+            <SearchOverlay />
+          </SoftErrorBoundary>
+        ) : null}
+        {cartPrewarmed || hasOpenedCart ? (
+          <SoftErrorBoundary label="Cart drawer">
+            <CartDrawer />
+          </SoftErrorBoundary>
+        ) : null}
+        <SoftErrorBoundary label="Assistant">
+          <MithronAssistantWidget />
+        </SoftErrorBoundary>
         <Suspense fallback={null}>
           <LogoutNoticeToastBridge />
         </Suspense>

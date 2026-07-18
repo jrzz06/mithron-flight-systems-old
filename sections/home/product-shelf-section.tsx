@@ -6,6 +6,7 @@ import type { HomeChapter } from "@/lib/home/homepage-resolution";
 import { pickShelfProducts, type ProductShelfConfig } from "@/lib/home/shelf-product-resolution";
 import { ProductShelfScrollRail } from "@/sections/home/product-shelf-scroll-rail";
 import { ProductShelfViewAllCard } from "@/sections/home/product-shelf-view-all-card";
+import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import styles from "@/sections/home/home-shelf-shared.module.css";
 
 function shelfNavbarInk(tone: ProductShelfConfig["tone"]): "light" | "dark" {
@@ -47,6 +48,7 @@ export function ProductShelfSection({
 
         <div className={styles.shelfBoard} data-home-composite-reveal>
           {cardProducts.length > 0 ? (
+            <SoftErrorBoundary label="Product shelf">
             <ProductShelfScrollRail
               className={styles.productShelfGrid}
               data-testid="home-product-shelf-grid"
@@ -71,6 +73,7 @@ export function ProductShelfSection({
                 imageSlug={cardProducts[0]?.slug}
               />
             </ProductShelfScrollRail>
+            </SoftErrorBoundary>
           ) : null}
 
           <a

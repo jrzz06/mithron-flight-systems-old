@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
+import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import CartLoading from "./loading";
 
 const CartPageClient = dynamic(
@@ -9,8 +10,10 @@ const CartPageClient = dynamic(
 
 export default function CartPage() {
   return (
-    <Suspense fallback={<CartLoading />}>
-      <CartPageClient />
-    </Suspense>
+    <SoftErrorBoundary label="Cart">
+      <Suspense fallback={<CartLoading />}>
+        <CartPageClient />
+      </Suspense>
+    </SoftErrorBoundary>
   );
 }
