@@ -1,10 +1,6 @@
 "use client";
 
-import { wrapServerAction } from "@/hooks/use-async-action";
-
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react";
 import {
   useAdminLiveResource,
   useOptionalAdminRealtime
@@ -29,6 +25,12 @@ import {
   enquiryPrimaryActionLabel
 } from "@/lib/admin/queue-workflow";
 import { relativeTimeLabel } from "@/lib/platform/copy";
+import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
+import { notify } from "@/lib/feedback/notify";
+import { raceWithTimeout } from "@/lib/fetch-with-timeout";
+import { wrapServerAction } from "@/hooks/use-async-action";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   billingFormFieldName,
   ENQUIRY_ADDRESS_FIELDS,
@@ -60,18 +62,24 @@ import {
   type EnquiryAddressView
 } from "@/lib/enquiries/shared";
 
+type EnquiryActionResult = {
+  ok?: boolean;
+  message?: string;
+  addressFields?: string[];
+};
+
 type EnquiryActions = {
-  markContacted: (formData: FormData) => Promise<void>;
-  addNote: (formData: FormData) => Promise<void>;
-  convert: (formData: FormData) => Promise<void>;
-  close: (formData: FormData) => Promise<void>;
-  markInProgress: (formData: FormData) => Promise<void>;
-  complete: (formData: FormData) => Promise<void>;
-  requestInfo: (formData: FormData) => Promise<void>;
-  cancel: (formData: FormData) => Promise<void>;
-  updateMeta: (formData: FormData) => Promise<void>;
-  updateAddress: (formData: FormData) => Promise<void>;
-  updateContactDetails: (formData: FormData) => Promise<void>;
+  markContacted: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  addNote: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  convert: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  close: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  markInProgress: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  complete: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  requestInfo: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  cancel: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  updateMeta: (formData: FormData) => Promise<EnquiryActionResult | void>;
+  updateAddress: (formData: FormData) => Promise<{ ok: boolean; message: string; addressFields?: string[] }>;
+  updateContactDetails: (formData: FormData) => Promise<EnquiryActionResult | void>;
   assignWarehouse?: (formData: FormData) => Promise<void>;
 };
 
@@ -166,12 +174,9 @@ function EnquiryAddressEditor({
   serverFieldHints: string[];
   listStatus: string;
   listQuery: string;
-  updateAddress: (formData: FormData) => Promise<void>;
+  updateAddress: (formData: FormData) => Promise<{ ok: boolean; message: string; addressFields?: string[] }>;
 }) {
-  const timedUpdateAddress = useMemo(
-    () => wrapServerAction(updateAddress, { label: "Save enquiry address" }),
-    [updateAddress]
-  );
+  const [isSaving, startTransition] = useTransition();
   const [shippingAddress, setShippingAddress] = useState<EnquiryAddressView>(
     shipping ?? emptyAddress(defaultCountry)
   );
@@ -183,12 +188,13 @@ function EnquiryAddressEditor({
   );
   const [clientMissingShipping, setClientMissingShipping] = useState<EnquiryAddressFieldKey[]>([]);
   const [clientMissingBilling, setClientMissingBilling] = useState<EnquiryAddressFieldKey[]>([]);
+  const [serverHints, setServerHints] = useState(serverFieldHints);
   const firstMissingRef = useRef<HTMLInputElement | null>(null);
 
-  const serverMissingShipping = serverFieldHints
+  const serverMissingShipping = serverHints
     .map((field) => addressKeyFromFormField(field, "shipping"))
     .filter((field): field is EnquiryAddressFieldKey => Boolean(field));
-  const serverMissingBilling = serverFieldHints
+  const serverMissingBilling = serverHints
     .map((field) => addressKeyFromFormField(field, "billing"))
     .filter((field): field is EnquiryAddressFieldKey => Boolean(field));
 
@@ -201,6 +207,10 @@ function EnquiryAddressEditor({
   const bannerMessage = needsAddress ? addressBannerMessage(shipping, missingSummary) : null;
 
   useEffect(() => {
+    setServerHints(serverFieldHints);
+  }, [serverFieldHints]);
+
+  useEffect(() => {
     if (!billingSameAsShipping) return;
     setBillingAddress(shippingAddress);
   }, [billingSameAsShipping, shippingAddress]);
@@ -209,19 +219,48 @@ function EnquiryAddressEditor({
     if (!highlightedShipping.length && !highlightedBilling.length) return;
     firstMissingRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     firstMissingRef.current?.focus();
-  }, [highlightedShipping.length, highlightedBilling.length, serverFieldHints.length]);
+  }, [highlightedShipping.length, highlightedBilling.length, serverHints.length]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     const nextShippingMissing = getMissingEnquiryAddressFields(shippingAddress);
     const nextBillingMissing = billingSameAsShipping ? [] : getMissingEnquiryAddressFields(billingAddress);
     if (nextShippingMissing.length || nextBillingMissing.length) {
-      event.preventDefault();
       setClientMissingShipping(nextShippingMissing);
       setClientMissingBilling(nextBillingMissing);
       return;
     }
     setClientMissingShipping([]);
     setClientMissingBilling([]);
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      try {
+        const result = await raceWithTimeout(
+          updateAddress(formData),
+          undefined,
+          "Save enquiry address"
+        );
+        if (result.ok) {
+          notify.success(result.message || "Customer address saved.", {
+            source: "admin",
+            id: "enquiry:address-save"
+          });
+          return;
+        }
+        if (result.addressFields?.length) {
+          setServerHints(result.addressFields);
+        }
+        notify.error(result.message || FEEDBACK_MESSAGES.failedToSaveChanges, {
+          source: "admin",
+          id: "enquiry:address-save:error"
+        });
+      } catch (error) {
+        notify.error(
+          error instanceof Error ? error.message : FEEDBACK_MESSAGES.failedToSaveChanges,
+          { source: "admin", id: "enquiry:address-save:error" }
+        );
+      }
+    });
   }
 
   function updateAddressField(
@@ -311,7 +350,7 @@ function EnquiryAddressEditor({
         </p>
       ) : null}
 
-      <form action={timedUpdateAddress} onSubmit={handleSubmit} className="grid gap-4">
+      <form onSubmit={handleSubmit} className="grid gap-4">
         <input type="hidden" name="enquiry_id" value={enquiryId} />
         <ListContextFields listStatus={listStatus} listQuery={listQuery} />
 
@@ -338,12 +377,14 @@ function EnquiryAddressEditor({
           </div>
         ) : null}
 
-        <OperationalSubmitButton
-          pendingLabel="Saving address"
-          className="platform-btn-primary h-9 w-full rounded-[8px] px-3 text-xs font-medium sm:w-auto sm:px-4"
+        <button
+          type="submit"
+          disabled={isSaving}
+          aria-busy={isSaving}
+          className="platform-btn-primary h-9 w-full rounded-[8px] px-3 text-xs font-medium sm:w-auto sm:px-4 disabled:opacity-60"
         >
-          Save address
-        </OperationalSubmitButton>
+          {isSaving ? "Saving address..." : "Save address"}
+        </button>
       </form>
     </section>
   );
@@ -456,6 +497,20 @@ export function AdminEnquiryQueue({
   const seedExpandedId = openFromUrl || initialExpandedEnquiryId;
   const [expandedId, setExpandedId] = useState<string | null>(seedExpandedId);
   const expandedRowRef = useRef<HTMLTableRowElement | null>(null);
+  const timedCancelEnquiry = useMemo(
+    () =>
+      wrapServerAction(async (formData: FormData) => {
+        const result = await actions.cancel(formData);
+        if (result && typeof result === "object") {
+          const message = String(result.message ?? "").trim();
+          if (message) {
+            if (result.ok === false) notify.error(message);
+            else notify.success(message);
+          }
+        }
+      }, { label: "Cancel enquiry" }),
+    [actions.cancel]
+  );
 
   useEffect(() => {
     if (!realtime || hydratedRef.current) return;
@@ -619,7 +674,7 @@ export function AdminEnquiryQueue({
                   <td className="px-3 py-2.5">
                     <div className="flex flex-wrap items-center gap-2">
                       {availableMoreActions.includes("cancel") ? (
-                        <form action={wrapServerAction(actions.cancel, { label: "Cancel enquiry" })} className="inline-flex">
+                        <form action={timedCancelEnquiry} className="inline-flex">
                           <input type="hidden" name="enquiry_id" value={id} />
                           <input type="hidden" name="list_status" value={listStatus} />
                           <input type="hidden" name="list_q" value={listQuery} />

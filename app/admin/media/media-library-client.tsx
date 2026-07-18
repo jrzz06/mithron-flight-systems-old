@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useAdminLiveCollectionRows } from "@/components/admin/realtime/use-admin-live-collection-rows";
+import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import type { AdminEntityRow } from "@/lib/admin/realtime/admin-entity-store";
 import { deleteMediaLibraryItemFormAction, type MediaLibraryItem } from "./actions";
 
@@ -99,9 +100,13 @@ export function MediaLibraryClient({ items }: { items: MediaLibraryItem[] }) {
                 </div>
                 <form action={timedDeleteMediaLibraryItemFormAction}>
                   <input type="hidden" name="id" value={item.id} />
-                  <button type="submit" className="text-xs font-medium text-rose-400">
+                  <OperationalSubmitButton
+                    pendingLabel="Deleting..."
+                    confirmMessage="Delete this media item?"
+                    className="text-xs font-medium text-rose-400"
+                  >
                     Delete
-                  </button>
+                  </OperationalSubmitButton>
                 </form>
               </div>
             );

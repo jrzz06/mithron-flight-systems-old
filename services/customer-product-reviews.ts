@@ -5,6 +5,7 @@ import {
   deleteAdminRecord,
   updateAdminRecord
 } from "@/services/admin-actions";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 type EnvSource = Record<string, string | undefined>;
@@ -155,7 +156,7 @@ function sortReviews(reviews: CustomerProductReview[], sort: ReviewSort) {
 
 async function fetchRows(query: string, env: EnvSource = process.env, cache?: { tags?: string[] }) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/customer_order_reviews?${query}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/customer_order_reviews?${query}`, {
     headers: headers(config.serviceRoleKey),
     cache: cache ? "force-cache" : "no-store",
     ...(cache?.tags?.length ? { next: { tags: cache.tags, revalidate: 60 } } : {})
@@ -320,7 +321,7 @@ export async function updateCustomerReviewByOwner(
   }
 
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/customer_order_reviews?id=eq.${encodeURIComponent(input.id)}&user_id=eq.${encodeURIComponent(input.userId)}`,
     {
       method: "PATCH",
@@ -350,7 +351,7 @@ export async function deleteCustomerReviewByOwner(id: string, userId: string, en
   }
 
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/customer_order_reviews?id=eq.${encodeURIComponent(id)}&user_id=eq.${encodeURIComponent(userId)}`,
     { method: "DELETE", headers: headers(config.serviceRoleKey) }
   );
@@ -418,7 +419,6 @@ export async function bulkModerateCustomerReviews(
 
   const config = assertSupabaseAdminConfig(env);
   const idFilter = ids.map((id) => encodeURIComponent(id)).join(",");
-  const { fetchWithTimeout } = await import("@/lib/fetch-with-timeout");
 
   if (input.action === "delete") {
     const response = await fetchWithTimeout(
@@ -531,7 +531,7 @@ export async function markReviewHelpful(
   }
 
   const config = assertSupabaseAdminConfig(env);
-  const voteResponse = await fetch(`${config.url}/rest/v1/product_review_helpful_votes`, {
+  const voteResponse = await fetchWithTimeout(`${config.url}/rest/v1/product_review_helpful_votes`, {
     method: "POST",
     headers: headers(config.serviceRoleKey, "return=minimal,resolution=ignore-duplicates"),
     body: JSON.stringify({ review_id: reviewId, voter_key: key })
@@ -541,14 +541,14 @@ export async function markReviewHelpful(
     throw new Error("Could not record helpful vote.");
   }
 
-  const countResponse = await fetch(
+  const countResponse = await fetchWithTimeout(
     `${config.url}/rest/v1/product_review_helpful_votes?select=id&review_id=eq.${encodeURIComponent(reviewId)}`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
   const votes = countResponse.ok ? ((await countResponse.json()) as JsonRecord[]) : [];
   const helpfulCount = Array.isArray(votes) ? votes.length : review.helpfulCount + 1;
 
-  await fetch(`${config.url}/rest/v1/customer_order_reviews?id=eq.${encodeURIComponent(reviewId)}`, {
+  await fetchWithTimeout(`${config.url}/rest/v1/customer_order_reviews?id=eq.${encodeURIComponent(reviewId)}`, {
     method: "PATCH",
     headers: headers(config.serviceRoleKey, "return=minimal"),
     body: JSON.stringify({ helpful_count: helpfulCount, updated_at: new Date().toISOString() })

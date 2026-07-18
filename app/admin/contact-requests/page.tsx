@@ -5,7 +5,7 @@ import {
   promoteContactRequestToOrderFormAction,
   rejectContactRequestFormAction,
   requestContactRequestMissingInfoFormAction,
-  updateContactRequestAddressFormAction,
+  updateContactRequestAddressClientAction,
   updateContactRequestContactDetailsFormAction
 } from "@/app/admin/contact-requests/actions";
 import { assignLinkedOrderToWarehouseFormAction } from "@/app/admin/contact-requests/warehouse-actions";
@@ -39,10 +39,6 @@ function text(value: unknown, fallback = "") {
 }
 
 export default async function AdminContactRequestsPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
-  const [requests, policy] = await Promise.all([
-    listAdminContactRequests(),
-    getAdminSettingsPolicy()
-  ]);
   const params = searchParams ? await searchParams : {};
   const statusFilter = searchValue(params, "status") || "all";
   const query = searchValue(params, "q").toLowerCase();
@@ -51,21 +47,24 @@ export default async function AdminContactRequestsPage({ searchParams }: { searc
     .split(",")
     .map((field) => field.trim())
     .filter(Boolean);
+  const pageRaw = Number(searchValue(params, "page") || "1");
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+  const pageSize = 50;
 
-  const filtered = requests.filter((request) => {
-    const matchesStatus = contactRequestMatchesLeadStatusFilter(request.status, statusFilter);
-    const haystack = [
-      text(request.customer_email),
-      text(request.customer_full_name),
-      text(request.customer_phone),
-      text(request.subject),
-      text(request.body),
-      text(request.product_name),
-      text(request.source)
-    ].join(" ").toLowerCase();
-    const matchesQuery = !query || haystack.includes(query);
-    return matchesStatus && matchesQuery;
-  });
+  const [requests, policy] = await Promise.all([
+    listAdminContactRequests({
+      status: statusFilter,
+      q: query || undefined,
+      limit: pageSize,
+      offset: (page - 1) * pageSize
+    }),
+    getAdminSettingsPolicy()
+  ]);
+
+  // Server already filtered; keep helper as a safety net for lead-status aliases.
+  const filtered = requests.filter((request) =>
+    contactRequestMatchesLeadStatusFilter(request.status, statusFilter)
+  );
 
   const linkedOrderIds = filtered
     .map((request) => String(request.converted_order_id ?? "").trim())
@@ -124,7 +123,7 @@ export default async function AdminContactRequestsPage({ searchParams }: { searc
           markInProgress: markContactRequestInProgressFormAction,
           requestInfo: requestContactRequestMissingInfoFormAction,
           reject: rejectContactRequestFormAction,
-          updateAddress: updateContactRequestAddressFormAction,
+          updateAddress: updateContactRequestAddressClientAction,
           updateContactDetails: updateContactRequestContactDetailsFormAction,
           assignWarehouse: assignLinkedOrderToWarehouseFormAction
         }}

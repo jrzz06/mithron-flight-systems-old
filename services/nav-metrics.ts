@@ -1,10 +1,11 @@
 import { cache } from "react";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { readThroughCache, REDIS_CACHE_KEYS, deleteCachedKeys } from "@/lib/cache-redis";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 async function countTable(table: string, filter: string, idColumn = "id"): Promise<number> {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/${table}?select=${encodeURIComponent(idColumn)}&${filter}&limit=1`,
     {
       headers: {
@@ -49,7 +50,7 @@ export type SupplierNavMetricsPayload = {
 
 async function countSupplierProducts(supplierId: string, filter: string): Promise<number> {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/mithron_products?select=slug&supplier_id=eq.${encodeURIComponent(supplierId)}&${filter}&limit=1`,
     {
       headers: {
@@ -70,7 +71,7 @@ async function countSupplierProducts(supplierId: string, filter: string): Promis
 async function countSupplierInventoryAlerts(supplierId: string): Promise<number> {
   const config = assertSupabaseAdminConfig(process.env);
 
-  const rpcResponse = await fetch(`${config.url}/rest/v1/rpc/get_supplier_inventory_alert_count`, {
+  const rpcResponse = await fetchWithTimeout(`${config.url}/rest/v1/rpc/get_supplier_inventory_alert_count`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -86,7 +87,7 @@ async function countSupplierInventoryAlerts(supplierId: string): Promise<number>
     if (Number.isFinite(count)) return count;
   }
 
-  const productsResponse = await fetch(
+  const productsResponse = await fetchWithTimeout(
     `${config.url}/rest/v1/mithron_products?select=slug&supplier_id=eq.${encodeURIComponent(supplierId)}&limit=500`,
     {
       headers: {
@@ -102,7 +103,7 @@ async function countSupplierInventoryAlerts(supplierId: string): Promise<number>
   if (!slugs.length) return 0;
 
   const slugFilter = slugs.map((slug) => encodeURIComponent(slug)).join(",");
-  const inventoryResponse = await fetch(
+  const inventoryResponse = await fetchWithTimeout(
     `${config.url}/rest/v1/inventory?select=product_slug&product_slug=in.(${slugFilter})&stock_status=in.(low_stock,out_of_stock)&limit=1`,
     {
       headers: {

@@ -2,6 +2,7 @@ import type { ServiceResult } from "@/lib/service-result";
 import { serviceUnavailable } from "@/lib/service-result";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { resolveOrderAddresses } from "@/lib/addresses/resolve-server";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 type EnvSource = Record<string, string | undefined>;
@@ -18,7 +19,7 @@ export async function listCustomerOrders(
   env: EnvSource = process.env
 ): Promise<ServiceResult<JsonRecord[]>> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?select=id,order_number,status,payment_status,fulfillment_status,total,currency,created_at,updated_at,order_items(count)&created_by_user_id=eq.${userId}&order=created_at.desc&limit=50`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -28,7 +29,7 @@ export async function listCustomerOrders(
 
 export async function getCustomerOrder(userId: string, orderId: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?select=id,order_number,customer_email,status,payment_status,fulfillment_status,total,currency,metadata,timeline,shipment_tracking,invoice_url,shipping_address_id,billing_address_id,created_by_user_id,created_at,updated_at&id=eq.${encodeURIComponent(orderId)}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -39,11 +40,11 @@ export async function getCustomerOrder(userId: string, orderId: string, env: Env
   if (!order || String(order.created_by_user_id ?? "") !== userId) return null;
 
   const [itemsResponse, paymentsResponse] = await Promise.all([
-    fetch(
+    fetchWithTimeout(
       `${config.url}/rest/v1/order_items?select=id,order_id,product_slug,product_name,quantity,line_total,metadata&order_id=eq.${encodeURIComponent(orderId)}&limit=50`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     ),
-    fetch(
+    fetchWithTimeout(
       `${config.url}/rest/v1/payments?select=id,order_id,provider,provider_intent_id,provider_payment_id,amount,currency,status,verified_at,created_at&order_id=eq.${encodeURIComponent(orderId)}&limit=10`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     )
@@ -73,7 +74,7 @@ export async function linkGuestOrdersToUser(userId: string, email: string, env: 
   if (!userId || !normalizedEmail) return { linked: 0 };
 
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?created_by_user_id=is.null&customer_email=eq.${encodeURIComponent(normalizedEmail)}`,
     {
       method: "PATCH",
@@ -105,7 +106,7 @@ export async function fetchCheckoutOrderStatus(
   env: EnvSource = process.env
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?select=id,order_number,total,status,payment_status,customer_email,created_by_user_id&id=eq.${encodeURIComponent(orderId)}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -123,7 +124,7 @@ export async function fetchCheckoutOrderStatus(
     if (order.created_by_user_id) return null;
   }
 
-  const paymentsResponse = await fetch(
+  const paymentsResponse = await fetchWithTimeout(
     `${config.url}/rest/v1/payments?select=status,verified_at&order_id=eq.${encodeURIComponent(orderId)}&order=created_at.desc&limit=5`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -150,7 +151,7 @@ export async function lookupOrderForTracking(
   if (!normalizedNumber || !normalizedEmail) return null;
 
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?select=id,order_number,status,payment_status,fulfillment_status,channel,shipment_tracking,timeline,total,metadata&order_number=eq.${encodeURIComponent(normalizedNumber)}&customer_email=eq.${encodeURIComponent(normalizedEmail)}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -161,7 +162,7 @@ export async function lookupOrderForTracking(
   if (!order?.id) return null;
 
   const orderId = String(order.id);
-  const itemsResponse = await fetch(
+  const itemsResponse = await fetchWithTimeout(
     `${config.url}/rest/v1/order_items?select=product_slug,product_name,quantity,line_total&order_id=eq.${encodeURIComponent(orderId)}&limit=50`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );

@@ -22,6 +22,7 @@ import {
   type OrderStatus
 } from "@/services/orders";
 import { assertValidWarehouseCode } from "@/services/warehouses";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 type EnvSource = Record<string, string | undefined>;
@@ -40,7 +41,7 @@ function isPlainRecord(value: unknown): value is JsonRecord {
 
 async function listWarehouseUserIds(env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/user_roles?select=user_id&role_key=eq.warehouse&limit=50`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -817,7 +818,7 @@ export async function permanentDeleteAdminOrderWorkflow(
   const optimisticQuery = expectedUpdatedAt
     ? `&updated_at=eq.${encodeURIComponent(expectedUpdatedAt)}`
     : "";
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?id=eq.${encodeURIComponent(input.orderId)}${optimisticQuery}`,
     {
       method: "DELETE",

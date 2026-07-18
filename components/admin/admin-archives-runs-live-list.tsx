@@ -16,7 +16,17 @@ function text(value: unknown, fallback = "") {
 }
 
 function formatDate(value: unknown) {
-  return typeof value === "string" && value ? new Date(value).toLocaleString() : "—";
+  if (typeof value !== "string" || !value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Kolkata"
+  });
 }
 
 function mapArchiveRun(row: AdminEntityRow): DataArchiveRunRow {

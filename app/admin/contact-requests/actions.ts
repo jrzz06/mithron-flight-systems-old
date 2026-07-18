@@ -256,6 +256,70 @@ export async function updateContactRequestAddressFormAction(formData: FormData) 
   }
 }
 
+/** In-place queue bridge — no redirect so expanded-row pending always clears. */
+export async function updateContactRequestAddressClientAction(
+  formData: FormData
+): Promise<{ ok: boolean; message: string; addressFields?: string[] }> {
+  try {
+    const context = await requireAdminPermission("enquiries.write");
+    const contactRequestId = readString(formData, "contact_request_id");
+    const billingSameAsShipping = formData.get("billing_same_as_shipping") === "on"
+      || formData.get("billing_same_as_shipping") === "true";
+
+    if (!contactRequestId) throw new Error("Contact request id is required.");
+
+    const shipping = {
+      line1: readString(formData, "shipping_line1"),
+      city: readString(formData, "shipping_city"),
+      state: readString(formData, "shipping_state"),
+      country: readString(formData, "shipping_country"),
+      postalCode: readString(formData, "shipping_postal_code")
+    };
+
+    const billing = billingSameAsShipping
+      ? null
+      : {
+        line1: readString(formData, "billing_line1"),
+        city: readString(formData, "billing_city"),
+        state: readString(formData, "billing_state"),
+        country: readString(formData, "billing_country"),
+        postalCode: readString(formData, "billing_postal_code")
+      };
+
+    await updateContactRequestAddress(contactRequestId, context.userId!, {
+      shipping,
+      billing,
+      billingSameAsShipping
+    });
+    await revalidateAfterMutation("contact_requests");
+    return { ok: true, message: "Customer address saved." };
+  } catch (error) {
+    const billingSameAsShipping = formData.get("billing_same_as_shipping") === "on"
+      || formData.get("billing_same_as_shipping") === "true";
+    const shippingView = {
+      line1: readString(formData, "shipping_line1"),
+      city: readString(formData, "shipping_city"),
+      state: readString(formData, "shipping_state"),
+      country: readString(formData, "shipping_country"),
+      postalCode: readString(formData, "shipping_postal_code")
+    };
+    const billingView = billingSameAsShipping
+      ? null
+      : {
+        line1: readString(formData, "billing_line1"),
+        city: readString(formData, "billing_city"),
+        state: readString(formData, "billing_state"),
+        country: readString(formData, "billing_country"),
+        postalCode: readString(formData, "billing_postal_code")
+      };
+    return {
+      ok: false,
+      message: actionError(error),
+      addressFields: missingAddressFormFields(shippingView, billingView, billingSameAsShipping)
+    };
+  }
+}
+
 export async function archiveContactRequestFormAction(formData: FormData) {
   const context = await requireAdminPermission("enquiries.write");
   const contactRequestId = readString(formData, "contact_request_id");

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { getSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export type CachedAdminSettingsRow = {
   payload?: unknown;
@@ -10,7 +11,7 @@ export const getCachedAdminSettingsPayload = cache(async (): Promise<CachedAdmin
   const config = getSupabaseAdminConfig();
   if (!config.configured) return null;
 
-  const response = await fetch(`${config.url}/rest/v1/admin_settings?id=eq.global&select=payload,updated_at&limit=1`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/admin_settings?id=eq.global&select=payload,updated_at&limit=1`, {
     headers: {
       apikey: config.serviceRoleKey,
       Authorization: `Bearer ${config.serviceRoleKey}`

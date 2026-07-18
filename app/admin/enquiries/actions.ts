@@ -35,42 +35,14 @@ import {
   updateEnquiryMeta
 } from "@/services/enquiries";
 
-type FeedbackContext = {
-  enquiryId?: string;
-  listStatus?: string;
-  listQuery?: string;
+export type EnquiryActionResult = {
+  ok: boolean;
+  message: string;
   addressFields?: string[];
 };
 
 function readString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function readListContext(formData: FormData): Pick<FeedbackContext, "listStatus" | "listQuery"> {
-  return {
-    listStatus: readString(formData, "list_status") || undefined,
-    listQuery: readString(formData, "list_q") || undefined
-  };
-}
-
-function feedbackUrl(
-  status: "success" | "error",
-  message: string,
-  context: FeedbackContext = {}
-) {
-  const params = new URLSearchParams();
-  if (context.listStatus) params.set("status", context.listStatus);
-  if (context.listQuery) params.set("q", context.listQuery);
-  if (context.enquiryId) {
-    params.set("open", context.enquiryId);
-    params.set("enquiry_id", context.enquiryId);
-  }
-  if (context.addressFields?.length) {
-    params.set("address_fields", context.addressFields.join(","));
-  }
-  params.set("enquiry_status", status);
-  params.set("enquiry_message", message);
-  return `/admin/enquiries?${params.toString()}`;
 }
 
 function missingAddressFormFields(
@@ -96,13 +68,34 @@ function actionError(error: unknown) {
   return (error instanceof Error ? error.message : String(error)).slice(0, 240);
 }
 
-export async function markEnquiryContactedFormAction(formData: FormData) {
+function okResult(message: string): EnquiryActionResult {
+  return { ok: true, message };
+}
+
+function errorResult(error: unknown, addressFields?: string[]): EnquiryActionResult {
+  return {
+    ok: false,
+    message: actionError(error),
+    ...(addressFields?.length ? { addressFields } : {})
+  };
+}
+
+/**
+ * In-place queue actions return a result instead of redirect()-ing back to the
+ * same /admin/enquiries page. redirect() throws NEXT_REDIRECT, which does not
+ * reliably settle useFormStatus pending on an already-mounted expanded row —
+ * leaving buttons stuck on "Saving". Cross-page navigations (e.g. to /admin/orders)
+ * still use redirect().
+ */
+
+export async function markEnquiryContactedFormAction(
+  formData: FormData
+): Promise<EnquiryActionResult | void> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const orderId = readString(formData, "order_id");
   const queueKind = readString(formData, "queue_kind");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (queueKind === "checkout_order") {
@@ -110,47 +103,29 @@ export async function markEnquiryContactedFormAction(formData: FormData) {
       await markCheckoutOrderEnquiryContacted(orderId, context.userId!, note || undefined);
       await revalidateAfterMutation("enquiries", "orders");
       redirect(orderApprovalUrl(orderId, "Enquiry marked as contacted. Review the order to continue."));
-    } else {
-      if (!enquiryId) throw new Error("Enquiry id is required.");
-      await markEnquiryContacted(
-        enquiryId,
-        context.userId!,
-        context.userId!,
-        note || undefined,
-        process.env,
-        { expectedUpdatedAt: readExpectedUpdatedAt(formData) }
-      );
-
-      await revalidateAfterMutation("enquiries");
-      redirect(
-        feedbackUrl(
-          "success",
-          "Enquiry marked as contacted. Create the order when ready.",
-          {
-            enquiryId,
-            listStatus: "contacted",
-            listQuery: listContext.listQuery
-          }
-        )
-      );
     }
+
+    if (!enquiryId) throw new Error("Enquiry id is required.");
+    await markEnquiryContacted(
+      enquiryId,
+      context.userId!,
+      context.userId!,
+      note || undefined,
+      process.env,
+      { expectedUpdatedAt: readExpectedUpdatedAt(formData) }
+    );
+    await revalidateAfterMutation("enquiries");
+    return okResult("Enquiry marked as contacted. Create the order when ready.");
   } catch (error) {
     if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function addEnquiryNoteFormAction(formData: FormData) {
+export async function addEnquiryNoteFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -159,22 +134,9 @@ export async function addEnquiryNoteFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Note saved.", {
-        enquiryId,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Note saved.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
@@ -183,12 +145,13 @@ export async function assignEnquiryFormAction(formData: FormData) {
   return markEnquiryContactedFormAction(formData);
 }
 
-export async function convertEnquiryToOrderFormAction(formData: FormData) {
+export async function convertEnquiryToOrderFormAction(
+  formData: FormData
+): Promise<EnquiryActionResult | void> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const orderId = readString(formData, "order_id");
   const queueKind = readString(formData, "queue_kind");
-  const listContext = readListContext(formData);
 
   try {
     let convertedOrderId = orderId;
@@ -210,21 +173,14 @@ export async function convertEnquiryToOrderFormAction(formData: FormData) {
     );
   } catch (error) {
     if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function closeEnquiryFormAction(formData: FormData) {
+export async function closeEnquiryFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -232,30 +188,16 @@ export async function closeEnquiryFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Enquiry closed.", {
-        enquiryId,
-        listStatus: listContext.listStatus || "lost",
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Enquiry closed.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function markEnquiryInProgressFormAction(formData: FormData) {
+export async function markEnquiryInProgressFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -263,30 +205,16 @@ export async function markEnquiryInProgressFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Enquiry marked as in progress.", {
-        enquiryId,
-        listStatus: listContext.listStatus || "qualified",
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Enquiry marked as in progress.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function markEnquiryCompleteFormAction(formData: FormData) {
+export async function markEnquiryCompleteFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -294,30 +222,16 @@ export async function markEnquiryCompleteFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Enquiry marked as complete.", {
-        enquiryId,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Enquiry marked as complete.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function requestEnquiryMissingInfoFormAction(formData: FormData) {
+export async function requestEnquiryMissingInfoFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -325,30 +239,16 @@ export async function requestEnquiryMissingInfoFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Missing information noted internally.", {
-        enquiryId,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Missing information noted internally.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function archiveEnquiryFormAction(formData: FormData) {
+export async function archiveEnquiryFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -356,30 +256,16 @@ export async function archiveEnquiryFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Enquiry archived.", {
-        enquiryId,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Enquiry archived.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function rejectEnquiryFormAction(formData: FormData) {
+export async function rejectEnquiryFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
   const note = readString(formData, "note");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -387,29 +273,15 @@ export async function rejectEnquiryFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Enquiry cancelled.", {
-        enquiryId,
-        listStatus: listContext.listStatus || "lost",
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Enquiry cancelled.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function restoreEnquiryFormAction(formData: FormData) {
+export async function restoreEnquiryFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -417,29 +289,15 @@ export async function restoreEnquiryFormAction(formData: FormData) {
       expectedUpdatedAt: readExpectedUpdatedAt(formData)
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Enquiry restored.", {
-        enquiryId,
-        listStatus: listContext.listStatus || "new",
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Enquiry restored.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function updateEnquiryMetaFormAction(formData: FormData) {
+export async function updateEnquiryMetaFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -453,29 +311,15 @@ export async function updateEnquiryMetaFormAction(formData: FormData) {
       }
     );
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Enquiry details updated.", {
-        enquiryId,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Enquiry details updated.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }
 
-export async function updateEnquiryAddressFormAction(formData: FormData) {
+export async function updateEnquiryAddressFormAction(formData: FormData): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
-  const listContext = readListContext(formData);
   const billingSameAsShipping = formData.get("billing_same_as_shipping") === "on"
     || formData.get("billing_same_as_shipping") === "true";
 
@@ -510,15 +354,8 @@ export async function updateEnquiryAddressFormAction(formData: FormData) {
       }
     );
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Customer address saved.", {
-        enquiryId,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Customer address saved.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
     const shippingView = {
       line1: readString(formData, "shipping_line1"),
       city: readString(formData, "shipping_city"),
@@ -535,21 +372,22 @@ export async function updateEnquiryAddressFormAction(formData: FormData) {
         country: readString(formData, "billing_country"),
         postalCode: readString(formData, "billing_postal_code")
       };
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery,
-        addressFields: missingAddressFormFields(shippingView, billingView, billingSameAsShipping)
-      })
-    );
+    return errorResult(error, missingAddressFormFields(shippingView, billingView, billingSameAsShipping));
   }
 }
 
-export async function updateEnquiryContactDetailsFormAction(formData: FormData) {
+/** In-place queue bridge — no redirect so expanded-row pending always clears. */
+export async function updateEnquiryAddressClientAction(
+  formData: FormData
+): Promise<EnquiryActionResult> {
+  return updateEnquiryAddressFormAction(formData);
+}
+
+export async function updateEnquiryContactDetailsFormAction(
+  formData: FormData
+): Promise<EnquiryActionResult> {
   const context = await requireAdminPermission("enquiries.write");
   const enquiryId = readString(formData, "enquiry_id");
-  const listContext = readListContext(formData);
 
   try {
     if (!enquiryId) throw new Error("Enquiry id is required.");
@@ -559,21 +397,8 @@ export async function updateEnquiryContactDetailsFormAction(formData: FormData) 
       company: readString(formData, "customer_company")
     });
     await revalidateAfterMutation("enquiries");
-    redirect(
-      feedbackUrl("success", "Customer details saved.", {
-        enquiryId,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return okResult("Customer details saved.");
   } catch (error) {
-    if (isNextRedirect(error)) throw error;
-    redirect(
-      feedbackUrl("error", actionError(error), {
-        enquiryId: enquiryId || undefined,
-        listStatus: listContext.listStatus,
-        listQuery: listContext.listQuery
-      })
-    );
+    return errorResult(error);
   }
 }

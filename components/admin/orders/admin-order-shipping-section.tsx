@@ -3,7 +3,7 @@
 import { wrapServerAction } from "@/hooks/use-async-action";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useOptionalAdminRealtime } from "@/components/admin/realtime/admin-realtime-provider";
 import { formatAddressInline, pickAddressFromMetadata } from "@/lib/addresses/format";
 import { runOrderFormActionWithConflictRetry } from "@/lib/admin/order-action-client";
@@ -67,6 +67,69 @@ export function AdminOrderShippingSection({
   const canEditAddress = Boolean(updateShippingAddressAction)
     && !["cancelled", "delivered", "returned", "refunded", "dispatched", "in_transit"].includes(text(order.status, "draft"));
 
+  const saveShippingAddress = useCallback(
+    async (formData: FormData) => {
+      if (!updateShippingAddressAction) return;
+      const orderId = text(order.id);
+      setSaveError(null);
+      let navigated = false;
+      try {
+        const outcome = await runOrderFormActionWithConflictRetry(updateShippingAddressAction, formData, {
+          orderId,
+          patchOrder
+        });
+        if (outcome.kind === "failed") {
+          setSaveError("The order changed before the address could be saved. Please try again.");
+          return;
+        }
+
+        const line1 = String(formData.get("shipping_line1") ?? "").trim();
+        const line2 = String(formData.get("shipping_line2") ?? "").trim() || null;
+        const city = String(formData.get("shipping_city") ?? "").trim();
+        const state = String(formData.get("shipping_state") ?? "").trim();
+        const country = String(formData.get("shipping_country") ?? "").trim() || "India";
+        const postalCode = String(formData.get("shipping_postal_code") ?? "").trim();
+        const shipping = {
+          line1,
+          line2,
+          city,
+          state,
+          region: state,
+          country,
+          postal_code: postalCode
+        };
+        patchOrder(orderId, {
+          ...order,
+          metadata: {
+            ...metadata,
+            shipping_address: shipping,
+            billing_address: shipping,
+            billing_same_as_shipping: true,
+            needs_address: false
+          }
+        });
+        setShowEditor(false);
+      } catch (error) {
+        if (isActionNavigationError(error)) {
+          navigated = true;
+          throw error;
+        }
+        setSaveError(error instanceof Error ? error.message : "Unable to save shipping address.");
+        return;
+      } finally {
+        if (!navigated) {
+          markControlPlaneLiveSyncFlush();
+          void realtime?.reconcileResources(["orders"]);
+        }
+      }
+    },
+    [metadata, order, patchOrder, realtime, updateShippingAddressAction]
+  );
+
+  const timedSaveShippingAddress = useMemo(
+    () => wrapServerAction(saveShippingAddress, { label: "Save shipping address" }),
+    [saveShippingAddress]
+  );
   return (
     <OrderDetailSection title="Shipping">
       <div className={orderSectionStack}>
@@ -113,60 +176,7 @@ export function AdminOrderShippingSection({
 
       {canEditAddress && showEditor && updateShippingAddressAction ? (
         <form
-          action={wrapServerAction(async (formData) => {
-            const orderId = text(order.id);
-            setSaveError(null);
-            let navigated = false;
-            try {
-              const outcome = await runOrderFormActionWithConflictRetry(updateShippingAddressAction, formData, {
-                orderId,
-                patchOrder
-              });
-              if (outcome.kind === "failed") {
-                setSaveError("The order changed before the address could be saved. Please try again.");
-                return;
-              }
-
-              const line1 = String(formData.get("shipping_line1") ?? "").trim();
-              const line2 = String(formData.get("shipping_line2") ?? "").trim() || null;
-              const city = String(formData.get("shipping_city") ?? "").trim();
-              const state = String(formData.get("shipping_state") ?? "").trim();
-              const country = String(formData.get("shipping_country") ?? "").trim() || "India";
-              const postalCode = String(formData.get("shipping_postal_code") ?? "").trim();
-              const shipping = {
-                line1,
-                line2,
-                city,
-                state,
-                region: state,
-                country,
-                postal_code: postalCode
-              };
-              patchOrder(orderId, {
-                ...order,
-                metadata: {
-                  ...metadata,
-                  shipping_address: shipping,
-                  billing_address: shipping,
-                  billing_same_as_shipping: true,
-                  needs_address: false
-                }
-              });
-              setShowEditor(false);
-            } catch (error) {
-              if (isActionNavigationError(error)) {
-                navigated = true;
-                throw error;
-              }
-              setSaveError(error instanceof Error ? error.message : "Unable to save shipping address.");
-              return;
-            } finally {
-              if (!navigated) {
-                markControlPlaneLiveSyncFlush();
-                void realtime?.reconcileResources(["orders"]);
-              }
-            }
-          }, { label: "Save shipping address" })}
+          action={timedSaveShippingAddress}
           className={`grid gap-2 border border-[var(--platform-border)] p-4 ${orderRadiusControl}`}
         >
           <input type="hidden" name="order_id" value={text(order.id)} />

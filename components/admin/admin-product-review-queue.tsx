@@ -12,6 +12,7 @@ import {
   updateCustomerReviewAdminFormAction
 } from "@/app/admin/reviews/actions";
 import { StatusBadge } from "@/components/admin/module-panel";
+import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import { useAdminLiveCollectionRows } from "@/components/admin/realtime/use-admin-live-collection-rows";
 import type { CustomerProductReview } from "@/services/customer-product-reviews";
 import type { AdminEntityRow } from "@/lib/admin/realtime/admin-entity-store";
@@ -85,9 +86,9 @@ export function AdminProductReviewQueue({
               <textarea name="body" required rows={4} className="platform-input" placeholder="What they said…" />
             </label>
             <div>
-              <button type="submit" className="platform-button platform-button-primary">
+              <OperationalSubmitButton pendingLabel="Saving..." className="platform-button platform-button-primary">
                 Save review
-              </button>
+              </OperationalSubmitButton>
             </div>
           </form>
         </article>
@@ -124,16 +125,16 @@ export function AdminProductReviewQueue({
                     <form action={timedPublishCustomerReviewFormAction}>
                       <input type="hidden" name="id" value={review.id} />
                       <input type="hidden" name="product_slug" value={review.productSlug} />
-                      <button type="submit" className="platform-button platform-button-primary">
+                      <OperationalSubmitButton pendingLabel="Publishing..." className="platform-button platform-button-primary">
                         Publish
-                      </button>
+                      </OperationalSubmitButton>
                     </form>
                     <form action={timedRejectCustomerReviewFormAction}>
                       <input type="hidden" name="id" value={review.id} />
                       <input type="hidden" name="product_slug" value={review.productSlug} />
-                      <button type="submit" className="platform-button platform-button-secondary">
+                      <OperationalSubmitButton pendingLabel="Rejecting..." className="platform-button platform-button-secondary">
                         Reject
-                      </button>
+                      </OperationalSubmitButton>
                     </form>
                   </>
                 ) : null}
@@ -141,16 +142,20 @@ export function AdminProductReviewQueue({
                   <input type="hidden" name="id" value={review.id} />
                   <input type="hidden" name="product_slug" value={review.productSlug} />
                   <input type="hidden" name="is_visible" value={review.isVisible ? "false" : "true"} />
-                  <button type="submit" className="platform-button platform-button-secondary">
+                  <OperationalSubmitButton pendingLabel="Updating..." className="platform-button platform-button-secondary">
                     {review.isVisible ? "Hide" : "Show"}
-                  </button>
+                  </OperationalSubmitButton>
                 </form>
                 <form action={timedDeleteCustomerReviewAdminFormAction}>
                   <input type="hidden" name="id" value={review.id} />
                   <input type="hidden" name="product_slug" value={review.productSlug} />
-                  <button type="submit" className="platform-button platform-button-danger">
+                  <OperationalSubmitButton
+                    pendingLabel="Deleting..."
+                    confirmMessage="Delete this review?"
+                    className="platform-button platform-button-danger"
+                  >
                     Delete
-                  </button>
+                  </OperationalSubmitButton>
                 </form>
               </div>
             </div>
@@ -179,9 +184,9 @@ export function AdminProductReviewQueue({
                 <textarea name="body" defaultValue={review.body} required rows={4} className="platform-input" />
               </label>
               <div>
-                <button type="submit" className="platform-button platform-button-secondary">
+                <OperationalSubmitButton pendingLabel="Saving..." className="platform-button platform-button-secondary">
                   Save changes
-                </button>
+                </OperationalSubmitButton>
               </div>
             </form>
           </article>

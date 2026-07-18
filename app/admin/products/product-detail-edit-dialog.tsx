@@ -1,8 +1,6 @@
 "use client";
 
-import { wrapServerAction } from "@/hooks/use-async-action";
-
-import { useFormStatus } from "react-dom";
+import { useTransition } from "react";
 import { ProductBadgeFields } from "@/components/admin/product-badge-fields";
 import { ProductFieldLabel } from "@/components/admin/product-info-tooltip";
 import { ProductPricingFields } from "@/components/admin/product-pricing-fields";
@@ -11,24 +9,11 @@ import { ProductTaxFields } from "@/components/admin/product-tax-fields";
 import { ProductMultiImageField } from "@/components/products/product-multi-image-field";
 import { RichTextEditor } from "@/components/editor/RichTextEditor/lazy";
 import type { ProductCatalogGridRow } from "@/app/admin/products/product-catalog-grid";
-import { saveProductQuickEditFormAction } from "@/app/admin/products/actions";
+import { saveProductQuickEditClientAction } from "@/app/admin/products/actions";
 import { ProductCategoryField, type ProductCategoryOption } from "@/app/admin/products/product-category-field";
-
-const timedSaveProductQuickEditFormAction = wrapServerAction(saveProductQuickEditFormAction, { label: "Save product changes" });
-
-function SaveChangesButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      aria-busy={pending}
-      className="platform-btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
-    >
-      {pending ? "Saving..." : "Save changes"}
-    </button>
-  );
-}
+import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
+import { notify } from "@/lib/feedback/notify";
+import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 
 export function ProductDetailEditDialog({
   product,
@@ -40,14 +25,47 @@ export function ProductDetailEditDialog({
   categoryOptions: ProductCategoryOption[];
   deleteCategoryAction: (formData: FormData) => void | Promise<void>;
   onClose: () => void;
-  /** @deprecated Optimistic updates before save complete — unused; redirect refreshes the catalog. */
+  /** @deprecated Optimistic updates before save complete — unused; catalog refreshes after save. */
   onSaved?: (fields: Partial<ProductCatalogGridRow>) => void;
 }) {
+  const [isSaving, startTransition] = useTransition();
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      try {
+        const result = await raceWithTimeout(
+          saveProductQuickEditClientAction(formData),
+          undefined,
+          "Save product changes"
+        );
+        if (result.ok) {
+          notify.success(result.message || FEEDBACK_MESSAGES.productUpdated, {
+            source: "admin",
+            id: "product:quick-edit"
+          });
+          onClose();
+          return;
+        }
+        notify.error(result.message || FEEDBACK_MESSAGES.failedToSaveChanges, {
+          source: "admin",
+          id: "product:quick-edit:error"
+        });
+      } catch (error) {
+        notify.error(
+          error instanceof Error ? error.message : FEEDBACK_MESSAGES.failedToSaveChanges,
+          { source: "admin", id: "product:quick-edit:error" }
+        );
+      }
+    });
+  };
+
   return (
     <div data-product-detail-modal className="fixed inset-0 z-50 grid place-items-center bg-black/55 p-4 backdrop-blur-[2px]">
       <form
         id="update-product"
-        action={timedSaveProductQuickEditFormAction}
+        onSubmit={handleSubmit}
         data-product-quick-edit
         className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[var(--platform-radius-lg)] bg-[var(--platform-surface)] shadow-none"
       >
@@ -63,7 +81,8 @@ export function ProductDetailEditDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--platform-text-secondary)] transition hover:bg-[var(--platform-accent-soft)] hover:text-[var(--platform-text-primary)]"
+            disabled={isSaving}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--platform-text-secondary)] transition hover:bg-[var(--platform-accent-soft)] hover:text-[var(--platform-text-primary)] disabled:opacity-60"
           >
             Cancel
           </button>
@@ -169,7 +188,14 @@ export function ProductDetailEditDialog({
         </div>
 
         <div className="flex justify-end px-5 py-4">
-          <SaveChangesButton />
+          <button
+            type="submit"
+            disabled={isSaving}
+            aria-busy={isSaving}
+            className="platform-btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
+          >
+            {isSaving ? "Saving..." : "Save changes"}
+          </button>
         </div>
       </form>
     </div>

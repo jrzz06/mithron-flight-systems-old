@@ -1,4 +1,5 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout, SUPABASE_FETCH_TIMEOUT_MS } from "@/lib/fetch-with-timeout";
 import type { EnterprisePermission } from "@/lib/auth/permissions";
 import { requirePermission } from "@/services/auth";
 
@@ -199,6 +200,11 @@ function mutationSignal() {
   return AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS);
 }
 
+/** Bounded Supabase REST fetch — composes with mutationSignal when provided. */
+function adminRestFetch(input: RequestInfo | URL, init?: RequestInit) {
+  return fetchWithTimeout(input, init, SUPABASE_FETCH_TIMEOUT_MS);
+}
+
 function logCmsRevisionDebug(message: string, payload: Record<string, unknown>) {
   if (process.env.MITHRON_CMS_REVISION_DEBUG === "true") {
     console.info(message, payload);
@@ -351,7 +357,7 @@ export async function insertAuditLog(
   extraMetadata: JsonRecord | null = null
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/audit_logs`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/audit_logs`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     signal: mutationSignal(),
@@ -406,7 +412,7 @@ async function fetchExistingAdminRecord(
   if (columns.some((column) => identity[column] === undefined || identity[column] === null || String(identity[column]) === "")) return null;
 
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/${table}?${adminReadSelectForTable(table)}&${query}&limit=1`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/${table}?${adminReadSelectForTable(table)}&${query}&limit=1`, {
     headers: headers(config.serviceRoleKey),
     cache: "no-store",
     signal: mutationSignal()
@@ -459,7 +465,7 @@ export async function fetchAdminRecordsByColumn(
   }
   const config = assertSupabaseAdminConfig(env);
   const limit = options.limit ?? 50;
-  const response = await fetch(
+  const response = await adminRestFetch(
     `${config.url}/rest/v1/${table}?${column}=eq.${encodeURIComponent(value)}&${adminReadSelectForTable(table)}&limit=${limit}`,
     {
       headers: headers(config.serviceRoleKey),
@@ -486,7 +492,7 @@ async function deleteAdminRecordsByColumn(
   await assertAdminMutationPermission(table, actorId);
   const config = assertSupabaseAdminConfig(env);
   const beforeData = await fetchAdminRecordsByColumn(table, column, value, env);
-  const response = await fetch(`${config.url}/rest/v1/${table}?${column}=eq.${encodeURIComponent(value)}`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/${table}?${column}=eq.${encodeURIComponent(value)}`, {
     method: "DELETE",
     headers: headers(config.serviceRoleKey, "return=representation"),
     signal: mutationSignal()
@@ -517,7 +523,7 @@ async function insertActivityLogRecord(payload: JsonRecord, actorId: string | nu
     ["warehouse.write", "orders.write", "audit.read", "settings.write"]
   );
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/activity_logs`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/activity_logs`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     signal: mutationSignal(),
@@ -587,7 +593,7 @@ async function insertNotificationRecord(
     insertBody.recipient_id = null;
   }
 
-  const response = await fetch(endpoint, {
+  const response = await adminRestFetch(endpoint, {
     method: "POST",
     headers: headers(config.serviceRoleKey, preferHeader),
     signal: mutationSignal(),
@@ -618,12 +624,15 @@ async function insertNotificationRecord(
     ? mergedPayload.recipient_email
     : null;
   if (recipientEmail) {
-    const { dispatchEmailNotification } = await import("@/services/email/resend");
-    await dispatchEmailNotification({
-      recipientEmail,
-      title: String(insertBody.title ?? "Mithron notification"),
-      body: String(insertBody.body ?? "")
-    }).catch(() => undefined);
+    const { scheduleBackgroundWork } = await import("@/lib/jobs/queue-provider");
+    scheduleBackgroundWork("notification-email", async () => {
+      const { dispatchEmailNotification } = await import("@/services/email/resend");
+      await dispatchEmailNotification({
+        recipientEmail,
+        title: String(insertBody.title ?? "Mithron notification"),
+        body: String(insertBody.body ?? "")
+      });
+    });
   }
 
   return record ?? insertBody;
@@ -687,7 +696,7 @@ async function insertContentRevisionViaRpc(
   env: EnvSource
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/cms_insert_content_revision`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/rpc/cms_insert_content_revision`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -725,7 +734,7 @@ async function insertContentRevisionViaTableTrigger(
   env: EnvSource
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/content_revisions`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/content_revisions`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     cache: "no-store",
@@ -827,7 +836,7 @@ export async function mutateCmsContentWithRevision(input: CmsRevisionMutationInp
       attempt
     });
 
-    const response = await fetch(`${config.url}/rest/v1/rpc/cms_mutate_content_with_revision`, {
+    const response = await adminRestFetch(`${config.url}/rest/v1/rpc/cms_mutate_content_with_revision`, {
       method: "POST",
       headers: headers(config.serviceRoleKey, "return=representation"),
       cache: "no-store",
@@ -894,7 +903,7 @@ export async function createAdminRecord(
   assertMutableTable(table);
   await assertAdminMutationPermission(table, actorId, options);
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/${table}`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/${table}`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     signal: mutationSignal(),
@@ -944,7 +953,7 @@ export async function upsertAdminRecord(
   await assertAdminMutationPermission(table, actorId, options);
   const config = assertSupabaseAdminConfig(env);
   const beforeData = await fetchExistingAdminRecord(table, payload, conflictColumn, env);
-  const response = await fetch(`${config.url}/rest/v1/${table}?on_conflict=${encodeURIComponent(conflictColumn)}`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/${table}?on_conflict=${encodeURIComponent(conflictColumn)}`, {
     method: "POST",
     headers: headers(config.serviceRoleKey, "resolution=merge-duplicates,return=representation"),
     signal: mutationSignal(),
@@ -995,7 +1004,7 @@ export async function updateAdminRecord(
   const optimisticQuery = options.expectedUpdatedAt && optimisticLockTables.has(table)
     ? `&updated_at=eq.${encodeURIComponent(options.expectedUpdatedAt)}`
     : "";
-  const response = await fetch(`${config.url}/rest/v1/${table}?${target.query}${optimisticQuery}`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/${table}?${target.query}${optimisticQuery}`, {
     method: "PATCH",
     headers: headers(config.serviceRoleKey, "return=representation"),
     signal: mutationSignal(),
@@ -1062,7 +1071,7 @@ export async function deleteAdminRecord(table: string, idColumn: string, idValue
   await assertAdminMutationPermission(table, actorId);
   const config = assertSupabaseAdminConfig(env);
   const beforeData = await fetchExistingAdminRecord(table, { [idColumn]: idValue }, idColumn, env);
-  const response = await fetch(`${config.url}/rest/v1/${table}?${idColumn}=eq.${encodeURIComponent(idValue)}`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/${table}?${idColumn}=eq.${encodeURIComponent(idValue)}`, {
     method: "DELETE",
     headers: headers(config.serviceRoleKey, "return=minimal"),
     signal: mutationSignal()
@@ -1400,7 +1409,7 @@ export async function createCustomerCheckoutOrderAtomic(
   assertMutableTable("orders");
   await assertAdminMutationPermission("orders", actorId, checkoutApiMutationOptions);
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/create_checkout_order`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/rpc/create_checkout_order`, {
     method: "POST",
     headers: {
       ...headers(config.serviceRoleKey),
@@ -1454,7 +1463,7 @@ export async function createCustomerCheckoutOrderItemRecords(
   assertMutableTable("order_items");
   await assertAdminMutationPermission("order_items", actorId, checkoutApiMutationOptions);
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/order_items`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/order_items`, {
     method: "POST",
     headers: {
       ...headers(config.serviceRoleKey),
@@ -1560,7 +1569,7 @@ export async function appendOrderTimelineViaRpc(
 ) {
   await assertAdminMutationPermission("orders", actorId);
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/append_order_timeline_entry`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/rpc/append_order_timeline_entry`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     cache: "no-store",
@@ -1608,7 +1617,7 @@ export async function transitionOrderWithTimelineViaRpc(
 ) {
   await assertAdminMutationPermission("orders", actorId);
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/transition_order_with_timeline`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/rpc/transition_order_with_timeline`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     cache: "no-store",
@@ -1658,7 +1667,7 @@ export async function setProductMediaPrimaryViaRpc(
   env: EnvSource = process.env
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/set_product_media_primary`, {
+  const response = await adminRestFetch(`${config.url}/rest/v1/rpc/set_product_media_primary`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     cache: "no-store",
@@ -1705,7 +1714,7 @@ export async function deleteUserRoleRecord(userId: string, roleKey: string, acto
   await assertAdminMutationPermission("user_roles", actorId);
   const config = assertSupabaseAdminConfig(env);
   const beforeData = await fetchExistingAdminRecord("user_roles", { user_id: userId, role_key: roleKey }, "user_id,role_key", env);
-  const response = await fetch(
+  const response = await adminRestFetch(
     `${config.url}/rest/v1/user_roles?user_id=eq.${encodeURIComponent(userId)}&role_key=eq.${encodeURIComponent(roleKey)}`,
     {
       method: "DELETE",

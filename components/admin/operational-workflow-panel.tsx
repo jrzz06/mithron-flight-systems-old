@@ -13,7 +13,7 @@ import { isWarehouseEligible } from "@/lib/orders/lifecycle";
 type WorkflowAction = {
   key: string;
   label: string;
-  action: (formData: FormData) => Promise<void>;
+  action: (formData: FormData) => Promise<{ ok?: boolean; message?: string } | void>;
   pendingLabel: string;
   variant?: "primary" | "secondary" | "danger";
   description?: string;

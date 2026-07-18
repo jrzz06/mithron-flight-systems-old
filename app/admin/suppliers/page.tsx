@@ -15,18 +15,22 @@ function searchValue(params: SearchParams, key: string) {
 }
 
 export default async function AdminSuppliersPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
-  const [access, policy] = await Promise.all([
-    getAdminSuppliersSnapshot(),
-    getAdminSettingsPolicy()
-  ]);
   const params = searchParams ? await searchParams : {};
   const query = searchValue(params, "q").toLowerCase();
+  const pageRaw = Number(searchValue(params, "page") || "1");
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+  const pageSize = 80;
 
-  const suppliers = access.data.suppliers.filter((supplier) => {
-    if (!query) return true;
-    const haystack = `${supplier.name} ${supplier.company} ${supplier.email} ${supplier.phone}`.toLowerCase();
-    return haystack.includes(query);
-  });
+  const [access, policy] = await Promise.all([
+    getAdminSuppliersSnapshot({
+      q: query || undefined,
+      limit: pageSize,
+      offset: (page - 1) * pageSize
+    }),
+    getAdminSettingsPolicy()
+  ]);
+
+  const suppliers = access.data.suppliers;
 
   return (
     <div className="grid gap-4" data-supplier-directory>

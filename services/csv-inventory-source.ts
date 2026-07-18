@@ -2,6 +2,7 @@ import { getSupabaseAdminConfig } from "@/lib/env";
 import { getInventoryStockMetrics, type InventoryStockMetrics } from "@/services/inventory-metrics";
 import { buildSimpleInventoryRows, type SimpleInventoryRow } from "@/services/simple-inventory-view";
 import { getCheckoutWarehouseCode } from "@/services/warehouse-config";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 type EnvSource = Record<string, string | undefined>;
 type AdminRow = Record<string, unknown>;
 
@@ -67,7 +68,7 @@ async function fetchRows<T extends AdminRow>(
   table: string,
   query: string
 ) {
-  const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/${table}?${query}`, {
     headers: getAdminHeaders(config),
     cache: "no-store"
   });
@@ -89,7 +90,7 @@ async function countProducts(
 ) {
   const filter = catalogFilterQuery(catalogFilter, publishedOnly);
   const query = filter ? `select=slug&${filter}` : "select=slug";
-  const response = await fetch(`${config.url}/rest/v1/mithron_products?${query}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/mithron_products?${query}`, {
     headers: {
       ...getAdminHeaders(config),
       Prefer: "count=exact"

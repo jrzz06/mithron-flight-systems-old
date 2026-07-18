@@ -368,7 +368,7 @@ async function ensurePackedShipmentForOrder(input: {
       shipmentForm.set("tracking_number", input.trackingNumber ?? String(existing.tracking_number ?? ""));
       shipmentForm.set("notes", "Updated during warehouse dispatch");
       shipmentForm.set("change_summary", `Update shipment for order ${input.orderId}`);
-      await updateShipmentLifecycleFormAction(shipmentForm);
+      await updateShipmentLifecycleFormAction(shipmentForm, { skipRevalidate: true });
     }
     return shipmentId;
   }
@@ -1427,7 +1427,10 @@ export async function createShipmentFormAction(formData: FormData) {
   }
 }
 
-export async function updateShipmentLifecycleFormAction(formData: FormData) {
+export async function updateShipmentLifecycleFormAction(
+  formData: FormData,
+  options?: { skipRevalidate?: boolean }
+) {
   const input = buildShipmentUpdateWorkflowFromFormData(formData);
   const actorId = await currentActorId();
   const now = new Date().toISOString();
@@ -1476,11 +1479,13 @@ export async function updateShipmentLifecycleFormAction(formData: FormData) {
     });
   }
 
-  await revalidateWarehouseFulfillmentPaths();
-  revalidatePath("/warehouse/inventory");
-  revalidatePath(`/warehouse/shipments/${input.shipmentId}`);
-  revalidatePath("/track-order");
-  revalidatePath("/account/orders");
+  if (!options?.skipRevalidate) {
+    await revalidateWarehouseFulfillmentPaths();
+    revalidatePath("/warehouse/inventory");
+    revalidatePath(`/warehouse/shipments/${input.shipmentId}`);
+    revalidatePath("/track-order");
+    revalidatePath("/account/orders");
+  }
 }
 
 export async function receiveWarehouseOrderFormAction(formData: FormData) {
@@ -1615,7 +1620,7 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
   }
   shipmentForm.set("notes", "Dispatched from warehouse fulfillment");
   shipmentForm.set("change_summary", `Dispatch order ${orderId}`);
-  await updateShipmentLifecycleFormAction(shipmentForm);
+  await updateShipmentLifecycleFormAction(shipmentForm, { skipRevalidate: true });
 
   order = await fetchOrderRecord(orderId);
   fulfillment = String(order.fulfillment_status ?? "pending");

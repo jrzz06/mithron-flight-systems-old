@@ -91,8 +91,18 @@ function readProductTool(value: string): ProductToolKey | "" {
 export default async function AdminProductsPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
   const params = searchParams ? await searchParams : {};
   const selectedProductSlug = searchValue(params, "product_slug");
+  const query = searchValue(params, "q").toLowerCase();
+  const statusFilter = searchValue(params, "workflow_status") || "active";
+  const pageRaw = Number(searchValue(params, "page") || "1");
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+  const pageSize = 120;
   const [snapshot, warehouses, checkoutWarehouseCode, editorProduct, authContext, policy] = await Promise.all([
-    getProductManagerSnapshot(),
+    getProductManagerSnapshot({
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+      q: query || undefined,
+      workflowStatus: statusFilter
+    }),
     listActiveWarehouses(),
     getCheckoutWarehouseCode(),
     selectedProductSlug ? fetchProductEditorDetail(selectedProductSlug) : Promise.resolve(null),
@@ -100,8 +110,6 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     getAdminSettingsPolicy()
   ]);
   const catalogMetrics = snapshot.data.catalogMetrics;
-  const query = searchValue(params, "q").toLowerCase();
-  const statusFilter = searchValue(params, "workflow_status");
   const activeTool = readProductTool(searchValue(params, "tool").toLowerCase());
   const canForceDeleteProducts = roleHasPermission(authContext.role, "products.permanent_delete");
   const categoryOptions = buildProductCategoryOptions(snapshot.data.products, snapshot.data.categories);
@@ -111,20 +119,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
       return { ...product, ...editorProduct };
     }
     return product;
-  }).filter((product) => {
-    const workflow = String(product.workflow_status ?? "published");
-    const isArchived = workflow === "archived" || Boolean(product.archived_at);
-    const haystack = `${String(product.name ?? "")} ${String(product.slug ?? "")} ${String(product.category ?? "")}`.toLowerCase();
-    const matchesQuery = !query || haystack.includes(query);
-    const matchesStatus = !statusFilter
-      ? !isArchived
-      : statusFilter === "active"
-        ? !isArchived
-        : statusFilter === "all"
-          ? true
-          : workflow === statusFilter;
-    return matchesStatus && matchesQuery;
   });
+  const filteredTotal = Number(snapshot.data.filteredTotal ?? filteredProducts.length);
   const activeProductSlug = selectedProductSlug || String(filteredProducts[0]?.slug ?? snapshot.data.products[0]?.slug ?? "");
   const activeProductSku = activeProductSlug ? deriveProductSku(activeProductSlug) : "";
   const inventoryBySlug = new Map(snapshot.data.inventory.map((row) => [String(row.product_slug ?? ""), row]));
@@ -356,7 +352,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
           <AdminProductsLiveWorkspace
             productRows={productRows}
             products={filteredProducts as Array<Record<string, unknown>>}
-            totalCount={filteredProducts.length}
+            totalCount={filteredTotal}
             statusFilter={statusFilter || "active"}
             canForceDelete={canForceDeleteProducts}
             categoryOptions={categoryOptions}

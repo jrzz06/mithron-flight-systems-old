@@ -421,135 +421,169 @@ export async function deleteProductCategoryFormAction(formData: FormData) {
   });
 }
 
-export async function saveProductQuickEditFormAction(formData: FormData) {
-  await runProductAction({ successMessage: FEEDBACK_MESSAGES.productUpdated }, async () => {
-    const quickInput = buildProductQuickEditFromFormData(formData);
-    // Same reasoning as product creation: readProductCommerceFields already
-    // sanitizes (not rewrites) the description, so a manually-edited
-    // description is preserved as typed. No automatic re-normalization here.
-    const expectedUpdatedAt = String(formData.get("expected_updated_at") ?? "").trim() || null;
-    const { actorId, actorRole } = await currentActorContext();
-    const snapshot = await getProductManagerSnapshot();
-    const existingProduct = snapshot.data.products.find((product) => String(product.slug ?? "") === quickInput.identity.slug);
-    const uploadedImages = await uploadProductImagesForDraft(formData, actorId, "admin-product-quick-edit", {
-      applyAutoCutout: true
+/**
+ * Shared quick-edit mutation body. Returns an optional warning string when the
+ * product row saved but a secondary media-link step failed.
+ * Throws on hard failure. Does NOT redirect — callers decide feedback style.
+ */
+async function performProductQuickEdit(formData: FormData): Promise<string | undefined> {
+  await requirePermission("products.write");
+  const quickInput = buildProductQuickEditFromFormData(formData);
+  // Same reasoning as product creation: readProductCommerceFields already
+  // sanitizes (not rewrites) the description, so a manually-edited
+  // description is preserved as typed. No automatic re-normalization here.
+  const expectedUpdatedAt = String(formData.get("expected_updated_at") ?? "").trim() || null;
+  const { actorId, actorRole } = await currentActorContext();
+  const snapshot = await getProductManagerSnapshot();
+  const existingProduct = snapshot.data.products.find((product) => String(product.slug ?? "") === quickInput.identity.slug);
+  const uploadedImages = await uploadProductImagesForDraft(formData, actorId, "admin-product-quick-edit", {
+    applyAutoCutout: true
+  });
+  const productName = String(quickInput.fields.name ?? existingProduct?.name ?? quickInput.identity.slug);
+  const removedUrls = parseRemovedGalleryUrls(formData);
+
+  if (hasAnyProductImageInput(formData, uploadedImages.length)) {
+    const existingPrimarySrc = existingProduct
+      ? readMediaSrc(existingProduct.image) || readMediaSrc(existingProduct.hero)
+      : "";
+    const mergedGallery = buildProductGalleryMedia({
+      primarySrc: readOptionalFormText(formData, "image_src") || existingPrimarySrc,
+      primaryAlt: productName,
+      uploadedUrls: uploadedImages.map((upload) => upload.publicUrl),
+      extraUrls: parseGalleryUrls(formData),
+      existingGallery: existingProduct ? readProductGalleryFromRow(existingProduct) : [],
+      removedUrls
     });
-    const productName = String(quickInput.fields.name ?? existingProduct?.name ?? quickInput.identity.slug);
-    const removedUrls = parseRemovedGalleryUrls(formData);
-
-    if (hasAnyProductImageInput(formData, uploadedImages.length)) {
-      const existingPrimarySrc = existingProduct
-        ? readMediaSrc(existingProduct.image) || readMediaSrc(existingProduct.hero)
-        : "";
-      const mergedGallery = buildProductGalleryMedia({
-        primarySrc: readOptionalFormText(formData, "image_src") || existingPrimarySrc,
-        primaryAlt: productName,
-        uploadedUrls: uploadedImages.map((upload) => upload.publicUrl),
-        extraUrls: parseGalleryUrls(formData),
-        existingGallery: existingProduct ? readProductGalleryFromRow(existingProduct) : [],
-        removedUrls
-      });
-      if (mergedGallery) {
-        quickInput.fields.image = mergedGallery.image;
-        quickInput.fields.hero = mergedGallery.hero;
-        quickInput.fields.gallery = mergedGallery.gallery;
-      }
+    if (mergedGallery) {
+      quickInput.fields.image = mergedGallery.image;
+      quickInput.fields.hero = mergedGallery.hero;
+      quickInput.fields.gallery = mergedGallery.gallery;
     }
+  }
 
-    const fields = appendBundlePricingSync(
-      { ...quickInput.fields } as Record<string, unknown>,
-      existingProduct as Record<string, unknown> | undefined
-    );
-    const record = await updateAdminRecord(
-      "mithron_products",
-      "slug",
-      quickInput.identity.slug,
-      {
-        ...fields,
-        updated_at: new Date().toISOString()
-      },
-      actorId,
-      process.env,
-      { expectedUpdatedAt }
-    );
+  const fields = appendBundlePricingSync(
+    { ...quickInput.fields } as Record<string, unknown>,
+    existingProduct as Record<string, unknown> | undefined
+  );
+  const record = await updateAdminRecord(
+    "mithron_products",
+    "slug",
+    quickInput.identity.slug,
+    {
+      ...fields,
+      updated_at: new Date().toISOString()
+    },
+    actorId,
+    process.env,
+    { expectedUpdatedAt }
+  );
 
-    let imageLinkWarning: string | null = null;
-    if (uploadedImages.length) {
-      // Same reasoning as the create action: the product update above is
-      // already committed, so a media-link failure must surface as a clear
-      // warning rather than throwing (which would misreport a completed save
-      // as a hard failure) or being silently dropped (which would leave the
-      // primary image missing responsive delivery with no admin-facing signal).
-      try {
-        await linkUploadedImagesToProduct(quickInput.identity.slug, uploadedImages, {
-          name: productName,
-          source: "admin-product-quick-edit",
-          actorId
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.warn(`[admin-products] failed to link uploaded images for ${quickInput.identity.slug}: ${message}`);
-        imageLinkWarning = `Product updated, but linking uploaded images failed (${message}). Re-open the product and re-save the images.`;
-      }
-    }
-
-    if (removedUrls.length) {
-      try {
-        await unlinkRemovedProductMedia({
-          productSlug: quickInput.identity.slug,
-          removedUrls,
-          actorId
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.warn(`[admin-products] failed to unlink removed images for ${quickInput.identity.slug}: ${message}`);
-        imageLinkWarning = imageLinkWarning
-          ? `${imageLinkWarning} Removed image cleanup also failed (${message}).`
-          : `Product updated, but removed image cleanup failed (${message}).`;
-      }
-    }
-
+  let imageLinkWarning: string | null = null;
+  if (uploadedImages.length) {
+    // Same reasoning as the create action: the product update above is
+    // already committed, so a media-link failure must surface as a clear
+    // warning rather than throwing (which would misreport a completed save
+    // as a hard failure) or being silently dropped (which would leave the
+    // primary image missing responsive delivery with no admin-facing signal).
     try {
-      await ensureProductMediaLinksForProduct({
-        productSlug: quickInput.identity.slug,
-        productName,
-        media: {
-          image: record.image ?? quickInput.fields.image,
-          hero: record.hero ?? quickInput.fields.hero,
-          gallery: record.gallery ?? quickInput.fields.gallery
-        },
+      await linkUploadedImagesToProduct(quickInput.identity.slug, uploadedImages, {
+        name: productName,
+        source: "admin-product-quick-edit",
         actorId
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[admin-products] failed to sync media links for ${quickInput.identity.slug}: ${message}`);
-      imageLinkWarning = imageLinkWarning
-        ? `${imageLinkWarning} Media link sync also failed (${message}).`
-        : `Product updated, but media link sync failed (${message}).`;
+      console.warn(`[admin-products] failed to link uploaded images for ${quickInput.identity.slug}: ${message}`);
+      imageLinkWarning = `Product updated, but linking uploaded images failed (${message}). Re-open the product and re-save the images.`;
     }
+  }
 
-    await recordProductAuditTrail(
-      {
-        action: "products.quick_edit",
-        entityTable: "mithron_products",
-        entityId: quickInput.identity.slug,
-        snapshot: record as Record<string, unknown>,
-        actorId,
-        actorRole,
-        changeSummary: quickInput.changeSummary,
-        metadata: {
-          product_slug: quickInput.identity.slug,
-          fields: Object.keys(quickInput.fields),
-          uploaded_media_asset_ids: uploadedImages.map((upload) => upload.mediaAssetId),
-          image_link_failed: Boolean(imageLinkWarning)
-        }
+  if (removedUrls.length) {
+    try {
+      await unlinkRemovedProductMedia({
+        productSlug: quickInput.identity.slug,
+        removedUrls,
+        actorId
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[admin-products] failed to unlink removed images for ${quickInput.identity.slug}: ${message}`);
+      imageLinkWarning = imageLinkWarning
+        ? `${imageLinkWarning} Removed image cleanup also failed (${message}).`
+        : `Product updated, but removed image cleanup failed (${message}).`;
+    }
+  }
+
+  try {
+    await ensureProductMediaLinksForProduct({
+      productSlug: quickInput.identity.slug,
+      productName,
+      media: {
+        image: record.image ?? quickInput.fields.image,
+        hero: record.hero ?? quickInput.fields.hero,
+        gallery: record.gallery ?? quickInput.fields.gallery
+      },
+      actorId
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[admin-products] failed to sync media links for ${quickInput.identity.slug}: ${message}`);
+    imageLinkWarning = imageLinkWarning
+      ? `${imageLinkWarning} Media link sync also failed (${message}).`
+      : `Product updated, but media link sync failed (${message}).`;
+  }
+
+  await recordProductAuditTrail(
+    {
+      action: "products.quick_edit",
+      entityTable: "mithron_products",
+      entityId: quickInput.identity.slug,
+      snapshot: record as Record<string, unknown>,
+      actorId,
+      actorRole,
+      changeSummary: quickInput.changeSummary,
+      metadata: {
+        product_slug: quickInput.identity.slug,
+        fields: Object.keys(quickInput.fields),
+        uploaded_media_asset_ids: uploadedImages.map((upload) => upload.mediaAssetId),
+        image_link_failed: Boolean(imageLinkWarning)
       }
-    );
+    }
+  );
 
-    await revalidateCatalogSurfaces(quickInput.identity.slug);
-    revalidatePath("/admin/products");
-    return imageLinkWarning ?? undefined;
+  await revalidateCatalogSurfaces(quickInput.identity.slug);
+  revalidatePath("/admin/products");
+  return imageLinkWarning ?? undefined;
+}
+
+/** Full-page form action — redirects with feedback query params. */
+export async function saveProductQuickEditFormAction(formData: FormData) {
+  await runProductAction({ successMessage: FEEDBACK_MESSAGES.productUpdated }, async () => {
+    return performProductQuickEdit(formData);
   });
+}
+
+/**
+ * In-place modal bridge — returns `{ ok, message }` so the client can clear
+ * pending state without waiting on a NEXT_REDIRECT flight that never settles
+ * inside a modal (the root cause of stuck "Saving...").
+ */
+export async function saveProductQuickEditClientAction(
+  formData: FormData
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    const warning = await performProductQuickEdit(formData);
+    await revalidateAfterMutation("mithron_products");
+    return {
+      ok: true,
+      message: warning ?? FEEDBACK_MESSAGES.productUpdated
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: productActionErrorMessage(error)
+    };
+  }
 }
 
 export async function saveProductMediaLinkFormAction(formData: FormData) {

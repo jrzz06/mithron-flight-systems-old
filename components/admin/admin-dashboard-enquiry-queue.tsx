@@ -1,8 +1,11 @@
-import type { ReactNode } from "react";
+import { cache } from "react";
 import Link from "next/link";
 import { StatusPill } from "@/components/platform";
 import { relativeTimeLabel } from "@/lib/platform/copy";
 import { listAdminEnquiries } from "@/services/enquiries";
+
+/** Request-scoped dedupe so dashboard cannot double-hit within one render. */
+const listDashboardEnquiries = cache(() => listAdminEnquiries());
 
 function text(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
@@ -38,7 +41,7 @@ function QueuePanel({
 }
 
 export async function AdminDashboardEnquiryQueue() {
-  const enquiries = await listAdminEnquiries();
+  const enquiries = await listDashboardEnquiries();
   const queueEnquiries = openEnquiries(enquiries).slice(0, 8);
 
   return (

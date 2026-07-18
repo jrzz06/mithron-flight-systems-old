@@ -1,8 +1,6 @@
 "use client";
 
-import { wrapServerAction } from "@/hooks/use-async-action";
-
-import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react";
 import {
   useAdminLiveResource,
   useOptionalAdminRealtime
@@ -26,6 +24,10 @@ import {
   contactRequestPrimaryAction,
   contactRequestPrimaryActionLabel
 } from "@/lib/admin/queue-workflow";
+import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
+import { notify } from "@/lib/feedback/notify";
+import { raceWithTimeout } from "@/lib/fetch-with-timeout";
+import { wrapServerAction } from "@/hooks/use-async-action";
 import {
   billingFormFieldName,
   CONTACT_REQUEST_ADDRESS_FIELDS,
@@ -54,7 +56,7 @@ type ContactRequestActions = {
   markInProgress: (formData: FormData) => Promise<void>;
   requestInfo: (formData: FormData) => Promise<void>;
   reject: (formData: FormData) => Promise<void>;
-  updateAddress: (formData: FormData) => Promise<void>;
+  updateAddress: (formData: FormData) => Promise<{ ok: boolean; message: string; addressFields?: string[] }>;
   updateContactDetails: (formData: FormData) => Promise<void>;
   assignWarehouse?: (formData: FormData) => Promise<void>;
 };
@@ -122,12 +124,9 @@ function ContactRequestAddressEditor({
   needsAddress: boolean;
   savedMissingFields: ContactRequestAddressFieldKey[];
   serverFieldHints: string[];
-  updateAddress: (formData: FormData) => Promise<void>;
+  updateAddress: (formData: FormData) => Promise<{ ok: boolean; message: string; addressFields?: string[] }>;
 }) {
-  const timedUpdateAddress = useMemo(
-    () => wrapServerAction(updateAddress, { label: "Save contact address" }),
-    [updateAddress]
-  );
+  const [isSaving, startTransition] = useTransition();
   const [shippingAddress, setShippingAddress] = useState<ContactRequestAddressView>(
     shipping ?? emptyAddress(defaultCountry)
   );
@@ -139,12 +138,13 @@ function ContactRequestAddressEditor({
   );
   const [clientMissingShipping, setClientMissingShipping] = useState<ContactRequestAddressFieldKey[]>([]);
   const [clientMissingBilling, setClientMissingBilling] = useState<ContactRequestAddressFieldKey[]>([]);
+  const [serverHints, setServerHints] = useState(serverFieldHints);
   const firstMissingRef = useRef<HTMLInputElement | null>(null);
 
-  const serverMissingShipping = serverFieldHints
+  const serverMissingShipping = serverHints
     .map((field) => addressKeyFromFormField(field, "shipping"))
     .filter((field): field is ContactRequestAddressFieldKey => Boolean(field));
-  const serverMissingBilling = serverFieldHints
+  const serverMissingBilling = serverHints
     .map((field) => addressKeyFromFormField(field, "billing"))
     .filter((field): field is ContactRequestAddressFieldKey => Boolean(field));
 
@@ -152,6 +152,10 @@ function ContactRequestAddressEditor({
     ? Array.from(new Set([...savedMissingFields, ...serverMissingShipping, ...clientMissingShipping]))
     : Array.from(new Set([...serverMissingShipping, ...clientMissingShipping]));
   const highlightedBilling = Array.from(new Set([...serverMissingBilling, ...clientMissingBilling]));
+
+  useEffect(() => {
+    setServerHints(serverFieldHints);
+  }, [serverFieldHints]);
 
   useEffect(() => {
     if (!billingSameAsShipping) return;
@@ -162,19 +166,48 @@ function ContactRequestAddressEditor({
     if (!highlightedShipping.length && !highlightedBilling.length) return;
     firstMissingRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     firstMissingRef.current?.focus();
-  }, [highlightedShipping.length, highlightedBilling.length, serverFieldHints.length]);
+  }, [highlightedShipping.length, highlightedBilling.length, serverHints.length]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     const nextShippingMissing = getMissingContactRequestAddressFields(shippingAddress);
     const nextBillingMissing = billingSameAsShipping ? [] : getMissingContactRequestAddressFields(billingAddress);
     if (nextShippingMissing.length || nextBillingMissing.length) {
-      event.preventDefault();
       setClientMissingShipping(nextShippingMissing);
       setClientMissingBilling(nextBillingMissing);
       return;
     }
     setClientMissingShipping([]);
     setClientMissingBilling([]);
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      try {
+        const result = await raceWithTimeout(
+          updateAddress(formData),
+          undefined,
+          "Save contact address"
+        );
+        if (result.ok) {
+          notify.success(result.message || "Customer address saved.", {
+            source: "admin",
+            id: "contact:address-save"
+          });
+          return;
+        }
+        if (result.addressFields?.length) {
+          setServerHints(result.addressFields);
+        }
+        notify.error(result.message || FEEDBACK_MESSAGES.failedToSaveChanges, {
+          source: "admin",
+          id: "contact:address-save:error"
+        });
+      } catch (error) {
+        notify.error(
+          error instanceof Error ? error.message : FEEDBACK_MESSAGES.failedToSaveChanges,
+          { source: "admin", id: "contact:address-save:error" }
+        );
+      }
+    });
   }
 
   function updateAddressField(
@@ -264,7 +297,7 @@ function ContactRequestAddressEditor({
         </p>
       ) : null}
 
-      <form action={timedUpdateAddress} onSubmit={handleSubmit} className="grid gap-4">
+      <form onSubmit={handleSubmit} className="grid gap-4">
         <input type="hidden" name="contact_request_id" value={contactRequestId} />
 
         <div className="grid gap-3">
@@ -290,12 +323,14 @@ function ContactRequestAddressEditor({
           </div>
         ) : null}
 
-        <OperationalSubmitButton
-          pendingLabel="Saving address"
-          className="platform-btn-primary h-9 w-full rounded-[8px] px-3 text-xs font-medium sm:w-auto sm:px-4"
+        <button
+          type="submit"
+          disabled={isSaving}
+          aria-busy={isSaving}
+          className="platform-btn-primary h-9 w-full rounded-[8px] px-3 text-xs font-medium sm:w-auto sm:px-4 disabled:opacity-60"
         >
-          Save address
-        </OperationalSubmitButton>
+          {isSaving ? "Saving address..." : "Save address"}
+        </button>
       </form>
     </section>
   );
@@ -363,6 +398,10 @@ export function AdminContactRequestQueue({
   const live = useAdminLiveResource("contact_requests", Boolean(realtime));
   const hydratedRef = useRef(false);
   const [expandedId, setExpandedId] = useState<string | null>(initialExpandedRequestId);
+  const timedRejectContactRequest = useMemo(
+    () => wrapServerAction(actions.reject, { label: "Reject contact request" }),
+    [actions.reject]
+  );
 
   useEffect(() => {
     if (!realtime || hydratedRef.current) return;
@@ -492,7 +531,7 @@ export function AdminContactRequestQueue({
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       {availableMoreActions.includes("reject") ? (
-                        <form action={wrapServerAction(actions.reject, { label: "Reject contact request" })} className="inline-flex">
+                        <form action={timedRejectContactRequest} className="inline-flex">
                           <input type="hidden" name="contact_request_id" value={request.id} />
                           {statusFilter ? <input type="hidden" name="list_status" value={statusFilter} /> : null}
                           {request.updated_at ? (

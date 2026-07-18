@@ -1,4 +1,5 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 type JsonRecord = Record<string, unknown>;
@@ -145,7 +146,7 @@ export async function invokeArchiveOperationalData(
   env: EnvSource = process.env
 ): Promise<ArchiveOperationalResult> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/archive_operational_data`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/archive_operational_data`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     body: JSON.stringify({ retention_days: retentionDays }),
@@ -167,7 +168,7 @@ async function fetchArchiveRows(
   env: EnvSource
 ): Promise<JsonRecord[]> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/${table}?select=${encodeURIComponent(select)}&archived_at=gte.${encodeURIComponent(runStarted)}&order=created_at.asc&limit=5000`,
     { headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` }, cache: "no-store" }
   );
@@ -341,7 +342,7 @@ export function buildAuditLogsArchiveCsv(rows: JsonRecord[]) {
 export async function uploadArchiveCsv(storagePath: string, csv: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
   const body = new TextEncoder().encode(csv);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/storage/v1/object/${ARCHIVE_STORAGE_BUCKET}/${encodeObjectPath(storagePath)}`,
     {
       method: "POST",
@@ -374,7 +375,7 @@ export async function recordArchiveRun(
   env: EnvSource = process.env
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/data_archive_runs`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/data_archive_runs`, {
     method: "POST",
     headers: {
       ...headers(config.serviceRoleKey),
@@ -493,7 +494,7 @@ export async function runOperationalDataArchive(
 
 export async function listDataArchiveRuns(limit = 24, env: EnvSource = process.env): Promise<DataArchiveRunRow[]> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/data_archive_runs?select=id,run_month,entity,rows_archived,csv_storage_path,status,metadata,created_at&order=created_at.desc&limit=${limit}`,
     { headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` }, cache: "no-store" }
   );
@@ -513,7 +514,7 @@ export async function listArchivedOrders(
   if (query) {
     url += `&or=(customer_email.ilike.*${encodeURIComponent(query)}*,order_number.ilike.*${encodeURIComponent(query)}*)`;
   }
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` },
     cache: "no-store"
   });
@@ -533,7 +534,7 @@ export async function listArchivedEnquiries(
   if (query) {
     url += `&or=(customer_email.ilike.*${encodeURIComponent(query)}*,subject.ilike.*${encodeURIComponent(query)}*)`;
   }
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` },
     cache: "no-store"
   });
@@ -553,7 +554,7 @@ export async function listArchivedContactRequests(
   if (query) {
     url += `&or=(customer_email.ilike.*${encodeURIComponent(query)}*,subject.ilike.*${encodeURIComponent(query)}*)`;
   }
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` },
     cache: "no-store"
   });
@@ -572,7 +573,7 @@ export async function listArchivedLogs(
   const select = input.kind === "audit"
     ? "id,actor_id,action,entity_table,entity_id,archived_at,created_at"
     : "id,actor_id,action,entity_table,entity_id,severity,archived_at,created_at";
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/${table}?select=${encodeURIComponent(select)}&order=created_at.desc&limit=${limit}&offset=${offset}`,
     { headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` }, cache: "no-store" }
   );
@@ -585,7 +586,7 @@ export async function downloadArchiveCsvFromStorage(
   env: EnvSource = process.env
 ): Promise<string | null> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/storage/v1/object/${ARCHIVE_STORAGE_BUCKET}/${encodeObjectPath(storagePath)}`,
     { headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` }, cache: "no-store" }
   );
@@ -638,7 +639,7 @@ export async function fetchAllArchivedTableRows(
 
   while (rows.length < maxRows) {
     const limit = Math.min(pageSize, maxRows - rows.length);
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/${table}?select=${encodeURIComponent(select)}&order=created_at.asc&limit=${limit}&offset=${offset}`,
       { headers: { apikey: config.serviceRoleKey, Authorization: `Bearer ${config.serviceRoleKey}` }, cache: "no-store" }
     );

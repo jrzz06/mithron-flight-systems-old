@@ -3,9 +3,15 @@
 import { useMemo, useState } from "react";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import { wrapServerAction } from "@/hooks/use-async-action";
+import { notify } from "@/lib/feedback/notify";
 
 const fieldClass =
   "rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-sm text-[var(--platform-text-primary)] outline-none placeholder:text-[var(--platform-text-muted)] focus:border-[var(--platform-focus-border)]";
+
+type CustomerDetailsResult = {
+  ok?: boolean;
+  message?: string;
+} | void;
 
 type CustomerDetailsEditorProps = {
   recordId: string;
@@ -14,7 +20,7 @@ type CustomerDetailsEditorProps = {
   email: string;
   phone: string;
   company: string;
-  updateDetails: (formData: FormData) => Promise<void>;
+  updateDetails: (formData: FormData) => Promise<CustomerDetailsResult>;
   hiddenFields?: Record<string, string>;
 };
 
@@ -29,7 +35,17 @@ export function CustomerDetailsEditor({
   hiddenFields = {}
 }: CustomerDetailsEditorProps) {
   const timedUpdateDetails = useMemo(
-    () => wrapServerAction(updateDetails, { label: "Save customer details" }),
+    () =>
+      wrapServerAction(async (formData: FormData) => {
+        const result = await updateDetails(formData);
+        if (result && typeof result === "object") {
+          const message = String(result.message ?? "").trim();
+          if (message) {
+            if (result.ok === false) notify.error(message);
+            else notify.success(message);
+          }
+        }
+      }, { label: "Save customer details" }),
     [updateDetails]
   );
   const [fullNameValue, setFullNameValue] = useState(fullName);

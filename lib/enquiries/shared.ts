@@ -316,11 +316,12 @@ export function formatEnquiryDateTime(value: unknown) {
   if (!raw) return "—";
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return raw.slice(0, 16);
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString("en-IN", {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    timeZone: "Asia/Kolkata"
   });
 }

@@ -1,6 +1,7 @@
 import { canCustomerReviewOrder, REVIEW_UNAVAILABLE_MESSAGE } from "@/lib/orders/review-eligibility";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { getCustomerOrder } from "@/services/customer-orders";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 type EnvSource = Record<string, string | undefined>;
@@ -20,7 +21,7 @@ function text(value: unknown, fallback = "") {
 
 export async function listCustomerReviewsForOrder(orderId: string, userId: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/customer_order_reviews?select=id,product_slug,rating,body,status,created_at&order_id=eq.${encodeURIComponent(orderId)}&user_id=eq.${encodeURIComponent(userId)}`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -30,7 +31,7 @@ export async function listCustomerReviewsForOrder(orderId: string, userId: strin
 
 export async function listCustomerReviewsForUser(userId: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/customer_order_reviews?select=id,product_slug,rating,body,status,created_at&user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc&limit=200`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -79,7 +80,7 @@ export async function submitCustomerOrderReview(
   const config = assertSupabaseAdminConfig(env);
   let customerName = input.customerName?.trim() ?? "";
   if (!customerName) {
-    const profileResponse = await fetch(
+    const profileResponse = await fetchWithTimeout(
       `${config.url}/rest/v1/profiles?select=display_name,email&id=eq.${encodeURIComponent(input.userId)}&limit=1`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     );
@@ -108,7 +109,7 @@ export async function submitCustomerOrderReview(
   };
   if (input.idempotencyKey) payload.idempotency_key = input.idempotencyKey;
 
-  const response = await fetch(`${config.url}/rest/v1/customer_order_reviews`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/customer_order_reviews`, {
     method: "POST",
     headers: headers(config.serviceRoleKey, "return=representation,resolution=ignore-duplicates"),
     body: JSON.stringify(payload)
@@ -127,7 +128,7 @@ export async function submitCustomerOrderReview(
   }
 
   const [record] = (await response.json()) as JsonRecord[];
-  await fetch(`${config.url}/rest/v1/activity_logs`, {
+  await fetchWithTimeout(`${config.url}/rest/v1/activity_logs`, {
     method: "POST",
     headers: headers(config.serviceRoleKey, "return=minimal"),
     body: JSON.stringify({

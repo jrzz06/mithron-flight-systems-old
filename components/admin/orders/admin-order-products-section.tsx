@@ -3,7 +3,7 @@
 import { wrapServerAction } from "@/hooks/use-async-action";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useOptionalAdminRealtime } from "@/components/admin/realtime/admin-realtime-provider";
 import { OrderItemPicker } from "@/components/admin/order-item-picker";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
@@ -87,6 +87,96 @@ export function AdminOrderProductsSection({
   const canAddProducts = Boolean(addOrderItemsAction) && canModifyProducts;
   const canRemoveProducts = Boolean(removeOrderItemAction) && canModifyProducts;
 
+  const removeOrderItem = useCallback(
+    async (formData: FormData) => {
+      if (!removeOrderItemAction) return;
+      const orderId = text(order.id);
+      let navigated = false;
+      try {
+        const outcome = await runOrderFormActionWithConflictRetry(removeOrderItemAction, formData, {
+          orderId,
+          patchOrder
+        });
+        if (outcome.kind === "failed") return;
+      } catch (error) {
+        if (isActionNavigationError(error)) {
+          navigated = true;
+          throw error;
+        }
+        throw error;
+      } finally {
+        if (!navigated) {
+          markControlPlaneLiveSyncFlush();
+          void realtime?.reconcileResources(["orders"]);
+        }
+      }
+    },
+    [order.id, patchOrder, realtime, removeOrderItemAction]
+  );
+
+  const timedRemoveOrderItem = useMemo(
+    () => wrapServerAction(removeOrderItem, { label: "Remove order item" }),
+    [removeOrderItem]
+  );
+
+  const addOrderItems = useCallback(
+    async (formData: FormData) => {
+      if (!addOrderItemsAction) return;
+      const rawItems = String(formData.get("order_items") ?? "");
+      const parsed = parseConversionLineItems(rawItems);
+      const orderId = text(order.id);
+      const optimisticRows: AdminRow[] = parsed.map((line, index) => {
+        const catalog = catalogProducts.find((row) => row.slug === line.productSlug);
+        const unitPrice = catalog?.price ?? 0;
+        return {
+          id: `optimistic-${orderId}-${line.productSlug}-${Date.now()}-${index}`,
+          order_id: orderId,
+          product_slug: line.productSlug,
+          product_name: catalog?.name ?? line.productSlug,
+          quantity: line.quantity,
+          unit_price: unitPrice,
+          line_total: unitPrice * line.quantity,
+          sku: "",
+          metadata: {},
+          _optimistic: true
+        };
+      });
+
+      if (optimisticRows.length) {
+        appendOptimisticOrderItems(optimisticRows);
+        setShowPicker(false);
+      }
+
+      let navigated = false;
+      try {
+        const outcome = await runOrderFormActionWithConflictRetry(addOrderItemsAction, formData, {
+          orderId,
+          patchOrder
+        });
+        if (outcome.kind === "failed") {
+          // Realtime/RSC refresh will drop optimistic rows once server state arrives.
+          return;
+        }
+      } catch (error) {
+        if (isActionNavigationError(error)) {
+          navigated = true;
+          throw error;
+        }
+        throw error;
+      } finally {
+        if (!navigated) {
+          markControlPlaneLiveSyncFlush();
+          void realtime?.reconcileResources(["orders"]);
+        }
+      }
+    },
+    [addOrderItemsAction, appendOptimisticOrderItems, catalogProducts, order.id, patchOrder, realtime]
+  );
+
+  const timedAddOrderItems = useMemo(
+    () => wrapServerAction(addOrderItems, { label: "Add order items" }),
+    [addOrderItems]
+  );
   return (
     <OrderDetailSection title="Products" dataAttribute="data-inventory-allocation">
       <div className={orderSectionStack}>
@@ -156,28 +246,7 @@ export function AdminOrderProductsSection({
                   <OrderStockBadge available={available} />
                   {canRemoveProducts && text(item.id) && !isOptimistic ? (
                     <form
-                      action={wrapServerAction(async (formData) => {
-                        const orderId = text(order.id);
-                        let navigated = false;
-                        try {
-                          const outcome = await runOrderFormActionWithConflictRetry(removeOrderItemAction!, formData, {
-                            orderId,
-                            patchOrder
-                          });
-                          if (outcome.kind === "failed") return;
-                        } catch (error) {
-                          if (isActionNavigationError(error)) {
-                            navigated = true;
-                            throw error;
-                          }
-                          throw error;
-                        } finally {
-                          if (!navigated) {
-                            markControlPlaneLiveSyncFlush();
-                            void realtime?.reconcileResources(["orders"]);
-                          }
-                        }
-                      }, { label: "Remove order item" })}
+                      action={timedRemoveOrderItem}
                       className="inline-flex"
                       onClick={(event) => event.stopPropagation()}
                     >
@@ -225,55 +294,7 @@ export function AdminOrderProductsSection({
 
         {canAddProducts && showPicker && addOrderItemsAction ? (
           <form
-            action={wrapServerAction(async (formData) => {
-              const rawItems = String(formData.get("order_items") ?? "");
-              const parsed = parseConversionLineItems(rawItems);
-              const orderId = text(order.id);
-              const optimisticRows: AdminRow[] = parsed.map((line, index) => {
-                const catalog = catalogProducts.find((row) => row.slug === line.productSlug);
-                const unitPrice = catalog?.price ?? 0;
-                return {
-                  id: `optimistic-${orderId}-${line.productSlug}-${Date.now()}-${index}`,
-                  order_id: orderId,
-                  product_slug: line.productSlug,
-                  product_name: catalog?.name ?? line.productSlug,
-                  quantity: line.quantity,
-                  unit_price: unitPrice,
-                  line_total: unitPrice * line.quantity,
-                  sku: "",
-                  metadata: {},
-                  _optimistic: true
-                };
-              });
-
-              if (optimisticRows.length) {
-                appendOptimisticOrderItems(optimisticRows);
-                setShowPicker(false);
-              }
-
-              let navigated = false;
-              try {
-                const outcome = await runOrderFormActionWithConflictRetry(addOrderItemsAction, formData, {
-                  orderId,
-                  patchOrder
-                });
-                if (outcome.kind === "failed") {
-                  // Realtime/RSC refresh will drop optimistic rows once server state arrives.
-                  return;
-                }
-              } catch (error) {
-                if (isActionNavigationError(error)) {
-                  navigated = true;
-                  throw error;
-                }
-                throw error;
-              } finally {
-                if (!navigated) {
-                  markControlPlaneLiveSyncFlush();
-                  void realtime?.reconcileResources(["orders"]);
-                }
-              }
-            }, { label: "Add order items" })}
+            action={timedAddOrderItems}
             className={`grid gap-2 border border-[var(--platform-border)] p-4 ${orderRadiusControl}`}
           >
             <input type="hidden" name="order_id" value={text(order.id)} />

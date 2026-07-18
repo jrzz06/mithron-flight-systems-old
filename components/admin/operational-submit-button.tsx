@@ -14,7 +14,8 @@ export function OperationalSubmitButton({
   name,
   value,
   disabled = false,
-  formAction
+  formAction,
+  busy
 }: {
   children: React.ReactNode;
   pendingLabel?: string;
@@ -25,8 +26,15 @@ export function OperationalSubmitButton({
   value?: string;
   disabled?: boolean;
   formAction?: (formData: FormData) => void | Promise<void>;
+  /**
+   * When set, drives the pending label/disabled state instead of useFormStatus.
+   * Timed operational forms pass this so the button clears as soon as the server
+   * action returns — even if RSC revalidation is still in flight.
+   */
+  busy?: boolean;
 }) {
-  const { pending } = useFormStatus();
+  const { pending: formPending } = useFormStatus();
+  const pending = busy !== undefined ? busy : formPending;
   const busyId = useId();
   const busyCtx = useOptionalGlobalBusy();
   const beginBusy = busyCtx?.beginBusy;

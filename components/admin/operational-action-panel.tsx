@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import { wrapServerAction } from "@/hooks/use-async-action";
+import { notify } from "@/lib/feedback/notify";
 
 const panelClass =
   "grid gap-2 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] p-4";
@@ -14,10 +15,52 @@ const secondaryButtonClass =
 const dangerButtonClass =
   "h-9 w-full rounded-[8px] border border-rose-500/40 px-3 text-xs font-medium text-rose-200";
 
+export type OperationalActionResult = {
+  ok?: boolean;
+  message?: string;
+} | void;
+
+type OperationalFormAction = (formData: FormData) => Promise<OperationalActionResult>;
+
+function notifyActionResult(result: OperationalActionResult) {
+  if (!result || typeof result !== "object") return;
+  const message = String(result.message ?? "").trim();
+  if (!message) return;
+  if (result.ok === false) notify.error(message);
+  else notify.success(message);
+}
+
+/**
+ * Wraps a server action with timeout racing and local pending that clears as soon
+ * as the action settles — so OperationalSubmitButton does not stay on "Saving"
+ * while RSC revalidation is still running.
+ */
+function useTimedOperationalAction(action: OperationalFormAction, label: string) {
+  const [isPending, setIsPending] = useState(false);
+
+  const timedAction = useCallback(
+    async (formData: FormData) => {
+      setIsPending(true);
+      try {
+        const run = wrapServerAction(async (data: FormData) => {
+          const result = await action(data);
+          notifyActionResult(result);
+        }, { label });
+        await run(formData);
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [action, label]
+  );
+
+  return { timedAction, isPending };
+}
+
 type OperationalPrimaryActionProps = {
   title?: string;
   description?: string;
-  action: (formData: FormData) => Promise<void>;
+  action: OperationalFormAction;
   buttonLabel: string;
   pendingLabel: string;
   children?: ReactNode;
@@ -33,10 +76,7 @@ export function OperationalPrimaryAction({
   children,
   variant = "primary"
 }: OperationalPrimaryActionProps) {
-  const timedAction = useMemo(
-    () => wrapServerAction(action, { label: pendingLabel || buttonLabel }),
-    [action, pendingLabel, buttonLabel]
-  );
+  const { timedAction, isPending } = useTimedOperationalAction(action, pendingLabel || buttonLabel);
 
   return (
     <form action={timedAction} data-primary-action className={panelClass}>
@@ -50,6 +90,7 @@ export function OperationalPrimaryAction({
       </div>
       {children}
       <OperationalSubmitButton
+        busy={isPending}
         pendingLabel={pendingLabel}
         className={variant === "primary" ? primaryButtonClass : secondaryButtonClass}
       >
@@ -127,20 +168,17 @@ export function OperationalDangerAction({
   pendingLabel,
   children
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: OperationalFormAction;
   buttonLabel: string;
   pendingLabel: string;
   children?: ReactNode;
 }) {
-  const timedAction = useMemo(
-    () => wrapServerAction(action, { label: pendingLabel || buttonLabel }),
-    [action, pendingLabel, buttonLabel]
-  );
+  const { timedAction, isPending } = useTimedOperationalAction(action, pendingLabel || buttonLabel);
 
   return (
     <form action={timedAction} className="grid gap-2">
       {children}
-      <OperationalSubmitButton pendingLabel={pendingLabel} className={dangerButtonClass}>
+      <OperationalSubmitButton busy={isPending} pendingLabel={pendingLabel} className={dangerButtonClass}>
         {buttonLabel}
       </OperationalSubmitButton>
     </form>
@@ -153,20 +191,17 @@ export function OperationalSecondaryAction({
   pendingLabel,
   children
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: OperationalFormAction;
   buttonLabel: string;
   pendingLabel: string;
   children?: ReactNode;
 }) {
-  const timedAction = useMemo(
-    () => wrapServerAction(action, { label: pendingLabel || buttonLabel }),
-    [action, pendingLabel, buttonLabel]
-  );
+  const { timedAction, isPending } = useTimedOperationalAction(action, pendingLabel || buttonLabel);
 
   return (
     <form action={timedAction} className="grid gap-2">
       {children}
-      <OperationalSubmitButton pendingLabel={pendingLabel} className={secondaryButtonClass}>
+      <OperationalSubmitButton busy={isPending} pendingLabel={pendingLabel} className={secondaryButtonClass}>
         {buttonLabel}
       </OperationalSubmitButton>
     </form>

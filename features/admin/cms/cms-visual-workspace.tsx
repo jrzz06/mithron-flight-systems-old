@@ -5,7 +5,7 @@ import { wrapServerAction } from "@/hooks/use-async-action";
 import Link from "next/link";
 import Image from "next/image";
 import { Copy, Crop, Eye, EyeOff, GripVertical, History, ImageIcon, ImagePlus, Monitor, RotateCcw, Save, Search, Send, Smartphone, Tablet } from "lucide-react";
-import { useDeferredValue, useMemo, useState, useTransition } from "react";
+import { useDeferredValue, useId, useMemo, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import { RichTextEditorField } from "@/components/editor/RichTextEditor/rich-text-editor-field";
@@ -157,17 +157,10 @@ const viewportOptions: Array<{ id: Viewport; label: string; Icon: typeof Monitor
   { id: "mobile", label: "Mobile", Icon: Smartphone }
 ];
 
-function generatePublishRequestId(operation: string, entityId: string) {
-  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
-    const values = new Uint32Array(2);
-    crypto.getRandomValues(values);
-    return `${operation}-${entityId}-${Date.now()}-${values[0].toString(16)}${values[1].toString(16)}`;
-  }
-  return `${operation}-${entityId}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
 function PublishRequestField({ operation, entityId }: { operation: string; entityId: string }) {
-  const requestId = useMemo(() => generatePublishRequestId(operation, entityId), [operation, entityId]);
+  // useId() is stable across SSR ↔ client hydration (unlike Date.now()/random).
+  const reactId = useId().replace(/:/g, "");
+  const requestId = `${operation}-${entityId}-${reactId}`;
   return <input type="hidden" name="publish_request_id" value={requestId} />;
 }
 

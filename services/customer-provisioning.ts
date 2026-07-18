@@ -1,6 +1,7 @@
 import { createClient as createSupabaseServiceClient } from "@supabase/supabase-js";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { provisionAuthenticatedUser } from "@/services/auth-provisioning";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -57,7 +58,7 @@ async function findAuthUserByEmail(supabase: ReturnType<typeof serviceClient>, e
 
 async function findProfileByEmail(email: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/profiles?select=id,email,phone,display_name&email=eq.${encodeURIComponent(normalizeEmail(email))}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -70,7 +71,7 @@ async function findProfileByPhone(phone: string, env: EnvSource = process.env) {
   const normalized = phone.trim();
   if (!normalized) return null;
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/profiles?select=id,email,phone,display_name&phone=eq.${encodeURIComponent(normalized)}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -86,7 +87,7 @@ export async function lookupCustomers(query: string, limit = 8, env: EnvSource =
   const config = assertSupabaseAdminConfig(env);
   const encoded = encodeURIComponent(q);
   const filter = `or=(email.ilike.*${encoded}*,display_name.ilike.*${encoded}*,phone.ilike.*${encoded}*)`;
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/profiles?select=id,email,phone,display_name&${filter}&order=updated_at.desc&limit=${limit}`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -120,7 +121,7 @@ export async function resolveManualOrderCustomer(
 
   if (input.customerUserId) {
     const config = assertSupabaseAdminConfig(env);
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/profiles?select=id,email,phone,display_name&id=eq.${encodeURIComponent(input.customerUserId)}&limit=1`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     );

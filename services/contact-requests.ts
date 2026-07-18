@@ -20,6 +20,7 @@ import { resolveCheckoutStockSkus } from "@/services/checkout-stock";
 import { buildValidatedOrderDraft } from "@/services/orders";
 import { operationalArchiveHotCutoffIso } from "@/services/data-archive";
 import type { ConversionLineItem } from "@/lib/admin/order-items";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export type { AdminContactRequestRow, ContactRequestLeadSource, ContactRequestNoteEntry, ContactRequestTimelineEntry } from "@/lib/contact-requests/shared";
 export {
@@ -101,7 +102,7 @@ function contactMutationOptions() {
 
 async function listAdminRecipientIds(roleKey: string, env: EnvSource) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/user_roles?select=user_id&role_key=eq.${encodeURIComponent(roleKey)}&limit=40`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
@@ -265,7 +266,7 @@ function leadNotificationTitle(source: ContactRequestLeadSource) {
 
 async function findContactRequestByIdempotencyKey(idempotencyKey: string, env: EnvSource) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/contact_requests?select=id,request_number,customer_email,customer_phone,customer_full_name,customer_company,subject,body,status,assigned_to,converted_order_id,payload,archived_at,deleted_at,created_at,updated_at&payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&deleted_at=is.null&order=created_at.desc&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
@@ -364,37 +365,68 @@ export async function submitContactRequest(
   return record;
 }
 
-export async function listAdminContactRequests(env: EnvSource = process.env): Promise<AdminContactRequestRow[]> {
+export async function listAdminContactRequests(
+  envOrOptions: EnvSource | {
+    env?: EnvSource;
+    limit?: number;
+    offset?: number;
+    status?: string;
+    q?: string;
+  } = process.env
+): Promise<AdminContactRequestRow[]> {
+  const isOptions = Boolean(
+    envOrOptions
+    && typeof envOrOptions === "object"
+    && ("limit" in envOrOptions || "offset" in envOrOptions || "status" in envOrOptions || "q" in envOrOptions || "env" in envOrOptions)
+  );
+  const options = isOptions
+    ? (envOrOptions as { env?: EnvSource; limit?: number; offset?: number; status?: string; q?: string })
+    : null;
+  const env = options ? (options.env ?? process.env) : (envOrOptions as EnvSource);
   const config = assertSupabaseAdminConfig(env);
   const cutoff = operationalArchiveHotCutoffIso();
   const selectFields =
     "id,request_number,customer_user_id,customer_email,customer_phone,customer_full_name,customer_company,subject,body,status,region,assigned_to,converted_order_id,payload,archived_at,deleted_at,created_at,updated_at";
 
-  // Fetch recent records (within retention window) and open leads older than the cutoff in parallel.
-  // This ensures operators never lose sight of an unresolved contact request just because it's old.
-  const [recentResponse, openOldResponse] = await Promise.all([
-    fetch(
-      `${config.url}/rest/v1/contact_requests?select=${selectFields}&deleted_at=is.null&created_at=gte.${encodeURIComponent(cutoff)}&order=created_at.desc&limit=100`,
-      { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
-    ),
-    fetch(
-      `${config.url}/rest/v1/contact_requests?select=${selectFields}&deleted_at=is.null&archived_at=is.null&created_at=lt.${encodeURIComponent(cutoff)}&status=in.(new,contacted,in_progress)&order=created_at.desc&limit=50`,
-      { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
-    )
-  ]);
+  const limit = Math.min(Math.max(1, Math.floor(options?.limit ?? 100)), 200);
+  const offset = Math.max(0, Math.floor(options?.offset ?? 0));
+  const statusFilter = (options?.status ?? "all").trim() || "all";
+  const search = (options?.q ?? "").trim();
 
-  const recentRows = recentResponse.ok ? ((await recentResponse.json()) as JsonRecord[]) : [];
+  let statusQuery = "";
+  if (statusFilter === "new") statusQuery = "&status=eq.new";
+  else if (statusFilter === "contacted") statusQuery = "&status=in.(contacted,qualified,in_progress)";
+  else if (statusFilter === "converted") statusQuery = "&status=eq.converted";
+  else if (statusFilter === "closed") statusQuery = "&status=in.(closed,rejected,spam,resolved)";
+
+  const searchQuery = search
+    ? `&or=(customer_email.ilike.*${encodeURIComponent(search)}*,customer_full_name.ilike.*${encodeURIComponent(search)}*,customer_phone.ilike.*${encodeURIComponent(search)}*,subject.ilike.*${encodeURIComponent(search)}*,body.ilike.*${encodeURIComponent(search)}*)`
+    : "";
+
+  // Prefer a single filtered page query; still include open-old leads when viewing "all"/"new"/"contacted" without search.
+  const primaryResponse = await fetchWithTimeout(
+    `${config.url}/rest/v1/contact_requests?select=${selectFields}&deleted_at=is.null&created_at=gte.${encodeURIComponent(cutoff)}${statusQuery}${searchQuery}&order=created_at.desc&limit=${limit}${offset > 0 ? `&offset=${offset}` : ""}`,
+    { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
+  );
+
+  const recentRows = primaryResponse.ok ? ((await primaryResponse.json()) as JsonRecord[]) : [];
+
+  if (search || statusFilter === "converted" || statusFilter === "closed" || offset > 0) {
+    return recentRows.map(mapContactRequestRow);
+  }
+
+  const openOldResponse = await fetchWithTimeout(
+    `${config.url}/rest/v1/contact_requests?select=${selectFields}&deleted_at=is.null&archived_at=is.null&created_at=lt.${encodeURIComponent(cutoff)}&status=in.(new,contacted,in_progress,qualified)${statusQuery}&order=created_at.desc&limit=50`,
+    { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
+  );
   const openOldRows = openOldResponse.ok ? ((await openOldResponse.json()) as JsonRecord[]) : [];
-
-  // Dedupe by id (recent takes precedence since it's fresher).
   const seenIds = new Set<string>(recentRows.map((row) => String(row.id ?? "")));
   const merged = [
     ...recentRows,
     ...openOldRows.filter((row) => !seenIds.has(String(row.id ?? "")))
   ];
   merged.sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")));
-
-  return merged.map(mapContactRequestRow);
+  return merged.slice(0, limit).map(mapContactRequestRow);
 }
 
 export async function markContactRequestContacted(
@@ -872,7 +904,7 @@ export async function promoteContactRequestToOrder(
   }
 
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/convert_contact_request_to_order`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/convert_contact_request_to_order`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     cache: "no-store",
@@ -951,7 +983,7 @@ async function syncSiblingEnquiryConverted(
   config: { url: string; serviceRoleKey: string }
 ) {
   const now = new Date().toISOString();
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/enquiries?payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&deleted_at=is.null&converted_order_id=is.null&limit=5`,
     { method: "GET", headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -960,7 +992,7 @@ async function syncSiblingEnquiryConverted(
   for (const row of rows) {
     const id = text(row.id);
     if (!id) continue;
-    await fetch(
+    await fetchWithTimeout(
       `${config.url}/rest/v1/enquiries?id=eq.${encodeURIComponent(id)}`,
       {
         method: "PATCH",
@@ -980,7 +1012,7 @@ export async function linkContactRequestToOrder(
   env: EnvSource = process.env
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/link_contact_request_to_order`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/link_contact_request_to_order`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     cache: "no-store",

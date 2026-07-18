@@ -1,10 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { ChevronDown, Replace } from "lucide-react";
-import { saveHomepageV2SectionFormAction } from "@/app/admin/cms/actions";
+import { saveHomepageV2SectionClientAction } from "@/app/admin/cms/actions";
 import { CmsAssignmentSourceBadge } from "@/components/admin/cms/cms-assignment-source-badge";
 import { CmsEditorSection } from "@/components/admin/cms/cms-editor-section";
 import { CmsSelectField } from "@/components/admin/cms/cms-field";
@@ -18,19 +17,14 @@ import {
   type MiniCarouselSlotAssignment
 } from "@/lib/cms/homepage-slot-assignment";
 import type { Product } from "@/config/types";
+import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
+import { notify } from "@/lib/feedback/notify";
+import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 function assignmentsToSlides(assignments: MiniCarouselSlotAssignment[]): CmsMiniCarouselSlide[] {
   return buildMiniCarouselSlidesFromAssignments(assignments);
-}
-
-function MiniCarouselPendingReporter({ onPendingChange }: { onPendingChange?: (pending: boolean) => void }) {
-  const { pending } = useFormStatus();
-  useEffect(() => {
-    onPendingChange?.(pending);
-  }, [onPendingChange, pending]);
-  return null;
 }
 
 export function MiniCarouselSlotEditor({
@@ -51,6 +45,7 @@ export function MiniCarouselSlotEditor({
   onPinRequest?: () => void;
 }) {
   const builder = useOptionalHomepageBuilder();
+  const [isSaving, startTransition] = useTransition();
   const initialState = useMemo(
     () => resolveMiniCarouselEditorState({ enabled, slides: storedSlides }, products),
     [enabled, products, storedSlides]
@@ -63,6 +58,10 @@ export function MiniCarouselSlotEditor({
   useEffect(() => {
     setSlots(initialState.slots);
   }, [initialState.slots]);
+
+  useEffect(() => {
+    onPendingChange?.(isSaving);
+  }, [isSaving, onPendingChange]);
 
   const syncDraft = useCallback(
     (nextSlots: MiniCarouselSlotAssignment[]) => {
@@ -100,15 +99,44 @@ export function MiniCarouselSlotEditor({
     onDirty?.();
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      try {
+        const result = await raceWithTimeout(
+          saveHomepageV2SectionClientAction(formData),
+          undefined,
+          "Save mini carousel"
+        );
+        if (result.ok) {
+          notify.success(result.message || FEEDBACK_MESSAGES.changesSaved, {
+            source: "cms",
+            id: "cms:mini-carousel-save"
+          });
+          return;
+        }
+        notify.error(result.message || FEEDBACK_MESSAGES.failedToSaveChanges, {
+          source: "cms",
+          id: "cms:mini-carousel-save:error"
+        });
+      } catch (error) {
+        notify.error(
+          error instanceof Error ? error.message : FEEDBACK_MESSAGES.failedToSaveChanges,
+          { source: "cms", id: "cms:mini-carousel-save:error" }
+        );
+      }
+    });
+  };
+
   const hiddenSlides = assignmentsToSlides(slots);
 
   return (
     <form
-      action={saveHomepageV2SectionFormAction}
       className="grid gap-5"
       onChange={() => onDirty?.()}
+      onSubmit={handleSubmit}
     >
-      <MiniCarouselPendingReporter onPendingChange={onPendingChange} />
       <input type="hidden" name="section_key" value="mini-carousel" />
       <input type="hidden" name="slide_count" value={String(hiddenSlides.length)} />
       {hiddenSlides.map((slide, index) => (

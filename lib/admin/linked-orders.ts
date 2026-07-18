@@ -1,4 +1,5 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export type LinkedOrderSummary = {
   id: string;
@@ -35,7 +36,7 @@ export async function loadLinkedOrderSummaries(
 
   const config = assertSupabaseAdminConfig(env);
   const filter = uniqueIds.map((id) => encodeURIComponent(id)).join(",");
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?select=id,order_number,status,payment_status,fulfillment_status,updated_at,archived_at,deleted_at,metadata&id=in.(${filter})`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );

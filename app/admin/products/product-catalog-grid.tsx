@@ -9,6 +9,7 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { resolveNextImageSrc } from "@/lib/media/next-image-src";
 import { formatINR } from "@/lib/utils";
 import { notify } from "@/lib/feedback/notify";
+import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import type { ProductDeletionBlockerResult } from "@/services/admin-actions";
 import {
   previewProductDeleteAction,
@@ -128,15 +129,13 @@ function ProductPublishToggle({
       <input type="hidden" name="workflow_status" value={nextStatus} />
       {isLiveOnStorefront ? null : <input type="hidden" name="is_visible" value="true" />}
       <input type="hidden" name="change_summary" value={`${label} product ${product.id}`} />
-      <button
-        type="submit"
-        title={isLiveOnStorefront ? "Remove product from storefront" : "Publish product to storefront"}
+      <OperationalSubmitButton
+        pendingLabel={isLiveOnStorefront ? "Unpublishing..." : "Publishing..."}
         className="product-row-btn inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-medium text-[var(--platform-text-primary)] transition-colors"
-        data-product-row-action="publish"
       >
         <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         {label}
-      </button>
+      </OperationalSubmitButton>
     </form>
   );
 }

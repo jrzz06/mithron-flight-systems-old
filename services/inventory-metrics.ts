@@ -1,4 +1,5 @@
 import { getSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -47,7 +48,7 @@ async function countWithQuery(
   table: string,
   query: string
 ): Promise<number> {
-  const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/${table}?${query}`, {
     method: "HEAD",
     headers: adminHeaders(config.serviceRoleKey),
     cache: "no-store"
@@ -110,7 +111,7 @@ async function resolveInventoryStockMetrics(env: EnvSource = process.env): Promi
     return { totalInventoryItems: 0, inStock: 0, lowStock: 0, outOfStock: 0 };
   }
 
-  const rpcResponse = await fetch(`${config.url}/rest/v1/rpc/get_inventory_stock_metrics`, {
+  const rpcResponse = await fetchWithTimeout(`${config.url}/rest/v1/rpc/get_inventory_stock_metrics`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -189,8 +190,8 @@ async function assertInventoryProductParityViaRowScan(
   const limit = ENABLE_PARITY_ROW_SCAN ? 5000 : PARITY_ROW_SCAN_LIMIT;
 
   const [productsResponse, inventoryResponse] = await Promise.all([
-    fetch(`${config.url}/rest/v1/mithron_products?select=slug&limit=${limit}`, { headers, cache: "no-store" }),
-    fetch(`${config.url}/rest/v1/inventory?select=product_slug&limit=${limit}`, { headers, cache: "no-store" })
+    fetchWithTimeout(`${config.url}/rest/v1/mithron_products?select=slug&limit=${limit}`, { headers, cache: "no-store" }),
+    fetchWithTimeout(`${config.url}/rest/v1/inventory?select=product_slug&limit=${limit}`, { headers, cache: "no-store" })
   ]);
 
   const products = productsResponse.ok ? (await productsResponse.json() as Array<{ slug?: string }>) : [];
@@ -224,7 +225,7 @@ export async function assertInventoryProductParity(env: EnvSource = process.env)
     return emptyParityReport();
   }
 
-  const rpcResponse = await fetch(`${config.url}/rest/v1/rpc/get_inventory_parity_counts`, {
+  const rpcResponse = await fetchWithTimeout(`${config.url}/rest/v1/rpc/get_inventory_parity_counts`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,

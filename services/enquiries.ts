@@ -32,6 +32,7 @@ import {
   getMissingEnquiryAddressFields,
   type EnquiryAddressView
 } from "@/lib/enquiries/shared";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export type { AdminEnquiryRow, EnquiryNoteEntry, EnquiryTimelineEntry } from "@/lib/enquiries/shared";
 export { formatEnquiryReference } from "@/lib/enquiries/shared";
@@ -97,7 +98,7 @@ function readNotes(payload: JsonRecord) {
 
 async function listAdminRecipientIds(roleKey: string, env: EnvSource) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/user_roles?select=user_id&role_key=eq.${encodeURIComponent(roleKey)}&limit=40`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
@@ -370,7 +371,7 @@ export async function findCheckoutEnquiryByIdempotencyKey(
       ? `customer_user_id=eq.${scope.userId}`
       : `customer_user_id=is.null&customer_email=eq.${encodeURIComponent(scope.guestEmail.trim())}&payload->>customer_phone=eq.${encodeURIComponent(scope.guestPhone.trim())}`;
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/enquiries?select=id,enquiry_number,subject,status,payload&enquiry_kind=eq.checkout&${filter}&payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&order=created_at.desc&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
@@ -919,7 +920,7 @@ export async function listOwnEnquiries(userId: string, env: EnvSource = process.
   timeline: EnquiryTimelineEntry[];
 }>>> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/enquiries?select=id,enquiry_number,subject,body,status,related_product_slug,region,payload,created_at,updated_at&customer_user_id=eq.${userId}&order=created_at.desc&limit=50`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
@@ -961,7 +962,7 @@ async function loadAdminEnquiries(
     params.push(`or=(customer_email.ilike.${pattern},subject.ilike.${pattern},body.ilike.${pattern})`);
   }
 
-  const enquiriesResponse = await fetch(
+  const enquiriesResponse = await fetchWithTimeout(
     `${config.url}/rest/v1/enquiries?${params.join("&")}`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
@@ -1426,7 +1427,7 @@ export async function linkGuestEnquiriesToUser(userId: string, email: string, en
   if (!userId || !normalizedEmail) return { linked: 0 };
 
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/enquiries?customer_user_id=is.null&customer_email=eq.${encodeURIComponent(normalizedEmail)}`,
     {
       method: "PATCH",
@@ -1828,7 +1829,7 @@ export async function markCheckoutOrderEnquiryContacted(
   }
 
   const config = assertSupabaseAdminConfig(env);
-  const orderResponse = await fetch(
+  const orderResponse = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&select=id,status,metadata&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
@@ -1897,7 +1898,7 @@ export async function convertEnquiryToOrderAtomic(
   idempotencyKey?: string | null
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/convert_enquiry_to_order_atomic`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/convert_enquiry_to_order_atomic`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     cache: "no-store",
@@ -1916,7 +1917,14 @@ export async function convertEnquiryToOrderAtomic(
     throw new Error(`Enquiry conversion failed: ${response.status}${body ? ` - ${body.slice(0, 240)}` : ""}`);
   }
 
-  const result = body ? JSON.parse(body) as JsonRecord : {};
+  let result: JsonRecord = {};
+  if (body) {
+    try {
+      result = JSON.parse(body) as JsonRecord;
+    } catch {
+      throw new Error("Enquiry conversion returned an invalid response payload.");
+    }
+  }
   if (result.ok !== true) {
     const errorCode = text(result.error, "Enquiry conversion failed.");
     if (errorCode === "enquiry_closed") {
@@ -1976,7 +1984,7 @@ async function syncSiblingContactRequestConverted(
 ) {
   const config = assertSupabaseAdminConfig(env);
   const now = new Date().toISOString();
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/contact_requests?payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&deleted_at=is.null&converted_order_id=is.null&limit=5`,
     { method: "GET", headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -1985,7 +1993,7 @@ async function syncSiblingContactRequestConverted(
   for (const row of rows) {
     const id = text(row.id);
     if (!id) continue;
-    await fetch(
+    await fetchWithTimeout(
       `${config.url}/rest/v1/contact_requests?id=eq.${encodeURIComponent(id)}`,
       {
         method: "PATCH",

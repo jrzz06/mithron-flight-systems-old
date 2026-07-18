@@ -9,7 +9,7 @@ import {
   markEnquiryInProgressFormAction,
   rejectEnquiryFormAction,
   requestEnquiryMissingInfoFormAction,
-  updateEnquiryAddressFormAction,
+  updateEnquiryAddressClientAction,
   updateEnquiryContactDetailsFormAction,
   updateEnquiryMetaFormAction
 } from "@/app/admin/enquiries/actions";
@@ -124,7 +124,7 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
             requestInfo: requestEnquiryMissingInfoFormAction,
             cancel: rejectEnquiryFormAction,
             updateMeta: updateEnquiryMetaFormAction,
-            updateAddress: updateEnquiryAddressFormAction,
+            updateAddress: updateEnquiryAddressClientAction,
             updateContactDetails: updateEnquiryContactDetailsFormAction,
             assignWarehouse: assignLinkedOrderToWarehouseFormAction
           }}

@@ -7,6 +7,7 @@ import type { CmsImageSpec } from "@/config/homepage-section-registry";
 import { validateImageFile } from "@/lib/cms/section-validation";
 import { notify } from "@/lib/feedback/notify";
 import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
+import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 import { cn } from "@/lib/utils";
 
 function formatSpecLine(spec: CmsImageSpec) {
@@ -86,7 +87,7 @@ export function CmsImageField({
       if (onUpload) {
         setUploading(true);
         try {
-          const result = await onUpload(file);
+          const result = await raceWithTimeout(onUpload(file), undefined, "CMS image upload");
           if (result?.src) {
             updatePreview(result.src);
             if (result.alt) setPreviewAlt(result.alt);
@@ -98,8 +99,8 @@ export function CmsImageField({
             notify.error(FEEDBACK_MESSAGES.uploadFailed, { source: "cms", id: "cms-image-field:upload-empty" });
             updatePreview(defaultValue);
           }
-        } catch {
-          const message = "Upload failed. Please try again.";
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Upload failed. Please try again.";
           setLocalError(message);
           notify.error(FEEDBACK_MESSAGES.uploadFailed, { source: "cms", id: "cms-image-field:upload-error" });
           updatePreview(defaultValue);
@@ -124,7 +125,7 @@ export function CmsImageField({
             {spec.formats.map((f) => f.replace("image/", "").toUpperCase()).join(", ")}
           </p>
         </div>
-        <label className="platform-btn-secondary platform-btn-sm inline-flex cursor-pointer items-center gap-1.5">
+        <label className={`platform-btn-secondary platform-btn-sm inline-flex cursor-pointer items-center gap-1.5 ${uploading ? "pointer-events-none opacity-60" : ""}`}>
           <Upload className="size-3.5" aria-hidden="true" />
           {uploading ? "Uploading…" : "Upload"}
           <input
@@ -132,6 +133,7 @@ export function CmsImageField({
             type="file"
             accept={spec.formats.join(",")}
             className="sr-only"
+            disabled={uploading}
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) void handleFile(file);

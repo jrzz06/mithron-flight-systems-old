@@ -130,17 +130,30 @@ async function createAdminManualOrderAction(formData: FormData) {
 }
 
 export default async function AdminOrdersPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
-  const [snapshot, warehouses, policy] = await Promise.all([
-    getWarehouseSnapshot({ scope: "orders", ordersFilter: "all" }),
-    listActiveWarehouses(process.env, { includeOperatorCounts: false }),
-    getAdminSettingsPolicy()
-  ]);
   const params = searchParams ? await searchParams : {};
   const queue = resolveOrdersViewQueue(searchValue(params, "queue") || "all");
   const selectedKey = searchValue(params, "order");
   const orderStatus = searchValue(params, "order_status");
   const orderMessage = searchValue(params, "order_message");
   const query = searchValue(params, "q").toLowerCase();
+  const statusFilter = searchValue(params, "status");
+  const pageRaw = Number(searchValue(params, "page") || "1");
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+  const pageSize = 80;
+  const offset = (page - 1) * pageSize;
+
+  const [snapshot, warehouses, policy] = await Promise.all([
+    getWarehouseSnapshot({
+      scope: "orders",
+      ordersFilter: "all",
+      limit: pageSize,
+      offset,
+      status: statusFilter || undefined,
+      search: query || undefined
+    }),
+    listActiveWarehouses(process.env, { includeOperatorCounts: false }),
+    getAdminSettingsPolicy()
+  ]);
 
   const queueOrders = snapshot.data.orders.filter((order) => orderMatchesViewQueue(order, queue));
   const selectedOrder =
@@ -148,6 +161,16 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
     ?? resolveOrderBySelectionKey(snapshot.data.orders, selectedKey);
   const selectedOrderId = selectedOrder ? text(selectedOrder.id) : "";
   const selectedOrderKey = selectedOrder ? orderSelectionKey(selectedOrder) : selectedKey;
+
+  // Lazy-load timeline (and full row) for the selected order detail panel.
+  let hydratedSelectedOrder = selectedOrder;
+  if (selectedOrderId) {
+    const { fetchAdminRecordsByColumn } = await import("@/services/admin-actions");
+    const detailRows = await fetchAdminRecordsByColumn("orders", "id", selectedOrderId).catch(() => []);
+    if (detailRows[0]) {
+      hydratedSelectedOrder = { ...selectedOrder!, ...detailRows[0] };
+    }
+  }
 
   return (
     <>
@@ -161,7 +184,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
         products={snapshot.data.products}
         warehouses={warehouses}
         defaultWarehouseCode={policy.defaultWarehouseCode}
-        selectedOrder={selectedOrder}
+        selectedOrder={hydratedSelectedOrder}
         selectedOrderId={selectedOrderId}
         selectedOrderKey={selectedOrderKey}
         queue={queue}

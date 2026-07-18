@@ -18,6 +18,7 @@ import {
   buildArchiveCsvDocument,
   operationalArchiveHotCutoffIso
 } from "@/services/data-archive";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 type EnvSource = Record<string, string | undefined>;
@@ -145,7 +146,7 @@ async function fetchPaginatedRows(
 
   while (rows.length < maxRows) {
     const limit = Math.min(pageSize, maxRows - rows.length);
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/${table}?select=${encodeURIComponent(select)}&${extraQuery}&order=created_at.desc&limit=${limit}&offset=${offset}`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     );
@@ -169,7 +170,7 @@ async function fetchOrderItemsForOrders(orderIds: string[], env: EnvSource) {
   for (let index = 0; index < orderIds.length; index += chunkSize) {
     const chunk = orderIds.slice(index, index + chunkSize);
     const filter = chunk.map((id) => encodeURIComponent(id)).join(",");
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/order_items?select=${encodeURIComponent(ORDER_ITEM_SELECT)}&order_id=in.(${filter})&order=created_at.asc&limit=5000`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     );
@@ -189,7 +190,7 @@ async function fetchShipmentsForOrders(orderIds: string[], env: EnvSource) {
   for (let index = 0; index < orderIds.length; index += chunkSize) {
     const chunk = orderIds.slice(index, index + chunkSize);
     const filter = chunk.map((id) => encodeURIComponent(id)).join(",");
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/shipments?select=${encodeURIComponent(SHIPMENT_SELECT)}&order_id=in.(${filter})&order=updated_at.desc&limit=5000`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     );
@@ -209,7 +210,7 @@ async function fetchInvoicesForOrders(orderIds: string[], env: EnvSource) {
   for (let index = 0; index < orderIds.length; index += chunkSize) {
     const chunk = orderIds.slice(index, index + chunkSize);
     const filter = chunk.map((id) => encodeURIComponent(id)).join(",");
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/invoices?select=${encodeURIComponent(INVOICE_SELECT)}&order_id=in.(${filter})&limit=5000`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     );

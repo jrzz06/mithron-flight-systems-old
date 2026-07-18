@@ -1,5 +1,6 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { createActivityLogRecord } from "@/services/admin-actions";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -52,7 +53,7 @@ function slugWarehouseCode(name: string) {
 async function fetchWarehouseRows(env: EnvSource, activeOnly: boolean) {
   const config = assertSupabaseAdminConfig(env);
   const filter = activeOnly ? "&is_active=eq.true" : "";
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/warehouses?select=code,name,location,is_active&order=name.asc${filter}`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -65,7 +66,7 @@ async function fetchWarehouseRows(env: EnvSource, activeOnly: boolean) {
 
 async function fetchOperatorCounts(env: EnvSource) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/profiles?select=assigned_warehouse_code&assigned_warehouse_code=not.is.null`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -147,7 +148,7 @@ export async function assertValidWarehouseCode(code: string, env: EnvSource = pr
 async function warehouseNameExists(name: string, env: EnvSource) {
   const config = assertSupabaseAdminConfig(env);
   const normalized = name.trim();
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/warehouses?select=code,name&name=ilike.${encodeURIComponent(normalized)}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
@@ -189,7 +190,7 @@ export async function createWarehouseRecord(
     is_active: true
   };
 
-  const response = await fetch(`${config.url}/rest/v1/warehouses`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/warehouses`, {
     method: "POST",
     headers: headers(config.serviceRoleKey, "return=representation"),
     body: JSON.stringify(payload)
@@ -226,7 +227,7 @@ export async function assignWarehouseOperator(
 ) {
   await assertValidWarehouseCode(input.warehouseCode, env);
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/profiles?id=eq.${encodeURIComponent(input.userId)}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/profiles?id=eq.${encodeURIComponent(input.userId)}`, {
     method: "PATCH",
     headers: headers(config.serviceRoleKey, "return=representation"),
     body: JSON.stringify({

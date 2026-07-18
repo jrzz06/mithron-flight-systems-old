@@ -3,6 +3,7 @@ import { createClient as createSupabaseServiceClient } from "@supabase/supabase-
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { normalizeCmsRole, type CmsRole } from "@/lib/auth/permissions";
 import { provisionAuthenticatedUser } from "@/services/auth-provisioning";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -31,7 +32,7 @@ export async function resolveInviteRoleForUser(input: {
   if (!email || !inviteToken) return null;
 
   const query = `${config.url}/rest/v1/admin_invites?select=id,email,role_key,status,expires_at,token_hash&email=eq.${encodeURIComponent(email)}&status=eq.pending&order=expires_at.desc&limit=5`;
-  const response = await fetch(query, {
+  const response = await fetchWithTimeout(query, {
     headers: headers(config.serviceRoleKey),
     cache: "no-store"
   });

@@ -3,6 +3,7 @@ import { normalizeCmsRole } from "@/lib/auth/permissions";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { listActiveWarehouses } from "@/services/warehouses";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -26,7 +27,7 @@ export async function getAssignedWarehouseCodeForUser(
 ): Promise<string | null> {
   if (!userId) return null;
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=assigned_warehouse_code,default_role&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );

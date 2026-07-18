@@ -1,4 +1,5 @@
 import { getSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 type JsonRecord = Record<string, unknown>;
@@ -91,7 +92,7 @@ async function serviceInsert(table: string, payload: JsonRecord, env: EnvSource 
     throw new Error(config.message);
   }
 
-  const response = await fetch(`${config.url}/rest/v1/${table}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/${table}`, {
     method: "POST",
     headers: adminHeaders(config.serviceRoleKey),
     body: JSON.stringify(payload)
@@ -157,7 +158,7 @@ async function serviceFindByDedupeKey(table: string, dedupeKey: unknown, env: En
     throw new Error(config.message);
   }
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/${table}?${securityEventDedupeColumns}&dedupe_key=eq.${encodeURIComponent(String(dedupeKey))}&limit=1`,
     { headers: adminHeaders(config.serviceRoleKey, "") }
   );

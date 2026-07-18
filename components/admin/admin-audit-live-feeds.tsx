@@ -11,7 +11,17 @@ import type { AdminEntityRow } from "@/lib/admin/realtime/admin-entity-store";
 type AuditRow = Record<string, unknown>;
 
 function formatDate(value: unknown) {
-  return typeof value === "string" && value ? new Date(value).toLocaleString() : "not recorded";
+  if (typeof value !== "string" || !value) return "not recorded";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "not recorded";
+  return date.toLocaleString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Kolkata"
+  });
 }
 
 function detailFromMetadata(row: AuditRow) {

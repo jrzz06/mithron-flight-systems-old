@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { getSupabaseAdminConfig } from "@/lib/env";
 import { listActiveWarehouses } from "@/services/warehouses";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -65,7 +66,7 @@ async function loadWarehouseConfigurationRow(env: EnvSource = process.env): Prom
   if (!config.configured) return null;
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/warehouse_configuration?id=eq.global&select=default_warehouse_code,checkout_warehouse_code,supplier_intake_warehouse_code,auto_reserve_on_allocate,stock_deduction_trigger,default_carrier,barcode_prefix,printer_name,label_width_mm,require_item_scan&limit=1`,
       { headers: headers(config.serviceRoleKey), cache: "no-store" }
     );

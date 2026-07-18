@@ -36,14 +36,24 @@ function managedRole(value: unknown): "admin" | "warehouse" | "supplier" | "user
 }
 
 export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
-  const [snapshot, warehouses, policy] = await Promise.all([
-    getUserGovernanceSnapshot(),
-    listActiveWarehouses().catch(() => []),
-    getAdminSettingsPolicy()
-  ]);
   const params = searchParams ? await searchParams : {};
   const userStatus = searchValue(params, "user_status");
   const userMessage = searchValue(params, "user_message");
+  const query = searchValue(params, "q");
+  const role = searchValue(params, "role");
+  const pageRaw = Number(searchValue(params, "page") || "1");
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+
+  const [snapshot, warehouses, policy] = await Promise.all([
+    getUserGovernanceSnapshot(process.env, {
+      page,
+      perPage: 50,
+      q: query || undefined,
+      role: role || undefined
+    }),
+    listActiveWarehouses().catch(() => []),
+    getAdminSettingsPolicy()
+  ]);
 
   const users = snapshot.data.users.map((user) => ({
     id: user.id,

@@ -8,6 +8,7 @@ import {
 } from "@/services/admin-actions";
 import type { ProductInventoryWorkflowInput } from "@/services/enterprise-admin-forms";
 import { upsertProductInventoryRecord } from "@/services/product-inventory";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 type JsonRecord = Record<string, unknown>;
@@ -176,7 +177,7 @@ function numberField(record: JsonRecord | null, key: string, fallback = 0) {
 
 async function fetchAdminRows<T extends JsonRecord>(table: string, query: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/${table}?${query}`, {
     headers: adminHeaders(config.serviceRoleKey),
     cache: "no-store"
   });
@@ -371,7 +372,7 @@ async function applyInventoryAdjustmentRpc(
   env: EnvSource
 ) {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/apply_inventory_adjustment`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/apply_inventory_adjustment`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,

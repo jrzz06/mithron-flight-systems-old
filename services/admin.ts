@@ -2,6 +2,7 @@ import { cache } from "react";
 import { createClient as createSupabaseServiceClient } from "@supabase/supabase-js";
 import { normalizeCmsRole } from "@/lib/auth/permissions";
 import { getSupabaseAdminConfig, type SupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout, supabaseFetch } from "@/lib/fetch-with-timeout";
 import { buildEnterpriseCleanupReadiness } from "@/services/enterprise-cleanup";
 import { countPublishedProductsWithoutPrimaryLink } from "@/services/catalog";
 import {
@@ -58,6 +59,8 @@ type WarehouseSnapshotInput = EnvSource | {
   offset?: number;
   /** Optional orders.status equality filter (e.g. "confirmed"). */
   status?: string;
+  /** Optional order_number / customer_email ilike search. */
+  search?: string;
 };
 
 type CountMetric = {
@@ -373,7 +376,7 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
   const isOptions = Boolean(
     input
     && typeof input === "object"
-    && ("scope" in input || "env" in input || "ordersFilter" in input || "limit" in input || "offset" in input || "status" in input)
+    && ("scope" in input || "env" in input || "ordersFilter" in input || "limit" in input || "offset" in input || "status" in input || "search" in input)
   );
   const options = isOptions
     ? input as {
@@ -383,6 +386,7 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
       limit?: number;
       offset?: number;
       status?: string;
+      search?: string;
     }
     : null;
   const scope = isWarehouseSnapshotScope(options?.scope) ? options.scope : "full";
@@ -397,6 +401,9 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
   const status = typeof options?.status === "string" && options.status.trim()
     ? options.status.trim()
     : undefined;
+  const search = typeof options?.search === "string" && options.search.trim()
+    ? options.search.trim()
+    : undefined;
   return {
     env: options ? (options.env ?? process.env) : (input as EnvSource),
     scope,
@@ -404,7 +411,8 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
     ordersFilter: options?.ordersFilter ?? "warehouse",
     limit,
     offset,
-    status
+    status,
+    search
   };
 }
 
@@ -421,14 +429,22 @@ function getSupabaseServiceClient(config: Extract<SupabaseAdminConfig, { configu
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    global: {
+      fetch: supabaseFetch()
     }
   });
 }
 
-async function listGovernanceAuthUsers(config: Extract<SupabaseAdminConfig, { configured: true }>) {
+async function listGovernanceAuthUsers(
+  config: Extract<SupabaseAdminConfig, { configured: true }>,
+  options: { page?: number; perPage?: number } = {}
+) {
   try {
     const supabase = getSupabaseServiceClient(config);
-    const authUsers = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 });
+    const page = Math.max(1, Math.floor(options.page ?? 1));
+    const perPage = Math.min(Math.max(1, Math.floor(options.perPage ?? 100)), 100);
+    const authUsers = await supabase.auth.admin.listUsers({ page, perPage });
     if (authUsers.error) {
       return { users: [] as SupabaseAuthUser[], error: authUsers.error.message };
     }
@@ -455,7 +471,7 @@ async function fetchAdminRows<T extends AdminRow>(
   query = `select=id&limit=${ADMIN_LIST_LIMIT}`
 ) {
   try {
-    const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+    const response = await fetchWithTimeout(`${config.url}/rest/v1/${table}?${query}`, {
       headers: getAdminHeaders(config),
       cache: "no-store",
       signal: AbortSignal.timeout(ADMIN_FETCH_TIMEOUT_MS)
@@ -491,7 +507,7 @@ async function countTableRows(
   query = "select=id&limit=1"
 ): Promise<CountMetric> {
   try {
-    const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+    const response = await fetchWithTimeout(`${config.url}/rest/v1/${table}?${query}`, {
       method: "HEAD",
       headers: {
         ...getAdminHeaders(config),
@@ -519,7 +535,7 @@ async function countTable(config: Extract<SupabaseAdminConfig, { configured: tru
 
 async function fetchStorageBuckets(config: Extract<SupabaseAdminConfig, { configured: true }>) {
   try {
-    const response = await fetch(`${config.url}/storage/v1/bucket`, {
+    const response = await fetchWithTimeout(`${config.url}/storage/v1/bucket`, {
       headers: getAdminHeaders(config),
       cache: "no-store",
       signal: AbortSignal.timeout(ADMIN_FETCH_TIMEOUT_MS)
@@ -672,7 +688,7 @@ export async function getAdminDashboardSnapshot(env: EnvSource = process.env) {
   );
 }
 
-export const getAuditObservabilitySnapshot = cache(async (env: EnvSource = process.env) => {
+export const loadAuditObservabilitySnapshot = cache(async (env: EnvSource = process.env) => {
   const config = getSupabaseAdminConfig(env);
   const emptyData = {
     metrics: [] as CountMetric[],
@@ -750,6 +766,21 @@ export const getAuditObservabilitySnapshot = cache(async (env: EnvSource = proce
   };
 });
 
+export async function getAuditObservabilitySnapshot(env: EnvSource = process.env) {
+  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
+  return readThroughCache(
+    REDIS_CACHE_KEYS.controlPlaneAuditObservability,
+    30,
+    () =>
+      cacheControlPlaneRead(
+        ["admin-audit-observability"],
+        () => loadAuditObservabilitySnapshot(env),
+        { revalidate: 30, tags: ["admin-audit", "control-plane-audit"] }
+      )
+  );
+}
+
 export const getEnterpriseCleanupSnapshot = cache(async (env: EnvSource = process.env) => {
   const config = getSupabaseAdminConfig(env);
   const blockedReadiness = buildEnterpriseCleanupReadiness({
@@ -826,7 +857,10 @@ export const getEnterpriseCleanupSnapshot = cache(async (env: EnvSource = proces
   };
 });
 
-export const getUserGovernanceSnapshot = cache(async (env: EnvSource = process.env) => {
+export const getUserGovernanceSnapshot = cache(async (
+  env: EnvSource = process.env,
+  listOptions: { page?: number; perPage?: number; q?: string; role?: string } = {}
+) => {
   const config = getSupabaseAdminConfig(env);
   const emptyData = {
     users: [] as GovernedUser[],
@@ -836,9 +870,18 @@ export const getUserGovernanceSnapshot = cache(async (env: EnvSource = process.e
   };
   if (!config.configured) return blockedSnapshot(config.message, emptyData);
 
+  const page = Math.max(1, Math.floor(listOptions.page ?? 1));
+  const perPage = Math.min(Math.max(1, Math.floor(listOptions.perPage ?? 50)), 100);
+  const search = (listOptions.q ?? "").trim();
+  const roleFilter = (listOptions.role ?? "").trim();
+
+  const profileQuery = search
+    ? `select=id,email,display_name,phone,default_role,governance_status,created_at,updated_at&or=(email.ilike.*${encodeURIComponent(search)}*,display_name.ilike.*${encodeURIComponent(search)}*)&order=updated_at.desc&limit=160`
+    : governanceQueries.profiles;
+
   const [authUsers, profiles, userRoles, roles, invites, activity, governanceTimeline] = await Promise.all([
-    listGovernanceAuthUsers(config),
-    fetchAdminRows(config, "profiles", governanceQueries.profiles),
+    listGovernanceAuthUsers(config, { page, perPage }),
+    fetchAdminRows(config, "profiles", profileQuery),
     fetchAdminRows(config, "user_roles", governanceQueries.userRoles),
     fetchAdminRows(config, "roles", governanceQueries.roles),
     fetchAdminRows(config, "admin_invites", governanceQueries.adminInvites),
@@ -864,7 +907,7 @@ export const getUserGovernanceSnapshot = cache(async (env: EnvSource = process.e
     ...authUsers.users.map((user) => user.id),
     ...profiles.rows.map((profile) => String(profile.id ?? "")).filter(Boolean)
   ]);
-  const users = Array.from(userIds).map((userId) => {
+  let users = Array.from(userIds).map((userId) => {
     const user = authById.get(userId);
     const profile = profileById.get(userId);
     const bannedUntil = typeof user?.banned_until === "string" ? user.banned_until : null;
@@ -891,6 +934,23 @@ export const getUserGovernanceSnapshot = cache(async (env: EnvSource = process.e
     return first.display_name.localeCompare(second.display_name);
   });
 
+  if (search) {
+    const needle = search.toLowerCase();
+    users = users.filter((user) =>
+      `${user.email} ${user.display_name}`.toLowerCase().includes(needle)
+    );
+  }
+  if (roleFilter && roleFilter !== "all") {
+    if (roleFilter === "disabled") {
+      users = users.filter((user) => user.status === "disabled");
+    } else {
+      users = users.filter((user) => user.default_role === roleFilter || user.roles.includes(roleFilter));
+    }
+  }
+
+  // Keep the current auth page bounded — do not ship the full governance join to the client.
+  users = users.slice(0, perPage);
+
   return {
     status: authUsers.error || [profiles, userRoles, roles, invites, activity, governanceTimeline].some((table) => table.status !== "LIVE") ? "PARTIAL" as const : "LIVE" as const,
     source: "supabase-admin" as const,
@@ -907,15 +967,26 @@ export const getUserGovernanceSnapshot = cache(async (env: EnvSource = process.e
   };
 });
 
-export const loadAdminSuppliersSnapshot = cache(async (env: EnvSource = process.env) => {
+export const loadAdminSuppliersSnapshot = cache(async (
+  env: EnvSource = process.env,
+  listOptions: { q?: string; limit?: number; offset?: number } = {}
+) => {
   const config = getSupabaseAdminConfig(env);
-  const emptyData = { suppliers: [] as AdminSupplierItem[] };
+  const emptyData = { suppliers: [] as AdminSupplierItem[], filteredTotal: 0 };
   if (!config.configured) return blockedSnapshot(config.message, emptyData);
 
+  const search = (listOptions.q ?? "").trim();
+  const limit = Math.min(Math.max(1, Math.floor(listOptions.limit ?? 80)), 200);
+  const offset = Math.max(0, Math.floor(listOptions.offset ?? 0));
+
+  const profilesQuery = search
+    ? `select=id,email,display_name,phone,governance_status,created_at,updated_at&or=(email.ilike.*${encodeURIComponent(search)}*,display_name.ilike.*${encodeURIComponent(search)}*)&order=updated_at.desc&limit=320`
+    : supplierDirectoryQueries.profiles;
+
   const [authUsers, supplierRoles, profiles] = await Promise.all([
-    listGovernanceAuthUsers(config),
+    listGovernanceAuthUsers(config, { page: 1, perPage: 100 }),
     fetchAdminRows(config, "user_roles", supplierDirectoryQueries.supplierRoles),
-    fetchAdminRows(config, "profiles", supplierDirectoryQueries.profiles)
+    fetchAdminRows(config, "profiles", profilesQuery)
   ]);
 
   const profileById = new Map(profiles.rows.map((profile) => [String(profile.id ?? ""), profile]));
@@ -925,7 +996,7 @@ export const loadAdminSuppliersSnapshot = cache(async (env: EnvSource = process.
   );
   const supplierIds = [...new Set(supplierRoles.rows.map((row) => String(row.user_id ?? "")).filter(Boolean))];
 
-  const suppliers = supplierIds.map((supplierId) => {
+  let suppliers = supplierIds.map((supplierId) => {
     const profile = profileById.get(supplierId);
     const authUser = authById.get(supplierId);
     const metadata = authUser?.user_metadata ?? {};
@@ -954,24 +1025,49 @@ export const loadAdminSuppliersSnapshot = cache(async (env: EnvSource = process.
     };
   }).sort((first, second) => second.registeredAt.localeCompare(first.registeredAt));
 
+  if (search) {
+    const needle = search.toLowerCase();
+    suppliers = suppliers.filter((supplier) =>
+      `${supplier.name} ${supplier.company} ${supplier.email} ${supplier.phone}`.toLowerCase().includes(needle)
+    );
+  }
+
+  const filteredTotal = suppliers.length;
+  suppliers = suppliers.slice(offset, offset + limit);
+
   return {
     status: authUsers.error || [supplierRoles, profiles].some((table) => table.status !== "LIVE") ? "PARTIAL" as const : "LIVE" as const,
     source: "supabase-admin" as const,
     blockedReason: authUsers.error,
-    data: { suppliers }
+    data: { suppliers, filteredTotal }
   };
 });
 
-export async function getAdminSuppliersSnapshot(env: EnvSource = process.env) {
+export async function getAdminSuppliersSnapshot(
+  input: EnvSource | { env?: EnvSource; q?: string; limit?: number; offset?: number } = process.env
+) {
+  const isOptions = Boolean(
+    input
+    && typeof input === "object"
+    && ("q" in input || "limit" in input || "offset" in input || "env" in input)
+  );
+  const options = isOptions
+    ? (input as { env?: EnvSource; q?: string; limit?: number; offset?: number })
+    : null;
+  const env = options ? (options.env ?? process.env) : (input as EnvSource);
+  const listOptions = { q: options?.q, limit: options?.limit, offset: options?.offset };
   const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
+  const q = (listOptions.q ?? "").trim().toLowerCase().slice(0, 64);
+  const limit = listOptions.limit ?? 80;
+  const offset = listOptions.offset ?? 0;
   return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneSuppliersSnapshot,
+    `${REDIS_CACHE_KEYS.controlPlaneSuppliersSnapshot}:${limit}:${offset}:${q}`,
     30,
     () =>
       cacheControlPlaneRead(
-        ["admin-suppliers-snapshot"],
-        () => loadAdminSuppliersSnapshot(env),
+        ["admin-suppliers-snapshot", String(limit), String(offset), q],
+        () => loadAdminSuppliersSnapshot(env, listOptions),
         { revalidate: 30, tags: ["admin-suppliers", "control-plane-suppliers"] }
       )
   );
@@ -1212,7 +1308,10 @@ export async function getAdminSettingsSnapshot(env: EnvSource = process.env) {
   };
 }
 
-export const loadProductManagerSnapshot = cache(async (env: EnvSource = process.env) => {
+export const loadProductManagerSnapshot = cache(async (
+  env: EnvSource = process.env,
+  listOptions: { limit?: number; offset?: number; q?: string; workflowStatus?: string } = {}
+) => {
   const config = getSupabaseAdminConfig(env);
   const emptyData = {
     products: [] as AdminRow[],
@@ -1224,15 +1323,37 @@ export const loadProductManagerSnapshot = cache(async (env: EnvSource = process.
     productCounts: [] as CountMetric[],
     mediaCounts: [] as CountMetric[],
     stockCoverage: { productCount: 0, inventoryLinked: 0, stockLinked: 0, missingStock: 0 },
-    catalogMetrics: { activeProducts: 0, archivedProducts: 0, totalProducts: 0 }
+    catalogMetrics: { activeProducts: 0, archivedProducts: 0, totalProducts: 0 },
+    filteredTotal: 0
   };
   if (!config.configured) return blockedSnapshot(config.message, emptyData);
+
+  const listLimit = Math.min(Math.max(1, Math.floor(listOptions.limit ?? PRODUCT_MANAGER_LIMIT)), 500);
+  const listOffset = Math.max(0, Math.floor(listOptions.offset ?? 0));
+  const statusFilter = (listOptions.workflowStatus ?? "active").trim() || "active";
+  const search = (listOptions.q ?? "").trim();
+
+  let workflowQuery = "";
+  if (statusFilter === "active") {
+    workflowQuery = "&workflow_status=neq.archived&archived_at=is.null&merge_status=neq.archived_merged";
+  } else if (statusFilter === "archived") {
+    workflowQuery = "&or=(workflow_status.eq.archived,archived_at.not.is.null)";
+  } else if (statusFilter !== "all") {
+    workflowQuery = `&workflow_status=eq.${encodeURIComponent(statusFilter)}`;
+  }
+
+  const searchQuery = search
+    ? `&or=(name.ilike.*${encodeURIComponent(search)}*,slug.ilike.*${encodeURIComponent(search)}*,category.ilike.*${encodeURIComponent(search)}*)`
+    : "";
 
   const activeProductQuery =
     "select=slug&workflow_status=neq.archived&archived_at=is.null&merge_status=neq.archived_merged";
   const archivedProductQuery = "select=slug&or=(workflow_status.eq.archived,archived_at.not.is.null)";
+  const filteredCountQuery = `select=slug${workflowQuery}${searchQuery}`;
+  const productsListQuery =
+    `select=${PRODUCT_LIST_SELECT}${workflowQuery}${searchQuery}&order=sort_order.asc&limit=${listLimit}${listOffset > 0 ? `&offset=${listOffset}` : ""}`;
 
-  const [productCounts, mediaCounts, products, mediaLinks, inventory, stock, movements, categories, activeProducts, archivedProducts, totalProducts] = await Promise.all([
+  const [productCounts, mediaCounts, products, mediaLinks, inventory, stock, movements, categories, activeProducts, archivedProducts, totalProducts, filteredTotal] = await Promise.all([
     Promise.all([
       countTable(config, "mithron_products"),
       countTable(config, "inventory"),
@@ -1242,7 +1363,7 @@ export const loadProductManagerSnapshot = cache(async (env: EnvSource = process.
       countTable(config, "media_assets"),
       countTable(config, "product_media_assets")
     ]),
-    fetchAdminRows(config, "mithron_products", `select=${PRODUCT_LIST_SELECT}&order=sort_order.asc&limit=${PRODUCT_MANAGER_LIMIT}`),
+    fetchAdminRows(config, "mithron_products", productsListQuery),
     fetchAdminRows(config, "product_media_assets", `select=product_slug,media_asset_id,usage,variant_id,is_primary,sort_order,alt_text,caption,metadata,updated_at&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
     fetchAdminRows(config, "inventory", `select=product_slug,sku,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
     fetchAdminRows(config, "warehouse_stock", `select=warehouse_code,product_slug,sku,available_quantity,committed_quantity,last_counted_at,updated_at&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
@@ -1250,7 +1371,8 @@ export const loadProductManagerSnapshot = cache(async (env: EnvSource = process.
     fetchAdminRows(config, "category_metadata", "select=route_key,title,status,is_visible,sort_order&order=sort_order.asc&limit=80"),
     countTableRows(config, "mithron_products", activeProductQuery),
     countTableRows(config, "mithron_products", archivedProductQuery),
-    countTableRows(config, "mithron_products", "select=slug")
+    countTableRows(config, "mithron_products", "select=slug"),
+    countTableRows(config, "mithron_products", filteredCountQuery)
   ]);
   const inventorySlugs = new Set(inventory.rows.map((row) => String(row.product_slug ?? "")).filter(Boolean));
   const stockSlugs = new Set(stock.rows.map((row) => String(row.product_slug ?? "")).filter(Boolean));
@@ -1279,21 +1401,55 @@ export const loadProductManagerSnapshot = cache(async (env: EnvSource = process.
         activeProducts: activeProducts.count,
         archivedProducts: archivedProducts.count,
         totalProducts: totalProducts.count
-      }
+      },
+      filteredTotal: filteredTotal.count
     }
   };
 });
 
-export async function getProductManagerSnapshot(env: EnvSource = process.env) {
+export async function getProductManagerSnapshot(
+  input: EnvSource | {
+    env?: EnvSource;
+    limit?: number;
+    offset?: number;
+    q?: string;
+    workflowStatus?: string;
+  } = process.env
+) {
+  const isOptions = Boolean(
+    input
+    && typeof input === "object"
+    && ("limit" in input || "offset" in input || "q" in input || "workflowStatus" in input || "env" in input)
+  );
+  const options = isOptions
+    ? (input as {
+      env?: EnvSource;
+      limit?: number;
+      offset?: number;
+      q?: string;
+      workflowStatus?: string;
+    })
+    : null;
+  const env = options ? (options.env ?? process.env) : (input as EnvSource);
+  const listOptions = {
+    limit: options?.limit,
+    offset: options?.offset,
+    q: options?.q,
+    workflowStatus: options?.workflowStatus
+  };
   const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
+  const limit = listOptions.limit ?? PRODUCT_MANAGER_LIMIT;
+  const offset = listOptions.offset ?? 0;
+  const workflowStatus = listOptions.workflowStatus ?? "active";
+  const q = (listOptions.q ?? "").trim().toLowerCase().slice(0, 64);
   return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneProductManagerSnapshot,
+    REDIS_CACHE_KEYS.controlPlaneProductManagerList(limit, offset, workflowStatus, q),
     30,
     () =>
       cacheControlPlaneRead(
-        ["admin-product-manager-snapshot"],
-        () => loadProductManagerSnapshot(env),
+        ["admin-product-manager-snapshot", String(limit), String(offset), workflowStatus, q],
+        () => loadProductManagerSnapshot(env, listOptions),
         {
           revalidate: 30,
           tags: ["admin-products", "control-plane-catalog", "control-plane-inventory"]
@@ -1335,7 +1491,8 @@ const loadWarehouseSnapshot = cache(async (
   env: EnvSource,
   limit: number,
   offset: number,
-  status: string | undefined
+  status: string | undefined,
+  search: string | undefined
 ) => {
   const tables = warehouseSnapshotScopes[scope];
   const resolvedEnv = env;
@@ -1380,10 +1537,16 @@ const loadWarehouseSnapshot = cache(async (
   const shipmentsSelect =
     "select=id,shipment_number,shipment_status,order_id,warehouse_id,carrier_name,tracking_number,updated_at,created_at";
   // Keep metadata/timeline on list fetch — detail pages and list helpers (eligibility, shipping UI) read them from the snapshot.
+  // Batch 6 (C3) will drop metadata/timeline from list selects.
   const ordersStatusFilter = status ? `&status=eq.${encodeURIComponent(status)}` : "";
+  const ordersSearchFilter = search
+    ? `&or=(order_number.ilike.*${encodeURIComponent(search)}*,customer_email.ilike.*${encodeURIComponent(search)}*)`
+    : "";
   const ordersOffset = offset > 0 ? `&offset=${offset}` : "";
+  // C3: omit timeline from LIST selects (lazy-load on detail). Keep metadata for
+  // warehouse eligibility, customer phone/name, and shipping helpers.
   const ordersListQuery =
-    `select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,metadata,timeline,shipment_tracking,invoice_url,archived_at,deleted_at,created_at,updated_at&created_at=gte.${encodeURIComponent(operationalArchiveHotCutoffIso())}${ordersStatusFilter}&order=created_at.desc&limit=${ordersRowLimit}${ordersOffset}`;
+    `select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,metadata,shipment_tracking,invoice_url,archived_at,deleted_at,created_at,updated_at&created_at=gte.${encodeURIComponent(operationalArchiveHotCutoffIso())}${ordersStatusFilter}${ordersSearchFilter}&order=created_at.desc&limit=${ordersRowLimit}${ordersOffset}`;
   const [products, inventory, stock, movements, orders, shipmentItems, shipmentTimeline, activityLogs] = await Promise.all([
     maybeFetch("products", "mithron_products", `select=slug,name,category,price,image,hero,workflow_status,archived_at,is_visible,updated_at&order=sort_order.asc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
     maybeFetch("inventory", "inventory", inventoryCatalogQuery),
@@ -1487,17 +1650,18 @@ const loadWarehouseSnapshot = cache(async (
 });
 
 export async function getWarehouseSnapshot(input: WarehouseSnapshotInput = process.env) {
-  const { env, scope, ordersFilter, limit, offset, status } = resolveWarehouseSnapshotInput(input);
+  const { env, scope, ordersFilter, limit, offset, status, search } = resolveWarehouseSnapshotInput(input);
   const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
   const statusKey = status ?? "all";
+  const searchKey = search ? search.toLowerCase().slice(0, 64) : "";
   return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneWarehouseSnapshot(scope, ordersFilter, limit, offset, statusKey),
+    `${REDIS_CACHE_KEYS.controlPlaneWarehouseSnapshot(scope, ordersFilter, limit, offset, statusKey)}:q:${searchKey}`,
     30,
     () =>
       cacheControlPlaneRead(
-        ["admin-warehouse-snapshot", scope, ordersFilter, String(limit), String(offset), statusKey],
-        () => loadWarehouseSnapshot(scope, ordersFilter, env, limit, offset, status),
+        ["admin-warehouse-snapshot", scope, ordersFilter, String(limit), String(offset), statusKey, searchKey],
+        () => loadWarehouseSnapshot(scope, ordersFilter, env, limit, offset, status, search),
         {
           revalidate: 30,
           tags: [
@@ -1555,7 +1719,7 @@ export async function listPendingSupplierSubmissions(env: EnvSource = process.en
   const config = getSupabaseAdminConfig(env);
   if (!config.configured) return [];
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/mithron_products?select=slug,name,supplier_id,updated_at&workflow_status=eq.pending_review&order=updated_at.desc&limit=8`,
     {
       headers: {
@@ -1572,7 +1736,7 @@ export async function listPendingSupplierSubmissions(env: EnvSource = process.en
   const profileById = new Map<string, string>();
 
   if (supplierIds.length) {
-    const profilesResponse = await fetch(
+    const profilesResponse = await fetchWithTimeout(
       `${config.url}/rest/v1/profiles?select=id,email,display_name&id=in.(${supplierIds.map(encodeURIComponent).join(",")})`,
       {
         headers: {

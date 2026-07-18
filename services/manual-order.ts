@@ -18,6 +18,7 @@ import {
   type CheckoutOrderItemInput
 } from "@/services/orders";
 import { notifyCustomerAboutOrder } from "@/services/order-workflow";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 type JsonRecord = Record<string, unknown>;
@@ -152,7 +153,7 @@ async function findManualOrderByIdempotencyKey(
   env: EnvSource = process.env
 ): Promise<ManualOrderWorkflowResult | null> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/orders?select=id,order_number,status,payment_status,total,created_by_user_id,customer_email&customer_email=eq.${encodeURIComponent(email.trim().toLowerCase())}&metadata->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );

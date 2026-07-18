@@ -57,7 +57,7 @@ export async function getInventoryQuantitiesBySlug(
     const chunk = slugs.slice(index, index + INVENTORY_SLUG_CHUNK_SIZE);
     const slugFilter = chunk.map((slug) => encodeURIComponent(slug)).join(",");
     const freshness = options.freshness ?? "checkout";
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.url}/rest/v1/inventory?select=product_slug,sku,quantity,reserved_quantity&product_slug=in.(${slugFilter})&order=updated_at.desc`,
       {
         headers: headers(config.serviceRoleKey),

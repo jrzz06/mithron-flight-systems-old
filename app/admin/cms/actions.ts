@@ -505,6 +505,58 @@ export async function saveHomepageMissionFormAction(formData: FormData) {
   );
 }
 
+/** In-place editor bridge — no redirect, so SPA pending state always clears. */
+export async function saveHomepageMissionClientAction(
+  formData: FormData
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    await requirePermission("cms.write");
+    const missionKey = readText(formData, "mission_key", "agri") as keyof HomepageCmsContent["missions"];
+    const section = missionKey === "city" ? "mission-city" : "mission-agri";
+    const tileCount = Number(readText(formData, "tile_count", "5"));
+    const tiles = Array.from({ length: tileCount }, (_, index) => ({
+      label: readText(formData, `tile_${index}_label`),
+      body: readRichTextHtmlField(formData, `tile_${index}_body`),
+      operator: readText(formData, `tile_${index}_operator`),
+      model: readText(formData, `tile_${index}_model`),
+      location: readText(formData, `tile_${index}_location`),
+      imageSrc: assertOptionalCmsMediaSrc(readText(formData, `tile_${index}_image_src`), `Mission tile ${index + 1} image`),
+      imageAlt: readText(formData, `tile_${index}_image_alt`),
+      href: readText(formData, `tile_${index}_href`)
+    }));
+    const patch: Partial<HomepageMissionCms> = {
+      eyebrow: readText(formData, "eyebrow"),
+      title: readText(formData, "title"),
+      body: readRichTextHtmlField(formData, "body"),
+      href: readText(formData, "href"),
+      cta: readText(formData, "cta"),
+      mediaNote: readText(formData, "media_note"),
+      tiles
+    };
+    await persistHomepageV1Draft(section, (current) => ({
+      ...current,
+      missions: {
+        ...current.missions,
+        [missionKey]: {
+          ...current.missions[missionKey],
+          ...patch,
+          tiles: current.missions[missionKey].tiles.map((tile, index) => ({
+            ...tile,
+            ...(tiles[index] ?? {})
+          }))
+        }
+      }
+    }));
+    await revalidateCmsCutoverPaths("homepage_cms");
+    return {
+      ok: true,
+      message: `${patch.title || "Mission section"} draft saved.`
+    };
+  } catch (error) {
+    return { ok: false, message: cmsActionMessage(error) };
+  }
+}
+
 export async function saveHomepageTestimonialsHeaderFormAction(formData: FormData) {
   const patch = {
     eyebrow: readText(formData, "eyebrow"),
@@ -522,6 +574,31 @@ export async function saveHomepageTestimonialsHeaderFormAction(formData: FormDat
     }),
     "Reviews header draft saved. Publish to update the live homepage."
   );
+}
+
+/** In-place editor bridge — no redirect. */
+export async function saveHomepageTestimonialsHeaderClientAction(
+  formData: FormData
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    await requirePermission("cms.write");
+    const patch = {
+      eyebrow: readText(formData, "eyebrow"),
+      title: readText(formData, "title"),
+      titleAccent: readText(formData, "title_accent"),
+      lead: readText(formData, "lead"),
+      linkLabel: readText(formData, "link_label"),
+      linkHref: readText(formData, "link_href")
+    };
+    await persistHomepageV1Draft("testimonials", (current) => ({
+      ...current,
+      testimonials: { ...current.testimonials, ...patch }
+    }));
+    await revalidateCmsCutoverPaths("homepage_cms");
+    return { ok: true, message: "Reviews header draft saved." };
+  } catch (error) {
+    return { ok: false, message: cmsActionMessage(error) };
+  }
 }
 
 export async function saveHomepageFooterLeadFormAction(formData: FormData) {
@@ -1244,6 +1321,22 @@ export async function saveHomepageV2SectionFormAction(formData: FormData) {
   const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);
 
   await saveHomepageV2Draft((current) => applyHomepageV2SectionPatch(current, sectionKey, patch), "Section draft saved.");
+}
+
+/** In-place editor bridge — no redirect, so SPA pending state always clears. */
+export async function saveHomepageV2SectionClientAction(
+  formData: FormData
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    await requirePermission("cms.write");
+    const sectionKey = readText(formData, "section_key");
+    const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);
+    await mutateHomepageV2Draft((current) => applyHomepageV2SectionPatch(current, sectionKey, patch));
+    await revalidateCmsCutoverPaths("homepage_cms_v2");
+    return { ok: true, message: "Section draft saved." };
+  } catch (error) {
+    return { ok: false, message: cmsActionMessage(error) };
+  }
 }
 
 function buildHomepageV2SectionPatchFromFormData(formData: FormData, sectionKey: string): Record<string, unknown> {

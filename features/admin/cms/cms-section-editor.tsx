@@ -1,10 +1,7 @@
 "use client";
 
-import { wrapServerAction } from "@/hooks/use-async-action";
-
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { useFormStatus } from "react-dom";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useOptionalAdminRealtime } from "@/components/admin/realtime/admin-realtime-provider";
 import { markControlPlaneLiveSyncFlush } from "@/lib/control-plane/shared-live-sync-coordinator";
@@ -13,10 +10,10 @@ import {
   publishHomepageSectionClientAction,
   publishHomepageV1ClientAction,
   publishHomepageV2ClientAction,
-  saveHomepageMissionFormAction,
+  saveHomepageMissionClientAction,
   saveHomepageShelfClientAction,
-  saveHomepageTestimonialsHeaderFormAction,
-  saveHomepageV2SectionFormAction,
+  saveHomepageTestimonialsHeaderClientAction,
+  saveHomepageV2SectionClientAction,
   uploadCmsFieldImageAction
 } from "@/app/admin/cms/actions";
 import { BannerImagePreview } from "@/components/admin/cms/banner-image-preview";
@@ -64,17 +61,32 @@ import type { ProductPageReview } from "@/lib/product-reviews/types";
 import { CmsSyncErrorPanel } from "@/components/admin/cms/cms-sync-error-panel";
 import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 
-const timedSaveHomepageMissionFormAction = wrapServerAction(saveHomepageMissionFormAction, { label: "Save homepage mission" });
-const timedSaveHomepageTestimonialsHeaderFormAction = wrapServerAction(saveHomepageTestimonialsHeaderFormAction, { label: "Save testimonials header" });
-const timedSaveHomepageV2SectionFormAction = wrapServerAction(saveHomepageV2SectionFormAction, { label: "Save homepage section" });
+type ClientActionResult = { ok: boolean; message: string };
 
-/** Reports nested form pending into the section editor action bar. Must render inside a <form>. */
-function CmsFormPendingReporter({ onPendingChange }: { onPendingChange: (pending: boolean) => void }) {
-  const { pending } = useFormStatus();
-  useEffect(() => {
-    onPendingChange(pending);
-  }, [onPendingChange, pending]);
-  return null;
+async function runCmsClientSave(
+  action: (formData: FormData) => Promise<ClientActionResult>,
+  formData: FormData,
+  label: string,
+  notifyId: string
+): Promise<boolean> {
+  try {
+    const result = await raceWithTimeout(action(formData), undefined, label);
+    if (result.ok) {
+      notify.success(result.message || FEEDBACK_MESSAGES.changesSaved, { source: "cms", id: notifyId });
+      return true;
+    }
+    notify.error(result.message || FEEDBACK_MESSAGES.failedToSaveChanges, {
+      source: "cms",
+      id: `${notifyId}:error`
+    });
+    return false;
+  } catch (error) {
+    notify.error(
+      error instanceof Error ? error.message : FEEDBACK_MESSAGES.failedToSaveChanges,
+      { source: "cms", id: `${notifyId}:error` }
+    );
+    return false;
+  }
 }
 
 type HeroRecord = {
@@ -326,18 +338,13 @@ export function CmsSectionEditor({
       const missionState = resolveMissionEditorState(missionKey, homepageContent);
       const mission = missionState.mission;
       return (
-        <form action={timedSaveHomepageMissionFormAction} className="grid gap-4" onChange={markDirty}>
-          <CmsFormPendingReporter onPendingChange={onFormPendingChange} />
-          <input type="hidden" name="mission_key" value={missionKey} />
-          <div className="grid gap-4 md:grid-cols-2">
-            <CmsField label="Title" name="title" defaultValue={mission.title} />
-            <CmsField label="Eyebrow" name="eyebrow" defaultValue={mission.eyebrow} />
-            <CmsField label="Primary CTA" name="cta" defaultValue={mission.cta} />
-            <CmsField label="Section link" name="href" defaultValue={mission.href} />
-          </div>
-          <CmsTextAreaField label="Intro body" name="body" defaultValue={mission.body} />
-          <MissionTileEditor tiles={mission.tiles} onDirty={markDirty} />
-        </form>
+        <MissionSectionForm
+          missionKey={missionKey}
+          mission={mission}
+          onDirty={markDirty}
+          onSaved={markSaved}
+          onSavingChange={onFormPendingChange}
+        />
       );
     }
 
@@ -383,6 +390,7 @@ export function CmsSectionEditor({
           banner={banner}
           spec={CMS_IMAGE_SPECS.interShelfBanner}
           onDirty={markDirty}
+          onSaved={markSaved}
           onPendingChange={onFormPendingChange}
           onUpload={uploadImage}
         />
@@ -396,6 +404,7 @@ export function CmsSectionEditor({
           sectionKey={`banner-full-viewport-${fullIndex + 1}`}
           banner={homepageV2.banners.fullViewport[fullIndex]}
           onDirty={markDirty}
+          onSaved={markSaved}
           onPendingChange={onFormPendingChange}
           onUpload={uploadImage}
         />
@@ -426,34 +435,19 @@ export function CmsSectionEditor({
               Open Reviews
             </Link>
           </div>
-          <form action={timedSaveHomepageTestimonialsHeaderFormAction} className="grid gap-4" onChange={markDirty}>
-            <CmsFormPendingReporter onPendingChange={onFormPendingChange} />
-            <div className="grid gap-4 md:grid-cols-2">
-              <CmsField label="Heading" name="title" defaultValue={homepageContent.testimonials.title} />
-              <CmsField label="Accent phrase" name="title_accent" defaultValue={homepageContent.testimonials.titleAccent} />
-              <CmsField label="Eyebrow" name="eyebrow" defaultValue={homepageContent.testimonials.eyebrow} />
-              <CmsField label="Browse link label" name="link_label" defaultValue={homepageContent.testimonials.linkLabel} />
-              <CmsField label="Browse link" name="link_href" defaultValue={homepageContent.testimonials.linkHref} />
-            </div>
-            <CmsTextAreaField label="Description" name="lead" defaultValue={homepageContent.testimonials.lead} />
-            <button type="submit" className={cmsPrimaryButtonClass()}>Save section header</button>
-          </form>
-          <form action={timedSaveHomepageV2SectionFormAction} className="grid gap-4 rounded-[var(--platform-radius)] border border-[var(--platform-border)] p-4" onChange={markDirty}>
-            <CmsFormPendingReporter onPendingChange={onFormPendingChange} />
-            <input type="hidden" name="section_key" value="reviews" />
-            <CmsField label="Max reviews shown" name="max_count" defaultValue={String(homepageV2.reviews.maxCount)} type="number" />
-            <CmsSelectField
-              label="Sort order"
-              name="sort_order"
-              defaultValue={homepageV2.reviews.sortOrder}
-              options={[
-                { value: "newest", label: "Newest" },
-                { value: "rating", label: "Highest rating" },
-                { value: "manual", label: "Manual" }
-              ]}
-            />
-            <button type="submit" className={cmsPrimaryButtonClass()}>Save review settings</button>
-          </form>
+          <TestimonialsHeaderForm
+            testimonials={homepageContent.testimonials}
+            onDirty={markDirty}
+            onSaved={markSaved}
+            onSavingChange={onFormPendingChange}
+          />
+          <ReviewsSettingsForm
+            maxCount={homepageV2.reviews.maxCount}
+            sortOrder={homepageV2.reviews.sortOrder}
+            onDirty={markDirty}
+            onSaved={markSaved}
+            onSavingChange={onFormPendingChange}
+          />
         </div>
       );
     }
@@ -543,11 +537,166 @@ export function CmsSectionEditor({
   );
 }
 
+function MissionSectionForm({
+  missionKey,
+  mission,
+  onDirty,
+  onSaved,
+  onSavingChange
+}: {
+  missionKey: string;
+  mission: HomepageCmsContent["missions"]["agri"];
+  onDirty: () => void;
+  onSaved: () => void;
+  onSavingChange?: (pending: boolean) => void;
+}) {
+  const [isSaving, startTransition] = useTransition();
+
+  useEffect(() => {
+    onSavingChange?.(isSaving);
+  }, [isSaving, onSavingChange]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const ok = await runCmsClientSave(
+        saveHomepageMissionClientAction,
+        formData,
+        "Save homepage mission",
+        "cms:mission-save"
+      );
+      if (ok) onSaved();
+    });
+  };
+
+  return (
+    <form className="grid gap-4" onChange={onDirty} onSubmit={handleSubmit}>
+      <input type="hidden" name="mission_key" value={missionKey} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <CmsField label="Title" name="title" defaultValue={mission.title} />
+        <CmsField label="Eyebrow" name="eyebrow" defaultValue={mission.eyebrow} />
+        <CmsField label="Primary CTA" name="cta" defaultValue={mission.cta} />
+        <CmsField label="Section link" name="href" defaultValue={mission.href} />
+      </div>
+      <CmsTextAreaField label="Intro body" name="body" defaultValue={mission.body} />
+      <MissionTileEditor tiles={mission.tiles} onDirty={onDirty} />
+    </form>
+  );
+}
+
+function TestimonialsHeaderForm({
+  testimonials,
+  onDirty,
+  onSaved,
+  onSavingChange
+}: {
+  testimonials: HomepageCmsContent["testimonials"];
+  onDirty: () => void;
+  onSaved: () => void;
+  onSavingChange?: (pending: boolean) => void;
+}) {
+  const [isSaving, startTransition] = useTransition();
+
+  useEffect(() => {
+    onSavingChange?.(isSaving);
+  }, [isSaving, onSavingChange]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const ok = await runCmsClientSave(
+        saveHomepageTestimonialsHeaderClientAction,
+        formData,
+        "Save testimonials header",
+        "cms:testimonials-header-save"
+      );
+      if (ok) onSaved();
+    });
+  };
+
+  return (
+    <form className="grid gap-4" onChange={onDirty} onSubmit={handleSubmit}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <CmsField label="Heading" name="title" defaultValue={testimonials.title} />
+        <CmsField label="Accent phrase" name="title_accent" defaultValue={testimonials.titleAccent} />
+        <CmsField label="Eyebrow" name="eyebrow" defaultValue={testimonials.eyebrow} />
+        <CmsField label="Browse link label" name="link_label" defaultValue={testimonials.linkLabel} />
+        <CmsField label="Browse link" name="link_href" defaultValue={testimonials.linkHref} />
+      </div>
+      <CmsTextAreaField label="Description" name="lead" defaultValue={testimonials.lead} />
+      <button type="submit" disabled={isSaving} aria-busy={isSaving} className={cmsPrimaryButtonClass()}>
+        {isSaving ? "Saving..." : "Save section header"}
+      </button>
+    </form>
+  );
+}
+
+function ReviewsSettingsForm({
+  maxCount,
+  sortOrder,
+  onDirty,
+  onSaved,
+  onSavingChange
+}: {
+  maxCount: number;
+  sortOrder: string;
+  onDirty: () => void;
+  onSaved: () => void;
+  onSavingChange?: (pending: boolean) => void;
+}) {
+  const [isSaving, startTransition] = useTransition();
+
+  useEffect(() => {
+    onSavingChange?.(isSaving);
+  }, [isSaving, onSavingChange]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const ok = await runCmsClientSave(
+        saveHomepageV2SectionClientAction,
+        formData,
+        "Save review settings",
+        "cms:reviews-settings-save"
+      );
+      if (ok) onSaved();
+    });
+  };
+
+  return (
+    <form
+      className="grid gap-4 rounded-[var(--platform-radius)] border border-[var(--platform-border)] p-4"
+      onChange={onDirty}
+      onSubmit={handleSubmit}
+    >
+      <input type="hidden" name="section_key" value="reviews" />
+      <CmsField label="Max reviews shown" name="max_count" defaultValue={String(maxCount)} type="number" />
+      <CmsSelectField
+        label="Sort order"
+        name="sort_order"
+        defaultValue={sortOrder}
+        options={[
+          { value: "newest", label: "Newest" },
+          { value: "rating", label: "Highest rating" },
+          { value: "manual", label: "Manual" }
+        ]}
+      />
+      <button type="submit" disabled={isSaving} aria-busy={isSaving} className={cmsPrimaryButtonClass()}>
+        {isSaving ? "Saving..." : "Save review settings"}
+      </button>
+    </form>
+  );
+}
+
 function V2BannerForm({
   sectionKey,
   banner,
   spec,
   onDirty,
+  onSaved,
   onPendingChange,
   onUpload
 }: {
@@ -565,15 +714,34 @@ function V2BannerForm({
   };
   spec: (typeof CMS_IMAGE_SPECS)[keyof typeof CMS_IMAGE_SPECS];
   onDirty?: () => void;
+  onSaved?: () => void;
   onPendingChange?: (pending: boolean) => void;
   onUpload?: (file: File) => Promise<{ src: string; alt?: string } | null>;
 }) {
   const [previewSrc, setPreviewSrc] = useState(banner.imageSrc);
   const [bannerDevice, setBannerDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [isSaving, startTransition] = useTransition();
+
+  useEffect(() => {
+    onPendingChange?.(isSaving);
+  }, [isSaving, onPendingChange]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const ok = await runCmsClientSave(
+        saveHomepageV2SectionClientAction,
+        formData,
+        "Save homepage section",
+        "cms:v2-banner-save"
+      );
+      if (ok) onSaved?.();
+    });
+  };
 
   return (
-    <form action={timedSaveHomepageV2SectionFormAction} className="grid gap-4" onChange={() => onDirty?.()}>
-      {onPendingChange ? <CmsFormPendingReporter onPendingChange={onPendingChange} /> : null}
+    <form className="grid gap-4" onChange={() => onDirty?.()} onSubmit={handleSubmit}>
       <input type="hidden" name="section_key" value={sectionKey} />
       <div className="grid gap-4 md:grid-cols-2">
         <CmsField label="Heading" name="heading" defaultValue={banner.heading} />
@@ -612,17 +780,20 @@ function FullViewportBannerForm({
   sectionKey,
   banner,
   onDirty,
+  onSaved,
   onPendingChange,
   onUpload
 }: {
   sectionKey: string;
   banner: HomepageCmsV2Content["banners"]["fullViewport"][number];
   onDirty?: () => void;
+  onSaved?: () => void;
   onPendingChange?: (pending: boolean) => void;
   onUpload?: (file: File) => Promise<{ src: string; alt?: string } | null>;
 }) {
   const [desktopPreview, setDesktopPreview] = useState(banner.desktopImageSrc);
   const [mobilePreview, setMobilePreview] = useState(banner.mobileImageSrc);
+  const [isSaving, startTransition] = useTransition();
   const mobileSpec = {
     ...CMS_IMAGE_SPECS.fullViewport,
     label: "Full viewport mobile banner",
@@ -635,9 +806,26 @@ function FullViewportBannerForm({
     aspectRatio: "9:16"
   };
 
+  useEffect(() => {
+    onPendingChange?.(isSaving);
+  }, [isSaving, onPendingChange]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const ok = await runCmsClientSave(
+        saveHomepageV2SectionClientAction,
+        formData,
+        "Save homepage section",
+        "cms:full-viewport-banner-save"
+      );
+      if (ok) onSaved?.();
+    });
+  };
+
   return (
-    <form action={timedSaveHomepageV2SectionFormAction} className="grid gap-5" onChange={() => onDirty?.()}>
-      {onPendingChange ? <CmsFormPendingReporter onPendingChange={onPendingChange} /> : null}
+    <form className="grid gap-5" onChange={() => onDirty?.()} onSubmit={handleSubmit}>
       <input type="hidden" name="section_key" value={sectionKey} />
       <div className="grid gap-4 md:grid-cols-2">
         <CmsField label="Heading" name="heading" defaultValue={banner.heading} />

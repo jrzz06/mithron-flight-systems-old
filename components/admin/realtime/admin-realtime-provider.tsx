@@ -82,6 +82,18 @@ function applyResourcePayload(
   return next;
 }
 
+/** True when both lists contain the same resources in the same order. */
+export function sameActiveResources(
+  prev: readonly AdminLiveResourceId[],
+  next: readonly AdminLiveResourceId[]
+): boolean {
+  if (prev.length !== next.length) return false;
+  for (let i = 0; i < prev.length; i += 1) {
+    if (prev[i] !== next[i]) return false;
+  }
+  return true;
+}
+
 export function AdminRealtimeProvider({
   enabled = true,
   children
@@ -96,7 +108,8 @@ export function AdminRealtimeProvider({
   const reconcileInFlight = useRef(false);
 
   const syncActiveResources = useCallback(() => {
-    setActiveResources([...registrationsRef.current.keys()]);
+    const next = [...registrationsRef.current.keys()];
+    setActiveResources((prev) => (sameActiveResources(prev, next) ? prev : next));
   }, []);
 
   const registerResource = useCallback(
@@ -243,21 +256,27 @@ export function useOptionalAdminRealtime() {
 
 export function useAdminLiveResource(resource: AdminLiveResourceId, enabled = true) {
   const realtime = useOptionalAdminRealtime();
+  // Depend on the stable register callback — not the whole context value.
+  // Context identity changes when collections/activeResources update; depending on
+  // `realtime` re-ran this effect, re-registered, and caused max update depth.
+  const registerResource = realtime?.registerResource;
+  const reconcileResources = realtime?.reconcileResources;
+  const storeCollections = realtime?.collections;
 
   useEffect(() => {
-    if (!enabled || !realtime) return undefined;
-    return realtime.registerResource(resource);
-  }, [enabled, realtime, resource]);
+    if (!enabled || !registerResource) return undefined;
+    return registerResource(resource);
+  }, [enabled, registerResource, resource]);
 
   const tables = ADMIN_RESOURCE_TABLES[resource] ?? [];
   const collections = useMemo(() => {
-    if (!realtime) return {} as Partial<Record<AdminEntityTable, AdminEntityRow[]>>;
+    if (!storeCollections) return {} as Partial<Record<AdminEntityTable, AdminEntityRow[]>>;
     const next: Partial<Record<AdminEntityTable, AdminEntityRow[]>> = {};
     for (const table of tables) {
-      next[table] = realtime.getCollection(table);
+      next[table] = storeCollections[table] ?? [];
     }
     return next;
-  }, [realtime, tables]);
+  }, [storeCollections, tables]);
 
   return {
     enabled: Boolean(realtime) && enabled,
@@ -265,7 +284,9 @@ export function useAdminLiveResource(resource: AdminLiveResourceId, enabled = tr
     collections,
     hydrateResource: realtime?.hydrateResource,
     patchCollection: realtime?.patchCollection,
-    reconcile: realtime ? () => realtime.reconcileResources([resource]) : async () => undefined
+    reconcile: reconcileResources
+      ? () => reconcileResources([resource])
+      : async () => undefined
   };
 }
 
