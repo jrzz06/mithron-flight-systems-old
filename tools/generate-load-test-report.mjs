@@ -66,8 +66,16 @@ function buildReport(data) {
   md += `Evaluate application stability, responsiveness, and resource utilization under baseline, expected production, and peak concurrent user loads.\n\n`;
 
   md += `## 2. Testing Approach\n\n`;
-  md += `Automated HTTP load testing was executed against the production Next.js server using **autocannon** (with native fetch fallback). Each scenario sustained concurrent connections for approximately 200 seconds across five representative storefront routes.\n\n`;
+  md += `Automated HTTP load testing was executed against the production Next.js server using **autocannon** (with native fetch fallback). Each scenario sustained concurrent connections across storefront pages plus cart-pricing POST and checkout dry-checks.\n\n`;
   md += `**Acceptance criteria:** p95 response time ≤ ${thresholds.p95Ms} ms; error rate ≤ ${thresholds.errorPct}%.\n\n`;
+  md += `**Notes:** Category uses \`/category/agri-drones\` (not \`/agriculture\` redirect). Checkout **POST** is not load-tested (requires auth/audit token); dry-check uses \`GET /api/checkout/status\` without \`orderId\` (expects 400). Flash-sale scenarios weight 80% traffic to a single hot PDP.\n\n`;
+  if ((data.meta?.notes ?? []).length) {
+    md += `**Run notes:**\n`;
+    for (const note of data.meta.notes) {
+      md += `- ${note}\n`;
+    }
+    md += `\n`;
+  }
 
   md += `## 3. Test Scenarios\n\n`;
   md += `| Scenario | Concurrent connections | Duration | Purpose |\n`;
