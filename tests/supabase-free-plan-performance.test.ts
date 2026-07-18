@@ -165,7 +165,9 @@ describe("Supabase free-plan performance contract", () => {
     expect(adminScope).toContain("orders");
     expect(adminScope).toContain("inventory");
     expect(adminScope).toContain("warehouse_stock");
-    expect(adminScope).not.toContain("product_media_assets");
+    // Admin media library / catalog live sync intentionally includes these;
+    // the free-plan egress guard is that the CMS scope stays narrow (below).
+    expect(adminScope).toContain("product_media_assets");
 
     const storefrontScope = realtime.match(/storefront:\s*\{[\s\S]*?\r?\n\s*\}\s*\};?/)?.[0] ?? "";
     expect(storefrontScope).toContain("mithron_products");

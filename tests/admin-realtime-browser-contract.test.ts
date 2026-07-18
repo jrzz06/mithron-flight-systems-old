@@ -25,6 +25,8 @@ describe("admin realtime browser contract", () => {
     expect(provider).toContain("reconcileResources");
     expect(provider).toContain("visibilitychange");
     expect(provider).toContain("/api/admin/live/");
+    expect(provider).toContain("sameActiveResources");
+    expect(provider).toContain("registerResource = realtime?.registerResource");
     expect(controlPlaneHook).toContain("isAdminNoRefresh");
     expect(controlPlaneHook).toContain("preferReconcile: isAdminNoRefresh");
     expect(controlPlaneHook).toContain("routerRefresh: isAdminNoRefresh ? undefined");

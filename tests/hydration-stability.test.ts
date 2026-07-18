@@ -40,7 +40,9 @@ describe("hydration stability", () => {
     expect(storeShell).toContain("useCartAuthSync");
     expect(configurator).toContain("useCartSessionReady");
     expect(configurator).toContain("cartReady");
-    expect(stickyPurchase).toContain("useCartHasHydrated");
+    // Sticky bar gates on purchase context readiness (handlers), not cart hydration directly.
+    expect(stickyPurchase).toContain("useProductPurchaseHandlers");
+    expect(stickyPurchase).toContain("purchaseDisabled");
   });
 
   it("keeps public CMS storefront reads bounded", () => {

@@ -66,7 +66,7 @@ describe("supplier workflow guards", () => {
     expect(adminCreateFields).not.toContain("tagline");
     expect(adminEditDialog).not.toContain("tagline");
     expect(adminEditDialog).toContain("RichTextEditor");
-    expect(adminEditDialog).toContain("action={saveProductQuickEditFormAction}");
+    expect(adminEditDialog).toContain("saveProductQuickEditClientAction");
     expect(adminEditDialog).not.toContain('encType="multipart/form-data"');
     expect(adminEditDialog).toContain("ProductMultiImageField");
   });
@@ -111,6 +111,6 @@ describe("supplier workflow guards", () => {
     expect(approvalActions).toContain("approveProductSubmissionFormAction");
     expect(approvalActions).toContain("rejectProductSubmissionFormAction");
     expect(approvalActions).toContain("runSupplierApprovalAction");
-    expect(approvalActions).toContain("approval_status");
+    expect(approvalActions).toContain("workflow_status");
   });
 });

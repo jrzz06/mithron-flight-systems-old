@@ -153,7 +153,7 @@ describe("product multi-image upload helpers", () => {
     expect(adminPage).toContain("action={saveProductDraftFormAction}");
     expect(adminPage).not.toContain('encType="multipart/form-data"');
     expect(adminQuickEdit).toContain("ProductMultiImageField");
-    expect(adminQuickEdit).toContain("action={saveProductQuickEditFormAction}");
+    expect(adminQuickEdit).toContain("saveProductQuickEditClientAction");
     expect(adminQuickEdit).not.toContain('encType="multipart/form-data"');
     expect(adminActions).toContain("admin-product-quick-edit");
     expect(multiField).toContain("ProductImageFileInput");

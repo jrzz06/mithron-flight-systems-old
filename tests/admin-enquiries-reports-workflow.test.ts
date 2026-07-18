@@ -52,14 +52,23 @@ describe("admin enquiry lifecycle workflow", () => {
     const actions = readFileSync(join(process.cwd(), "app/admin/enquiries/actions.ts"), "utf8");
     const page = readFileSync(join(process.cwd(), "app/admin/enquiries/page.tsx"), "utf8");
     const queue = readFileSync(join(process.cwd(), "components/admin/admin-enquiry-queue.tsx"), "utf8");
+    const panel = readFileSync(join(process.cwd(), "components/admin/operational-action-panel.tsx"), "utf8");
 
-    expect(actions).toContain('listStatus: "contacted"');
-    expect(actions).toContain('params.set("open", context.enquiryId)');
-    expect(actions).not.toContain("Add the customer's shipping address to continue.");
+    // In-place result (no same-page redirect) so useFormStatus pending always clears.
     expect(actions).toContain("Create the order when ready.");
-    expect(actions).toContain("readListContext");
-    expect(actions).toContain('readString(formData, "list_status")');
-    expect(actions).toContain('readString(formData, "list_q")');
+    expect(actions).toContain("okResult(");
+    expect(actions).toContain("errorResult(");
+    expect(actions).not.toContain("Add the customer's shipping address to continue.");
+    expect(actions).not.toContain("function feedbackUrl(");
+    expect(actions).not.toContain('listStatus: "contacted"');
+    expect(panel).toContain("notifyActionResult");
+    expect(panel).toContain("notify.success");
+    // Local busy clears Saving as soon as the action returns (not useFormStatus/RSC).
+    expect(panel).toContain("busy={isPending}");
+    expect(panel).toContain("setIsPending(false)");
+    expect(readFileSync(join(process.cwd(), "components/admin/operational-submit-button.tsx"), "utf8")).toContain(
+      "busy?: boolean"
+    );
 
     expect(queue).toContain("ListContextFields");
     expect(queue).toContain('name="list_status"');

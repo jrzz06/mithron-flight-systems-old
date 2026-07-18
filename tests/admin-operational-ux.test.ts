@@ -18,7 +18,10 @@ describe("admin operational UX", () => {
     expect(modulePanel).toContain("export function OperationalRecordGrid");
     expect(modulePanel).toContain("export function OperationalFeedback");
     expect(submitButton).toContain("useFormStatus");
+    expect(submitButton).toContain("busy?: boolean");
     expect(submitButton).toContain("aria-live=\"polite\"");
+    expect(source("components/admin/operational-action-panel.tsx")).toContain("busy={isPending}");
+    expect(source("components/admin/operational-action-panel.tsx")).toContain("notifyActionResult");
     expect(nav).toContain("usePathname");
     expect(nav).toContain("aria-current");
     expect(nav).toContain("/auth/logout");

@@ -49,4 +49,36 @@ describe("OperationalSubmitButton", () => {
     expect(button).toHaveAttribute("disabled");
     expect(button).toHaveAttribute("aria-busy", "true");
   });
+
+  it("prefers the busy override over useFormStatus so Saving can clear after the action returns", () => {
+    useFormStatusMock.mockReturnValue({ pending: true });
+
+    render(
+      <form>
+        <OperationalSubmitButton busy={false} pendingLabel="Saving">
+          I contacted the customer
+        </OperationalSubmitButton>
+      </form>
+    );
+
+    const button = screen.getByRole("button", { name: "I contacted the customer" });
+    expect(button).not.toHaveAttribute("disabled");
+    expect(button).toHaveAttribute("aria-busy", "false");
+  });
+
+  it("shows pending when busy override is true even if useFormStatus is idle", () => {
+    useFormStatusMock.mockReturnValue({ pending: false });
+
+    render(
+      <form>
+        <OperationalSubmitButton busy pendingLabel="Saving">
+          I contacted the customer
+        </OperationalSubmitButton>
+      </form>
+    );
+
+    const button = screen.getByRole("button", { name: "Saving" });
+    expect(button).toHaveAttribute("disabled");
+    expect(button).toHaveAttribute("aria-busy", "true");
+  });
 });

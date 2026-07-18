@@ -170,11 +170,13 @@ describe("product admin draft form", () => {
   });
 
   it("maps the minimal add-product form and derives a slug from the name", () => {
+    const supabaseImage =
+      "https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/media/products/agri-8l.webp";
     expect(buildProductDraftFromFormData(formData({
       name: "Agri Kisan Drone Small",
       category: "Agri Drones",
       price: "120000",
-      image_src: "https://example.com/agri-8l.webp",
+      image_src: supabaseImage,
       source_availability: "InStock",
       change_summary: "Add product from admin catalog"
     }))).toMatchObject({
@@ -188,7 +190,7 @@ describe("product admin draft form", () => {
         price: 120000,
         category: "Agri Drones",
         image: {
-          src: "https://example.com/agri-8l.webp",
+          src: supabaseImage,
           alt: "Agri Kisan Drone Small",
           kind: "image"
         },
@@ -299,7 +301,7 @@ describe("product admin draft form", () => {
     expect(gridSource).toContain("deleteCategoryAction={deleteCategoryAction}");
     expect(dialogSource).toContain("ProductCategoryField");
     expect(dialogSource).toContain("defaultCategory={product.category}");
-    expect(dialogSource).toContain("saveProductQuickEditFormAction");
+    expect(dialogSource).toContain("saveProductQuickEditClientAction");
     expect(dialogSource).toContain("data-product-quick-edit");
     expect(dialogSource).toContain("description_editor_present");
     expect(dialogSource).toContain("defaultJson={product.descriptionJson");
@@ -310,6 +312,7 @@ describe("product admin draft form", () => {
     expect(pageSource).not.toContain("<span id=\"update-product\"");
     expect(actionSource).toContain("buildProductQuickEditFromFormData");
     expect(actionSource).toContain("saveProductQuickEditFormAction");
+    expect(actionSource).toContain("saveProductQuickEditClientAction");
     expect(actionSource).toContain("products.quick_edit");
     expect(actionSource).toContain("revalidateCatalogSurfaces(quickInput.identity.slug)");
   });
