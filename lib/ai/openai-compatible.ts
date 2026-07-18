@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import {
   providerEndpoint,
   type AiProviderCredential,
@@ -56,18 +57,22 @@ export async function openAiCompatibleCompletion(input: {
   }
 
   const endpoint = providerEndpoint(input.credential.provider as Exclude<AiProviderKind, "gemini">);
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: buildOpenAiCompatibleHeaders(input.credential),
-    signal: input.signal,
-    body: JSON.stringify({
-      model: input.credential.model,
-      temperature: input.temperature ?? 0.4,
-      max_tokens: input.maxTokens ?? 512,
-      stream: false,
-      messages: buildMessages(input)
-    })
-  });
+  const response = await fetchWithTimeout(
+    endpoint,
+    {
+      method: "POST",
+      headers: buildOpenAiCompatibleHeaders(input.credential),
+      signal: input.signal,
+      body: JSON.stringify({
+        model: input.credential.model,
+        temperature: input.temperature ?? 0.4,
+        max_tokens: input.maxTokens ?? 512,
+        stream: false,
+        messages: buildMessages(input)
+      })
+    },
+    60_000
+  );
 
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
@@ -102,19 +107,23 @@ export async function openAiCompatibleStream(input: {
   }
 
   const endpoint = providerEndpoint(input.credential.provider as Exclude<AiProviderKind, "gemini">);
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: buildOpenAiCompatibleHeaders(input.credential),
-    signal: input.signal,
-    body: JSON.stringify({
-      model: input.credential.model,
-      temperature: input.temperature ?? 0.2,
-      top_p: 0.9,
-      max_completion_tokens: input.maxTokens ?? 512,
-      stream: true,
-      messages: buildMessages(input)
-    })
-  });
+  const response = await fetchWithTimeout(
+    endpoint,
+    {
+      method: "POST",
+      headers: buildOpenAiCompatibleHeaders(input.credential),
+      signal: input.signal,
+      body: JSON.stringify({
+        model: input.credential.model,
+        temperature: input.temperature ?? 0.2,
+        top_p: 0.9,
+        max_completion_tokens: input.maxTokens ?? 512,
+        stream: true,
+        messages: buildMessages(input)
+      })
+    },
+    60_000
+  );
 
   if (!response.ok || !response.body) {
     const detail = await response.text().catch(() => "");

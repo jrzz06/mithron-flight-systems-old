@@ -1,4 +1,5 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout, SUPABASE_FETCH_TIMEOUT_MS } from "@/lib/fetch-with-timeout";
 import { mergePaymentLifecycleMetadata } from "@/lib/orders/payment-lifecycle";
 import { fetchAdminRecordsByColumn, updateAdminRecord } from "@/services/admin-actions";
 import { appendOrderTimeline, buildOrderTimelineEntry, transitionOrderStatus } from "@/services/orders";
@@ -60,21 +61,25 @@ export function buildCheckoutPaymentResponse(input: {
 
 export async function recordWebhookEvent(provider: string, eventId: string, payload: unknown) {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(`${config.url}/rest/v1/payment_webhook_events`, {
-    method: "POST",
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json",
-      Prefer: "resolution=ignore-duplicates,return=minimal"
+  const response = await fetchWithTimeout(
+    `${config.url}/rest/v1/payment_webhook_events`,
+    {
+      method: "POST",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=ignore-duplicates,return=minimal"
+      },
+      body: JSON.stringify({
+        provider,
+        event_id: eventId,
+        payload,
+        processed_at: new Date().toISOString()
+      })
     },
-    body: JSON.stringify({
-      provider,
-      event_id: eventId,
-      payload,
-      processed_at: new Date().toISOString()
-    })
-  });
+    SUPABASE_FETCH_TIMEOUT_MS
+  );
   return response.status === 201 || response.status === 409;
 }
 

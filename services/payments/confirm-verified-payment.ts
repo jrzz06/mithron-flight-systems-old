@@ -1,4 +1,5 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout, SUPABASE_FETCH_TIMEOUT_MS } from "@/lib/fetch-with-timeout";
 import { mergePaymentLifecycleMetadata } from "@/lib/orders/payment-lifecycle";
 import { fetchAdminRecordsByColumn, updateAdminRecord } from "@/services/admin-actions";
 import { getCheckoutWarehouseCode } from "@/services/warehouse-config";
@@ -53,24 +54,28 @@ export async function confirmVerifiedPayment(
     providerPaymentId: input.event.paymentId ?? null
   });
 
-  const response = await fetch(`${config.url}/rest/v1/rpc/confirm_verified_payment`, {
-    method: "POST",
-    headers: headers(config.serviceRoleKey),
-    body: JSON.stringify({
-      p_payment_id: input.paymentId,
-      p_order_id: input.orderId,
-      p_provider: input.provider,
-      p_provider_intent_id: input.event.intentId,
-      p_provider_payment_id: input.event.paymentId ?? null,
-      p_gateway_payload: input.event.raw ?? {},
-      p_event_id: input.eventId,
-      p_source: input.source,
-      p_warehouse_code: warehouseCode,
-      p_payment_method: paymentMethod,
-      p_verified_at: new Date().toISOString()
-    }),
-    cache: "no-store"
-  });
+  const response = await fetchWithTimeout(
+    `${config.url}/rest/v1/rpc/confirm_verified_payment`,
+    {
+      method: "POST",
+      headers: headers(config.serviceRoleKey),
+      body: JSON.stringify({
+        p_payment_id: input.paymentId,
+        p_order_id: input.orderId,
+        p_provider: input.provider,
+        p_provider_intent_id: input.event.intentId,
+        p_provider_payment_id: input.event.paymentId ?? null,
+        p_gateway_payload: input.event.raw ?? {},
+        p_event_id: input.eventId,
+        p_source: input.source,
+        p_warehouse_code: warehouseCode,
+        p_payment_method: paymentMethod,
+        p_verified_at: new Date().toISOString()
+      }),
+      cache: "no-store"
+    },
+    SUPABASE_FETCH_TIMEOUT_MS
+  );
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");

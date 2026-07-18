@@ -93,23 +93,26 @@ export async function fulfillOrderOnPaymentVerified(
   const alreadySent = readConfirmationEmailSentAt(baseMetadata);
 
   if (customerEmail && !alreadySent) {
-    try {
+    // Do not block payment webhook / verify path on SMTP. Schedule email + metadata stamp.
+    const { scheduleBackgroundWork } = await import("@/lib/jobs/queue-provider");
+    const orderSnapshot = order;
+    const invoiceNumberSnapshot = invoiceNumber;
+    const metadataSnapshot = baseMetadata;
+    scheduleBackgroundWork("order-confirmation-email", async () => {
       const result = await sendOrderConfirmationEmail({
         orderId,
-        order,
-        invoiceNumber: invoiceNumber || undefined
+        order: orderSnapshot,
+        invoiceNumber: invoiceNumberSnapshot || undefined
       });
-      emailSent = result.ok === true && result.skipped !== true;
-      emailSkipped = result.skipped === true;
-
-      if (emailSent) {
+      const sent = result.ok === true && result.skipped !== true;
+      if (sent) {
         await updateAdminRecord(
           "orders",
           "id",
           orderId,
           {
             metadata: {
-              ...mergePaymentLifecycleMetadata(baseMetadata, {
+              ...mergePaymentLifecycleMetadata(metadataSnapshot, {
                 state: "PAYMENT_VERIFIED",
                 note: "Order confirmation email sent."
               }),
@@ -122,17 +125,13 @@ export async function fulfillOrderOnPaymentVerified(
           env,
           { allowSystemActor: true }
         );
-
         logPaymentEvent("order_confirmation_email_sent", { orderId, customerEmail });
-      } else if (emailSkipped) {
+      } else if (result.skipped === true) {
         logPaymentWarning("order_confirmation_email_skipped", { orderId, customerEmail });
       }
-    } catch (emailError) {
-      logPaymentWarning("order_confirmation_email_failed", {
-        orderId,
-        error: emailError instanceof Error ? emailError.message : String(emailError)
-      });
-    }
+    });
+    emailSkipped = false;
+    emailSent = false;
   } else if (alreadySent) {
     emailSent = true;
   }

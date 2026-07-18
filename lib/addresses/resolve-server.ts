@@ -3,6 +3,7 @@ import "server-only";
 import type { GuestAddress } from "@/lib/api/checkout-schema";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { formatAddressMultiline, normalizeAddressRecord, pickAddressFromMetadata, type AddressRecord } from "@/lib/addresses/format";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 type EnvSource = Record<string, string | undefined>;
@@ -59,7 +60,7 @@ async function fetchCustomerAddress(
 ): Promise<JsonRecord | null> {
   if (!addressId || !userId) return null;
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/customer_addresses?select=id,user_id,label,line1,line2,city,region,postal_code,country,phone,is_billing,is_shipping&user_id=eq.${encodeURIComponent(userId)}&id=eq.${encodeURIComponent(addressId)}&limit=1`,
     {
       headers: {

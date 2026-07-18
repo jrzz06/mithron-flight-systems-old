@@ -91,13 +91,27 @@ export async function POST(request: Request, context: { params: Promise<{ provid
 
   const eventId = resolveWebhookEventId(provider, request, payload, event);
 
-  const result = await applyPaymentEvent({
-    provider: provider as PaymentProviderId,
-    event,
-    source: "webhook",
-    eventId,
-    rawPayload: payload
-  });
+  let result;
+  try {
+    result = await applyPaymentEvent({
+      provider: provider as PaymentProviderId,
+      event,
+      source: "webhook",
+      eventId,
+      rawPayload: payload
+    });
+  } catch (error) {
+    logPaymentError("webhook_apply_payment_event_failed", error, { provider, eventId });
+    // Retryable: return 500 so the provider retries. Do not ack as 200 on processing failure.
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Payment event processing failed.",
+        retryable: true
+      },
+      { status: 500 }
+    );
+  }
 
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: result.status ?? 500 });

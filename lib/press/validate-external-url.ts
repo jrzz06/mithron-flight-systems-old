@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 const BLOCKED_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
 
 export function normalizeExternalUrl(value: string) {
@@ -40,7 +41,7 @@ export async function probeExternalUrl(value: string, timeoutMs = 6000) {
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(normalized, {
+    const response = await fetchWithTimeout(normalized, {
       method: "HEAD",
       redirect: "follow",
       signal: controller.signal,
@@ -49,7 +50,7 @@ export async function probeExternalUrl(value: string, timeoutMs = 6000) {
       }
     });
     if (response.status >= 400 && response.status !== 405) {
-      const getResponse = await fetch(normalized, {
+      const getResponse = await fetchWithTimeout(normalized, {
         method: "GET",
         redirect: "follow",
         signal: controller.signal,

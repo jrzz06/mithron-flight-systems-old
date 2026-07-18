@@ -5,12 +5,13 @@ import { fetchAdminRecordsByColumn, updateAdminRecord } from "@/services/admin-a
 import { buildInvoiceData } from "./build-invoice-data";
 import { financialYearFromDate } from "./financial-year";
 import { renderInvoiceHtmlDocument } from "./render-invoice-html";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 
 async function fetchExistingInvoice(orderId: string) {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/invoices?select=id,order_id,invoice_number&order_id=eq.${encodeURIComponent(orderId)}&limit=1`,
     {
       headers: {
@@ -27,7 +28,7 @@ async function fetchExistingInvoice(orderId: string) {
 
 async function allocateInvoiceSerial(): Promise<number> {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(`${config.url}/rest/v1/rpc/generate_invoice_serial`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/generate_invoice_serial`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -57,7 +58,7 @@ async function insertInvoiceRecord(input: {
   invoiceHtml: string;
 }) {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(`${config.url}/rest/v1/invoices`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/invoices`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -145,7 +146,7 @@ export async function generateAndStoreInvoice(orderId: string): Promise<{ invoic
 
 export async function getStoredInvoiceHtml(orderId: string): Promise<string | null> {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/invoices?select=invoice_html&order_id=eq.${encodeURIComponent(orderId)}&limit=1`,
     {
       headers: {
@@ -163,7 +164,7 @@ export async function getStoredInvoiceHtml(orderId: string): Promise<string | nu
 
 export async function getStoredInvoiceRecord(orderId: string) {
   const config = assertSupabaseAdminConfig(process.env);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/invoices?select=serial_number,invoice_number,invoice_html&order_id=eq.${encodeURIComponent(orderId)}&limit=1`,
     {
       headers: {

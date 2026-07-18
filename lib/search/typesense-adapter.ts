@@ -1,5 +1,6 @@
 import type { CatalogSearchResult } from "@/services/catalog";
 import { getTypesenseConfig, isTypesenseSearchEnabled } from "@/lib/search/search-provider";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 /**
  * Typesense adapter — activated when MITHRON_SEARCH_PROVIDER=typesense and
@@ -21,7 +22,7 @@ export async function searchCatalogProductsTypesense(
   url.searchParams.set("per_page", String(limit));
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         "X-TYPESENSE-API-KEY": config.apiKey
       },

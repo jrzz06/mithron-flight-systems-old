@@ -6,6 +6,7 @@ import {
 } from "@/lib/media/is-blocked-external-media-url";
 import { MAX_PRODUCT_IMAGE_BYTES } from "@/lib/product-image-limits";
 import { uploadSingleProductImageBuffer } from "@/services/product-image-upload";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -111,7 +112,7 @@ export function collectSupabaseProductMediaUrls(row: ProductMediaRow) {
 }
 
 export async function downloadExternalProductImage(url: string) {
-  const response = await fetch(url, { redirect: "follow" });
+  const response = await fetchWithTimeout(url, { redirect: "follow" });
   if (!response.ok) {
     throw new Error(`Failed to download image (${response.status} ${response.statusText})`);
   }

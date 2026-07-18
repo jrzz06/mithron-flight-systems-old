@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type AdminSupabase = SupabaseClient<any, "public", "public">;
 type MediaAssetLookupRow = { id: string | number; public_url: string | null };
@@ -131,7 +132,7 @@ async function fetchProductMediaLinks(supabase: AdminSupabase, slugs: string[]) 
 
 async function checkHttp(url: string) {
   try {
-    const response = await fetch(url, { method: "HEAD", redirect: "follow" });
+    const response = await fetchWithTimeout(url, { method: "HEAD", redirect: "follow" });
     return response.ok;
   } catch {
     return false;

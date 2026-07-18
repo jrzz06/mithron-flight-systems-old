@@ -4,6 +4,7 @@ import { autoCutoutIfNeeded } from "@/lib/catalog/auto-cutout";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { upsertMediaAssetRecord, upsertProductMediaAssetRecord } from "@/services/admin-actions";
 import { buildSupabasePublicObjectUrl } from "@/services/media-optimization";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 const BUCKET = "mithron-products";
 const CUTOUT_VARIANT_ID = "catalog-cutout-v1";
@@ -66,7 +67,7 @@ async function uploadStorageObject(storagePath: string, contentType: string, buf
   const uploadBody = new Uint8Array(buffer.byteLength);
   uploadBody.set(buffer);
 
-  const response = await fetch(`${config.url}/storage/v1/object/${BUCKET}/${encodeObjectPath(storagePath)}`, {
+  const response = await fetchWithTimeout(`${config.url}/storage/v1/object/${BUCKET}/${encodeObjectPath(storagePath)}`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -87,7 +88,7 @@ async function uploadStorageObject(storagePath: string, contentType: string, buf
 }
 
 export async function downloadImageBuffer(url: string) {
-  const response = await fetch(url.trim(), { redirect: "follow" });
+  const response = await fetchWithTimeout(url.trim(), { redirect: "follow" });
   if (!response.ok) {
     throw new Error(`Failed to download image (${response.status}): ${url}`);
   }

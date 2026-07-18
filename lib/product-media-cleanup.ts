@@ -12,6 +12,7 @@ import {
   upsertProductMediaAssetRecord
 } from "@/services/admin-actions";
 import { buildMediaAssetId } from "@/services/media-manager";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -59,7 +60,7 @@ function collectSupabaseMediaUrls(input: {
 async function deleteStorageObject(bucket: string, storagePath: string) {
   const config = assertSupabaseAdminConfig();
   try {
-    await fetch(`${config.url}/storage/v1/object/${bucket}/${encodeObjectPath(storagePath)}`, {
+    await fetchWithTimeout(`${config.url}/storage/v1/object/${bucket}/${encodeObjectPath(storagePath)}`, {
       method: "DELETE",
       headers: {
         apikey: config.serviceRoleKey,
@@ -73,7 +74,7 @@ async function deleteStorageObject(bucket: string, storagePath: string) {
 
 async function deleteProductMediaLinksOnly(productSlug: string, mediaAssetId: string) {
   const config = assertSupabaseAdminConfig();
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/product_media_assets?product_slug=eq.${encodeURIComponent(productSlug)}&media_asset_id=eq.${encodeURIComponent(mediaAssetId)}`,
     {
       method: "DELETE",
