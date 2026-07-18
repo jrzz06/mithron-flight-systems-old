@@ -14,6 +14,7 @@ import { RecordProductView } from "@/components/product/record-product-view";
 import { ProductRecentlyViewedSection } from "@/sections/product/product-recently-viewed-section";
 import { ProductRelatedAsyncSection } from "@/sections/product/product-related-async-section";
 import { ProductReviewsAsyncSection } from "@/sections/product/product-reviews-async-section";
+import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import { ProductImmersiveGallery } from "@/sections/product/showcase/product-immersive-gallery";
 import { ProductRichDescriptionSection } from "@/sections/product/showcase/product-rich-description";
 import { ProductShowcaseHero } from "@/sections/product/showcase/product-showcase-hero";
@@ -80,11 +81,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ProductDetailHeader product={product} />
       <ProductShowcaseHero
         gallery={(
-          <ProductImmersiveGallery
-            mediaPlan={mediaPlan}
-            showBadge={Boolean(product.badge?.trim())}
-            badgeLabel={product.badge?.trim() || undefined}
-          />
+          <SoftErrorBoundary label="Product gallery">
+            <ProductImmersiveGallery
+              mediaPlan={mediaPlan}
+              showBadge={Boolean(product.badge?.trim())}
+              badgeLabel={product.badge?.trim() || undefined}
+            />
+          </SoftErrorBoundary>
         )}
         purchase={(
           <ProductContactDefaults

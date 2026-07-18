@@ -57,7 +57,9 @@ export function useResolvedCart(options: UseResolvedCartOptions = {}) {
     return summarizeCartPricingBreakdown(linesForPricing);
   }, [items]);
   const itemCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
-  const pricesPending = persistedItems.length > 0 && !hasResolvedPricing && !error;
+  // Only pending while a fetch is in flight. A settled response with empty/mismatched
+  // lines must not leave ellipsis prices forever (show optimistic display + retry instead).
+  const pricesPending = persistedItems.length > 0 && !hasResolvedPricing && !error && isResolving;
 
   const refreshPricing = async () => {
     if (!enabled) return true;

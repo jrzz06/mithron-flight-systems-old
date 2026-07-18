@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
+import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import CheckoutLoading from "./loading";
 
 const CheckoutPageClient = dynamic(
@@ -10,7 +11,9 @@ const CheckoutPageClient = dynamic(
 export default function CheckoutPage() {
   return (
     <Suspense fallback={<CheckoutLoading />}>
-      <CheckoutPageClient />
+      <SoftErrorBoundary label="Checkout">
+        <CheckoutPageClient />
+      </SoftErrorBoundary>
     </Suspense>
   );
 }
