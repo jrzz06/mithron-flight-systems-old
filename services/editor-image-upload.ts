@@ -16,6 +16,7 @@ import {
   readImageBufferMetadata,
   type StoredOptimizedImageVariant
 } from "@/services/media-optimization";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 async function uploadStorageObject(bucket: string, storagePath: string, contentType: string, buffer: Buffer) {
   const config = assertSupabaseAdminConfig();
@@ -23,7 +24,7 @@ async function uploadStorageObject(bucket: string, storagePath: string, contentT
   uploadBody.set(buffer);
   const encodedPath = storagePath.split("/").map((segment) => encodeURIComponent(segment)).join("/");
 
-  const response = await fetch(`${config.url}/storage/v1/object/${bucket}/${encodedPath}`, {
+  const response = await fetchWithTimeout(`${config.url}/storage/v1/object/${bucket}/${encodedPath}`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -48,7 +49,7 @@ async function deleteStorageObjects(bucket: string, paths: string[]) {
     if (!storagePath) continue;
     try {
       const encodedPath = storagePath.split("/").map((segment) => encodeURIComponent(segment)).join("/");
-      await fetch(`${config.url}/storage/v1/object/${bucket}/${encodedPath}`, {
+      await fetchWithTimeout(`${config.url}/storage/v1/object/${bucket}/${encodedPath}`, {
         method: "DELETE",
         headers: {
           apikey: config.serviceRoleKey,

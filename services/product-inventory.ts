@@ -3,6 +3,7 @@ import { deriveProductSku } from "@/lib/product-sku";
 import { upsertInventoryRecord, updateAdminRecord } from "@/services/admin-actions";
 import { availabilityLabelFromQuantity, stockStatusFromQuantity } from "@/lib/inventory-availability";
 import type { ProductInventoryWorkflowInput } from "@/services/enterprise-admin-forms";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export { deriveProductSku };
 
@@ -72,7 +73,7 @@ export async function upsertProductInventoryRecord(
   const sku = deriveProductSku(input.productSlug);
   const stockStatus = stockStatusFromQuantity(input.quantity);
 
-  const response = await fetch(`${config.url}/rest/v1/rpc/upsert_product_inventory`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/upsert_product_inventory`, {
     method: "POST",
     headers: headers(config.serviceRoleKey),
     body: JSON.stringify({

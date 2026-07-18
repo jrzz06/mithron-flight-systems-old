@@ -134,6 +134,7 @@ export function CatalogPage({
                   height={optimizedShowcase?.height ?? showcaseImage.height}
                   loading="eager"
                   decoding="async"
+                  fetchPriority="high"
                   crossOrigin="anonymous"
                   sizes="(min-width: 1440px) 1440px, 100vw"
                   className="catalog-hero-image-section__asset"

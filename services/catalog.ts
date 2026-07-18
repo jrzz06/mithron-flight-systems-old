@@ -2214,10 +2214,12 @@ export const loadProductForPage = cache(async (slug: string): Promise<ProductPag
 
     try {
       const product = await mapLiveProductRow(row);
-      const coreEntry = await buildProductCoreEntry(slug);
-      if (coreEntry) {
-        void setCachedJson(REDIS_CACHE_KEYS.productCore(slug), coreEntry, 90);
-      }
+      // Warm product-core cache off the render critical path (do not await a second build).
+      void buildProductCoreEntry(slug).then((coreEntry) => {
+        if (coreEntry) {
+          void setCachedJson(REDIS_CACHE_KEYS.productCore(slug), coreEntry, 90);
+        }
+      });
       return {
         status: "ready",
         product

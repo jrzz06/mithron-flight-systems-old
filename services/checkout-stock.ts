@@ -1,3 +1,4 @@
+import { fetchWithTimeout, SUPABASE_FETCH_TIMEOUT_MS } from "@/lib/fetch-with-timeout";
 import {
   deductInventoryForOrder,
   orderInventoryDeducted,
@@ -112,24 +113,28 @@ export async function reserveCheckoutStock(
   const resolvedWarehouse =
     warehouseCode?.trim() || (await getCheckoutWarehouseCode(env)).trim() || "IN-WEST-01";
 
-  const response = await fetch(`${config.url}/rest/v1/rpc/reserve_checkout_stock`, {
-    method: "POST",
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json"
+  const response = await fetchWithTimeout(
+    `${config.url}/rest/v1/rpc/reserve_checkout_stock`,
+    {
+      method: "POST",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        p_order_id: orderId,
+        p_items: items.map((item) => ({
+          product_slug: item.productSlug,
+          quantity: item.quantity,
+          sku: item.sku ?? null
+        })),
+        p_warehouse_code: resolvedWarehouse
+      }),
+      cache: "no-store"
     },
-    body: JSON.stringify({
-      p_order_id: orderId,
-      p_items: items.map((item) => ({
-        product_slug: item.productSlug,
-        quantity: item.quantity,
-        sku: item.sku ?? null
-      })),
-      p_warehouse_code: resolvedWarehouse
-    }),
-    cache: "no-store"
-  });
+    SUPABASE_FETCH_TIMEOUT_MS
+  );
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");
@@ -168,19 +173,23 @@ export async function releaseCheckoutStock(
   const resolvedWarehouse =
     warehouseCode?.trim() || (await getCheckoutWarehouseCode(env)).trim() || "IN-WEST-01";
 
-  const response = await fetch(`${config.url}/rest/v1/rpc/release_checkout_stock`, {
-    method: "POST",
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json"
+  const response = await fetchWithTimeout(
+    `${config.url}/rest/v1/rpc/release_checkout_stock`,
+    {
+      method: "POST",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        p_order_id: orderId,
+        p_warehouse_code: resolvedWarehouse
+      }),
+      cache: "no-store"
     },
-    body: JSON.stringify({
-      p_order_id: orderId,
-      p_warehouse_code: resolvedWarehouse
-    }),
-    cache: "no-store"
-  });
+    SUPABASE_FETCH_TIMEOUT_MS
+  );
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");

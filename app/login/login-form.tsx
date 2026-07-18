@@ -390,6 +390,17 @@ export function LoginForm({
       id: `auth:redirect:${mode}`
     });
     window.location.assign(redirectTo);
+
+    // If full-page navigation stalls (blocked popup, hung browser, etc.), never leave
+    // auth buttons permanently busy — surface a recoverable error after a bounded wait.
+    const fallbackTimer = window.setTimeout(() => {
+      if (!isMountedRef.current) return;
+      setStatus("idle");
+      setError("Redirect is taking longer than expected. Tap Continue to open your destination.");
+      setNotice(null);
+    }, 8_000);
+
+    return () => window.clearTimeout(fallbackTimer);
   }, [mode, redirectTo]);
 
   useEffect(() => {
@@ -940,7 +951,19 @@ export function LoginForm({
         </div>
       ) : null}
 
-      {error ? <p className={styles.inlineAlert} role="alert">{error}</p> : null}
+      {error ? (
+        <p className={styles.inlineAlert} role="alert">
+          {error}
+          {redirectTo ? (
+            <>
+              {" "}
+              <a href={redirectTo} className={styles.recoveryLink}>
+                Continue
+              </a>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       {notice && !verificationPending ? <p className={styles.verificationNotice} role="status">{notice}</p> : null}
 
       <div data-testid="login-guest-account">

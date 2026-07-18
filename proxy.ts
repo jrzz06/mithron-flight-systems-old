@@ -638,12 +638,37 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
     if (claims) {
       const userId = typeof claims.sub === "string" ? claims.sub : null;
       const sessionIat = typeof claims.iat === "number" ? claims.iat : null;
+      const authCacheKey = userId && sessionIat ? REDIS_CACHE_KEYS.authRoleContext(userId, sessionIat) : null;
+
+      // H2: claims-only / cached profileComplete fast path for public storefront —
+      // skip full role + profile resolution when Redis already has a complete context
+      // or when JWT claims alone are enough to decide control-panel confinement.
+      if (authCacheKey) {
+        const cached = await getCachedJson<CachedAuthRoleContext>(authCacheKey);
+        if (cached?.role && !cached.disabled) {
+          if (shouldConfineRoleToControlPanel(cached.role, pathname)) {
+            return redirectToRoleHome(request, cached.role, "access_status", "control_panel_only");
+          }
+          if (cached.role !== "user" || cached.profileComplete === true || isProfileCompletionExemptPath(pathname)) {
+            return response;
+          }
+        }
+      } else {
+        const claimsRole = resolveClaimsRoleFromClaims(claims);
+        if (claimsRole && claimsRole !== "user" && shouldConfineRoleToControlPanel(claimsRole, pathname)) {
+          return redirectToRoleHome(request, claimsRole, "access_status", "control_panel_only");
+        }
+        if (claimsRole && claimsRole !== "user") {
+          return response;
+        }
+      }
+
       const authLookupsStartedAt = Date.now();
       const {
         roleResolution,
         profileLookup,
         usedAuthRoleCache,
-        authCacheKey,
+        authCacheKey: resolvedCacheKey,
         profileCompleteFromCache
       } = await resolveRoleAndProfileWithAuthRoleCache({
         supabase,
@@ -658,9 +683,9 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
       }
       const role = roleResolution.role;
 
-      if (!usedAuthRoleCache && authCacheKey && role) {
+      if (!usedAuthRoleCache && resolvedCacheKey && role) {
         void setCachedJson(
-          authCacheKey,
+          resolvedCacheKey,
           buildAuthRoleCachePayload(role, profileLookup),
           AUTH_ROLE_CACHE_TTL_SECONDS
         );

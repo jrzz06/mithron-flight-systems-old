@@ -7,6 +7,7 @@ import {
   fetchAdminRecordsByColumn,
   updateAdminRecord
 } from "@/services/admin-actions";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 type EnvSource = Record<string, string | undefined>;
 type JsonRecord = Record<string, unknown>;
@@ -152,7 +153,7 @@ async function fetchBlogRows(
   options: { cache?: RequestCache; tags?: string[]; allowMissing?: boolean } = {}
 ): Promise<JsonRecord[]> {
   const config = assertSupabaseAdminConfig(env);
-  const response = await fetch(`${config.url}/rest/v1/blog_posts?${query}`, {
+  const response = await fetchWithTimeout(`${config.url}/rest/v1/blog_posts?${query}`, {
     headers: {
       apikey: config.serviceRoleKey,
       Authorization: `Bearer ${config.serviceRoleKey}`

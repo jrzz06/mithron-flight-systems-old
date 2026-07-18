@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { autoCutoutIfNeeded } from "@/lib/catalog/auto-cutout";
 import { assertSupabaseAdminConfig } from "@/lib/env";
-import { mapWithConcurrency } from "@/lib/fetch-with-timeout";
+import { fetchWithTimeout, mapWithConcurrency } from "@/lib/fetch-with-timeout";
 import { upsertMediaAssetRecord } from "@/services/admin-actions";
 import {
   assertAllowedMediaMimeType,
@@ -131,7 +131,7 @@ async function uploadProductStorageObject(bucket: string, storagePath: string, c
   const uploadBody = new Uint8Array(buffer.byteLength);
   uploadBody.set(buffer);
 
-  const response = await fetch(`${config.url}/storage/v1/object/${bucket}/${encodeObjectPath(storagePath)}`, {
+  const response = await fetchWithTimeout(`${config.url}/storage/v1/object/${bucket}/${encodeObjectPath(storagePath)}`, {
     method: "POST",
     headers: {
       apikey: config.serviceRoleKey,
@@ -156,7 +156,7 @@ async function deleteProductStorageObjects(bucket: string, paths: string[]) {
   for (const storagePath of paths) {
     if (!storagePath) continue;
     try {
-      await fetch(`${config.url}/storage/v1/object/${bucket}/${encodeObjectPath(storagePath)}`, {
+      await fetchWithTimeout(`${config.url}/storage/v1/object/${bucket}/${encodeObjectPath(storagePath)}`, {
         method: "DELETE",
         headers: {
           apikey: config.serviceRoleKey,
@@ -173,7 +173,7 @@ async function uploadProductOptimizedVariants(bucket: string, storagePath: strin
   const config = assertSupabaseAdminConfig();
   const variants = await createOptimizedImageVariants(buffer, mimeType);
 
-  return mapWithConcurrency(variants, 3, async (variant) => {
+  return mapWithConcurrency(variants, Math.max(variants.length, 1), async (variant) => {
     const variantStoragePath = buildOptimizedVariantStoragePath(storagePath, variant);
     await uploadProductStorageObject(bucket, variantStoragePath, variant.mimeType, variant.buffer);
     return {
