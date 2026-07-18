@@ -81,6 +81,7 @@ Env:
   LOAD_TEST_FLASH_SALE=1      Add flash-sale 80/20 hot-PDP scenario after main phases
   LOAD_TEST_ALLOW_DEGRADED=0  Fail if /api/health is degraded
   LOAD_TEST_SMOKE=1           One short 5s / 10-conn pass (structure smoke only)
+  LOAD_TEST_QUICK=1           Three 30s phases at 50/100/200 (local before/after)
 
 Notes:
   - Category route uses /category/agri-drones (not redirect /agriculture).
@@ -356,10 +357,17 @@ async function main() {
   const flashSale =
     args.includes("--flash-sale") || process.env.LOAD_TEST_FLASH_SALE === "1";
   const smoke = args.includes("--smoke") || process.env.LOAD_TEST_SMOKE === "1";
+  const quick = args.includes("--quick") || process.env.LOAD_TEST_QUICK === "1";
 
   const scenarios = smoke
     ? [{ connections: 10, durationSec: 5, label: "Smoke (10 concurrent, 5s)" }]
-    : [...SCENARIOS];
+    : quick
+      ? [
+          { connections: 50, durationSec: 30, label: "Quick baseline (50 concurrent, 30s)" },
+          { connections: 100, durationSec: 30, label: "Quick mid (100 concurrent, 30s)" },
+          { connections: 200, durationSec: 30, label: "Quick peak (200 concurrent, 30s)" }
+        ]
+      : [...SCENARIOS];
 
   console.log(`Mithron load test → ${BASE}`);
   console.log(`Total duration: ~${scenarios.reduce((s, x) => s + x.durationSec, 0)}s across ${scenarios.length} scenarios`);
