@@ -41,10 +41,23 @@ async function CategoryPageContent({ slug }: { slug: string }) {
   if (!isCatalogCategorySlug(slug)) notFound();
 
   const definition = getCatalogCategoryDefinition(slug);
-  const [catalog, products] = await Promise.all([
-    getCategoryCmsMetadata(definition.cmsRouteKey),
-    getProductsForCategorySlug(slug)
-  ]);
+  let catalog: Awaited<ReturnType<typeof getCategoryCmsMetadata>>;
+  let products: Awaited<ReturnType<typeof getProductsForCategorySlug>> = [];
+  try {
+    [catalog, products] = await Promise.all([
+      getCategoryCmsMetadata(definition.cmsRouteKey),
+      getProductsForCategorySlug(slug)
+    ]);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[category] load failed for ${slug}; rendering degraded catalog: ${message}`);
+    try {
+      catalog = await getCategoryCmsMetadata(definition.cmsRouteKey);
+    } catch {
+      catalog = { title: definition.label, subtitle: "", heroImage: "" };
+    }
+    products = [];
+  }
 
   return (
     <CatalogPage

@@ -14,7 +14,7 @@ const AdminOrdersWorkspaceInner = dynamic(
 
 export function AdminOrdersWorkspace(props: ComponentProps<typeof AdminOrdersWorkspaceInner>) {
   return (
-    <SoftErrorBoundary label="Orders workspace">
+    <SoftErrorBoundary label="Orders workspace" variant="retry">
       <AdminOrdersWorkspaceInner {...props} />
     </SoftErrorBoundary>
   );

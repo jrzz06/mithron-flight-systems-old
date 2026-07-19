@@ -829,18 +829,24 @@ const hasCmsSchema = cache(async () => {
 });
 
 async function loadPublicHeroBannersUncached(): Promise<HeroSlide[]> {
-  if (!(await hasCmsSchema())) {
+  try {
+    if (!(await hasCmsSchema())) {
+      return fallbackSnapshot.home.heroBanners;
+    }
+
+    const orchestration = await getHomepageCmsOrchestration();
+    if (!shouldLoadCmsSource(orchestration, "hero_banners")) {
+      return fallbackSnapshot.home.heroBanners;
+    }
+
+    const heroRows = await getCachedCmsTableRows("hero_banners", publicCmsQueries.heroBanners);
+    const published = publishedRows(heroRows);
+    return mapHeroRows(published.rows) ?? fallbackSnapshot.home.heroBanners;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[cms] public hero banners failed; using fallback: ${message}`);
     return fallbackSnapshot.home.heroBanners;
   }
-
-  const orchestration = await getHomepageCmsOrchestration();
-  if (!shouldLoadCmsSource(orchestration, "hero_banners")) {
-    return fallbackSnapshot.home.heroBanners;
-  }
-
-  const heroRows = await getCachedCmsTableRows("hero_banners", publicCmsQueries.heroBanners);
-  const published = publishedRows(heroRows);
-  return mapHeroRows(published.rows) ?? fallbackSnapshot.home.heroBanners;
 }
 
 /** Published homepage hero — Redis read-through (60s) + single-flight; preview path stays uncached. */
@@ -865,12 +871,13 @@ export const getPublicHeroBannersForCmsPreview = cache(async (): Promise<HeroSli
 });
 
 async function loadPublicCmsSnapshot(options: { omitHero?: boolean } = {}): Promise<PublicCmsSnapshot> {
-  if (!(await hasCmsSchema())) {
-    if (process.env.MITHRON_CMS_STRICT === "true") {
-      throw new Error("Supabase CMS schema is not available. Apply 20260523000100_enterprise_cms_rbac.sql before enabling strict CMS mode.");
+  try {
+    if (!(await hasCmsSchema())) {
+      if (process.env.MITHRON_CMS_STRICT === "true") {
+        console.warn("[cms] schema unavailable in strict mode; returning storefront fallback snapshot");
+      }
+      return fallbackSnapshot;
     }
-    return fallbackSnapshot;
-  }
 
   const orchestration = await getHomepageCmsOrchestration();
   const load = (source: Parameters<typeof shouldLoadCmsSource>[1]) => shouldLoadCmsSource(orchestration, source);
@@ -925,6 +932,11 @@ async function loadPublicCmsSnapshot(options: { omitHero?: boolean } = {}): Prom
     },
     footer: mergeFooterContent(snapshot.footer, footerLead)
   };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[cms] public snapshot failed; using fallback: ${message}`);
+    return fallbackSnapshot;
+  }
 }
 
 export const getPublicCmsSnapshot = cache(async () => {
@@ -948,7 +960,7 @@ export type StorefrontShellCms = {
 export async function getStorefrontShellCmsLight(): Promise<StorefrontShellCms> {
   if (!(await hasCmsSchema())) {
     if (process.env.MITHRON_CMS_STRICT === "true") {
-      throw new Error("Supabase CMS schema is not available. Apply 20260523000100_enterprise_cms_rbac.sql before enabling strict CMS mode.");
+      console.warn("[cms] shell CMS schema unavailable in strict mode; using fallback nav/footer");
     }
     return {
       navigation: fallbackSnapshot.navigation,
@@ -982,17 +994,23 @@ async function loadStorefrontShellCms(): Promise<StorefrontShellCms> {
 export const getStorefrontShellCms = cache(async () => loadStorefrontShellCms());
 
 export const getCategoryCmsMetadataOnly = cache(async (routeKey: string): Promise<CategoryMetadata> => {
-  if (!(await hasCmsSchema())) {
+  try {
+    if (!(await hasCmsSchema())) {
+      return mergeCategoryMetadata(routeKey, undefined);
+    }
+
+    const rows = await getCachedCmsTableRows(
+      "category_metadata",
+      `select=route_key,title,subtitle,hero_image,showcase_image,sort_order,is_visible,status&route_key=eq.${encodeURIComponent(routeKey)}&limit=1`
+    );
+    const published = publishedRows(rows);
+    const mapped = mapCategoryRows(published.rows);
+    return mergeCategoryMetadata(routeKey, mapped?.[routeKey]);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[cms] category metadata failed for ${routeKey}; using fallback: ${message}`);
     return mergeCategoryMetadata(routeKey, undefined);
   }
-
-  const rows = await getCachedCmsTableRows(
-    "category_metadata",
-    `select=route_key,title,subtitle,hero_image,showcase_image,sort_order,is_visible,status&route_key=eq.${encodeURIComponent(routeKey)}&limit=1`
-  );
-  const published = publishedRows(rows);
-  const mapped = mapCategoryRows(published.rows);
-  return mergeCategoryMetadata(routeKey, mapped?.[routeKey]);
 });
 
 export const getProductReviewsCmsSlice = cache(async () => {

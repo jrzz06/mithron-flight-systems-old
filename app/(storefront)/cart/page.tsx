@@ -10,7 +10,7 @@ const CartPageClient = dynamic(
 
 export default function CartPage() {
   return (
-    <SoftErrorBoundary label="Cart">
+    <SoftErrorBoundary label="Cart" variant="retry">
       <Suspense fallback={<CartLoading />}>
         <CartPageClient />
       </Suspense>

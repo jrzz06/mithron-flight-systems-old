@@ -6,7 +6,13 @@ import { getFeaturedProducts } from "@/services/catalog";
 export const revalidate = 60;
 
 export default async function MithronCarePlusPage() {
-  const products = await getFeaturedProducts();
+  let products: Awaited<ReturnType<typeof getFeaturedProducts>> = [];
+  try {
+    products = await getFeaturedProducts();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[care-plus] featured products failed; rendering empty catalog: ${message}`);
+  }
 
   return (
     <div className="surface-page">

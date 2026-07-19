@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditorRenderedContent } from "@/components/editor/editor-rendered-content";
-import { getPublicCmsSnapshot } from "@/services/cms";
+import { fallbackSnapshot, getPublicCmsSnapshot } from "@/services/cms";
 
 export const revalidate = 60;
 
@@ -13,7 +13,13 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  const cms = await getPublicCmsSnapshot();
+  let cms = fallbackSnapshot;
+  try {
+    cms = await getPublicCmsSnapshot();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[about] CMS snapshot failed; using fallback: ${message}`);
+  }
   const title = cms.footer.leadTitle?.trim() || "Drones for teams that work outdoors.";
   const body = cms.footer.leadBody?.trim()
     || "Mithron builds and supplies agriculture, mapping, site monitoring, and media drones with an easy-to-manage product range.";

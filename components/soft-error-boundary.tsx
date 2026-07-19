@@ -5,8 +5,10 @@ import { recordClientError } from "@/lib/observability";
 
 type SoftErrorBoundaryProps = {
   children: ReactNode;
-  /** Optional fallback UI; defaults to a compact retry strip. */
+  /** Optional fallback UI. When omitted, uses `variant` (default: silent null). */
   fallback?: ReactNode;
+  /** `silent` (default) collapses the island; `retry` shows a compact retry strip. */
+  variant?: "silent" | "retry";
   label?: string;
 };
 
@@ -41,23 +43,28 @@ export class SoftErrorBoundary extends Component<SoftErrorBoundaryProps, SoftErr
   render() {
     if (!this.state.hasError) return this.props.children;
 
-    if (this.props.fallback) return this.props.fallback;
+    if (this.props.fallback !== undefined) return this.props.fallback;
 
-    return (
-      <div
-        data-soft-error-boundary
-        role="alert"
-        className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-      >
-        <p>{this.props.label ? `${this.props.label} failed to render.` : "This section failed to render."}</p>
-        <button
-          type="button"
-          onClick={this.retry}
-          className="mt-2 text-sm font-medium text-slate-900 underline underline-offset-2"
+    if (this.props.variant === "retry") {
+      return (
+        <div
+          data-soft-error-boundary
+          role="alert"
+          className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
         >
-          Retry
-        </button>
-      </div>
-    );
+          <p>{this.props.label ? `${this.props.label} could not load.` : "This section could not load."}</p>
+          <button
+            type="button"
+            onClick={this.retry}
+            className="mt-2 text-sm font-medium text-slate-900 underline underline-offset-2"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    // Storefront default: silent degrade (no customer-facing error strip).
+    return null;
   }
 }

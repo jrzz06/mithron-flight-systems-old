@@ -6,7 +6,7 @@ import {
   interestSlugToCategorySlug
 } from "@/lib/catalog-categories";
 import { getProductsByInterest } from "@/services/catalog";
-import { getPublicCmsSnapshot } from "@/services/cms";
+import { fallbackSnapshot, getPublicCmsSnapshot } from "@/services/cms";
 import { CatalogPage } from "@/sections/catalog/catalog-page";
 
 type InterestPageProps = {
@@ -16,17 +16,27 @@ type InterestPageProps = {
 export const revalidate = 60;
 
 export async function generateStaticParams() {
-  const cms = await getPublicCmsSnapshot();
-  return cms.home.interests.map((interest) => ({ slug: interest.slug }));
+  try {
+    const cms = await getPublicCmsSnapshot();
+    return cms.home.interests.map((interest) => ({ slug: interest.slug }));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[interest] generateStaticParams failed: ${message}`);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: InterestPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const cms = await getPublicCmsSnapshot();
-  const interest = cms.home.interests.find((item) => item.slug === slug);
-  return {
-    title: interest ? `${interest.label} - Mithron` : "Interest not found"
-  };
+  try {
+    const cms = await getPublicCmsSnapshot();
+    const interest = cms.home.interests.find((item) => item.slug === slug);
+    return {
+      title: interest ? `${interest.label} - Mithron` : "Interest not found"
+    };
+  } catch {
+    return { title: "Interest - Mithron" };
+  }
 }
 
 function CatalogPageFallback() {
@@ -39,10 +49,24 @@ async function InterestPageContent({ slug }: { slug: string }) {
     redirect(getCatalogCategoryDefinition(categorySlug).href);
   }
 
-  const cms = await getPublicCmsSnapshot();
+  let cms = fallbackSnapshot;
+  try {
+    cms = await getPublicCmsSnapshot();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[interest] CMS snapshot failed; using fallback: ${message}`);
+  }
+
   const interest = cms.home.interests.find((item) => item.slug === slug);
   if (!interest) notFound();
-  const products = await getProductsByInterest(slug);
+
+  let products: Awaited<ReturnType<typeof getProductsByInterest>> = [];
+  try {
+    products = await getProductsByInterest(slug);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[interest] products failed for ${slug}; rendering empty catalog: ${message}`);
+  }
 
   return (
     <CatalogPage

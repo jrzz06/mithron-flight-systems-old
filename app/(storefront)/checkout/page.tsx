@@ -11,7 +11,7 @@ const CheckoutPageClient = dynamic(
 export default function CheckoutPage() {
   return (
     <Suspense fallback={<CheckoutLoading />}>
-      <SoftErrorBoundary label="Checkout">
+      <SoftErrorBoundary label="Checkout" variant="retry">
         <CheckoutPageClient />
       </SoftErrorBoundary>
     </Suspense>

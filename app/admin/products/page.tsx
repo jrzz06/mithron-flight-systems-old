@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DataList, ModulePanel, OperationalFeedback, StatusBadge } from "@/components/admin/module-panel";
 import { AdminProductsLiveSync } from "@/components/admin/admin-products-live-sync";
 import { AdminProductsLiveWorkspace } from "@/components/admin/admin-products-live-workspace";
+import { CatalogIntegrityNotice } from "@/components/layout/catalog-integrity-notice";
 import { FormField, Input, Select } from "@/components/platform";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import { TimedActionForm } from "@/components/admin/timed-action-form";
@@ -21,6 +22,7 @@ import { deriveProductSku } from "@/lib/product-sku";
 import { getCheckoutWarehouseCode } from "@/services/warehouse-config";
 import { listActiveWarehouses } from "@/services/warehouses";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
+import { getEnterpriseMenuProducts } from "@/services/catalog";
 
 const platformLabelClass = "text-xs text-[var(--platform-text-muted)]";
 const platformFieldClass =
@@ -96,7 +98,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const pageRaw = Number(searchValue(params, "page") || "1");
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
   const pageSize = 120;
-  const [snapshot, warehouses, checkoutWarehouseCode, editorProduct, authContext, policy] = await Promise.all([
+  const [snapshot, warehouses, checkoutWarehouseCode, editorProduct, authContext, policy, enterpriseMenu] = await Promise.all([
     getProductManagerSnapshot({
       limit: pageSize,
       offset: (page - 1) * pageSize,
@@ -107,9 +109,11 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     getCheckoutWarehouseCode(),
     selectedProductSlug ? fetchProductEditorDetail(selectedProductSlug) : Promise.resolve(null),
     getCurrentAuthContext(),
-    getAdminSettingsPolicy()
+    getAdminSettingsPolicy(),
+    getEnterpriseMenuProducts()
   ]);
   const catalogMetrics = snapshot.data.catalogMetrics;
+  const catalogIntegrityErrors = enterpriseMenu.errors;
   const activeTool = readProductTool(searchValue(params, "tool").toLowerCase());
   const canForceDeleteProducts = roleHasPermission(authContext.role, "products.permanent_delete");
   const categoryOptions = buildProductCategoryOptions(snapshot.data.products, snapshot.data.categories);
@@ -217,6 +221,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   return (
     <>
       <AdminProductsLiveSync enabled={policy.realtimeUpdatesEnabled} />
+      <CatalogIntegrityNotice errors={catalogIntegrityErrors} />
       <ModulePanel
         eyebrow="Catalog"
         title="Catalog management"

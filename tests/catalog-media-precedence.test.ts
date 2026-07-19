@@ -27,13 +27,25 @@ describe("catalog media precedence", () => {
 
   it("skips enterprise menu products that are missing source images", () => {
     const catalog = source("services/catalog.ts");
-    const layout = source("app/(storefront)/layout.tsx");
+    const shell = source("components/layout/storefront-shell-chrome.tsx");
+    const adminProducts = source("app/admin/products/page.tsx");
     expect(catalog).toContain("export type CatalogDataError");
     expect(catalog).toContain("export type EnterpriseMenuLoadResult");
     expect(catalog).toContain("createMissingSourceImageError");
     expect(catalog).toContain("errors.push(error)");
-    expect(catalog).toContain("export async function loadProductForPage");
-    expect(layout).toContain("catalogErrors={enterpriseMenu.errors}");
-    expect(layout).toContain("enterpriseMenu.products");
+    expect(catalog).toContain("export const loadProductForPage");
+    expect(shell).not.toContain("CatalogIntegrityNotice");
+    expect(shell).toContain("enterpriseMenu.products");
+    expect(adminProducts).toContain("CatalogIntegrityNotice");
+    expect(adminProducts).toContain("getEnterpriseMenuProducts");
+  });
+
+  it("hides missing-image products from customers via notFound on PDP", () => {
+    const productPage = source("app/(storefront)/product/[slug]/page.tsx");
+    const panel = source("components/layout/catalog-integrity-notice.tsx");
+    expect(productPage).toContain('pageLoad.error.code === "missing_source_image"');
+    expect(productPage).toContain("notFound()");
+    expect(panel).toContain("showTechnicalDetail");
+    expect(panel).toContain("showTechnicalDetail ?");
   });
 });

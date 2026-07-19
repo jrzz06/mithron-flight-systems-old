@@ -28,7 +28,13 @@ function CatalogPageFallback() {
 }
 
 async function ProductsPageContent() {
-  const products = await getCatalogShowroomProducts();
+  let products: Awaited<ReturnType<typeof getCatalogShowroomProducts>> = [];
+  try {
+    products = await getCatalogShowroomProducts();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[products] catalog showroom failed; rendering empty catalog: ${message}`);
+  }
 
   return (
     <CatalogPage

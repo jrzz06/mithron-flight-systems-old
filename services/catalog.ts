@@ -691,14 +691,20 @@ async function overlayLiveInventoryAvailability<T extends { slug: string; source
 ): Promise<T[]> {
   const slugs = rows.map((row) => row.slug).filter(Boolean);
   if (!slugs.length) return rows;
-  const quantities = await getInventoryQuantitiesBySlug(slugs, process.env, {
-    freshness: options?.freshness ?? "catalog"
-  });
-  return rows.map((row) => {
-    const entry = quantities.get(row.slug);
-    if (!entry) return row;
-    return { ...row, source_availability: availabilityLabelFromQuantity(entry.quantity) };
-  });
+  try {
+    const quantities = await getInventoryQuantitiesBySlug(slugs, process.env, {
+      freshness: options?.freshness ?? "catalog"
+    });
+    return rows.map((row) => {
+      const entry = quantities.get(row.slug);
+      if (!entry) return row;
+      return { ...row, source_availability: availabilityLabelFromQuantity(entry.quantity) };
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[catalog] inventory overlay failed; continuing with source availability: ${message}`);
+    return rows;
+  }
 }
 
 function chunkItems<T>(items: T[], size: number) {
@@ -1976,9 +1982,21 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
       45,
       async (): Promise<ScopedMediaMaps> => {
         const [primary, cutouts, gallery] = await Promise.all([
-          getPrimaryProductMediaForSlugs(slugs),
-          getCatalogCutoutMediaForSlugs(slugs),
-          getGalleryProductMediaForSlugs(slugs)
+          getPrimaryProductMediaForSlugs(slugs).catch((error: unknown) => {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`[catalog] scoped primary media lookup failed; using inline JSON image fallback: ${message}`);
+            return new Map<string, MediaAsset>();
+          }),
+          getCatalogCutoutMediaForSlugs(slugs).catch((error: unknown) => {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`[catalog] scoped catalog cutout media lookup failed; falling back to primary product images: ${message}`);
+            return new Map<string, MediaAsset>();
+          }),
+          getGalleryProductMediaForSlugs(slugs).catch((error: unknown) => {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`[catalog] scoped gallery media lookup failed; gallery images will use inline JSON without responsive variants: ${message}`);
+            return new Map<string, MediaAsset[]>();
+          })
         ]);
         return {
           primary: [...primary.entries()],
@@ -1992,7 +2010,11 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
     galleryMedia = new Map(cached.gallery);
   } else {
     [primaryMedia, catalogCutouts, galleryMedia] = await Promise.all([
-      getPrimaryProductMediaLookup(),
+      getPrimaryProductMediaLookup().catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`[catalog] primary product media lookup failed; using inline JSON image fallback: ${message}`);
+        return new Map<string, MediaAsset>();
+      }),
       getCatalogCutoutMediaLookup().catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
         console.warn(`[catalog] catalog cutout media lookup failed; falling back to primary product images: ${message}`);
@@ -2013,13 +2035,14 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
         mapper(row, catalogCutouts.get(row.slug) ?? primaryMedia.get(row.slug), galleryMedia.get(row.slug))
       );
     } catch (error) {
-      // Skip broken catalog rows (e.g. demo `testing-product`) so related/PLP/ISR
-      // builds do not fail the whole page when one product lacks a source image.
+      // Skip broken catalog rows so related/PLP/ISR builds do not fail the whole page.
+      const message = error instanceof Error ? error.message : String(error);
       if (isMissingSourceImageError(error)) {
         console.warn(`[catalog] skipping product without source image: ${row.slug}`);
-        continue;
+      } else {
+        console.warn(`[catalog] skipping product due to mapper error (${row.slug}): ${message}`);
       }
-      throw error;
+      continue;
     }
   }
   return mapped;

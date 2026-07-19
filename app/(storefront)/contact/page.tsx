@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EnquiryForm } from "@/components/contact/enquiry-form";
 import { EditorRenderedContent } from "@/components/editor/editor-rendered-content";
 import { footerOfficialLinks } from "@/config/footer-links";
-import { getPublicCmsSnapshot } from "@/services/cms";
+import { fallbackSnapshot, getPublicCmsSnapshot } from "@/services/cms";
 
 export const revalidate = 60;
 
@@ -15,7 +15,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const cms = await getPublicCmsSnapshot();
+  let cms = fallbackSnapshot;
+  try {
+    cms = await getPublicCmsSnapshot();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[contact] CMS snapshot failed; using fallback: ${message}`);
+  }
 
   const contactEmail = cms.footer.contactEmail?.trim() || footerOfficialLinks.contactEmail;
   const contactPhone =

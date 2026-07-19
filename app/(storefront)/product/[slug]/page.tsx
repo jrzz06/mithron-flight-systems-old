@@ -67,6 +67,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const pageLoad = await loadProductForPage(slug);
   if (pageLoad.status === "not_found") notFound();
   if (pageLoad.status === "error") {
+    // Missing image = treat as unpublished for customers; no admin diagnostics on storefront.
+    if (pageLoad.error.code === "missing_source_image") notFound();
     return <CatalogDataErrorPanel error={pageLoad.error} />;
   }
 

@@ -17,7 +17,7 @@ const CmsSectionEditorInner = dynamic(
 
 export function CmsSectionEditor(props: ComponentProps<typeof CmsSectionEditorInner>) {
   return (
-    <SoftErrorBoundary label="CMS editor">
+    <SoftErrorBoundary label="CMS editor" variant="retry">
       <CmsSectionEditorInner {...props} />
     </SoftErrorBoundary>
   );

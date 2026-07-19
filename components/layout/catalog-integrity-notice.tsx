@@ -64,11 +64,14 @@ export function CatalogIntegrityNotice({ errors }: { errors: CatalogDataError[] 
 export function CatalogDataErrorPanel({
   error,
   title,
-  description
+  description,
+  showTechnicalDetail = false
 }: {
   error: CatalogDataError;
   title?: string;
   description?: string;
+  /** Admin-only: expose slug + raw catalog message. Never set on storefront. */
+  showTechnicalDetail?: boolean;
 }) {
   const resolvedTitle = title ?? (
     error.code === "catalog_unavailable"
@@ -77,8 +80,8 @@ export function CatalogDataErrorPanel({
   );
   const resolvedDescription = description ?? (
     error.code === "catalog_unavailable"
-      ? "Mithron could not load products right now. Refresh the page or try again in a moment."
-      : "The product is published, but Mithron could not resolve its image. Update the product image or unpublish the listing."
+      ? "Please refresh the page or try again in a moment."
+      : "This product is not available right now."
   );
 
   return (
@@ -87,10 +90,12 @@ export function CatalogDataErrorPanel({
         <p className="type-meta text-[#64748b]">Product unavailable</p>
         <h1 className="type-page mt-4">{resolvedTitle}</h1>
         <p className="type-body mt-5 max-w-xl text-[#64748b]">{resolvedDescription}</p>
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-[#9a3412]">
-          <span className="font-medium">{error.slug}</span>
-          <span className="text-[#b45309]"> — {error.message}</span>
-        </p>
+        {showTechnicalDetail ? (
+          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-[#9a3412]">
+            <span className="font-medium">{error.slug}</span>
+            <span className="text-[#b45309]"> — {error.message}</span>
+          </p>
+        ) : null}
       </section>
     </main>
   );

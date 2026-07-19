@@ -8,7 +8,13 @@ function HomeBelowHeroFallback() {
 }
 
 async function HomeHeroAsync({ cmsDraftPreview }: { cmsDraftPreview: boolean }) {
-  const heroBanners = await getHomepageHeroBanners(cmsDraftPreview);
+  let heroBanners: Awaited<ReturnType<typeof getHomepageHeroBanners>> = [];
+  try {
+    heroBanners = await getHomepageHeroBanners(cmsDraftPreview);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[home] hero banners failed; rendering empty hero: ${message}`);
+  }
   return (
     <HomeHeroSection
       cmsDraftPreview={cmsDraftPreview}

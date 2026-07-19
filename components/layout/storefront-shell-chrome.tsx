@@ -1,7 +1,5 @@
-import { CatalogIntegrityNotice } from "@/components/layout/catalog-integrity-notice";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { StoreNavWithAnchor } from "@/components/navigation/store-nav-with-anchor";
-import { createNavigationCatalogUnavailableError } from "@/services/catalog";
 import { buildEnterpriseMenuConfigs } from "@/services/catalog-navigation";
 import { getStorefrontShellBundle } from "@/services/storefront-shell-bundle";
 import { footerContent } from "@/config/storefront-content";
@@ -24,9 +22,7 @@ async function loadShellBundle() {
 
   const enterpriseMenu = bundle?.enterpriseMenu ?? {
     products: [],
-    errors: bundleResult[0].status === "rejected"
-      ? [createNavigationCatalogUnavailableError(bundleResult[0].reason)]
-      : []
+    errors: []
   };
 
   const cms = bundle?.cms ?? emptyShellCms;
@@ -35,7 +31,6 @@ async function loadShellBundle() {
   return {
     navigationItems: cms.navigation,
     enterpriseMenuConfigs,
-    catalogErrors: enterpriseMenu.errors,
     footer: cms.footer
   };
 }
@@ -43,13 +38,10 @@ async function loadShellBundle() {
 export async function StorefrontShellHeaderChrome() {
   const shell = await loadShellBundle();
   return (
-    <>
-      <CatalogIntegrityNotice errors={shell.catalogErrors} />
-      <StoreNavWithAnchor
-        navigationItems={shell.navigationItems}
-        enterpriseMenuConfigs={shell.enterpriseMenuConfigs}
-      />
-    </>
+    <StoreNavWithAnchor
+      navigationItems={shell.navigationItems}
+      enterpriseMenuConfigs={shell.enterpriseMenuConfigs}
+    />
   );
 }
 
