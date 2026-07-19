@@ -23,7 +23,7 @@ import { HomeMiniCarousel } from "@/sections/home/home-mini-carousel";
 import { AgriCommunityWorldSection, CityDroneWorldSection } from "@/sections/home/home-landing-composite";
 import {
   HomeClientTestimonialsSection,
-  pickHomeTestimonialItems
+  pickHomeTestimonialItemsFromCms
 } from "@/sections/home/home-client-testimonials-section";
 import { ProductShelfSection } from "@/sections/home/product-shelf-section";
 import { HomeFullViewportBanner } from "@/sections/home/home-full-viewport-banner";
@@ -117,8 +117,8 @@ export function HomepageSectionPreview({
     }
 
     if (definition.editorKind === "reviews-section") {
-      const reviewItems = pickHomeTestimonialItems(
-        productReviews,
+      const reviewItems = pickHomeTestimonialItemsFromCms(
+        v2.testimonialCards ?? [],
         catalog,
         v2.reviews.maxCount
       );
@@ -126,14 +126,21 @@ export function HomepageSectionPreview({
     }
 
     if (definition.editorKind === "related-articles") {
-      return <HomeRelatedArticlesSection posts={[]} pressItems={[]} customItems={v2.relatedArticles.items} />;
+      return <HomeRelatedArticlesSection
+        posts={[]}
+        pressItems={[]}
+        customItems={v2.relatedArticles.items}
+        sectionTitle={v2.relatedArticles.sectionTitle}
+        sectionLead={v2.relatedArticles.sectionLead}
+        browseAllHref={v2.relatedArticles.browseAllHref}
+      />;
     }
 
     return null;
   })();
 
   return (
-    <div data-homepage-section-preview={sectionId} className="overflow-auto pb-4">
+    <div data-homepage-section-preview={sectionId} data-cms-section-id={sectionId} className="overflow-auto pb-4">
       {content}
     </div>
   );

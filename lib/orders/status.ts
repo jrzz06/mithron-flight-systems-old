@@ -53,8 +53,8 @@ export type FulfillmentStatus = (typeof FULFILLMENT_STATUSES)[number];
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 const FULFILLMENT_STATUS_LABELS: Record<FulfillmentStatus, string> = {
-  pending: "Pending",
-  packing: "Packing",
+  pending: "Received",
+  packing: "Picking",
   dispatched: "Dispatched",
   delivered: "Delivered"
 };

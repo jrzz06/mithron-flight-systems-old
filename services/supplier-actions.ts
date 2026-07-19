@@ -65,13 +65,20 @@ function headers(serviceRoleKey: string) {
 }
 
 export async function listSupplierProducts(supplierId: string, env: EnvSource = process.env) {
-  const config = assertSupabaseAdminConfig(env);
-  const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/mithron_products?select=slug,name,category,price,tagline,workflow_status,rejection_reason,is_visible,updated_at&supplier_id=eq.${supplierId}&order=updated_at.desc&limit=100`,
-    { headers: headers(config.serviceRoleKey), cache: "no-store" }
+  const { timedAction } = await import("@/lib/perf/action-timer");
+  return timedAction(
+    "listSupplierProducts",
+    async () => {
+      const config = assertSupabaseAdminConfig(env);
+      const response = await fetchWithTimeout(
+        `${config.url}/rest/v1/mithron_products?select=slug,name,category,price,tagline,workflow_status,rejection_reason,is_visible,updated_at&supplier_id=eq.${supplierId}&order=updated_at.desc&limit=100`,
+        { headers: headers(config.serviceRoleKey), cache: "no-store" }
+      );
+      if (!response.ok) return [];
+      return (await response.json()) as JsonRecord[];
+    },
+    { panel: "supplier", phase: "server" }
   );
-  if (!response.ok) return [];
-  return (await response.json()) as JsonRecord[];
 }
 
 export async function createSupplierProductDraft(
@@ -285,27 +292,34 @@ export async function listSupplierInventory(
   env: EnvSource = process.env,
   existingProducts?: JsonRecord[]
 ): Promise<SupplierInventoryRow[]> {
-  const products = existingProducts ?? await listSupplierProducts(supplierId, env);
-  const nameBySlug = new Map(
-    products.map((product) => [String(product.slug ?? ""), String(product.name ?? product.slug ?? "")])
+  const { timedAction } = await import("@/lib/perf/action-timer");
+  return timedAction(
+    "listSupplierInventory",
+    async () => {
+      const products = existingProducts ?? await listSupplierProducts(supplierId, env);
+      const nameBySlug = new Map(
+        products.map((product) => [String(product.slug ?? ""), String(product.name ?? product.slug ?? "")])
+      );
+      const slugs = products.map((product) => String(product.slug)).filter(Boolean);
+      if (!slugs.length) return [];
+      const config = assertSupabaseAdminConfig(env);
+      const response = await fetchWithTimeout(
+        `${config.url}/rest/v1/inventory?select=id,product_slug,sku,stock_status,quantity,reorder_threshold,updated_at&product_slug=in.(${slugs.map(encodeURIComponent).join(",")})&order=updated_at.desc&limit=200`,
+        { headers: headers(config.serviceRoleKey), cache: "no-store" }
+      );
+      if (!response.ok) return [];
+      const rows = (await response.json()) as JsonRecord[];
+      return rows.map((row) => ({
+        id: String(row.id ?? ""),
+        product_slug: String(row.product_slug ?? ""),
+        product_name: nameBySlug.get(String(row.product_slug ?? "")) ?? String(row.product_slug ?? ""),
+        sku: String(row.sku ?? ""),
+        stock_status: String(row.stock_status ?? "available"),
+        quantity: Number(row.quantity ?? 0),
+        reorder_threshold: Number(row.reorder_threshold ?? 0),
+        updated_at: String(row.updated_at ?? "")
+      }));
+    },
+    { panel: "supplier", phase: "server" }
   );
-  const slugs = products.map((product) => String(product.slug)).filter(Boolean);
-  if (!slugs.length) return [];
-  const config = assertSupabaseAdminConfig(env);
-  const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/inventory?select=id,product_slug,sku,stock_status,quantity,reorder_threshold,updated_at&product_slug=in.(${slugs.map(encodeURIComponent).join(",")})&order=updated_at.desc&limit=200`,
-    { headers: headers(config.serviceRoleKey), cache: "no-store" }
-  );
-  if (!response.ok) return [];
-  const rows = (await response.json()) as JsonRecord[];
-  return rows.map((row) => ({
-    id: String(row.id ?? ""),
-    product_slug: String(row.product_slug ?? ""),
-    product_name: nameBySlug.get(String(row.product_slug ?? "")) ?? String(row.product_slug ?? ""),
-    sku: String(row.sku ?? ""),
-    stock_status: String(row.stock_status ?? "available"),
-    quantity: Number(row.quantity ?? 0),
-    reorder_threshold: Number(row.reorder_threshold ?? 0),
-    updated_at: String(row.updated_at ?? "")
-  }));
 }

@@ -50,7 +50,14 @@ function sanitizeAttemptedResource(value: string) {
 async function authContextFromBearer(request: NextRequest) {
   const config = getSupabasePublicConfig();
   if (!config.configured) {
-    throw new Error(config.message);
+    return {
+      authenticated: false,
+      userId: null,
+      role: null,
+      claimsRole: null,
+      error: "Telemetry unavailable.",
+      unavailable: true as const
+    };
   }
 
   const authorization = request.headers.get("authorization") ?? "";
@@ -106,6 +113,13 @@ export async function POST(request: NextRequest) {
 
   const payload = await request.json().catch(() => ({})) as JsonRecord;
   const auth = await authContextFromBearer(request);
+
+  if ("unavailable" in auth && auth.unavailable) {
+    return NextResponse.json(
+      { error: "Telemetry unavailable.", correlationId, retryable: true },
+      { status: 503, headers: { "x-correlation-id": correlationId } }
+    );
+  }
 
   if (!auth.authenticated) {
     await recordSecurityEvent({

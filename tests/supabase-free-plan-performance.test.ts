@@ -7,7 +7,7 @@ function source(path: string) {
 }
 
 describe("Supabase free-plan performance contract", () => {
-  it("compresses admin, CMS, and product uploads into generated image variants", () => {
+  it("compresses admin editor and product uploads into generated image variants", () => {
     const optimizerPath = join(process.cwd(), "services", "media-optimization.ts");
     expect(existsSync(optimizerPath)).toBe(true);
 
@@ -23,11 +23,7 @@ describe("Supabase free-plan performance contract", () => {
     expect(optimizer).toContain("createOptimizedImageThumbnail");
     expect(optimizer).toContain('import("sharp")');
 
-    // Request-path CMS/editor uploads stay on the lightweight thumbnail sync path.
-    const cmsAction = source("app/admin/cms/actions.ts");
-    expect(cmsAction).toContain("createOptimizedImageThumbnail");
-    expect(cmsAction).toContain("thumbnail_path");
-
+    // Request-path editor uploads stay on the lightweight thumbnail sync path.
     const editorUpload = source("services/editor-image-upload.ts");
     expect(editorUpload).toContain("createOptimizedImageThumbnail");
 
@@ -40,14 +36,9 @@ describe("Supabase free-plan performance contract", () => {
   });
 
   it("keeps admin thumbnails on the optimized Next image pipeline", () => {
-    for (const componentFile of [
-      "app/admin/products/product-catalog-grid.tsx",
-      "features/admin/cms/cms-visual-workspace.tsx"
-    ]) {
-      const component = source(componentFile);
-      expect(component).not.toContain("unoptimized");
-      expect(component).toContain("loading=\"lazy\"");
-    }
+    const productGrid = source("app/admin/products/product-catalog-grid.tsx");
+    expect(productGrid).not.toContain("unoptimized");
+    expect(productGrid).toContain("loading=\"lazy\"");
     // Inventory manager may use deferred/resolved image URLs without an explicit lazy attr;
     // still require the Next image pipeline (no unoptimized escapes).
     const inventory = source("components/admin/inventory-manager.tsx");
@@ -127,15 +118,15 @@ describe("Supabase free-plan performance contract", () => {
     expect(admin).toContain("adminInvites: \"select=id,email,role_key,status,expires_at,created_at,updated_at");
   });
 
-  it("keeps admin CMS workspace reads on visual-editor columns only", () => {
+  it("keeps CMS workspace service reads on explicit low-egress columns", () => {
     const admin = source("services/admin.ts");
-    const cmsWorkspaceSnapshot = admin.match(/export async function getCmsWorkspaceSnapshot[\s\S]*?export async function getMediaLibrarySnapshot/)?.[0] ?? "";
+    const cmsWorkspaceSnapshot = admin.match(/export async function getCmsWorkspaceSnapshot[\s\S]*?export const getMediaLibrarySnapshot/)?.[0] ?? "";
 
     expect(cmsWorkspaceSnapshot).not.toContain("select=*");
     expect(admin).toContain("cmsWorkspaceQueries");
     expect(admin).toContain("heroBanners: \"select=id,product_slug,title,subtitle,cta_label,href,image,poster,video,theme,composition,title_color,subtitle_color,starts_at,ends_at,sort_order,is_visible,status,revision,updated_at,created_at");
-    expect(admin).toContain("homepageSections: \"select=id,section_key,label,component_key,payload,sort_order,is_visible,status,revision,updated_at,created_at");
-    expect(admin).toContain("mediaAssets: \"select=id,public_url,caption,alt,alt_text,width,height,usage_scope,metadata,updated_at");
+    expect(admin).toContain("homepageSections: \"select=id,section_key,label,component_key,sort_order,is_visible,status,revision,updated_at,created_at");
+    expect(admin).toContain("mediaAssets: \"select=id,public_url,caption,alt,alt_text,width,height,usage_scope,updated_at");
   });
 
   it("keeps operational mutation helpers off broad select-star reads", () => {

@@ -210,3 +210,14 @@ Removed 11 sections that formed an internal import graph but were never mounted 
 ## Explicitly not removed
 
 See `review-queue.md` for knip-flagged files kept due to contract tests, runtime routes, or enterprise cleanup gates.
+
+## Batch — Safe cleanup allowlist (2026-07-19)
+
+See `after.md` for full summary. Highlights:
+
+- Memory leak fixes (navbar RAF, live-sync visibility teardown, paymentVersion LRU)
+- Tier A/B dead file deletion with redirect pages preserved
+- Dead catalog/store/search/utils export body removals
+- Leads column select + dashboard open-queue query narrowing + catalog original-order memo
+- Docs/log/artifact dead-weight cleanup
+- Warehouse/CMS unused FormActions left **exported** (un-exporting trips `eslint --max-warnings=0`)

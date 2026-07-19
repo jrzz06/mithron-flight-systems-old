@@ -5,7 +5,7 @@ import { SupplierLiveSync } from "@/components/supplier/supplier-live-sync";
 import { relativeTimeLabel, supplierEmptyMessage } from "@/lib/platform/copy";
 import { getCurrentAuthContext } from "@/services/auth";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
-import { listSupplierInventory } from "@/services/supplier-actions";
+import { listSupplierInventory, listSupplierProducts } from "@/services/supplier-actions";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -24,7 +24,10 @@ export default async function SupplierInventoryPage({ searchParams }: { searchPa
     getAdminSettingsPolicy(),
     searchParams ? searchParams : Promise.resolve({} as SearchParams)
   ]);
-  const inventory = context.userId ? await listSupplierInventory(context.userId) : [];
+  const products = context.userId ? await listSupplierProducts(context.userId) : [];
+  const inventory = context.userId
+    ? await listSupplierInventory(context.userId, process.env, products)
+    : [];
 
   return (
     <div data-supplier-inventory-route className="grid gap-5">

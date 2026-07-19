@@ -21,6 +21,10 @@ describe("shared live sync coordinator", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "visible"
+    });
   });
 
   it("debounces multiple consumers into one revalidation per table", async () => {
@@ -28,8 +32,9 @@ describe("shared live sync coordinator", () => {
     const { subscribeControlPlaneLiveSync } = await import("@/lib/control-plane/shared-live-sync-coordinator");
 
     const routerRefresh = vi.fn();
-    subscribeControlPlaneLiveSync("admin", () => true, { routerRefresh });
-    subscribeControlPlaneLiveSync("admin", (table) => table === "orders", { routerRefresh });
+    // warehouse scope defaults preferReconcile=false so routerRefresh is used
+    subscribeControlPlaneLiveSync("warehouse", () => true, { routerRefresh });
+    subscribeControlPlaneLiveSync("warehouse", (table) => table === "orders", { routerRefresh });
 
     await vi.advanceTimersByTimeAsync(150);
 
@@ -46,7 +51,7 @@ describe("shared live sync coordinator", () => {
     markControlPlaneLiveSyncFlush();
 
     const routerRefresh = vi.fn();
-    subscribeControlPlaneLiveSync("admin", () => true, { routerRefresh });
+    subscribeControlPlaneLiveSync("warehouse", () => true, { routerRefresh });
 
     await vi.advanceTimersByTimeAsync(150);
 
@@ -62,7 +67,7 @@ describe("shared live sync coordinator", () => {
 
     const { subscribeControlPlaneLiveSync } = await import("@/lib/control-plane/shared-live-sync-coordinator");
     const routerRefresh = vi.fn();
-    subscribeControlPlaneLiveSync("admin", () => true, { routerRefresh });
+    subscribeControlPlaneLiveSync("warehouse", () => true, { routerRefresh });
 
     await vi.advanceTimersByTimeAsync(150);
     expect(routerRefresh).not.toHaveBeenCalled();
@@ -75,5 +80,26 @@ describe("shared live sync coordinator", () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(routerRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("removes visibility listener on teardown while document stays hidden", async () => {
+    vi.useFakeTimers();
+    const removeSpy = vi.spyOn(document, "removeEventListener");
+
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden"
+    });
+
+    const { subscribeControlPlaneLiveSync } = await import("@/lib/control-plane/shared-live-sync-coordinator");
+    const unsubscribe = subscribeControlPlaneLiveSync("warehouse", () => true, {
+      routerRefresh: vi.fn()
+    });
+
+    await vi.advanceTimersByTimeAsync(150);
+    unsubscribe();
+
+    expect(removeSpy).toHaveBeenCalledWith("visibilitychange", expect.any(Function));
+    removeSpy.mockRestore();
   });
 });

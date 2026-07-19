@@ -15,16 +15,15 @@ describe("server action permission guards", () => {
   });
 
   it("requires admin role for privileged admin server actions", () => {
-    expect(source("app/admin/enquiries/actions.ts")).toContain("requireAdminPermission");
+    expect(source("app/admin/leads/actions.ts")).toContain("requireAdminPermission");
     expect(source("app/admin/products/actions.ts")).toContain("requirePermission");
     expect(source("app/admin/orders/actions.ts")).toContain("requireAdminPermission");
     expect(source("app/operations/actions.ts")).toContain("requireAdminPermission");
-    expect(source("app/admin/cms/actions.ts")).toContain("requireAdminPermission");
   });
 
-  it("requires cms.write for CMS form mutations", () => {
-    const cms = source("app/admin/cms/actions.ts");
-    expect(cms).toContain('requirePermission("cms.write")');
+  it("keeps cms.write available for catalog and editor upload APIs", () => {
+    expect(source("app/api/editor/upload-image/route.ts")).toContain('requirePermission("cms.write")');
+    expect(source("app/api/admin/catalog/products/route.ts")).toContain('requirePermission("cms.write")');
   });
 
   it("requires admin operations permission for operations actions", () => {

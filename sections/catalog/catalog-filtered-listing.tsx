@@ -11,6 +11,7 @@ import {
 } from "@/lib/catalog-categories";
 import {
   applyCatalogProductListing,
+  buildCatalogOriginalOrder,
   buildProductsCatalogHref,
   parseCatalogProductGroupParam,
   parseCatalogSearchQueryParam,
@@ -115,14 +116,17 @@ export function CatalogFilteredListing({
     );
   }, [debouncedQuery, group, mode, router, searchParams]);
 
+  const originalOrder = useMemo(() => buildCatalogOriginalOrder(products), [products]);
+
   const filteredProducts = useMemo(
     () =>
       applyCatalogProductListing(products, {
         query: debouncedQuery,
         sort,
-        group: mode === "global" ? group : "all"
+        group: mode === "global" ? group : "all",
+        originalOrder
       }),
-    [products, debouncedQuery, sort, group, mode]
+    [products, debouncedQuery, sort, group, mode, originalOrder]
   );
 
   const shelfLayout = useMemo(() => buildCatalogShelfLayout(filteredProducts), [filteredProducts]);

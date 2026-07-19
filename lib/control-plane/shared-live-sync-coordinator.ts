@@ -19,6 +19,7 @@ type ScopeCoordinator = {
   realtimeUnsubscribe: (() => void) | null;
   refCount: number;
   visibilityArmed: boolean;
+  visibilityListener: (() => void) | null;
 };
 
 const coordinators = new Map<EnterpriseRealtimeScope, ScopeCoordinator>();
@@ -46,7 +47,8 @@ function getOrCreateCoordinator(scope: EnterpriseRealtimeScope): ScopeCoordinato
     preferReconcile: scope === "admin",
     realtimeUnsubscribe: null,
     refCount: 0,
-    visibilityArmed: false
+    visibilityArmed: false,
+    visibilityListener: null
   };
   coordinators.set(scope, coordinator);
   return coordinator;
@@ -63,8 +65,10 @@ async function flushCoordinator(scope: EnterpriseRealtimeScope) {
         if (document.visibilityState !== "visible") return;
         document.removeEventListener("visibilitychange", onVisible);
         coordinator.visibilityArmed = false;
+        coordinator.visibilityListener = null;
         void flushCoordinator(scope);
       };
+      coordinator.visibilityListener = onVisible;
       document.addEventListener("visibilitychange", onVisible);
     }
     return;
@@ -137,6 +141,13 @@ function teardownRealtimeSubscription(scope: EnterpriseRealtimeScope) {
     coordinator.flushTimer = null;
   }
 
+  if (coordinator.visibilityArmed && coordinator.visibilityListener) {
+    document.removeEventListener("visibilitychange", coordinator.visibilityListener);
+    coordinator.visibilityArmed = false;
+    coordinator.visibilityListener = null;
+  }
+
+  coordinator.pendingTables.clear();
   coordinator.realtimeUnsubscribe?.();
   coordinator.realtimeUnsubscribe = null;
   coordinators.delete(scope);

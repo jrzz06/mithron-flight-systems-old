@@ -66,34 +66,6 @@ export function searchHaystackMatchesQuery(haystack: string, query: string) {
   return tokens.every((token) => fuzzyTokenMatches(haystack, token));
 }
 
-export function buildProductSearchHaystack(parts: Array<string | null | undefined>) {
-  return parts
-    .flatMap((part) => (part ?? "").split(/\s+/))
-    .join(" ")
-    .toLowerCase();
-}
-
-export function scoreSearchMatch(
-  haystack: string,
-  query: string,
-  options?: { sortOrder?: number; slug?: string }
-) {
-  const normalizedQuery = normalizeSearchText(query);
-  const tokens = tokenizeSearchQuery(normalizedQuery);
-  if (!normalizedQuery || normalizedQuery.length < MIN_SEARCH_QUERY_LENGTH) return 0;
-  if (!searchHaystackMatchesQuery(haystack, normalizedQuery)) return 0;
-
-  const compactHaystack = compactSearchText(haystack);
-  const compactQuery = compactSearchText(normalizedQuery);
-
-  if (compactHaystack === compactQuery) return 1000;
-  if (compactHaystack.startsWith(compactQuery)) return 940;
-  if (compactHaystack.includes(compactQuery)) return 880;
-
-  const tokenBonus = tokens.length * 45;
-  return 520 + tokenBonus;
-}
-
 export function mergeSearchResultsBySlug<T extends { slug: string }>(
   primary: T[],
   secondary: T[],

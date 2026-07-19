@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
     authProvider: "supabase",
     severity: action === "auth.failed_login" ? "warning" : "info",
     metadata
-  }, request);
+  }, request).catch((error) => {
+    console.error("[auth/audit] record failed", error);
+  });
 
   return NextResponse.json({ status: "recorded" });
 }

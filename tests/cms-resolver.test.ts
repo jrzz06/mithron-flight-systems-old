@@ -4,7 +4,6 @@ import {
   contentSourcesForComponent,
   defaultHomepageContentSources
 } from "@/config/cms-resolver-registry";
-import { CMS_DEPRECATED_STOREFRONT_TABLES } from "@/config/cms-deprecations";
 import {
   resolveCmsPageOrchestration,
   shouldLoadCmsSource
@@ -73,8 +72,9 @@ describe("CMS resolver orchestration", () => {
     }
   });
 
-  it("marks removed legacy storefront tables excluded from the public read path", () => {
-    expect(CMS_DEPRECATED_STOREFRONT_TABLES).toEqual(["homepage_sections", "testimonials"]);
+  it("keeps legacy storefront tables out of the public component map", () => {
     expect(Object.keys(CMS_COMPONENT_CONTENT_SOURCES)).toContain("HeroCarousel");
+    expect(Object.keys(CMS_COMPONENT_CONTENT_SOURCES)).not.toContain("homepage_sections");
+    expect(Object.keys(CMS_COMPONENT_CONTENT_SOURCES)).not.toContain("testimonials");
   });
 });

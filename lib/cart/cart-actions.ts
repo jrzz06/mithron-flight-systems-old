@@ -111,25 +111,44 @@ export async function addCartLine(
   const state = useCartStore.getState();
 
   if (state.cartSource === "authenticated") {
+    const previousItems = state.items;
+    const delta = clampQuantity(item.quantity);
+    // Optimistic UI: show the line immediately, then reconcile with server stock/price.
+    useCartStore.setState((current) => {
+      const key = cartLineKey(item);
+      const existing = (current.items ?? []).find((entry) => cartLineKey(entry) === key);
+      const nextItems = existing
+        ? (current.items ?? []).map((entry) =>
+            cartLineKey(entry) === key
+              ? { ...entry, quantity: clampQuantity(entry.quantity + delta) }
+              : entry
+          )
+        : [...(current.items ?? []), { ...item, quantity: delta }];
+      return { items: nextItems };
+    });
+    if (options.openMiniCart) {
+      useCartStore.setState({ isCartOpen: true, hasOpenedCart: true, cartDrawerMode: "confirmation" });
+    }
     try {
       await runCartLineMutation(item, async () => {
-        await addAuthenticatedCartItem({ ...item, delta: clampQuantity(item.quantity) });
+        await addAuthenticatedCartItem({ ...item, delta });
       });
     } catch (error) {
+      useCartStore.setState({ items: previousItems });
       notify.error(error instanceof Error ? error.message : "Unable to add item to cart.", { source: "cart" });
       throw error;
     }
   } else {
     state.addToCart(item, options);
+    if (options.openMiniCart) {
+      useCartStore.setState({ isCartOpen: true, hasOpenedCart: true, cartDrawerMode: "confirmation" });
+    }
   }
 
   notify.success(FEEDBACK_MESSAGES.cartAdded, {
     source: "cart",
     id: `cart:add:${item.productSlug}:${item.bundleId ?? ""}:${item.variantId ?? ""}`
   });
-  if (options.openMiniCart) {
-    useCartStore.setState({ isCartOpen: true, hasOpenedCart: true, cartDrawerMode: "confirmation" });
-  }
 }
 
 export async function setCartLineQuantity(item: PersistedCartItem, quantity: number) {
@@ -169,11 +188,17 @@ export async function removeCartLine(item: Pick<PersistedCartItem, "productSlug"
   await ensureCartSessionReady();
   const state = useCartStore.getState();
   if (state.cartSource === "authenticated") {
+    const previousItems = state.items;
+    const key = cartLineKey(item);
+    useCartStore.setState((current) => ({
+      items: (current.items ?? []).filter((entry) => cartLineKey(entry) !== key)
+    }));
     try {
       await runCartLineMutation(item, async () => {
         await removeAuthenticatedCartItem(item);
       });
     } catch (error) {
+      useCartStore.setState({ items: previousItems });
       notify.error(error instanceof Error ? error.message : "Unable to remove item from cart.", { source: "cart" });
       throw error;
     }

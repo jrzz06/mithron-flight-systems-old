@@ -53,12 +53,8 @@ function mapProduct(product: Product): GroundedProduct {
 async function loadProductsByQuery(query: string, limit: number) {
   const results = await searchCatalogProducts(query, Math.min(Math.max(limit, 1), 6));
   const slugs = results.map((row) => row.slug).filter(Boolean);
-  const products: Product[] = [];
-  for (const slug of slugs) {
-    const loaded = await getProductBySlug(slug);
-    if (loaded) products.push(loaded);
-  }
-  return products;
+  const loaded = await Promise.all(slugs.map((slug) => getProductBySlug(slug)));
+  return loaded.filter((product): product is Product => Boolean(product));
 }
 
 export async function buildAssistantContextPack(input: {

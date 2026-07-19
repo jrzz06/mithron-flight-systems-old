@@ -197,18 +197,36 @@ export function buildCatalogOriginalOrder(products: Product[]) {
 
 export function applyCatalogProductListing(
   products: Product[],
-  options: CatalogListingOptions = {}
+  options: CatalogListingOptions & { originalOrder?: Map<string, number> } = {}
 ): Product[] {
   const query = options.query ?? "";
   const sort = options.sort ?? "featured";
   const group = options.group ?? "all";
-  const originalOrder = buildCatalogOriginalOrder(products);
+  const originalOrder = options.originalOrder ?? buildCatalogOriginalOrder(products);
 
   const filtered = products.filter(
     (product) => productMatchesQuery(product, query) && matchesCatalogProductGroup(product, group)
   );
 
   return sortCatalogProducts(filtered, sort, originalOrder);
+}
+
+/**
+ * Strip below-fold / PDP-only blobs before shipping the catalog array to the client
+ * listing island. Filter/sort semantics are unchanged — only RSC→client payload size.
+ */
+export function slimCatalogListingProducts(products: Product[]): Product[] {
+  return products.map((product) => ({
+    ...product,
+    description: undefined,
+    gallery: product.image ? [product.image] : [],
+    hotspots: [],
+    variants: [],
+    bundles: [],
+    story: [],
+    specs: {},
+    anchors: ["Overview"]
+  }));
 }
 
 function isDroneMissionCategory(category: string) {

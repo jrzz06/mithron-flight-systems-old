@@ -24,6 +24,10 @@ export type AdminLeadRow = {
   order_number?: string | null;
 };
 
+/** Explicit PostgREST select for leads — keep in sync with admin-actions adminReadColumnsByTable.leads */
+export const LEADS_REST_SELECT =
+  "id,lead_number,name,phone,email,address,product_slug,product_name,message,source,status,converted_order_id,customer_user_id,payload,created_at,updated_at";
+
 export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   contact_form: "Contact",
   product_enquiry: "Product",

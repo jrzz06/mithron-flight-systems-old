@@ -21,17 +21,19 @@ describe("logout CSRF protection", () => {
   });
 
   it("uses POST forms for account and control panel logout buttons", () => {
-    const accountLayout = readFileSync(join(process.cwd(), "app/(storefront)/account/layout.tsx"), "utf8");
+    const accountProfile = readFileSync(join(process.cwd(), "app/(storefront)/account/profile/page.tsx"), "utf8");
     const platformNav = readFileSync(join(process.cwd(), "components/platform/platform-nav.tsx"), "utf8");
-    const warehouseFrame = readFileSync(join(process.cwd(), "components/warehouse/warehouse-frame.tsx"), "utf8");
-    const supplierFrame = readFileSync(join(process.cwd(), "components/supplier/supplier-frame.tsx"), "utf8");
+    const warehouseLayout = readFileSync(join(process.cwd(), "app/warehouse/layout.tsx"), "utf8");
+    const supplierLayout = readFileSync(join(process.cwd(), "app/supplier/layout.tsx"), "utf8");
 
-    expect(accountLayout).toContain("LogoutForm");
+    expect(accountProfile).toContain("LogoutForm");
     expect(readFileSync(join(process.cwd(), "components/auth/logout-form.tsx"), "utf8")).toContain('action="/auth/logout"');
     expect(readFileSync(join(process.cwd(), "components/auth/logout-form.tsx"), "utf8")).not.toContain("firebaseSignOut");
-    expect(accountLayout).not.toContain('href="/auth/logout"');
+    expect(accountProfile).not.toContain('href="/auth/logout"');
     expect(platformNav).toContain('action="/auth/logout"');
-    expect(warehouseFrame).toContain("PlatformShell");
-    expect(supplierFrame).toContain("PlatformShell");
+    expect(warehouseLayout).toContain("ControlPlaneParallelLayout");
+    expect(warehouseLayout).toContain("data-warehouse-frame");
+    expect(supplierLayout).toContain("ControlPlaneParallelLayout");
+    expect(supplierLayout).toContain("data-supplier-frame");
   });
 });

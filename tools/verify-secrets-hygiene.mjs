@@ -91,7 +91,12 @@ if (!trackedFiles().includes(".env.example")) {
 
 for (const file of trackedFiles()) {
   if (file.endsWith(".env.example") || file.includes("node_modules/")) continue;
-  const content = readFileSync(join(root, file), "utf8");
+  const absolute = join(root, file);
+  if (!existsSync(absolute)) {
+    console.warn(`[secrets-hygiene] WARN: tracked file missing on disk, skipped: ${file}`);
+    continue;
+  }
+  const content = readFileSync(absolute, "utf8");
   for (const pattern of SECRET_PATTERNS) {
     const matches = content.match(pattern.regex);
     if (!matches) continue;

@@ -14,11 +14,10 @@ import { getSupabaseAdminConfig } from "@/lib/env";
 const root = process.cwd();
 
 describe("enterprise admin platform", () => {
-  it("exposes the protected admin, CMS, media, product, warehouse, and staff route surface", () => {
+  it("exposes the protected admin, product, warehouse, and staff route surface", () => {
     const expectedRoutes = [
       "app/auth/callback/route.ts",
       "app/admin/layout.tsx",
-      "app/admin/cms/page.tsx",
       "app/admin/products/page.tsx",
       "app/admin/inventory/page.tsx",
       "app/admin/audit/page.tsx",

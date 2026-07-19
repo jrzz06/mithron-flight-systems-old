@@ -8,8 +8,17 @@ let redisClient: Redis | null | undefined;
  * Cap every Redis REST call so a degraded Upstash endpoint cannot stall
  * mutations. 4s leaves headroom for cold HTTPS handshakes (~0.5–1s observed)
  * while still failing fast vs unbounded hangs.
+ *
+ * Cache reads use a shorter budget so a slow Redis region cannot dominate TTFB —
+ * miss → fall through to Supabase immediately (fail-open for app-data caches).
  */
 export const REDIS_OP_TIMEOUT_MS = 4_000;
+/** Best-effort catalog/CMS GET — prefer Supabase over waiting on a slow Redis RTT. */
+export const REDIS_CACHE_READ_TIMEOUT_MS = 900;
+/** Best-effort cache SET — do not block SSR on write amplification. */
+export const REDIS_CACHE_WRITE_TIMEOUT_MS = 1_500;
+/** Health probe — long enough for warm RTT, short enough to fail the cron. */
+export const REDIS_HEALTH_PING_TIMEOUT_MS = 3_000;
 
 const redisAbortStore = new AsyncLocalStorage<AbortController>();
 
@@ -20,17 +29,40 @@ const keepAliveAgent = new https.Agent({
   scheduling: "lifo"
 });
 
+/**
+ * Vercel / dotenv sometimes stores secrets wrapped in quotes
+ * (`"https://….upstash.io"`). Those quotes break `new URL()` inside the
+ * Upstash HTTPS transport, so Redis never connects and auth-role cache
+ * never warms (`usedAuthRoleCache: false`). Strip only surrounding quotes.
+ */
+export function normalizeRedisEnvValue(raw: string | undefined | null): string {
+  const trimmed = raw?.trim() ?? "";
+  if (!trimmed) return "";
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    || (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
 export function getRedisRestCredentials() {
-  const url =
-    process.env.UPSTASH_REDIS_REST_URL?.trim()
-    || process.env.KV_REST_API_URL?.trim()
-    || "";
-  const token =
-    process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
-    || process.env.KV_REST_API_TOKEN?.trim()
-    || "";
+  const url = normalizeRedisEnvValue(
+    process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
+  );
+  const token = normalizeRedisEnvValue(
+    process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
+  );
   if (!url || !token) return null;
   if (/deploy-placeholder\.upstash\.io/i.test(url)) return null;
+  try {
+    // Reject quote-broken / malformed URLs before constructing the client.
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+  } catch {
+    return null;
+  }
   return { url, token };
 }
 
@@ -170,9 +202,7 @@ export async function withRedisTimeout<T>(
 ): Promise<T> {
   const controller = new AbortController();
   const startedAt = Date.now();
-  let timer: ReturnType<typeof setTimeout> | undefined;
-
-  timer = setTimeout(() => {
+  const timer = setTimeout(() => {
     controller.abort(
       new Error(`[mithron-cache] Redis ${operation} timed out after ${timeoutMs}ms`)
     );
@@ -199,6 +229,6 @@ export async function withRedisTimeout<T>(
     }
     throw error;
   } finally {
-    if (timer) clearTimeout(timer);
+    clearTimeout(timer);
   }
 }

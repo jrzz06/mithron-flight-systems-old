@@ -4,15 +4,11 @@ import { StatusPill } from "@/components/platform";
 import { relativeTimeLabel } from "@/lib/platform/copy";
 import { listAdminEnquiries } from "@/services/enquiries";
 
-/** Request-scoped dedupe so dashboard cannot double-hit within one render. */
-const listDashboardEnquiries = cache(() => listAdminEnquiries());
+/** Request-scoped dedupe: open leads only, dashboard hot window. */
+const listDashboardEnquiries = cache(() => listAdminEnquiries({ status: "new", limit: 8 }));
 
 function text(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
-
-function openEnquiries(enquiries: Awaited<ReturnType<typeof listAdminEnquiries>>) {
-  return enquiries.filter((enquiry) => !["converted", "lost", "closed"].includes(text(enquiry.status, "new")));
 }
 
 function QueuePanel({
@@ -41,8 +37,7 @@ function QueuePanel({
 }
 
 export async function AdminDashboardEnquiryQueue() {
-  const enquiries = await listDashboardEnquiries();
-  const queueEnquiries = openEnquiries(enquiries).slice(0, 8);
+  const queueEnquiries = await listDashboardEnquiries();
 
   return (
     <QueuePanel title="Customer leads" href="/admin/leads" emptyLabel="No open leads.">

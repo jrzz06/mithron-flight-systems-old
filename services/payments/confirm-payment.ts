@@ -162,7 +162,9 @@ async function createCustomerPaymentNotification(input: {
 }
 
 async function markPaymentInitiated(orderId: string, provider: PaymentProviderId, intentId: string) {
-  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) return;
 
@@ -288,7 +290,9 @@ async function processSucceededPaymentEvent(input: {
   }
 
   if (!confirmed.skipped) {
-    const orders = await fetchAdminRecordsByColumn("orders", "id", orderId);
+    const orders = await fetchAdminRecordsByColumn("orders", "id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
     const order = orders[0];
     await createCustomerPaymentNotification({
       recipientId: typeof order?.created_by_user_id === "string" ? order.created_by_user_id : null,
@@ -329,7 +333,9 @@ export async function applyPaymentEvent(input: {
     return { ok: false, status: 404, error: "Order not found for payment." };
   }
 
-  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
 
   if (isTerminalPaidState(payment, order)) {

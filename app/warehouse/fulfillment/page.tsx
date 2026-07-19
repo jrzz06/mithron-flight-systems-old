@@ -13,7 +13,7 @@ import { getWarehouseSnapshot } from "@/services/admin";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { getCurrentAuthContext } from "@/services/auth";
 import { filterOrdersForWarehouseScope, resolveWarehouseScope } from "@/services/warehouse-scope";
-import { cancelWarehouseOrderFormAction } from "../actions";
+import { cancelWarehouseOrderFormAction, dispatchWarehouseOrderFormAction } from "../actions";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +44,17 @@ async function cancelOrderWithFeedback(formData: FormData) {
   redirect(feedbackPath("success", "Order cancelled."));
 }
 
+async function dispatchOrderWithFeedback(formData: FormData) {
+  "use server";
+  try {
+    await dispatchWarehouseOrderFormAction(formData);
+  } catch (error) {
+    if (isActionNavigationError(error)) throw error;
+    redirect(feedbackPath("error", messageFromError(error)));
+  }
+  redirect(feedbackPath("success", "Order dispatched."));
+}
+
 function buildOrderRows(
   orders: Array<Record<string, unknown>>,
   itemsByOrder: Map<string, number>,
@@ -59,17 +70,27 @@ function buildOrderRows(
 }
 
 export default async function WarehouseFulfillmentPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
-  const [snapshot, policy, auth] = await Promise.all([
-    getWarehouseSnapshot({ scope: "orders" }),
-    getAdminSettingsPolicy(),
-    getCurrentAuthContext()
-  ]);
-  const scope = await resolveWarehouseScope({ userId: auth.userId, role: auth.role });
-  const defaultWarehouseCode = policy.defaultWarehouseCode;
   const params = searchParams ? await searchParams : {};
-  const query = searchValue(params, "q").toLowerCase();
+  const query = searchValue(params, "q").trim();
+  const pageRaw = Number(searchValue(params, "page") || "1");
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+  const pageSize = 80;
+  const offset = (page - 1) * pageSize;
   const operationStatus = searchValue(params, "operation_status");
   const operationMessage = searchValue(params, "operation_message");
+
+  const authPromise = getCurrentAuthContext();
+  const [snapshot, policy, scope] = await Promise.all([
+    getWarehouseSnapshot({
+      scope: "ordersList",
+      limit: pageSize,
+      offset,
+      search: query || undefined
+    }),
+    getAdminSettingsPolicy(),
+    authPromise.then((auth) => resolveWarehouseScope({ userId: auth.userId, role: auth.role }))
+  ]);
+  const defaultWarehouseCode = policy.defaultWarehouseCode;
 
   const assignedOrders = filterOrdersForWarehouseScope(snapshot.data.orders, scope, defaultWarehouseCode);
   const activeStatuses = ["pending", ...RECEIVED_FULFILLMENT_STATUSES];
@@ -81,11 +102,10 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
     itemsByOrder.set(orderId, (itemsByOrder.get(orderId) ?? 0) + Number(item.quantity ?? 0));
   }
 
+  // Status filter remains client-side (fulfillment_status multi-value); search is server-side.
   const filteredOrders = assignedOrders.filter((order) => {
     const fulfillmentStatus = String(order.fulfillment_status ?? "");
-    if (!activeStatuses.includes(fulfillmentStatus)) return false;
-    const haystack = `${String(order.order_number ?? "")} ${String(order.customer_email ?? "")}`.toLowerCase();
-    return !query || haystack.includes(query);
+    return activeStatuses.includes(fulfillmentStatus);
   });
 
   const queueRows = buildOrderRows(filteredOrders, itemsByOrder, defaultWarehouseCode);
@@ -111,8 +131,8 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
 
         <WarehouseKpiStrip
           tiles={[
-            { label: "Awaiting Receipt", value: assignedOrders.filter((order) => String(order.fulfillment_status ?? "") === "pending").length },
-            { label: "Ready to Dispatch", value: assignedOrders.filter((order) => RECEIVED_FULFILLMENT_STATUSES.includes(String(order.fulfillment_status ?? "") as typeof RECEIVED_FULFILLMENT_STATUSES[number])).length }
+            { label: "Received", value: assignedOrders.filter((order) => String(order.fulfillment_status ?? "") === "pending").length },
+            { label: "Picking", value: assignedOrders.filter((order) => RECEIVED_FULFILLMENT_STATUSES.includes(String(order.fulfillment_status ?? "") as typeof RECEIVED_FULFILLMENT_STATUSES[number])).length }
           ]}
         />
 
@@ -136,6 +156,7 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
           <WarehouseOrderQueueTable
             rows={queueRows}
             cancelAction={cancelOrderWithFeedback}
+            dispatchAction={dispatchOrderWithFeedback}
           />
         </section>
       </div>

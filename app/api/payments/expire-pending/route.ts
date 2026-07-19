@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withCronLock } from "@/lib/cron-lock";
 import { authorizeBearerSecret, type BearerAuthResult } from "@/lib/api/bearer-auth";
-import { assertSupabaseAdminConfig } from "@/lib/env";
+import { getSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { mergePaymentLifecycleMetadata } from "@/lib/orders/payment-lifecycle";
 import { updateAdminRecord } from "@/services/admin-actions";
@@ -68,7 +68,13 @@ export async function POST(request: Request) {
 }
 
 async function runExpirePendingPayments() {
-  const config = assertSupabaseAdminConfig(process.env);
+  const config = getSupabaseAdminConfig(process.env);
+  if (!config.configured) {
+    return NextResponse.json(
+      { ok: false, error: "Payment expire unavailable.", retryable: true },
+      { status: 503 }
+    );
+  }
   const cutoff = new Date(Date.now() - PENDING_MAX_MINUTES * 60_000).toISOString();
   // Join payments in one query instead of N+1 per-order fetches.
   const response = await fetchWithTimeout(
@@ -83,7 +89,10 @@ async function runExpirePendingPayments() {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to load stale orders.");
+    return NextResponse.json(
+      { ok: false, error: "Failed to load stale orders.", retryable: true },
+      { status: 503 }
+    );
   }
 
   const rows = (await response.json()) as ExpirePendingOrderRow[];

@@ -71,19 +71,22 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    let retryRafId: number | null = null;
     const observedSurfaces = new WeakSet<Element>();
 
     const runToneCheck = (markHydrated = false) => {
-      if (!hasMountedRef.current || isInteractionPaused()) return;
+      if (cancelled || !hasMountedRef.current || isInteractionPaused()) return;
       applyTone(syncTone(), markHydrated ? { markHydrated: true } : undefined);
       lastCheckAtRef.current = performance.now();
     };
 
     const scheduleToneCheck = (force = false) => {
-      if (rafIdRef.current !== null) return;
+      if (cancelled || rafIdRef.current !== null) return;
 
       rafIdRef.current = window.requestAnimationFrame(() => {
         rafIdRef.current = null;
+        if (cancelled || !hasMountedRef.current) return;
         const elapsed = performance.now() - lastCheckAtRef.current;
         if (!force && elapsed < MIN_CHECK_INTERVAL_MS) {
           scheduleToneCheck();
@@ -120,10 +123,11 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
     };
 
     const retryUntilSurfacesReady = () => {
+      if (cancelled || !hasMountedRef.current) return;
       scheduleToneCheck(true);
       const hasSurfaces = Boolean(document.querySelector(NAVBAR_INK_SURFACE_SELECTOR));
       if (!hasSurfaces && !isFlushHeroDocument()) {
-        window.requestAnimationFrame(retryUntilSurfacesReady);
+        retryRafId = window.requestAnimationFrame(retryUntilSurfacesReady);
       }
     };
     retryUntilSurfacesReady();
@@ -187,11 +191,14 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
     });
 
     return () => {
+      cancelled = true;
+      hasMountedRef.current = false;
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("load", onMediaReady, true);
       if (resizeTimerRef.current) window.clearTimeout(resizeTimerRef.current);
       if (rafIdRef.current !== null) window.cancelAnimationFrame(rafIdRef.current);
+      if (retryRafId !== null) window.cancelAnimationFrame(retryRafId);
       surfaceObserver.disconnect();
       surfaceMutationObserver.disconnect();
       rootMutationObserver.disconnect();

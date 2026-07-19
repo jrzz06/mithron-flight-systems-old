@@ -1,8 +1,38 @@
 import { NextResponse } from "next/server";
 import { resolveCartLines, stripPersistedCartItems, type PersistedCartItem } from "@/lib/cart-pricing";
+import { ActionTimeoutError, raceWithTimeout } from "@/lib/fetch-with-timeout";
 import { summarizeCartTax } from "@/lib/product-tax";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { getCartPricingByItems } from "@/services/catalog";
+
+/** Bound catalog pricing so a stalled PostgREST hop cannot hang checkout UI. */
+const CART_PRICING_TIMEOUT_MS = 8_000;
+/** Cap distinct in-flight fingerprints to bound heap under flood. */
+const INFLIGHT_PRICING_MAX = 64;
+
+type CartPricingPayload = {
+  lines: ReturnType<typeof resolveCartLines>;
+  subtotal: number;
+  taxTotal: number;
+  total: number;
+};
+
+/** In-flight coalesce: identical carts share one catalog fetch under concurrency. */
+const inflightPricing = new Map<string, Promise<CartPricingPayload>>();
+
+function rememberInflight(
+  fingerprint: string,
+  pending: Promise<CartPricingPayload>
+): Promise<CartPricingPayload> {
+  // FIFO eviction of oldest keys when at capacity (Map insertion order).
+  while (inflightPricing.size >= INFLIGHT_PRICING_MAX) {
+    const oldest = inflightPricing.keys().next().value;
+    if (oldest === undefined) break;
+    inflightPricing.delete(oldest);
+  }
+  inflightPricing.set(fingerprint, pending);
+  return pending;
+}
 
 function parseItems(body: unknown): PersistedCartItem[] | null {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
@@ -31,8 +61,34 @@ function parseItems(body: unknown): PersistedCartItem[] | null {
   return items;
 }
 
+function cartPricingFingerprint(items: PersistedCartItem[]) {
+  return items
+    .map((item) =>
+      [item.productSlug, item.bundleId, item.quantity, item.variantId ?? ""].join(":")
+    )
+    .sort()
+    .join("|");
+}
+
+async function buildPricingPayload(items: PersistedCartItem[]): Promise<CartPricingPayload> {
+  const products = await raceWithTimeout(
+    getCartPricingByItems(items),
+    CART_PRICING_TIMEOUT_MS,
+    "Cart pricing"
+  );
+  const lines = resolveCartLines(items, products);
+  const pricing = summarizeCartTax(lines);
+  return {
+    lines,
+    subtotal: pricing.subtotal,
+    taxTotal: pricing.taxTotal,
+    total: pricing.total
+  };
+}
+
 export async function POST(request: Request) {
   const rateKey = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
+  // Rate limit unchanged (60/min) — do not relax under load.
   const limiter = await checkDistributedRateLimit(`cart-pricing:${rateKey}`, 60, 60_000);
   if (!limiter.allowed) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
@@ -44,18 +100,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Valid cart items are required." }, { status: 400 });
   }
 
-  try {
-    const products = await getCartPricingByItems(items);
-    const lines = resolveCartLines(items, products);
-    const pricing = summarizeCartTax(lines);
+  const fingerprint = cartPricingFingerprint(items);
 
-    return NextResponse.json({
-      lines,
-      subtotal: pricing.subtotal,
-      taxTotal: pricing.taxTotal,
-      total: pricing.total
-    });
+  try {
+    let pending = inflightPricing.get(fingerprint);
+    if (!pending) {
+      pending = rememberInflight(
+        fingerprint,
+        buildPricingPayload(items).finally(() => {
+          inflightPricing.delete(fingerprint);
+        })
+      );
+    }
+    const payload = await pending;
+    return NextResponse.json(payload);
   } catch (error) {
+    if (error instanceof ActionTimeoutError) {
+      return NextResponse.json(
+        { error: "Cart pricing timed out. Please retry." },
+        { status: 503 }
+      );
+    }
     const message = error instanceof Error ? error.message : "Unable to resolve cart pricing.";
     return NextResponse.json({ error: message }, { status: 409 });
   }

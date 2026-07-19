@@ -44,12 +44,7 @@ const adminNavGroups: AdminNavGroupDef[] = [
   },
   {
     label: "Content",
-    items: [
-      { label: "Website", href: "/admin/cms", section: "cms", icon: "cms" },
-      { label: "Articles", href: "/admin/blog", section: "cms", icon: "cms" },
-      { label: "Media", href: "/admin/media", section: "cms", icon: "cms" },
-      { label: "Reviews", href: "/admin/reviews", section: "enquiries", icon: "enquiries" }
-    ]
+    items: [{ label: "Homepage", href: "/admin/cms", section: "cms", icon: "cms" }]
   },
   {
     label: "System",
@@ -88,11 +83,8 @@ export const adminRouteTitles: PlatformRouteTitle[] = [
   { href: "/admin/products", title: "Products", kicker: "Catalog" },
   { href: "/admin/orders", title: "Orders", kicker: "Fulfillment" },
   { href: "/admin/leads", title: "Leads", kicker: "Fulfillment" },
-  { href: "/admin/reviews", title: "Reviews", kicker: "Content" },
+  { href: "/admin/cms", title: "Homepage", kicker: "Content" },
   { href: "/admin/inventory", title: "Inventory", kicker: "Catalog" },
-  { href: "/admin/cms", title: "Website", kicker: "Content" },
-  { href: "/admin/blog", title: "Articles", kicker: "Content" },
-  { href: "/admin/press", title: "Articles", kicker: "Content" },
   { href: "/admin/suppliers", title: "Suppliers", kicker: "Partners" },
   { href: "/admin/suppliers/products", title: "Submissions", kicker: "Partners" },
   { href: "/admin/audit", title: "System Diagnostics", kicker: "System" },

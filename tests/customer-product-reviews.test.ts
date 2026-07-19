@@ -61,18 +61,10 @@ describe("production customer review system", () => {
     expect(composite).not.toContain("pickHomepageWixReviews");
   });
 
-  it("wires admin review moderation module", () => {
+  it("removes admin review moderation UI while keeping storefront review reads", () => {
     const nav = source("components/platform/nav-config.ts");
-    const access = source("lib/auth/access-control.ts");
-    expect(nav).toContain('href: "/admin/reviews"');
-    expect(access).toContain('normalized.startsWith("/admin/reviews")');
-    expect(source("app/admin/reviews/page.tsx")).toContain("AdminProductReviewQueue");
-    expect(source("app/admin/reviews/page.tsx")).toContain("Add review");
-    expect(source("app/admin/reviews/actions.ts")).toContain("moderateCustomerReview");
-    expect(source("app/admin/reviews/actions.ts")).toContain("createCustomerReviewAdminFormAction");
-    expect(source("components/admin/admin-product-review-queue.tsx")).toContain("product_slug");
-    expect(source("components/admin/admin-product-review-queue.tsx")).toContain("customer_name");
-    expect(source("components/admin/admin-product-review-queue.tsx")).toContain('name="body"');
+    expect(nav).not.toContain('href: "/admin/reviews"');
+    expect(nav).not.toContain('label: "Reviews"');
   });
 
   it("builds rating summaries from real review rows", () => {

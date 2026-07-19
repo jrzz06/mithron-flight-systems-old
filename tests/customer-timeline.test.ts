@@ -71,18 +71,19 @@ describe("customer progress tracker", () => {
     expect(steps).toHaveLength(4);
     expect(steps.map((step) => step.label)).toEqual([
       "Order Placed",
-      "Order Confirmed",
-      "Dispatched",
-      "Delivered"
+      "Received",
+      "Picking",
+      "Dispatched"
     ]);
     expect(steps[0].state).toBe("done");
-    expect(steps[1].state).toBe("current");
-    expect(steps[2].state).toBe("upcoming");
+    expect(steps[1].state).toBe("done");
+    expect(steps[2].state).toBe("current");
+    expect(steps[3].state).toBe("upcoming");
     expect(currentCustomerProgressLabel({
       channel: "checkout",
       status: "assigned",
       fulfillment_status: "processing"
-    })).toBe("Order Confirmed");
+    })).toBe("Picking");
   });
 
   it("marks delivered checkout orders as fully complete", () => {
@@ -95,6 +96,7 @@ describe("customer progress tracker", () => {
     });
 
     expect(steps.every((step) => step.state === "done")).toBe(true);
+    expect(steps[3].label).toBe("Delivered");
     expect(currentCustomerProgressLabel({
       channel: "checkout",
       status: "delivered",
@@ -117,6 +119,7 @@ describe("customer progress tracker", () => {
 
     expect(steps[0].label).toBe("Enquiry Submitted");
     expect(steps[0].completedAt).toBe("2026-01-01T10:00:00.000Z");
+    expect(steps[1].label).toBe("Received");
     expect(steps[1].state).toBe("current");
   });
 
@@ -129,8 +132,8 @@ describe("customer progress tracker", () => {
       created_at: "2026-01-01T10:00:00.000Z"
     });
 
-    expect(steps[2].label).toBe("Dispatched");
-    expect(steps[2].state).toBe("current");
-    expect(steps[3].state).toBe("upcoming");
+    expect(steps[3].label).toBe("Dispatched");
+    expect(steps[3].state).toBe("current");
+    expect(steps[2].state).toBe("done");
   });
 });

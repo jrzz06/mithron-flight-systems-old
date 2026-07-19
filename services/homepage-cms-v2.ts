@@ -2,6 +2,7 @@ import { cache } from "react";
 import {
   defaultHomepageCmsV2Content,
   mergeHomepageCmsV2Content,
+  overlayHomepageCmsV2Draft,
   type HomepageCmsV2Content
 } from "@/config/homepage-cms-v2";
 import { isCmsStrictMode } from "@/lib/cms/strict-mode";
@@ -26,7 +27,7 @@ export function mergeHomepageV2DraftPreviewFromPayload(payload: unknown): Homepa
   const draft = isPlainRecord(homepage.draftV2) ? homepage.draftV2 : null;
   const live = mergeHomepageCmsV2Content(v2);
   if (!draft) return live;
-  return mergeHomepageCmsV2Content({ ...live, ...draft });
+  return overlayHomepageCmsV2Draft(live, draft);
 }
 
 /** @deprecated Use mergeHomepageV2PublishedFromPayload or mergeHomepageV2DraftPreviewFromPayload */

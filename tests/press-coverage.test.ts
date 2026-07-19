@@ -49,22 +49,11 @@ describe("press coverage system", () => {
     expect(pressCtaLabel("TRACXN")).toContain("Tracxn");
   });
 
-  it("redirects legacy press admin to Articles and keeps press actions", () => {
+  it("removes legacy press admin UI while keeping storefront press reads", () => {
     const nav = source("components/platform/nav-config.ts");
-    const access = source("lib/auth/access-control.ts");
-    const page = source("app/admin/press/page.tsx");
-    const actions = source("app/admin/press/actions.ts");
-    const articles = source("app/admin/blog/page.tsx");
-
     expect(nav).not.toContain('label: "In the Press"');
-    expect(nav).toContain('label: "Articles"');
-    expect(access).toContain('normalized.startsWith("/admin/press")');
-    expect(page).toContain('redirect(query ? `/admin/blog?${query}` : "/admin/blog")');
-    expect(articles).toContain("listAdminPressCoverage");
-    expect(actions).toContain("requireAdminPermission");
-    expect(actions).toContain("probeExternalUrl");
-    expect(actions).toContain('revalidateTag("press"');
-    expect(actions).toContain('revalidatePath("/")');
+    expect(nav).not.toContain('label: "Articles"');
+    expect(nav).not.toContain('href: "/admin/press"');
   });
 
   it("renders CMS-driven press editorial cards on the homepage", () => {
@@ -81,7 +70,7 @@ describe("press coverage system", () => {
     expect(card).toContain('rel="noopener noreferrer"');
     expect(card).toContain("MithronCardImage");
     expect(card).toContain("item.publisher");
-    expect(bundle).toContain("listPublishedPressCoverage({ limit: 3 })");
+    expect(bundle).toContain("listPublishedPressCoverage({ limit: 40 })");
     expect(bundle).toContain("pressCoverage");
     expect(composite).toContain("pressItems={pressCoverage}");
   });

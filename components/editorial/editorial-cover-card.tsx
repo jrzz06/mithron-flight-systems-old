@@ -21,6 +21,7 @@ function EditorialCoverCardContent({
   category,
   title,
   description,
+  ctaLabel,
   priority = false
 }: {
   coverSrc: string;
@@ -30,6 +31,7 @@ function EditorialCoverCardContent({
   category?: string;
   title: string;
   description?: string;
+  ctaLabel?: string;
   priority?: boolean;
 }) {
   return (
@@ -64,7 +66,7 @@ function EditorialCoverCardContent({
         {category ? <p className={styles.category}>{category}</p> : null}
         <h3 className={styles.title}>{title}</h3>
         {description ? <p className={styles.description}>{description}</p> : null}
-        <span className={styles.cta}>Read Article</span>
+        <span className={styles.cta}>{ctaLabel?.trim() || "Read Article"}</span>
       </div>
     </div>
   );
@@ -110,6 +112,7 @@ export function EditorialCoverCard(props: EditorialCoverCardProps) {
         category={item.eyebrow || undefined}
         title={item.title}
         description={item.content || undefined}
+        ctaLabel={item.ctaLabel}
         priority={props.priority}
       />
     );

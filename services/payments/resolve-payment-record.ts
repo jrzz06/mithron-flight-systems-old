@@ -38,13 +38,17 @@ export async function resolvePaymentRecordForEvent(
   provider: PaymentProviderId,
   event: PaymentEvent
 ): Promise<JsonRecord | null> {
-  const intentMatches = await fetchAdminRecordsByColumn("payments", "provider_intent_id", event.intentId);
+  const intentMatches = await fetchAdminRecordsByColumn("payments", "provider_intent_id", event.intentId, process.env, {
+    skipPermissionCheck: true
+  });
   const intentPayment =
     intentMatches.find((row) => String(row.provider ?? "") === provider) ?? intentMatches[0];
   if (intentPayment) return intentPayment;
 
   if (event.paymentId) {
-    const paymentMatches = await fetchAdminRecordsByColumn("payments", "provider_payment_id", event.paymentId);
+    const paymentMatches = await fetchAdminRecordsByColumn("payments", "provider_payment_id", event.paymentId, process.env, {
+      skipPermissionCheck: true
+    });
     const paymentMatch =
       paymentMatches.find((row) => String(row.provider ?? "") === provider) ?? paymentMatches[0];
     if (paymentMatch) return paymentMatch;
@@ -52,7 +56,9 @@ export async function resolvePaymentRecordForEvent(
 
   const internalOrderId = readInternalOrderIdFromEvent(event);
   if (internalOrderId) {
-    const orderPayments = await fetchAdminRecordsByColumn("payments", "order_id", internalOrderId);
+    const orderPayments = await fetchAdminRecordsByColumn("payments", "order_id", internalOrderId, process.env, {
+      skipPermissionCheck: true
+    });
     const orderPayment = orderPayments.find((row) => String(row.provider ?? "") === provider) ?? orderPayments[0];
     if (orderPayment) return orderPayment;
   }

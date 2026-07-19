@@ -75,7 +75,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[contact-requests] failed", error);
-    const message = error instanceof Error ? error.message : "Could not send contact request.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Could not send contact request." }, { status: 500 });
   }
 }

@@ -9,13 +9,8 @@ function source(path: string) {
 }
 
 const ACTION_FILES = [
-  "app/admin/reviews/actions.ts",
-  "app/admin/blog/actions.ts",
-  "app/admin/press/actions.ts",
+  "app/admin/leads/actions.ts",
   "app/admin/warehouses/actions.ts",
-  "app/admin/contact-requests/actions.ts",
-  "app/admin/enquiries/actions.ts",
-  "app/admin/cms/actions.ts",
   "app/admin/products/actions.ts"
 ] as const;
 
@@ -52,12 +47,5 @@ describe("server action redirect hygiene", () => {
     const navigationHelper = source("lib/server-action-errors.ts");
     expect(navigationHelper).toContain("isNextRedirect");
     expect(navigationHelper).toContain("return isNextRedirect(error)");
-  });
-
-  it("does not clear CMS dirty state on submit before the server action finishes", () => {
-    const sectionEditor = source("features/admin/cms/cms-section-editor.tsx");
-    const visualWorkspace = source("features/admin/cms/cms-visual-workspace.tsx");
-    expect(sectionEditor).not.toMatch(/onSubmit=\{markSaved\}/);
-    expect(visualWorkspace).not.toMatch(/onSubmit=\{markSubmitted\}/);
   });
 });

@@ -36,11 +36,18 @@ describe("supplier portal workflow", () => {
   });
 
   it("mounts supplier feedback dialog and toast bridge in supplier shell", () => {
-    const supplierFrame = readFileSync(join(root, "components/supplier/supplier-frame.tsx"), "utf8");
+    const supplierLayout = readFileSync(join(root, "app/supplier/layout.tsx"), "utf8");
     expect(existsSync(join(root, "components/supplier/supplier-feedback-dialog.tsx"))).toBe(true);
-    expect(supplierFrame).toContain("SupplierFeedbackDialog");
-    // Toast bridge is mounted inside the shared control-plane shell (`PlatformShell`).
-    expect(supplierFrame).toContain("PlatformShell");
+    expect(supplierLayout).toContain("SupplierFeedbackDialog");
+    expect(supplierLayout).toContain("ControlPlaneParallelLayout");
+    expect(supplierLayout).toContain("data-supplier-frame");
+    expect(supplierLayout).toContain("getCurrentAuthContext");
+  });
+
+  it("uses session handoff in supplier @shell chrome (H13)", () => {
+    const shell = readFileSync(join(root, "app/supplier/@shell/default.tsx"), "utf8");
+    expect(shell).toContain("readSessionHandoff");
+    expect(shell).toContain("getCurrentAuthContext");
   });
 
   it("keeps storefront catalog limited to published products", () => {

@@ -1,4 +1,6 @@
+import Image from "next/image";
 import { productImageUploadNotice } from "@/lib/product-image-limits";
+import { resolveNextImageSrc } from "@/lib/media/next-image-src";
 import { ProductImageFileInput } from "@/components/products/product-image-file-input";
 
 // Must stay in sync with the server-side ALLOWED_MEDIA_MIME_TYPES in
@@ -74,36 +76,41 @@ export function ProductMultiImageField({
         <div className="grid gap-2" data-product-image-preview-grid>
           <span className={labelClassName}>Current images</span>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {previewItems.map((item) => (
-              <label
-                key={item.src}
-                className="group grid gap-2 rounded-lg border border-[var(--platform-border)] bg-[var(--platform-surface)] p-2"
-                data-product-image-preview-item
-              >
-                <div className="relative aspect-square overflow-hidden rounded-md bg-[var(--platform-surface-muted)]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.src}
-                    alt={item.alt || (item.isPrimary ? "Primary product image" : "Gallery product image")}
-                    className="size-full object-cover"
-                  />
-                  {item.isPrimary ? (
-                    <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
-                      Primary
-                    </span>
-                  ) : null}
-                </div>
-                <span className="inline-flex items-center gap-2 text-xs text-[var(--platform-text-secondary)]">
-                  <input
-                    type="checkbox"
-                    name="removed_gallery_urls"
-                    value={item.src}
-                    className="size-3.5 rounded border-[var(--platform-border)]"
-                  />
-                  Remove
-                </span>
-              </label>
-            ))}
+            {previewItems.map((item) => {
+              const resolvedSrc = resolveNextImageSrc(item.src) ?? item.src;
+              return (
+                <label
+                  key={item.src}
+                  className="group grid gap-2 rounded-lg border border-[var(--platform-border)] bg-[var(--platform-surface)] p-2"
+                  data-product-image-preview-item
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-md bg-[var(--platform-surface-muted)]">
+                    <Image
+                      src={resolvedSrc}
+                      alt={item.alt || (item.isPrimary ? "Primary product image" : "Gallery product image")}
+                      fill
+                      sizes="(max-width: 640px) 45vw, 180px"
+                      className="object-cover"
+                      loading="lazy"
+                    />
+                    {item.isPrimary ? (
+                      <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+                        Primary
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="inline-flex items-center gap-2 text-xs text-[var(--platform-text-secondary)]">
+                    <input
+                      type="checkbox"
+                      name="removed_gallery_urls"
+                      value={item.src}
+                      className="size-3.5 rounded border-[var(--platform-border)]"
+                    />
+                    Remove
+                  </span>
+                </label>
+              );
+            })}
           </div>
         </div>
       ) : null}

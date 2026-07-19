@@ -85,22 +85,50 @@ export function resolveHomeMiniCarouselItems(
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   if (cmsSlides.length) {
-    return cmsSlides.map((slide, index) => {
+    return cmsSlides.flatMap((slide, index) => {
       const product = slide.productSlug ? products.find((entry) => entry.slug === slide.productSlug) : undefined;
-      const href = slide.href.trim() || (product ? `/product/${product.slug}` : "/products");
-      const imageSrc = slide.imageSrc.trim() || product?.image?.src || "";
-      return {
-        itemKey: slide.id || `cms-slide-${index}`,
-        label: slide.heading.trim() || (product ? formatMiniCarouselLabel(product) : "Featured"),
-        fullLabel: slide.description.trim() || slide.heading.trim() || product?.name || "Featured",
-        href,
-        media: {
-          src: imageSrc,
-          alt: slide.imageAlt.trim() || product?.image?.alt || slide.heading,
-          responsive: product?.image?.responsive
-        },
-        sourceState: imageSrc ? "VERIFIED" as const : "FALLBACK" as const
-      };
+
+      if (slide.productSlug && !product) {
+        // Missing/unpublished: omit from storefront (no fake card). Admin shows warning.
+        return [];
+      }
+
+      if (product) {
+        const imageSrc = product.image?.src || slide.imageSrc.trim() || "";
+        const label = formatMiniCarouselLabel(product);
+        return [
+          {
+            itemKey: slide.id || `cms-slide-${index}`,
+            label,
+            fullLabel: sanitizeProductPreviewText(product.name || product.category),
+            href: `/product/${product.slug}`,
+            media: {
+              src: imageSrc,
+              alt: product.image?.alt || slide.imageAlt.trim() || label,
+              responsive: product.image?.responsive
+            },
+            sourceState: imageSrc ? ("VERIFIED" as const) : ("FALLBACK" as const)
+          }
+        ];
+      }
+
+      const href = slide.href.trim() || "/products";
+      const imageSrc = slide.imageSrc.trim() || "";
+      const heading = slide.heading.trim() || "Featured";
+      return [
+        {
+          itemKey: slide.id || `cms-slide-${index}`,
+          label: heading,
+          fullLabel: slide.description.trim() || heading,
+          href,
+          media: {
+            src: imageSrc,
+            alt: slide.imageAlt.trim() || heading,
+            responsive: undefined
+          },
+          sourceState: imageSrc ? ("VERIFIED" as const) : ("FALLBACK" as const)
+        }
+      ];
     });
   }
 

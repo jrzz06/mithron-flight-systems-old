@@ -1,7 +1,6 @@
 import { ControlPlaneNavMetricsProvider } from "@/components/platform/control-plane-nav-metrics-provider";
 import { ControlPlaneParallelLayout } from "@/components/platform/control-plane-parallel-layout";
 import { canAccessProtectedPath, defaultPathForRole } from "@/lib/auth/access-control";
-import { readSessionHandoff } from "@/lib/auth/session-handoff";
 import { getCurrentAuthContext } from "@/services/auth";
 import { redirect } from "next/navigation";
 
@@ -14,10 +13,9 @@ export default async function WarehouseLayout({
   children: React.ReactNode;
   shell: React.ReactNode;
 }) {
-  const handoff = await readSessionHandoff();
-  const context = handoff
-    ? { userId: handoff.userId, role: handoff.role, disabled: false as const }
-    : await getCurrentAuthContext();
+  // Always resolve via getCurrentAuthContext so handoff headers are cross-checked
+  // against the JWT (layouts must not trust x-mithron-auth-* alone).
+  const context = await getCurrentAuthContext();
 
   if (!context.userId) {
     redirect(`/login?next=${encodeURIComponent("/warehouse/dashboard")}`);

@@ -7,9 +7,11 @@ describe("health endpoint", () => {
     const route = readFileSync(join(process.cwd(), "app/api/health/route.ts"), "utf8");
     expect(route).toContain("HEALTH_CHECK_SECRET");
     expect(route).toContain("authorizeBearerSecret");
-    expect(route).toContain('return NextResponse.json({ status }');
+    expect(route).toContain("hasAuthorization");
     expect(route).toContain("build_id");
     expect(route).not.toContain("serviceRoleKey");
+    // Anonymous shallow probes must not burn the bearer rate-limit budget.
+    expect(route).toContain("Only spend the bearer rate-limit budget when a secret is presented");
   });
 });
 

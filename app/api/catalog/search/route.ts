@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     const results = await searchCatalogProducts(query, limit);
     return NextResponse.json({ query, results });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Catalog search failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[catalog-search] failed", error);
+    return NextResponse.json({ error: "Catalog search failed." }, { status: 500 });
   }
 }

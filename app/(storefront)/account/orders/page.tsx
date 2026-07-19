@@ -17,7 +17,6 @@ import { getCurrentAuthContext } from "@/services/auth";
 import { listCustomerOrders } from "@/services/customer-orders";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 export default async function AccountOrdersPage() {
   const context = await getCurrentAuthContext();

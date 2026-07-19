@@ -445,7 +445,7 @@ export function resolveLandingChapters(cms: HomepageCmsContent): HomeChapter[] {
     if (chapter.id === "drone-world") {
       return {
         ...chapter,
-        href: getHomepageShelfCatalogHref("drone-world"),
+        href: cms.shelves.droneWorld.href?.trim() || getHomepageShelfCatalogHref("drone-world"),
         media: {
           ...chapter.media,
           src: cms.shelves.droneWorld.heroImageSrc || chapter.media.src,
@@ -456,7 +456,7 @@ export function resolveLandingChapters(cms: HomepageCmsContent): HomeChapter[] {
     if (chapter.id === "drone-care") {
       return {
         ...chapter,
-        href: getHomepageShelfCatalogHref("drone-care"),
+        href: cms.shelves.droneCare.href?.trim() || getHomepageShelfCatalogHref("drone-care"),
         media: {
           ...chapter.media,
           src: cms.shelves.droneCare.heroImageSrc || chapter.media.src,
@@ -467,7 +467,7 @@ export function resolveLandingChapters(cms: HomepageCmsContent): HomeChapter[] {
     if (chapter.id === "global-products") {
       return {
         ...chapter,
-        href: getHomepageShelfCatalogHref("global-products"),
+        href: cms.shelves.globalProducts.href?.trim() || getHomepageShelfCatalogHref("global-products"),
         media: {
           ...chapter.media,
           src: cms.shelves.globalProducts.heroImageSrc || chapter.media.src,
@@ -583,7 +583,12 @@ export function resolveEffectiveHomepageCmsContent(stored: unknown): HomepageCms
   const mergeShelf = (key: keyof HomepageCmsContent["shelves"], partial: unknown): HomepageShelfCms => {
     const row = partial && typeof partial === "object" ? (partial as Record<string, unknown>) : {};
     const fallback = base.shelves[key];
-    const str = (field: string) => (typeof row[field] === "string" ? row[field] as string : undefined);
+    // Blank strings must not wipe storefront/base defaults (admins often save "" after an empty form field).
+    const str = (field: string) => {
+      if (typeof row[field] !== "string") return undefined;
+      const value = (row[field] as string).trim();
+      return value ? (row[field] as string) : undefined;
+    };
     return {
       eyebrow: str("eyebrow") ?? fallback.eyebrow,
       title: str("title") ?? fallback.title,
@@ -608,7 +613,11 @@ export function resolveEffectiveHomepageCmsContent(stored: unknown): HomepageCms
   const mergeMission = (key: keyof HomepageCmsContent["missions"], partial: unknown): HomepageMissionCms => {
     const row = partial && typeof partial === "object" ? (partial as Record<string, unknown>) : {};
     const fallback = base.missions[key];
-    const str = (field: string) => (typeof row[field] === "string" ? row[field] as string : undefined);
+    const str = (field: string) => {
+      if (typeof row[field] !== "string") return undefined;
+      const value = (row[field] as string).trim();
+      return value ? (row[field] as string) : undefined;
+    };
     const tilePartials = Array.isArray(row.tiles) ? row.tiles : [];
     return {
       eyebrow: str("eyebrow") ?? fallback.eyebrow,

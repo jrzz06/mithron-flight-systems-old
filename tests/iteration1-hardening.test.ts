@@ -33,7 +33,6 @@ describe("iteration 1 production hardening contracts", () => {
 
   it("exposes stable QA anchors for operational route families", () => {
     const auditPage = readWorkspaceFile("app/admin/audit/page.tsx");
-    const cmsPage = readWorkspaceFile("app/admin/cms/page.tsx");
     const warehousePage = readWorkspaceFile("app/warehouse/page.tsx");
     const warehouseDashboardPage = readWorkspaceFile("app/warehouse/dashboard/page.tsx");
     const warehouseFulfillmentPage = readWorkspaceFile("app/warehouse/fulfillment/page.tsx");
@@ -41,14 +40,9 @@ describe("iteration 1 production hardening contracts", () => {
     const operationsPage = readWorkspaceFile("app/operations/page.tsx");
     const operationsDeploymentsPage = readWorkspaceFile("app/operations/deployments/page.tsx");
     const operationsTasksPage = readWorkspaceFile("app/operations/tasks/page.tsx");
-    const cmsWorkspace = readWorkspaceFile("features/admin/cms/cms-visual-workspace.tsx");
 
     expect(auditPage).toContain("data-admin-audit-route");
     expect(auditPage).toContain("data-security-events-feed");
-    expect(cmsPage).toContain("data-admin-cms-route");
-    expect(cmsWorkspace).toContain("data-cms-visual-editor");
-    expect(cmsPage).toContain("hero-banner");
-    expect(cmsPage).not.toContain("data-cms-workflow-grid");
     expect(warehousePage).toContain('redirect("/warehouse/dashboard")');
     expect(warehouseDashboardPage).toContain("data-warehouse-operational-dashboard");
     expect(warehouseFulfillmentPage).toContain("data-warehouse-fulfillment-route");

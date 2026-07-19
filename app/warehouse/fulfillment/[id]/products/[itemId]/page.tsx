@@ -10,8 +10,15 @@ import { Breadcrumb } from "@/components/platform/breadcrumb";
 import { WarehouseOpsLiveSync } from "@/components/warehouse/warehouse-ops-live-sync";
 import { isActionNavigationError } from "@/lib/server-action-errors";
 import { employeeFulfillmentLabel } from "@/lib/warehouse/operational-labels";
-import { orderMetadata, warehouseCustomerEmail, warehouseCustomerName, warehouseCustomerPhone, warehouseShippingAddress } from "@/lib/warehouse/order-helpers";
-import { getWarehouseSnapshot } from "@/services/admin";
+import {
+  canDispatchOrder,
+  orderMetadata,
+  warehouseCustomerEmail,
+  warehouseCustomerName,
+  warehouseCustomerPhone,
+  warehouseShippingAddress
+} from "@/lib/warehouse/order-helpers";
+import { loadWarehouseOrderDetail } from "@/services/admin";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { dispatchWarehouseOrderFormAction } from "../../../../actions";
 
@@ -41,22 +48,17 @@ function messageFromError(error: unknown) {
   return error instanceof Error ? error.message : "The order could not be dispatched.";
 }
 
-function canDispatch(status: string) {
-  return ["pending", "processing", "picked", "packed", "ready_to_dispatch"].includes(status);
-}
-
 export default async function WarehouseProductDetailPage({ params, searchParams }: PageProps) {
   const { id, itemId } = await params;
-  const [snapshot, policy] = await Promise.all([
-    getWarehouseSnapshot({ scope: "orders" }),
+  const [detail, policy] = await Promise.all([
+    loadWarehouseOrderDetail(id),
     getAdminSettingsPolicy()
   ]);
 
-  const order = snapshot.data.orders.find((row) => String(row.id ?? "") === id);
+  const order = detail.data.order;
   if (!order) notFound();
 
-  const item = snapshot.data.orderItems.find((row) => {
-    if (String(row.order_id ?? "") !== id) return false;
+  const item = detail.data.orderItems.find((row) => {
     const productSlug = String(row.product_slug ?? "");
     const sku = String(row.sku ?? "");
     return String(row.id ?? `${productSlug}-${sku}`) === itemId;
@@ -65,7 +67,7 @@ export default async function WarehouseProductDetailPage({ params, searchParams 
 
   const productSlug = String(item.product_slug ?? "");
   const sku = String(item.sku ?? "");
-  const product = snapshot.data.products.find((row) => String(row.slug ?? "") === productSlug);
+  const product = detail.data.products.find((row) => String(row.slug ?? "") === productSlug);
   const productName = String(item.product_name ?? product?.name ?? productSlug);
   const metadata = orderMetadata(order);
   const warehouseCode = String(metadata.assigned_warehouse_code ?? policy.defaultWarehouseCode);
@@ -172,7 +174,7 @@ export default async function WarehouseProductDetailPage({ params, searchParams 
           </div>
 
           <aside className="grid min-w-0 content-start gap-3">
-            {canDispatch(fulfillmentStatus) ? (
+            {canDispatchOrder(fulfillmentStatus) ? (
               <OperationalPrimaryAction
                 title="Dispatch order"
                 description="Dispatches this product and every item in the order."

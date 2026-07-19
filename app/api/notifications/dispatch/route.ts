@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorizeBearerSecret } from "@/lib/api/bearer-auth";
 import { withCronLock } from "@/lib/cron-lock";
-import { assertSupabaseAdminConfig } from "@/lib/env";
+import { getSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout, mapWithConcurrency } from "@/lib/fetch-with-timeout";
 import { dispatchEmailNotification } from "@/services/email/resend";
 
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 }
 
 async function markNotificationStatus(
-  config: ReturnType<typeof assertSupabaseAdminConfig>,
+  config: Extract<ReturnType<typeof getSupabaseAdminConfig>, { configured: true }>,
   id: unknown,
   status: "sending" | "sent" | "unread",
   onlyIfStatus?: "unread" | "sending"
@@ -67,7 +67,14 @@ async function markNotificationStatus(
 }
 
 async function runDispatch() {
-  const config = assertSupabaseAdminConfig(process.env);
+  const config = getSupabaseAdminConfig(process.env);
+  if (!config.configured) {
+    return NextResponse.json(
+      { ok: false, error: "Notification dispatch unavailable.", retryable: true, dispatched: 0, failed: 0, total: 0 },
+      { status: 503 }
+    );
+  }
+  try {
   const response = await fetchWithTimeout(
     `${config.url}/rest/v1/notifications?select=id,title,body,recipient_id,status,payload&status=eq.unread&order=created_at.asc&limit=50`,
     {
@@ -138,4 +145,11 @@ async function runDispatch() {
     failed,
     total: rows.length
   });
+  } catch (error) {
+    console.error("[notifications/dispatch] failed", error);
+    return NextResponse.json(
+      { ok: false, error: "Notification dispatch failed.", retryable: true, dispatched: 0, failed: 0, total: 0 },
+      { status: 503 }
+    );
+  }
 }

@@ -416,10 +416,14 @@ export function SearchOverlay() {
     setSearchError(null);
     setActiveResultIndex(-1);
 
-    void fetch(`/api/catalog/search?q=${encodeURIComponent(debouncedQuery)}&limit=${SEARCH_REMOTE_RESULT_LIMIT}`, {
-      signal: controller.signal,
-      cache: "no-store"
-    })
+    void fetchWithTimeout(
+      `/api/catalog/search?q=${encodeURIComponent(debouncedQuery)}&limit=${SEARCH_REMOTE_RESULT_LIMIT}`,
+      {
+        signal: controller.signal,
+        cache: "no-store"
+      },
+      8_000
+    )
       .then(async (response) => {
         const payload = (await response.json()) as SearchResponse;
         if (!response.ok) {

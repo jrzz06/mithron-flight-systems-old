@@ -55,6 +55,7 @@ describe("ai provider pool", () => {
 
   it("maps retryable provider statuses", () => {
     expect(isRetryableProviderStatus(401)).toBe(true);
+    expect(isRetryableProviderStatus(404)).toBe(true);
     expect(isRetryableProviderStatus(429)).toBe(true);
     expect(isRetryableProviderStatus(503)).toBe(true);
     expect(isRetryableProviderStatus(400)).toBe(false);

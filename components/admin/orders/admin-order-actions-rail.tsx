@@ -113,7 +113,7 @@ export function AdminOrderActionsRail({
       >
         <div className="min-w-0">
           <h3 className={orderSectionLabel}>Actions</h3>
-          <p className={`platform-type-body leading-relaxed text-[var(--platform-text-secondary)] ${orderLongText}`}>
+          <p className={`mt-2 rounded-[8px] border border-cyan-400/55 bg-cyan-500/15 px-3 py-2.5 platform-type-body font-medium leading-relaxed text-cyan-50 ${orderLongText}`}>
             Handed off to warehouse. Admin view is read-only. Only warehouse can update details or cancel &amp; delete this order.
           </p>
         </div>
@@ -340,6 +340,8 @@ export function AdminOrderActionsRail({
                   <input name="cancel_reason" required placeholder="Cancellation reason" className={inputClass} />
                   <OperationalSubmitButton
                     pendingLabel="Cancelling..."
+                    confirmMessage={`Cancel order ${orderLabel}?`}
+                    confirmDescription="This cancels the order. Provide a reason above before confirming."
                     className={`${buttonClass} border border-rose-700 bg-rose-900/40 text-rose-100`}
                   >
                     Cancel order
@@ -445,6 +447,8 @@ export function AdminOrderActionsRail({
               <input name="cancel_reason" required placeholder="Cancellation reason" className={inputClass} />
               <OperationalSubmitButton
                 pendingLabel="Cancelling..."
+                confirmMessage={`Cancel order ${orderLabel}?`}
+                confirmDescription="This cancels the order. Provide a reason above before confirming."
                 className={`${buttonClass} border border-rose-700 bg-rose-900/40 text-rose-100`}
               >
                 Cancel order
@@ -467,6 +471,10 @@ export function AdminOrderActionsRail({
               <OperationalSubmitButton
                 pendingLabel="Deleting..."
                 confirmMessage={`Permanently delete order ${orderLabel}?`}
+                confirmDescription="This cannot be undone. Type the order ID to confirm."
+                requireTypedText={orderLabel}
+                typedTextLabel={`Type ${orderLabel} to permanently delete`}
+                confirmLabel="Delete permanently"
                 className={`${buttonClass} border border-rose-700 bg-rose-950/40 text-rose-100`}
               >
                 Delete permanently

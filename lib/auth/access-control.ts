@@ -79,11 +79,7 @@ export function sectionFromPath(pathname: string): AdminSection {
   if (normalized.startsWith("/admin/suppliers")) return "suppliers";
   if (normalized.startsWith("/admin/enquiries")) return "enquiries";
   if (normalized.startsWith("/admin/contact-requests")) return "enquiries";
-  if (normalized.startsWith("/admin/reviews")) return "enquiries";
   if (normalized.startsWith("/admin/cms")) return "cms";
-  if (normalized.startsWith("/admin/blog")) return "cms";
-  if (normalized.startsWith("/admin/press")) return "cms";
-  if (normalized.startsWith("/admin/media")) return "cms";
   if (normalized.startsWith("/admin/products")) return "products";
   if (normalized.startsWith("/admin/inventory")) return "warehouse";
   if (normalized.startsWith("/admin/archives")) return "audit";
@@ -236,6 +232,7 @@ export function resolveApiRoutePolicy(pathname: string): ApiRoutePolicy | null {
   // Cron / system admin routes: no user session; handler verifies CRON_SECRET (or equivalent).
   if (
     normalized === "/api/admin/prune-logs"
+    || normalized === "/api/admin/prune-redis-ttls"
     || normalized === "/api/admin/archive-movements"
     || normalized === "/api/admin/archive-operational-data"
     || normalized === "/api/admin/publish-scheduled-blog"

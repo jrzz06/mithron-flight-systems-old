@@ -138,9 +138,9 @@ export const ENTERPRISE_STAGE_LABELS: Record<EnterpriseOrderStage, string> = {
   draft: "Order created",
   pending_verification: "Under review",
   verified: "Verified",
-  ready_for_warehouse: "Preparing shipment",
-  picking: "Preparing shipment",
-  packed: "Preparing shipment",
+  ready_for_warehouse: "Picking",
+  picking: "Picking",
+  packed: "Picking",
   dispatched: "Dispatched",
   in_transit: "In transit",
   delivered: "Delivered",
@@ -269,18 +269,24 @@ export function customerOrderSourceLabel(
 function customerStepLabels(source: CustomerOrderSource) {
   switch (source) {
     case "enquiry":
-      return ["Enquiry Submitted", "Order Confirmed", "Dispatched", "Delivered"] as const;
+      return ["Enquiry Submitted", "Received", "Picking", "Dispatched"] as const;
     case "paid":
-      return ["Payment Confirmed", "Order Confirmed", "Dispatched", "Delivered"] as const;
+      return ["Payment Confirmed", "Received", "Picking", "Dispatched"] as const;
     default:
-      return ["Order Placed", "Order Confirmed", "Dispatched", "Delivered"] as const;
+      return ["Order Placed", "Received", "Picking", "Dispatched"] as const;
   }
 }
 
+const PICKING_FULFILLMENT = new Set(["packing", "processing", "picked", "packed"]);
+
+function isInPicking(order: OrderLike) {
+  return PICKING_FULFILLMENT.has(text(order.fulfillment_status));
+}
+
 function resolveCompletedThrough(order: OrderLike) {
-  if (isOrderDelivered(order)) return 3;
-  if (isOrderDispatched(order)) return 2;
-  if (isOrderConfirmed(order)) return 1;
+  if (isOrderDelivered(order) || isOrderDispatched(order)) return 3;
+  if (isInPicking(order)) return 2;
+  if (isOrderConfirmed(order) || text(order.fulfillment_status) === "pending") return 1;
   return 0;
 }
 
@@ -296,20 +302,28 @@ function resolveStepCompletedAt(
   }
   if (index === 1) {
     return timelineTimestamp(order, (entry) => CONFIRMED_STATUSES.has(text(entry.status)))
-      || (isOrderConfirmed(order) ? text(order.updated_at) || null : null);
+      || (isOrderConfirmed(order) || text(order.fulfillment_status) === "pending"
+        ? text(order.updated_at) || null
+        : null);
   }
   if (index === 2) {
     return timelineTimestamp(
       order,
-      (entry) => DISPATCHED_STATUSES.has(text(entry.status))
-        || DISPATCHED_FULFILLMENT.has(text(entry.fulfillment_status))
-        || text(entry.event).toLowerCase().includes("dispatch")
-    ) || (isOrderDispatched(order) ? text(order.updated_at) || null : null);
+      (entry) => PICKING_FULFILLMENT.has(text(entry.fulfillment_status))
+        || text(entry.event).toLowerCase().includes("pack")
+        || text(entry.event).toLowerCase().includes("pick")
+    ) || (isInPicking(order) || isOrderDispatched(order) || isOrderDelivered(order)
+      ? text(order.updated_at) || null
+      : null);
   }
   return timelineTimestamp(
     order,
-    (entry) => text(entry.status) === "delivered" || text(entry.fulfillment_status) === "delivered"
-  ) || (isOrderDelivered(order) ? text(order.updated_at) || null : null);
+    (entry) => DISPATCHED_STATUSES.has(text(entry.status))
+      || DISPATCHED_FULFILLMENT.has(text(entry.fulfillment_status))
+      || text(entry.event).toLowerCase().includes("dispatch")
+      || text(entry.status) === "delivered"
+      || text(entry.fulfillment_status) === "delivered"
+  ) || ((isOrderDispatched(order) || isOrderDelivered(order)) ? text(order.updated_at) || null : null);
 }
 
 export function buildCustomerProgressSteps(
@@ -318,9 +332,12 @@ export function buildCustomerProgressSteps(
   options?: { enquiryCreatedAt?: string | null }
 ): CustomerProgressStep[] {
   const source = resolveCustomerSource(order, paymentProviderIntentId);
-  const labels = customerStepLabels(source);
+  const labels: string[] = [...customerStepLabels(source)];
+  if (isOrderDelivered(order)) {
+    labels[labels.length - 1] = "Delivered";
+  }
   const completedThrough = resolveCompletedThrough(order);
-  const allDone = completedThrough >= labels.length - 1 && isOrderDelivered(order);
+  const allDone = isOrderDelivered(order);
 
   return labels.map((label, index) => {
     let state: CustomerProgressStep["state"];

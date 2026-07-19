@@ -1,4 +1,5 @@
 {
+  "regions": ["iad1"],
   "redirects": [
     {
       "source": "/:path*",
@@ -16,11 +17,15 @@
   "crons": [
     {
       "path": "/api/health",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/admin/prune-logs",
       "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/admin/prune-redis-ttls",
+      "schedule": "30 3 * * 0"
     },
     {
       "path": "/api/admin/archive-movements",

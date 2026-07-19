@@ -61,7 +61,9 @@ export async function GET(request: Request) {
     !paid
     && (status.paymentStatus === "requires_payment" || status.orderPaymentStatus === "requires_payment")
   ) {
-    const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId);
+    const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId, process.env, {
+      skipPermissionCheck: true
+    });
     const payment = payments.find((row) => !["failed", "cancelled", "refunded"].includes(String(row.status ?? "")))
       ?? payments[0];
     const provider = String(payment?.provider ?? "").trim().toLowerCase();

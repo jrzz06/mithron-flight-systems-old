@@ -11,7 +11,7 @@ import {
   buildWarehouseOrderRow,
   type WarehouseOrderRow
 } from "@/lib/warehouse/order-helpers";
-import { getWarehouseSnapshot } from "@/services/admin";
+import { loadWarehouseOrderDetail } from "@/services/admin";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import {
   cancelWarehouseOrderFormAction,
@@ -74,20 +74,20 @@ function firstImageFrom(value: unknown): string | null {
 
 export default async function WarehouseFulfillmentDetailPage({ params, searchParams }: PageProps) {
   const { id } = await params;
-  const [snapshot, policy] = await Promise.all([
-    getWarehouseSnapshot({ scope: "orders" }),
+  const [detail, policy] = await Promise.all([
+    loadWarehouseOrderDetail(id),
     getAdminSettingsPolicy()
   ]);
   const defaultWarehouseCode = policy.defaultWarehouseCode;
-  const order = snapshot.data.orders.find((row) => String(row.id ?? "") === id);
+  const order = detail.data.order;
   if (!order) notFound();
 
   const query = searchParams ? await searchParams : {};
   const operationStatus = searchValue(query, "operation_status");
   const operationMessage = searchValue(query, "operation_message");
 
-  const itemsByOrder = snapshot.data.orderItems.filter((item) => String(item.order_id ?? "") === id);
-  const productsBySlug = new Map(snapshot.data.products.map((product) => [String(product.slug ?? ""), product]));
+  const itemsByOrder = detail.data.orderItems;
+  const productsBySlug = new Map(detail.data.products.map((product) => [String(product.slug ?? ""), product]));
 
   const metadata = order.metadata && typeof order.metadata === "object" && !Array.isArray(order.metadata)
     ? order.metadata as Record<string, unknown>

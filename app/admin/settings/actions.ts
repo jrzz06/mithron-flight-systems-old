@@ -270,6 +270,8 @@ export async function saveAdminSettingsFormAction(formData: FormData) {
   const existingFooter = settingsRecord(existingPayload.footer);
   const existingSecurity = settingsRecord(existingPayload.security);
   const existingNotifications = settingsRecord(existingPayload.notifications);
+  const existingHomepage = existingPayload.homepage;
+  const existingPayloadVersion = existingPayload.payload_version;
   const payload = {
     general: {
       website_name: mergeSettingString(formData, "website_name", existingString(existingGeneral, "website_name", "Mithron Flight Systems"), "Mithron Flight Systems"),
@@ -321,6 +323,8 @@ export async function saveAdminSettingsFormAction(formData: FormData) {
       admin_login_alerts: existingBoolean(existingNotifications, "admin_login_alerts"),
       email_notifications: mergeSettingBoolean(formData, "email_notifications", existingBoolean(existingNotifications, "email_notifications"))
     },
+    ...(existingHomepage !== undefined ? { homepage: existingHomepage } : {}),
+    ...(existingPayloadVersion !== undefined ? { payload_version: existingPayloadVersion } : {}),
     updated_by: actorId,
     updated_at: new Date().toISOString()
   };

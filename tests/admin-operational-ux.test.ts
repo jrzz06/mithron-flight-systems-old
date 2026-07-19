@@ -243,20 +243,12 @@ describe("admin operational UX", () => {
     expect(inventoryManager).toContain("OperationalSubmitButton");
   });
 
-  it("keeps product media and CMS operations visible and retry-safe", () => {
+  it("keeps product media operations visible and retry-safe", () => {
     const productsPage = source("app/admin/products/page.tsx");
-    const cmsPage = source("app/admin/cms/page.tsx");
-    const cmsWorkspace = source("features/admin/cms/cms-visual-workspace.tsx");
 
     expect(productsPage).toContain("ProductMultiImageField");
     expect(productsPage).toContain("id=\"product-media\"");
     expect(productsPage).toContain("OperationalFeedback");
-    expect(cmsPage).not.toContain("Editable website systems.");
-    expect(cmsPage).toContain("data-cms-operational-feedback");
-    expect(cmsWorkspace).toContain("data-cms-visual-editor");
-    expect(cmsWorkspace).toContain("data-cms-media-picker");
-    expect(cmsWorkspace).toContain("data-cms-sticky-action-bar");
-    expect(cmsPage).not.toContain("data-cms-workflow-grid");
   });
 
   it("surfaces global operator feedback across admin and role shells", () => {

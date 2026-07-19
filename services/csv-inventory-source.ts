@@ -1,3 +1,8 @@
+import {
+  ACTIVE_PRODUCT_FILTER,
+  ARCHIVED_PRODUCT_FILTER,
+  PUBLISHED_STOREFRONT_FILTER
+} from "@/lib/catalog-product-filters";
 import { getSupabaseAdminConfig } from "@/lib/env";
 import { getInventoryStockMetrics, type InventoryStockMetrics } from "@/services/inventory-metrics";
 import { buildSimpleInventoryRows, type SimpleInventoryRow } from "@/services/simple-inventory-view";
@@ -31,9 +36,8 @@ type CsvInventoryOptions = {
   catalogFilter?: CatalogFilter;
 };
 
-const ACTIVE_CATALOG_FILTER = "workflow_status=neq.archived&archived_at=is.null&merge_status=neq.archived_merged";
-const ARCHIVED_CATALOG_FILTER = "or=(workflow_status.eq.archived,archived_at.not.is.null)";
-const PUBLISHED_STOREFRONT_FILTER = "workflow_status=eq.published&is_visible=eq.true&archived_at=is.null&merge_status=neq.archived_merged";
+const ACTIVE_CATALOG_FILTER = ACTIVE_PRODUCT_FILTER;
+const ARCHIVED_CATALOG_FILTER = ARCHIVED_PRODUCT_FILTER;
 
 function isOptions(value: EnvSource | CsvInventoryOptions): value is CsvInventoryOptions {
   return "env" in value || "page" in value || "pageSize" in value || "all" in value || "publishedOnly" in value || "catalogFilter" in value;
@@ -238,17 +242,12 @@ export async function getCsvInventoryRows(input: EnvSource | CsvInventoryOptions
   const page = positiveInteger(options.page, 1);
   const pageSize = Math.min(positiveInteger(options.pageSize, CSV_INVENTORY_PAGE_SIZE), CSV_INVENTORY_PAGE_SIZE);
   const catalogFilter: CatalogFilter = options.catalogFilter ?? (options.publishedOnly === true ? "active" : "all");
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see services/admin.ts getAdminDashboardSnapshot comment.
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
 
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneCsvInventory(page, pageSize, catalogFilter),
-    30,
-    () =>
-      cacheControlPlaneRead(
-        ["csv-inventory", String(page), String(pageSize), catalogFilter],
-        () => loadCsvInventoryRows(input),
-        { revalidate: 30, tags: ["admin-inventory", "control-plane-inventory"] }
-      )
+  return cacheControlPlaneRead(
+    ["csv-inventory", String(page), String(pageSize), catalogFilter],
+    () => loadCsvInventoryRows(input),
+    { revalidate: 30, tags: ["admin-inventory", "control-plane-inventory"] }
   );
 }

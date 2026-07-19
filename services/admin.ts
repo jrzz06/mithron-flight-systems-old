@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient as createSupabaseServiceClient } from "@supabase/supabase-js";
 import { normalizeCmsRole } from "@/lib/auth/permissions";
+import { ACTIVE_PRODUCT_FILTER, ARCHIVED_PRODUCT_FILTER } from "@/lib/catalog-product-filters";
 import { getSupabaseAdminConfig, type SupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout, supabaseFetch } from "@/lib/fetch-with-timeout";
 import { buildEnterpriseCleanupReadiness } from "@/services/enterprise-cleanup";
@@ -10,12 +11,77 @@ import {
   collectOrderItemProductSlugs,
   mergeInventoryRowsByProductSlug
 } from "@/lib/inventory-availability";
-import { isWarehouseEligible } from "@/lib/orders/lifecycle";
+import { isWarehouseEligible, matchesAdminOrderQueue } from "@/lib/orders/lifecycle";
 import { operationalArchiveHotCutoffIso } from "@/services/data-archive";
 
 type EnvSource = Record<string, string | undefined>;
 type AdminSnapshotStatus = "LIVE" | "PARTIAL" | "BLOCKED";
 type AdminRow = Record<string, unknown>;
+
+/** Mirrors `orderMatchesViewQueue` without importing the UI helpers module. */
+function orderMatchesAdminViewQueue(order: AdminRow, queue: string) {
+  const resolved = queue.trim() || "all";
+  switch (resolved) {
+    case "all":
+      return matchesAdminOrderQueue(order, "all");
+    case "pending":
+    case "pending_verification":
+      return matchesAdminOrderQueue(order, "pending_verification");
+    case "processing":
+      return (
+        matchesAdminOrderQueue(order, "verified")
+        || matchesAdminOrderQueue(order, "warehouse")
+        || (matchesAdminOrderQueue(order, "active")
+          && !matchesAdminOrderQueue(order, "pending_verification"))
+      );
+    case "active":
+      return matchesAdminOrderQueue(order, "active");
+    case "verified":
+      return matchesAdminOrderQueue(order, "verified");
+    case "warehouse":
+      return matchesAdminOrderQueue(order, "warehouse");
+    case "completed":
+      return matchesAdminOrderQueue(order, "completed");
+    case "cancelled":
+      return matchesAdminOrderQueue(order, "cancelled");
+    case "archived":
+      return matchesAdminOrderQueue(order, "archived");
+    case "trash":
+      return matchesAdminOrderQueue(order, "trash");
+    default:
+      return matchesAdminOrderQueue(order, "all");
+  }
+}
+
+/**
+ * PostgREST prefilters that are a *superset* of each view queue so we can
+ * paginate closer to the true queue before applying exact membership.
+ */
+function ordersQueuePrefilter(queue: string | undefined): string {
+  if (!queue || queue === "all") return "";
+  switch (queue) {
+    case "pending":
+    case "pending_verification":
+      return "&status=in.(paid,admin_review,pending_payment)&deleted_at=is.null";
+    case "verified":
+      return "&status=eq.confirmed&deleted_at=is.null";
+    case "completed":
+      return "&or=(status.eq.delivered,fulfillment_status.eq.delivered)&deleted_at=is.null";
+    case "cancelled":
+      return "&status=in.(cancelled,refunded)&deleted_at=is.null";
+    case "warehouse":
+      return "&or=(status.eq.assigned,fulfillment_status.in.(packing,processing,picked,packed,ready_to_dispatch,shipped,dispatched))&deleted_at=is.null";
+    case "processing":
+    case "active":
+      return "&status=not.in.(cancelled,refunded,delivered)&deleted_at=is.null";
+    case "archived":
+      return "&archived_at=not.is.null&deleted_at=is.null";
+    case "trash":
+      return "&deleted_at=not.is.null";
+    default:
+      return "";
+  }
+}
 
 type AdminSnapshot<T extends Record<string, unknown>> = {
   status: AdminSnapshotStatus;
@@ -29,6 +95,8 @@ type WarehouseSnapshotScope =
   | "full"
   | "dashboard"
   | "orders"
+  | "ordersList"
+  | "ordersSummary"
   | "picking"
   | "packing"
   | "dispatch"
@@ -61,6 +129,12 @@ type WarehouseSnapshotInput = EnvSource | {
   status?: string;
   /** Optional order_number / customer_email ilike search. */
   search?: string;
+  /**
+   * Admin Orders view-queue key (pending / processing / completed / …).
+   * Applied as a PostgREST status prefilter + exact queue post-filter so the
+   * returned page is queue-scoped rather than a random 80-row slice.
+   */
+  queue?: string;
 };
 
 type CountMetric = {
@@ -112,17 +186,23 @@ const WAREHOUSE_SNAPSHOT_ROW_LIMIT = 80;
 const ADMIN_FETCH_TIMEOUT_MS = 30_000;
 const MEDIA_LIBRARY_LIMIT = 96;
 const PRODUCT_MANAGER_LIMIT = 120;
-const PRODUCT_RELATION_LIMIT = 160;
+const PRODUCT_RELATION_LIMIT = 80;
 const PRODUCT_LIST_SELECT =
-  "slug,name,category,price,compare_at,badge,badge_enabled,badge_text,badge_style,description,description_json,specs,on_sale,discount_type,discount_value,cost_of_goods,show_price_per_unit,charge_tax,tax_group,tax_rate,tax_included,image,hero,gallery,workflow_status,published_at,archived_at,is_visible,sort_order,updated_at,source_availability,tagline";
+  "slug,name,category,price,compare_at,badge,badge_enabled,badge_text,badge_style,on_sale,discount_type,discount_value,cost_of_goods,show_price_per_unit,charge_tax,tax_group,tax_rate,tax_included,image,hero,workflow_status,published_at,archived_at,is_visible,sort_order,updated_at,source_availability,tagline";
 const PRODUCT_EDITOR_SELECT =
   "slug,name,category,price,compare_at,badge,badge_enabled,badge_text,badge_style,description,on_sale,discount_type,discount_value,cost_of_goods,show_price_per_unit,charge_tax,tax_group,tax_rate,tax_included,image,hero,gallery,variants,specs,workflow_status,published_at,archived_at,is_visible,seo_title,seo_description,og_title,og_description,og_image,source_availability,sort_order,updated_at,tagline";
 const MOVEMENT_AUDIT_LIMIT = 80;
 
 const warehouseSnapshotScopes: Record<WarehouseSnapshotScope, Set<WarehouseSnapshotTable>> = {
   full: new Set(["products", "inventory", "stock", "movements", "orders", "orderItems", "shipments", "shipmentItems", "shipmentTimeline", "activityLogs"]),
-  dashboard: new Set(["inventory", "stock", "movements", "orders", "orderItems", "shipments"]),
+  // Dashboard list only needs order rows + line quantities — not inventory/stock fan-out.
+  dashboard: new Set(["orders", "orderItems"]),
+  // Admin/operations orders workspace needs catalog + inventory for the detail panel.
   orders: new Set(["products", "inventory", "orders", "orderItems", "shipments"]),
+  // Warehouse list pages: orders + line items only (detail uses loadWarehouseOrderDetail).
+  ordersList: new Set(["orders", "orderItems"]),
+  // Dispatch history list: order rows + shipments (carrier/tracking columns).
+  ordersSummary: new Set(["orders", "shipments"]),
   picking: new Set(["inventory", "orders", "orderItems"]),
   packing: new Set(["orders", "orderItems", "shipments"]),
   dispatch: new Set(["shipments", "shipmentItems", "shipmentTimeline", "orders", "orderItems"]),
@@ -192,9 +272,9 @@ const adminSettingsQueries = {
 
 const cmsWorkspaceQueries = {
   cmsPages: "select=id,slug,title,route_path,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
-  cmsSections: "select=id,page_id,section_key,component_key,title,payload,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
+  cmsSections: "select=id,page_id,section_key,component_key,title,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
   heroBanners: "select=id,product_slug,title,subtitle,cta_label,href,image,poster,video,theme,composition,title_color,subtitle_color,starts_at,ends_at,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
-  homepageSections: "select=id,section_key,label,component_key,payload,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
+  homepageSections: "select=id,section_key,label,component_key,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
   sectionVisibility: "select=id,section_key,route_path,is_visible,starts_at,ends_at,status,created_at&order=created_at.desc&limit=20",
   homepageOrdering: "select=section_key,sort_order,is_visible,status,updated_at&order=sort_order.asc&limit=20",
   siteNavigation: "select=id,label,href,placement,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
@@ -204,8 +284,8 @@ const cmsWorkspaceQueries = {
   productReviews: "select=id,product_slug,reviewer_name,body,rating,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=20",
   faqs: "select=id,scope,product_slug,question,answer,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=40",
   promotionalCampaigns: "select=id,label,headline,body,cta_label,href,media_asset_id,starts_at,ends_at,sort_order,is_visible,status,revision,updated_at,created_at&order=sort_order.asc&limit=40",
-  mediaAssets: "select=id,public_url,caption,alt,alt_text,width,height,usage_scope,metadata,updated_at&order=updated_at.desc&limit=40",
-  contentRevisions: "select=id,entity_table,entity_id,revision,snapshot,change_summary,created_at&order=created_at.desc&limit=20"
+  mediaAssets: "select=id,public_url,caption,alt,alt_text,width,height,usage_scope,updated_at&order=updated_at.desc&limit=40",
+  contentRevisions: "select=id,entity_table,entity_id,revision,change_summary,created_at&order=created_at.desc&limit=20"
 } as const;
 
 type GovernedUser = {
@@ -376,7 +456,7 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
   const isOptions = Boolean(
     input
     && typeof input === "object"
-    && ("scope" in input || "env" in input || "ordersFilter" in input || "limit" in input || "offset" in input || "status" in input || "search" in input)
+    && ("scope" in input || "env" in input || "ordersFilter" in input || "limit" in input || "offset" in input || "status" in input || "search" in input || "queue" in input)
   );
   const options = isOptions
     ? input as {
@@ -387,6 +467,7 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
       offset?: number;
       status?: string;
       search?: string;
+      queue?: string;
     }
     : null;
   const scope = isWarehouseSnapshotScope(options?.scope) ? options.scope : "full";
@@ -404,6 +485,9 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
   const search = typeof options?.search === "string" && options.search.trim()
     ? options.search.trim()
     : undefined;
+  const queue = typeof options?.queue === "string" && options.queue.trim()
+    ? options.queue.trim()
+    : undefined;
   return {
     env: options ? (options.env ?? process.env) : (input as EnvSource),
     scope,
@@ -412,7 +496,8 @@ function resolveWarehouseSnapshotInput(input: WarehouseSnapshotInput = process.e
     limit,
     offset,
     status,
-    search
+    search,
+    queue
   };
 }
 
@@ -663,11 +748,13 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
 });
 
 export async function getAdminDashboardSnapshot(env: EnvSource = process.env) {
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // Admin/warehouse/supplier control-plane reads intentionally bypass Redis: staff-facing
+  // operational data must reflect the current DB state, not a 30s-stale cache. Redis stays
+  // reserved for customer-facing storefront reads (catalog/CMS/PDP/shell).
+  const { timedAction } = await import("@/lib/perf/action-timer");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneAdminDashboard,
-    30,
+  return timedAction(
+    "getAdminDashboardSnapshot",
     () =>
       cacheControlPlaneRead(
         ["admin-dashboard-snapshot"],
@@ -684,7 +771,8 @@ export async function getAdminDashboardSnapshot(env: EnvSource = process.env) {
             "control-plane-catalog"
           ]
         }
-      )
+      ),
+    { panel: "admin", phase: "server" }
   );
 }
 
@@ -767,17 +855,18 @@ export const loadAuditObservabilitySnapshot = cache(async (env: EnvSource = proc
 });
 
 export async function getAuditObservabilitySnapshot(env: EnvSource = process.env) {
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see getAdminDashboardSnapshot comment above.
+  const { timedAction } = await import("@/lib/perf/action-timer");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneAuditObservability,
-    30,
+  return timedAction(
+    "getAuditObservabilitySnapshot",
     () =>
       cacheControlPlaneRead(
         ["admin-audit-observability"],
         () => loadAuditObservabilitySnapshot(env),
         { revalidate: 30, tags: ["admin-audit", "control-plane-audit"] }
-      )
+      ),
+    { panel: "admin", phase: "server" }
   );
 }
 
@@ -858,6 +947,18 @@ export const getEnterpriseCleanupSnapshot = cache(async (env: EnvSource = proces
 });
 
 export const getUserGovernanceSnapshot = cache(async (
+  env: EnvSource = process.env,
+  listOptions: { page?: number; perPage?: number; q?: string; role?: string } = {}
+) => {
+  const { timedAction } = await import("@/lib/perf/action-timer");
+  return timedAction(
+    "getUserGovernanceSnapshot",
+    () => loadUserGovernanceSnapshot(env, listOptions),
+    { panel: "admin", phase: "server" }
+  );
+});
+
+const loadUserGovernanceSnapshot = cache(async (
   env: EnvSource = process.env,
   listOptions: { page?: number; perPage?: number; q?: string; role?: string } = {}
 ) => {
@@ -979,66 +1080,113 @@ export const loadAdminSuppliersSnapshot = cache(async (
   const limit = Math.min(Math.max(1, Math.floor(listOptions.limit ?? 80)), 200);
   const offset = Math.max(0, Math.floor(listOptions.offset ?? 0));
 
-  const profilesQuery = search
-    ? `select=id,email,display_name,phone,governance_status,created_at,updated_at&or=(email.ilike.*${encodeURIComponent(search)}*,display_name.ilike.*${encodeURIComponent(search)}*)&order=updated_at.desc&limit=320`
-    : supplierDirectoryQueries.profiles;
+  // Server-side page of supplier roles (avoid fetch-all-then-slice of 160+).
+  let supplierRoleRows: AdminRow[] = [];
+  let filteredTotal = 0;
+  let rolesStatus: "LIVE" | "PARTIAL" | "SKIPPED" = "LIVE";
 
-  const [authUsers, supplierRoles, profiles] = await Promise.all([
-    listGovernanceAuthUsers(config, { page: 1, perPage: 100 }),
-    fetchAdminRows(config, "user_roles", supplierDirectoryQueries.supplierRoles),
-    fetchAdminRows(config, "profiles", profilesQuery)
+  if (search) {
+    const profilesQuery =
+      `select=id,email,display_name,phone,governance_status,created_at,updated_at&or=(email.ilike.*${encodeURIComponent(search)}*,display_name.ilike.*${encodeURIComponent(search)}*)&order=updated_at.desc&limit=200`;
+    const [matchedProfiles, allSupplierRoles] = await Promise.all([
+      fetchAdminRows(config, "profiles", profilesQuery),
+      fetchAdminRows(
+        config,
+        "user_roles",
+        "select=user_id,role_key,created_at&role_key=eq.supplier&order=created_at.desc&limit=320"
+      )
+    ]);
+    rolesStatus = [matchedProfiles, allSupplierRoles].every((t) => t.status === "LIVE") ? "LIVE" : "PARTIAL";
+    const supplierIdSet = new Set(
+      allSupplierRoles.rows.map((row) => String(row.user_id ?? "")).filter(Boolean)
+    );
+    const matchedIds = matchedProfiles.rows
+      .map((row) => String(row.id ?? ""))
+      .filter((id) => id && supplierIdSet.has(id));
+    filteredTotal = matchedIds.length;
+    const pageIds = matchedIds.slice(offset, offset + limit);
+    const roleByUser = new Map(
+      allSupplierRoles.rows.map((row) => [String(row.user_id ?? ""), row] as const)
+    );
+    supplierRoleRows = pageIds.map((id) => roleByUser.get(id)).filter(Boolean) as AdminRow[];
+
+    const profileById = new Map(
+      matchedProfiles.rows.map((profile) => [String(profile.id ?? ""), profile] as const)
+    );
+    const suppliers: AdminSupplierItem[] = supplierRoleRows.map((roleRow) => {
+      const supplierId = String(roleRow.user_id ?? "");
+      const profile = profileById.get(supplierId);
+      const email = String(profile?.email ?? "");
+      const name = String(profile?.display_name ?? email);
+      const company = deriveCompanyLabel(email, {});
+      const phone = String(profile?.phone ?? "");
+      const governanceStatus = String(profile?.governance_status ?? "active");
+      return {
+        id: supplierId,
+        name,
+        company,
+        email,
+        phone,
+        verificationStatus: governanceStatus !== "active" ? governanceStatus : "pending",
+        registeredAt: String(roleRow.created_at ?? profile?.created_at ?? "")
+      };
+    });
+
+    return {
+      status: rolesStatus === "LIVE" ? ("LIVE" as const) : ("PARTIAL" as const),
+      source: "supabase-admin" as const,
+      blockedReason: undefined,
+      data: { suppliers, filteredTotal }
+    };
+  }
+
+  const rolesQuery =
+    `select=user_id,role_key,created_at&role_key=eq.supplier&order=created_at.desc&limit=${limit}&offset=${offset}`;
+  const [supplierRoles, rolesCount] = await Promise.all([
+    fetchAdminRows(config, "user_roles", rolesQuery),
+    countTableRows(config, "user_roles", "select=user_id&role_key=eq.supplier&limit=1")
   ]);
+  rolesStatus = supplierRoles.status === "LIVE" ? "LIVE" : "PARTIAL";
+  supplierRoleRows = supplierRoles.rows;
+  filteredTotal = rolesCount.status === "LIVE" ? rolesCount.count : supplierRoleRows.length;
+
+  const supplierIds = supplierRoleRows.map((row) => String(row.user_id ?? "")).filter(Boolean);
+  const profiles =
+    supplierIds.length > 0
+      ? await fetchAdminRows(
+          config,
+          "profiles",
+          `select=id,email,display_name,phone,governance_status,created_at,updated_at&id=in.(${supplierIds.map(encodeURIComponent).join(",")})`
+        )
+      : { status: "LIVE" as const, rows: [] as AdminRow[] };
 
   const profileById = new Map(profiles.rows.map((profile) => [String(profile.id ?? ""), profile]));
-  const authById = new Map(authUsers.users.map((user) => [user.id, user]));
-  const roleCreatedAt = new Map(
-    supplierRoles.rows.map((row) => [String(row.user_id ?? ""), String(row.created_at ?? "")])
-  );
-  const supplierIds = [...new Set(supplierRoles.rows.map((row) => String(row.user_id ?? "")).filter(Boolean))];
-
-  let suppliers = supplierIds.map((supplierId) => {
+  const suppliers: AdminSupplierItem[] = supplierRoleRows.map((roleRow) => {
+    const supplierId = String(roleRow.user_id ?? "");
     const profile = profileById.get(supplierId);
-    const authUser = authById.get(supplierId);
-    const metadata = authUser?.user_metadata ?? {};
-    const email = String(authUser?.email ?? profile?.email ?? "");
-    const name = String(profile?.display_name ?? metadata.display_name ?? email);
-    const company = deriveCompanyLabel(email, metadata);
-    const phone = String(profile?.phone ?? metadata.phone ?? "");
+    const email = String(profile?.email ?? "");
+    const name = String(profile?.display_name ?? email);
+    const company = deriveCompanyLabel(email, {});
+    const phone = String(profile?.phone ?? "");
     const governanceStatus = String(profile?.governance_status ?? "active");
-    const emailVerified = Boolean(authUser?.email_confirmed_at);
-    const verificationStatus = governanceStatus !== "active"
-      ? governanceStatus
-      : emailVerified
-        ? "verified"
-        : "pending";
-    const registeredAt = roleCreatedAt.get(supplierId)
-      || String(profile?.created_at ?? authUser?.created_at ?? "");
-
     return {
       id: supplierId,
       name,
       company,
       email,
       phone,
-      verificationStatus,
-      registeredAt
+      verificationStatus: governanceStatus !== "active" ? governanceStatus : "pending",
+      registeredAt: String(roleRow.created_at ?? profile?.created_at ?? "")
     };
-  }).sort((first, second) => second.registeredAt.localeCompare(first.registeredAt));
-
-  if (search) {
-    const needle = search.toLowerCase();
-    suppliers = suppliers.filter((supplier) =>
-      `${supplier.name} ${supplier.company} ${supplier.email} ${supplier.phone}`.toLowerCase().includes(needle)
-    );
-  }
-
-  const filteredTotal = suppliers.length;
-  suppliers = suppliers.slice(offset, offset + limit);
+  });
 
   return {
-    status: authUsers.error || [supplierRoles, profiles].some((table) => table.status !== "LIVE") ? "PARTIAL" as const : "LIVE" as const,
+    status:
+      rolesStatus !== "LIVE" || (profiles.status && profiles.status !== "LIVE")
+        ? ("PARTIAL" as const)
+        : ("LIVE" as const),
     source: "supabase-admin" as const,
-    blockedReason: authUsers.error,
+    blockedReason: undefined,
     data: { suppliers, filteredTotal }
   };
 });
@@ -1056,20 +1204,21 @@ export async function getAdminSuppliersSnapshot(
     : null;
   const env = options ? (options.env ?? process.env) : (input as EnvSource);
   const listOptions = { q: options?.q, limit: options?.limit, offset: options?.offset };
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see getAdminDashboardSnapshot comment above.
+  const { timedAction } = await import("@/lib/perf/action-timer");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
   const q = (listOptions.q ?? "").trim().toLowerCase().slice(0, 64);
   const limit = listOptions.limit ?? 80;
   const offset = listOptions.offset ?? 0;
-  return readThroughCache(
-    `${REDIS_CACHE_KEYS.controlPlaneSuppliersSnapshot}:${limit}:${offset}:${q}`,
-    30,
+  return timedAction(
+    "getAdminSuppliersSnapshot",
     () =>
       cacheControlPlaneRead(
         ["admin-suppliers-snapshot", String(limit), String(offset), q],
         () => loadAdminSuppliersSnapshot(env, listOptions),
         { revalidate: 30, tags: ["admin-suppliers", "control-plane-suppliers"] }
-      )
+      ),
+    { panel: "admin", phase: "server", extra: { limit, offset } }
   );
 }
 
@@ -1095,17 +1244,18 @@ export const loadCmsCoreSnapshot = cache(async (env: EnvSource = process.env) =>
 });
 
 export async function getCmsCoreSnapshot(env: EnvSource = process.env) {
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see getAdminDashboardSnapshot comment above.
+  const { timedAction } = await import("@/lib/perf/action-timer");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneCmsCoreSnapshot,
-    30,
+  return timedAction(
+    "getCmsCoreSnapshot",
     () =>
       cacheControlPlaneRead(
         ["admin-cms-core-snapshot"],
         () => loadCmsCoreSnapshot(env),
         { revalidate: 30, tags: ["admin-cms", "control-plane-cms"] }
-      )
+      ),
+    { panel: "admin", phase: "server" }
   );
 }
 
@@ -1128,17 +1278,18 @@ export const loadCmsMarketingWorkspaceSnapshot = cache(async (env: EnvSource = p
 });
 
 export async function getCmsMarketingWorkspaceSnapshot(env: EnvSource = process.env) {
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see getAdminDashboardSnapshot comment above.
+  const { timedAction } = await import("@/lib/perf/action-timer");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneCmsMarketingSnapshot,
-    30,
+  return timedAction(
+    "getCmsMarketingWorkspaceSnapshot",
     () =>
       cacheControlPlaneRead(
         ["admin-cms-marketing-snapshot"],
         () => loadCmsMarketingWorkspaceSnapshot(env),
         { revalidate: 30, tags: ["admin-cms", "control-plane-cms"] }
-      )
+      ),
+    { panel: "admin", phase: "server" }
   );
 }
 
@@ -1166,18 +1317,46 @@ export const loadCmsAdvancedWorkspaceSnapshot = cache(async (env: EnvSource = pr
 });
 
 export async function getCmsAdvancedWorkspaceSnapshot(env: EnvSource = process.env) {
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see getAdminDashboardSnapshot comment above.
+  const { timedAction } = await import("@/lib/perf/action-timer");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneCmsAdvancedSnapshot,
-    30,
+  return timedAction(
+    "getCmsAdvancedWorkspaceSnapshot",
     () =>
       cacheControlPlaneRead(
         ["admin-cms-advanced-snapshot"],
         () => loadCmsAdvancedWorkspaceSnapshot(env),
         { revalidate: 30, tags: ["admin-cms", "control-plane-cms"] }
-      )
+      ),
+    { panel: "admin", phase: "server" }
   );
+}
+
+/**
+ * Load a single revision snapshot JSON on demand for CMS restore.
+ * List queries intentionally omit `snapshot` to avoid shipping 20 large blobs.
+ */
+export async function fetchContentRevisionSnapshotPayload(
+  input: { entityTable: string; entityId: string; revision: number },
+  env: EnvSource = process.env
+): Promise<Record<string, unknown> | null> {
+  const config = getSupabaseAdminConfig(env);
+  if (!config.configured) return null;
+  if (!input.entityTable || !input.entityId || input.revision <= 0) return null;
+
+  const query =
+    `select=snapshot` +
+    `&entity_table=eq.${encodeURIComponent(input.entityTable)}` +
+    `&entity_id=eq.${encodeURIComponent(input.entityId)}` +
+    `&revision=eq.${input.revision}` +
+    `&limit=1`;
+
+  const result = await fetchAdminRows<{ snapshot?: unknown }>(config, "content_revisions", query);
+  const row = result.rows[0];
+  if (!row || !row.snapshot || typeof row.snapshot !== "object" || Array.isArray(row.snapshot)) {
+    return null;
+  }
+  return row.snapshot as Record<string, unknown>;
 }
 
 function mergeCmsWorkspaceSnapshots(
@@ -1335,9 +1514,9 @@ export const loadProductManagerSnapshot = cache(async (
 
   let workflowQuery = "";
   if (statusFilter === "active") {
-    workflowQuery = "&workflow_status=neq.archived&archived_at=is.null&merge_status=neq.archived_merged";
+    workflowQuery = `&${ACTIVE_PRODUCT_FILTER}`;
   } else if (statusFilter === "archived") {
-    workflowQuery = "&or=(workflow_status.eq.archived,archived_at.not.is.null)";
+    workflowQuery = `&${ARCHIVED_PRODUCT_FILTER}`;
   } else if (statusFilter !== "all") {
     workflowQuery = `&workflow_status=eq.${encodeURIComponent(statusFilter)}`;
   }
@@ -1346,14 +1525,13 @@ export const loadProductManagerSnapshot = cache(async (
     ? `&or=(name.ilike.*${encodeURIComponent(search)}*,slug.ilike.*${encodeURIComponent(search)}*,category.ilike.*${encodeURIComponent(search)}*)`
     : "";
 
-  const activeProductQuery =
-    "select=slug&workflow_status=neq.archived&archived_at=is.null&merge_status=neq.archived_merged";
-  const archivedProductQuery = "select=slug&or=(workflow_status.eq.archived,archived_at.not.is.null)";
+  const activeProductQuery = `select=slug&${ACTIVE_PRODUCT_FILTER}`;
+  const archivedProductQuery = `select=slug&${ARCHIVED_PRODUCT_FILTER}`;
   const filteredCountQuery = `select=slug${workflowQuery}${searchQuery}`;
   const productsListQuery =
     `select=${PRODUCT_LIST_SELECT}${workflowQuery}${searchQuery}&order=sort_order.asc&limit=${listLimit}${listOffset > 0 ? `&offset=${listOffset}` : ""}`;
 
-  const [productCounts, mediaCounts, products, mediaLinks, inventory, stock, movements, categories, activeProducts, archivedProducts, totalProducts, filteredTotal] = await Promise.all([
+  const [productCounts, mediaCounts, products, categories, activeProducts, archivedProducts, totalProducts, filteredTotal] = await Promise.all([
     Promise.all([
       countTable(config, "mithron_products"),
       countTable(config, "inventory"),
@@ -1364,16 +1542,30 @@ export const loadProductManagerSnapshot = cache(async (
       countTable(config, "product_media_assets")
     ]),
     fetchAdminRows(config, "mithron_products", productsListQuery),
-    fetchAdminRows(config, "product_media_assets", `select=product_slug,media_asset_id,usage,variant_id,is_primary,sort_order,alt_text,caption,metadata,updated_at&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
-    fetchAdminRows(config, "inventory", `select=product_slug,sku,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
-    fetchAdminRows(config, "warehouse_stock", `select=warehouse_code,product_slug,sku,available_quantity,committed_quantity,last_counted_at,updated_at&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
-    fetchAdminRows(config, "inventory_movements", `select=id,movement_type,product_slug,sku,quantity_before,quantity_after,quantity_delta,reason_code,actor_user_id,related_order_id,related_shipment_id,created_at&order=created_at.desc&limit=${MOVEMENT_AUDIT_LIMIT}`),
     fetchAdminRows(config, "category_metadata", "select=route_key,title,status,is_visible,sort_order&order=sort_order.asc&limit=80"),
     countTableRows(config, "mithron_products", activeProductQuery),
     countTableRows(config, "mithron_products", archivedProductQuery),
     countTableRows(config, "mithron_products", "select=slug"),
     countTableRows(config, "mithron_products", filteredCountQuery)
   ]);
+
+  // Scope relation rows to the current product page (not a global newest-N slice).
+  const pageSlugs = products.rows
+    .map((row) => String(row.slug ?? "").trim())
+    .filter(Boolean);
+  const slugFilter = pageSlugs.length
+    ? `&product_slug=in.(${pageSlugs.map((slug) => encodeURIComponent(slug)).join(",")})`
+    : "";
+
+  const emptyRelation = { rows: [] as AdminRow[], error: null as string | null, status: "LIVE" as const };
+  const [mediaLinks, inventory, stock, movements] = pageSlugs.length
+    ? await Promise.all([
+        fetchAdminRows(config, "product_media_assets", `select=product_slug,media_asset_id,usage,variant_id,is_primary,sort_order,alt_text,caption,metadata,updated_at${slugFilter}&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
+        fetchAdminRows(config, "inventory", `select=product_slug,sku,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at${slugFilter}&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
+        fetchAdminRows(config, "warehouse_stock", `select=warehouse_code,product_slug,sku,available_quantity,committed_quantity,last_counted_at,updated_at${slugFilter}&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
+        fetchAdminRows(config, "inventory_movements", `select=id,movement_type,product_slug,sku,quantity_before,quantity_after,quantity_delta,reason_code,actor_user_id,related_order_id,related_shipment_id,created_at${slugFilter}&order=created_at.desc&limit=${MOVEMENT_AUDIT_LIMIT}`)
+      ])
+    : [emptyRelation, emptyRelation, emptyRelation, emptyRelation];
   const inventorySlugs = new Set(inventory.rows.map((row) => String(row.product_slug ?? "")).filter(Boolean));
   const stockSlugs = new Set(stock.rows.map((row) => String(row.product_slug ?? "")).filter(Boolean));
   const stockCoverage = {
@@ -1437,24 +1629,25 @@ export async function getProductManagerSnapshot(
     q: options?.q,
     workflowStatus: options?.workflowStatus
   };
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see getAdminDashboardSnapshot comment above.
+  const { timedAction } = await import("@/lib/perf/action-timer");
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
   const limit = listOptions.limit ?? PRODUCT_MANAGER_LIMIT;
   const offset = listOptions.offset ?? 0;
   const workflowStatus = listOptions.workflowStatus ?? "active";
   const q = (listOptions.q ?? "").trim().toLowerCase().slice(0, 64);
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneProductManagerList(limit, offset, workflowStatus, q),
-    30,
+  return timedAction(
+    "getProductManagerSnapshot",
     () =>
       cacheControlPlaneRead(
-        ["admin-product-manager-snapshot", String(limit), String(offset), workflowStatus, q],
+        ["admin-product-manager-snapshot", "v3", String(limit), String(offset), workflowStatus, q],
         () => loadProductManagerSnapshot(env, listOptions),
         {
           revalidate: 30,
           tags: ["admin-products", "control-plane-catalog", "control-plane-inventory"]
         }
-      )
+      ),
+    { panel: "admin", phase: "server", extra: { limit, offset, workflowStatus } }
   );
 }
 
@@ -1492,7 +1685,8 @@ const loadWarehouseSnapshot = cache(async (
   limit: number,
   offset: number,
   status: string | undefined,
-  search: string | undefined
+  search: string | undefined,
+  queue: string | undefined
 ) => {
   const tables = warehouseSnapshotScopes[scope];
   const resolvedEnv = env;
@@ -1524,8 +1718,9 @@ const loadWarehouseSnapshot = cache(async (
       : Promise.resolve(skipped<T>(table))
   );
 
-  const scopeOrderRelations = scope === "orders";
-  const inventoryRowLimit = scopeOrderRelations ? ordersRowLimit : 500;
+  const scopeOrderRelations = tables.has("orders") && (tables.has("orderItems") || tables.has("shipments"));
+  // List scopes skip wide product metadata; admin orders still needs price/image/hero for the catalog panel.
+  const inventoryRowLimit = scope === "orders" ? ordersRowLimit : 500;
   const inventorySelectColumns =
     "product_slug,sku,variant_id,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at";
   const inventoryCatalogQuery =
@@ -1536,19 +1731,23 @@ const loadWarehouseSnapshot = cache(async (
     "select=id,order_id,product_slug,product_name,sku,quantity,line_total,metadata,created_at";
   const shipmentsSelect =
     "select=id,shipment_number,shipment_status,order_id,warehouse_id,carrier_name,tracking_number,updated_at,created_at";
-  // Keep metadata/timeline on list fetch — detail pages and list helpers (eligibility, shipping UI) read them from the snapshot.
-  // Batch 6 (C3) will drop metadata/timeline from list selects.
+  // Keep metadata on list fetch — eligibility/shipping helpers read it from the snapshot.
+  // shipment_tracking + timeline load only via loadWarehouseOrderDetail.
   const ordersStatusFilter = status ? `&status=eq.${encodeURIComponent(status)}` : "";
   const ordersSearchFilter = search
     ? `&or=(order_number.ilike.*${encodeURIComponent(search)}*,customer_email.ilike.*${encodeURIComponent(search)}*)`
     : "";
+  const ordersQueueFilter = status ? "" : ordersQueuePrefilter(queue);
   const ordersOffset = offset > 0 ? `&offset=${offset}` : "";
-  // C3: omit timeline from LIST selects (lazy-load on detail). Keep metadata for
+  // Omit timeline + shipment_tracking from LIST selects (lazy-load on detail). Keep metadata for
   // warehouse eligibility, customer phone/name, and shipping helpers.
+  // When a view-queue is active, over-fetch slightly so exact post-filter still fills a page.
+  const queueFetchMultiplier = queue && queue !== "all" && !status ? 2 : 1;
+  const ordersFetchLimit = Math.min(ordersRowLimit * queueFetchMultiplier, 500);
   const ordersListQuery =
-    `select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,metadata,shipment_tracking,invoice_url,archived_at,deleted_at,created_at,updated_at&created_at=gte.${encodeURIComponent(operationalArchiveHotCutoffIso())}${ordersStatusFilter}${ordersSearchFilter}&order=created_at.desc&limit=${ordersRowLimit}${ordersOffset}`;
+    `select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,metadata,invoice_url,archived_at,deleted_at,created_at,updated_at&created_at=gte.${encodeURIComponent(operationalArchiveHotCutoffIso())}${ordersStatusFilter}${ordersQueueFilter}${ordersSearchFilter}&order=created_at.desc&limit=${ordersFetchLimit}${ordersOffset}`;
   const [products, inventory, stock, movements, orders, shipmentItems, shipmentTimeline, activityLogs] = await Promise.all([
-    maybeFetch("products", "mithron_products", `select=slug,name,category,price,image,hero,workflow_status,archived_at,is_visible,updated_at&order=sort_order.asc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
+    maybeFetch("products", "mithron_products", `select=slug,name,price,image,hero&order=sort_order.asc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
     maybeFetch("inventory", "inventory", inventoryCatalogQuery),
     maybeFetch("stock", "warehouse_stock", warehouseStockQuery),
     maybeFetch("movements", "inventory_movements", `select=id,movement_type,product_slug,sku,quantity_before,quantity_after,quantity_delta,reason_code,actor_user_id,related_order_id,related_shipment_id,created_at&order=created_at.desc&limit=${WAREHOUSE_SNAPSHOT_ROW_LIMIT}`),
@@ -1613,9 +1812,15 @@ const loadWarehouseSnapshot = cache(async (
   const fetchedTables = [products, inventory, stock, movements, orders, orderItems, shipments, shipmentItems, shipmentTimeline, activityLogs]
     .filter((table) => table.status !== "SKIPPED");
   const blockedTable = fetchedTables.find((table) => table.status !== "LIVE");
-  const filteredOrders = ordersFilter === "warehouse"
+  let filteredOrders = ordersFilter === "warehouse"
     ? orders.rows.filter((order) => isWarehouseEligible(order))
     : orders.rows;
+  if (queue && queue !== "all") {
+    filteredOrders = filteredOrders.filter((order) => orderMatchesAdminViewQueue(order, queue));
+  }
+  if (filteredOrders.length > ordersRowLimit) {
+    filteredOrders = filteredOrders.slice(0, ordersRowLimit);
+  }
   const snapshotTables = [
     { table: "mithron_products", rows: products.rows },
     { table: "inventory", rows: inventoryRows },
@@ -1650,18 +1855,21 @@ const loadWarehouseSnapshot = cache(async (
 });
 
 export async function getWarehouseSnapshot(input: WarehouseSnapshotInput = process.env) {
-  const { env, scope, ordersFilter, limit, offset, status, search } = resolveWarehouseSnapshotInput(input);
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  const { env, scope, ordersFilter, limit, offset, status, search, queue } = resolveWarehouseSnapshotInput(input);
+  const { timedAction } = await import("@/lib/perf/action-timer");
+  // No Redis on admin/warehouse pages — see getAdminDashboardSnapshot comment above.
+  // This snapshot backs /admin/orders and every /warehouse/* page; staff need current
+  // order/stock state, not a 30s-stale cache.
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
   const statusKey = status ?? "all";
   const searchKey = search ? search.toLowerCase().slice(0, 64) : "";
-  return readThroughCache(
-    `${REDIS_CACHE_KEYS.controlPlaneWarehouseSnapshot(scope, ordersFilter, limit, offset, statusKey)}:q:${searchKey}`,
-    30,
+  const queueKey = queue ?? "all";
+  return timedAction(
+    "getWarehouseSnapshot",
     () =>
       cacheControlPlaneRead(
-        ["admin-warehouse-snapshot", scope, ordersFilter, String(limit), String(offset), statusKey, searchKey],
-        () => loadWarehouseSnapshot(scope, ordersFilter, env, limit, offset, status, search),
+        ["admin-warehouse-snapshot", scope, ordersFilter, String(limit), String(offset), statusKey, searchKey, queueKey],
+        () => loadWarehouseSnapshot(scope, ordersFilter, env, limit, offset, status, search, queue),
         {
           revalidate: 30,
           tags: [
@@ -1672,8 +1880,168 @@ export async function getWarehouseSnapshot(input: WarehouseSnapshotInput = proce
             "control-plane-warehouse"
           ]
         }
-      )
+      ),
+    { panel: "shared", phase: "server", extra: { scope, limit, offset, queue: queueKey } }
   );
+}
+
+export type WarehouseDashboardOrderKpis = {
+  received: number;
+  picking: number;
+  dispatchedToday: number;
+};
+
+/**
+ * Exact order counts for warehouse dashboard KPIs (not capped by the 80-row snapshot).
+ * Mirrors `orderMatchesWarehouseScope` + the same fulfillment / UTC-day predicates used on the page.
+ */
+export async function getWarehouseDashboardOrderKpis(input: {
+  isGlobal: boolean;
+  warehouseCode: string;
+  defaultWarehouseCode: string;
+  env?: EnvSource;
+}): Promise<WarehouseDashboardOrderKpis> {
+  const env = input.env ?? process.env;
+  const config = getSupabaseAdminConfig(env);
+  if (!config.configured) {
+    return { received: 0, picking: 0, dispatchedToday: 0 };
+  }
+
+  const hotCutoff = encodeURIComponent(operationalArchiveHotCutoffIso());
+  const now = new Date();
+  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+  const dayStartIso = encodeURIComponent(dayStart.toISOString());
+  const dayEndIso = encodeURIComponent(dayEnd.toISOString());
+
+  let warehouseFilter = "";
+  if (!input.isGlobal && input.warehouseCode) {
+    const code = encodeURIComponent(input.warehouseCode);
+    if (input.warehouseCode === input.defaultWarehouseCode) {
+      // Matches JS: missing assigned_warehouse_code falls back to defaultWarehouseCode.
+      warehouseFilter = `&or=(metadata->>assigned_warehouse_code.eq.${code},metadata->>assigned_warehouse_code.is.null)`;
+    } else {
+      warehouseFilter = `&metadata->>assigned_warehouse_code=eq.${code}`;
+    }
+  }
+
+  const base = `select=id&created_at=gte.${hotCutoff}${warehouseFilter}`;
+  const [received, picking, dispatchedToday] = await Promise.all([
+    countTableRows(config, "orders", `${base}&fulfillment_status=eq.pending&limit=1`),
+    countTableRows(config, "orders", `${base}&fulfillment_status=eq.packing&limit=1`),
+    countTableRows(
+      config,
+      "orders",
+      `${base}&fulfillment_status=in.(shipped,delivered)&updated_at=gte.${dayStartIso}&updated_at=lt.${dayEndIso}&limit=1`
+    )
+  ]);
+
+  return {
+    received: received.count,
+    picking: picking.count,
+    dispatchedToday: dispatchedToday.count
+  };
+}
+
+/**
+ * Single-order warehouse fulfilment detail — replaces the previous pattern of loading
+ * an 80-row snapshot and `.find(id)` (which 404'd older orders outside the hot window).
+ */
+export async function loadWarehouseOrderDetail(orderId: string, env: EnvSource = process.env) {
+  const config = getSupabaseAdminConfig(env);
+  const empty = {
+    order: null as AdminRow | null,
+    orderItems: [] as AdminRow[],
+    products: [] as AdminRow[],
+    shipments: [] as AdminRow[]
+  };
+  if (!config.configured || !orderId.trim()) {
+    return { status: "BLOCKED" as const, source: "blocked" as const, blockedReason: config.configured ? "Missing order id." : config.message, data: empty };
+  }
+
+  const id = orderId.trim();
+  const ordersSelect =
+    "id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,metadata,timeline,shipment_tracking,invoice_url,archived_at,deleted_at,created_at,updated_at";
+  const orderItemsSelect =
+    "id,order_id,product_slug,product_name,sku,quantity,line_total,metadata,created_at";
+  const shipmentsSelect =
+    "id,shipment_number,shipment_status,order_id,warehouse_id,carrier_name,tracking_number,updated_at,created_at";
+
+  const [orderResult, orderItemsResult, shipmentsResult] = await Promise.all([
+    fetchAdminRows(config, "orders", `select=${ordersSelect}&id=eq.${encodeURIComponent(id)}&limit=1`),
+    fetchAdminRows(config, "order_items", `select=${orderItemsSelect}&order_id=eq.${encodeURIComponent(id)}&order=created_at.desc`),
+    fetchAdminRows(config, "shipments", `select=${shipmentsSelect}&order_id=eq.${encodeURIComponent(id)}&order=updated_at.desc`)
+  ]);
+
+  const order = orderResult.rows[0] ?? null;
+  if (!order) {
+    return {
+      status: orderResult.status === "LIVE" ? "LIVE" as const : "PARTIAL" as const,
+      source: "supabase-admin" as const,
+      blockedReason: orderResult.status !== "LIVE" ? orderResult.error : undefined,
+      data: empty
+    };
+  }
+
+  const slugs = collectOrderItemProductSlugs(orderItemsResult.rows);
+  let products: AdminRow[] = [];
+  if (slugs.length) {
+    const productBatches = await Promise.all(
+      chunkValues(slugs, 40).map((chunk) => {
+        const slugFilter = chunk.map((slug) => encodeURIComponent(slug)).join(",");
+        return fetchAdminRows(
+          config,
+          "mithron_products",
+          `select=slug,name,category,price,image,hero,workflow_status,archived_at,is_visible,updated_at&slug=in.(${slugFilter})`
+        );
+      })
+    );
+    products = productBatches.flatMap((batch) => (batch.status === "LIVE" ? batch.rows : []));
+  }
+
+  const live = [orderResult, orderItemsResult, shipmentsResult].every((table) => table.status === "LIVE");
+  return {
+    status: live ? "LIVE" as const : "PARTIAL" as const,
+    source: "supabase-admin" as const,
+    blockedReason: undefined,
+    data: {
+      order,
+      orderItems: orderItemsResult.rows,
+      products,
+      shipments: shipmentsResult.rows
+    }
+  };
+}
+
+/** Lean catalog for admin order create drawer (not the full warehouse orders fan-out). */
+export async function loadAdminOrdersCatalogProducts(env: EnvSource = process.env) {
+  const config = getSupabaseAdminConfig(env);
+  if (!config.configured) return [] as AdminRow[];
+  const result = await fetchAdminRows(
+    config,
+    "mithron_products",
+    "select=slug,name,price,image,hero,charge_tax,tax_rate,tax_included,tax_group,workflow_status,is_visible&order=sort_order.asc&limit=80"
+  );
+  return result.status === "LIVE" ? result.rows : [];
+}
+
+/** Inventory rows for selected-order product slugs only. */
+export async function loadInventoryForProductSlugs(slugs: string[], env: EnvSource = process.env) {
+  const unique = [...new Set(slugs.map((slug) => slug.trim()).filter(Boolean))];
+  if (!unique.length) return [] as AdminRow[];
+  const config = getSupabaseAdminConfig(env);
+  if (!config.configured) return [] as AdminRow[];
+  const batches = await Promise.all(
+    chunkValues(unique, 40).map((chunk) => {
+      const slugFilter = chunk.map((slug) => encodeURIComponent(slug)).join(",");
+      return fetchAdminRows(
+        config,
+        "inventory",
+        `select=id,product_slug,sku,variant_id,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at&product_slug=in.(${slugFilter})`
+      );
+    })
+  );
+  return batches.flatMap((batch) => (batch.status === "LIVE" ? batch.rows : []));
 }
 
 export const getOperationsSnapshot = cache(async (env: EnvSource = process.env) => {

@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Monitor, RefreshCw, RotateCcw, Save, Send, Smartphone, Tablet } from "lucide-react";
-import { StatusPill } from "@/components/platform/status-pill";
+import { ExternalLink, Monitor, RefreshCw, Save, Send, Smartphone, Tablet } from "lucide-react";
 import { appendPreviewRefreshParam, buildCmsPreviewHref } from "@/lib/cms/preview-href";
 import { cn } from "@/lib/utils";
 
@@ -13,31 +12,47 @@ export function CmsEditorActionBar({
   isSaving,
   saveStatus,
   publishDisabled,
+  publishDisabledReason,
   previewHref,
   previewAnchor,
-  onSaveDraft,
+  onSave,
   onPublish,
-  onDiscard,
-  publishLabel = "Publish"
+  publishLabel = "Publish",
+  showSave = true,
+  showPublish = true
 }: {
   sectionLabel: string;
   isDirty: boolean;
   isSaving: boolean;
-  saveStatus?: "idle" | "draft-saved" | "published" | "unsaved";
+  saveStatus?: "idle" | "saved" | "published" | "unsaved";
   publishDisabled?: boolean;
+  publishDisabledReason?: string;
   previewHref?: string;
   previewAnchor?: string;
-  onSaveDraft?: () => void;
+  onSave?: () => void;
   onPublish?: () => void;
-  onDiscard?: () => void;
   publishLabel?: string;
+  showSave?: boolean;
+  showPublish?: boolean;
 }) {
   const externalHref = previewHref ?? buildCmsPreviewHref({ anchor: previewAnchor, draft: true });
-  const statusMessage =
-    saveStatus === "published"
-      ? "Published successfully"
-      : saveStatus === "draft-saved"
-        ? "Draft saved"
+  const [flash, setFlash] = useState<"saved" | "published" | null>(null);
+
+  useEffect(() => {
+    if (saveStatus === "saved" || saveStatus === "published") {
+      setFlash(saveStatus);
+      const timer = window.setTimeout(() => setFlash(null), 1800);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [saveStatus]);
+
+  const statusLabel = isSaving
+    ? "Saving…"
+    : flash === "published"
+      ? "Published"
+      : flash === "saved"
+        ? "Saved"
         : isDirty || saveStatus === "unsaved"
           ? "Unsaved changes"
           : null;
@@ -46,40 +61,66 @@ export function CmsEditorActionBar({
     <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--platform-border)] bg-[var(--platform-surface)]/95 px-4 py-3 backdrop-blur-md md:px-5">
       <div className="flex flex-wrap items-center gap-2">
         <p className="platform-type-section-title text-[var(--platform-text-primary)]">{sectionLabel}</p>
-        {isDirty ? <StatusPill status="draft" /> : null}
-        {isSaving ? <span className="text-xs text-[var(--platform-text-muted)]">Saving…</span> : null}
-        {statusMessage ? (
-          <span className="text-xs text-[var(--platform-text-secondary)]">{statusMessage}</span>
+        {statusLabel ? (
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity duration-200",
+              isSaving || saveStatus === "unsaved" || isDirty
+                ? "bg-amber-100 text-amber-950"
+                : "bg-emerald-100 text-emerald-900"
+            )}
+            role="status"
+            aria-live="polite"
+          >
+            {statusLabel}
+          </span>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Link href={externalHref} target="_blank" className="platform-btn-secondary platform-btn-sm inline-flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2" aria-busy={isSaving || undefined}>
+        <Link
+          href={externalHref}
+          target="_blank"
+          className="platform-btn-secondary platform-btn-sm inline-flex items-center gap-1.5 transition active:scale-[0.98]"
+        >
           <ExternalLink className="size-3.5" aria-hidden="true" />
           Preview
         </Link>
-        {onDiscard ? (
-          <button type="button" onClick={onDiscard} className="platform-btn-ghost platform-btn-sm inline-flex items-center gap-1.5">
-            <RotateCcw className="size-3.5" aria-hidden="true" />
-            Discard
-          </button>
-        ) : null}
-        {onSaveDraft ? (
-          <button type="button" onClick={onSaveDraft} disabled={isSaving} className="platform-btn-secondary platform-btn-sm inline-flex items-center gap-1.5 disabled:opacity-50">
-            <Save className="size-3.5" aria-hidden="true" />
-            Save Draft
-          </button>
-        ) : null}
-        {onPublish ? (
+        {showSave && onSave ? (
           <button
             type="button"
-            onClick={onPublish}
-            disabled={isSaving || publishDisabled}
-            className="platform-btn-primary platform-btn-sm inline-flex items-center gap-1.5 disabled:opacity-50"
-            title={publishDisabled ? "Save your draft before publishing" : undefined}
+            onClick={onSave}
+            disabled={isSaving}
+            className="platform-btn-secondary platform-btn-sm inline-flex items-center gap-1.5 transition active:scale-[0.98] disabled:opacity-50"
           >
-            <Send className="size-3.5" aria-hidden="true" />
-            {publishLabel}
+            <Save className="size-3.5" aria-hidden="true" />
+            {isSaving ? "Saving…" : "Save"}
           </button>
+        ) : null}
+        {showPublish && onPublish ? (
+          <div className="flex flex-col items-end gap-1">
+            <button
+              type="button"
+              onClick={onPublish}
+              disabled={isSaving || publishDisabled}
+              className="platform-btn-primary platform-btn-sm inline-flex items-center gap-1.5 transition active:scale-[0.98] disabled:opacity-50"
+              title={
+                publishDisabled
+                  ? publishDisabledReason || "Fix validation errors before publishing"
+                  : isDirty
+                    ? "Saves then publishes to the live homepage"
+                    : "Publishes the saved changes to the live homepage"
+              }
+              aria-describedby={publishDisabled && publishDisabledReason ? "cms-publish-blocked-reason" : undefined}
+            >
+              <Send className="size-3.5" aria-hidden="true" />
+              {publishLabel}
+            </button>
+            {publishDisabled && publishDisabledReason ? (
+              <p id="cms-publish-blocked-reason" className="max-w-[16rem] text-right text-[11px] font-medium text-amber-800">
+                {publishDisabledReason}
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </div>
@@ -132,9 +173,10 @@ export function CmsLivePreviewPanel({
         !embedded && "rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]"
       )}
     >
-      {!embedded ? (
-      <div className="flex items-center justify-between border-b border-[var(--platform-border)] px-4 py-2.5">
-        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">Live preview</p>
+      <div className="flex items-center justify-between border-b border-[var(--platform-border)] px-3 py-2">
+        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+          Preview
+        </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -146,11 +188,13 @@ export function CmsLivePreviewPanel({
             Refresh
           </button>
           <div className="flex items-center gap-0.5 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] p-0.5">
-            {([
-              ["desktop", Monitor],
-              ["tablet", Tablet],
-              ["mobile", Smartphone]
-            ] as const).map(([key, Icon]) => (
+            {(
+              [
+                ["desktop", Monitor],
+                ["tablet", Tablet],
+                ["mobile", Smartphone]
+              ] as const
+            ).map(([key, Icon]) => (
               <button
                 key={key}
                 type="button"
@@ -169,19 +213,6 @@ export function CmsLivePreviewPanel({
           </div>
         </div>
       </div>
-      ) : (
-        <div className="flex items-center justify-end border-b border-[var(--platform-border)] px-3 py-2">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className="platform-btn-ghost platform-btn-sm inline-flex items-center gap-1"
-            aria-label="Refresh preview"
-          >
-            <RefreshCw className="size-3.5" aria-hidden="true" />
-            Refresh
-          </button>
-        </div>
-      )}
       <div className="flex min-h-0 flex-1 flex-col overflow-auto p-3">
         <div
           className="relative mx-auto flex min-h-0 w-full flex-1 overflow-hidden rounded-[8px] border border-[var(--platform-border)] bg-black transition-[width] duration-200"
@@ -212,7 +243,7 @@ export function CmsLivePreviewPanel({
               ) : null}
               <iframe
                 key={iframeSrc}
-                title="Section preview"
+                title="Homepage preview"
                 src={iframeSrc}
                 className="min-h-[480px] w-full flex-1 border-0 bg-white"
                 onLoad={() => setIframeState("ready")}

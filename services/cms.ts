@@ -21,6 +21,7 @@ import {
   type CmsPageOrchestration
 } from "@/services/cms-resolver";
 import { getCachedAdminSettingsPayload } from "@/services/admin-settings-cache";
+import { readThroughCache, REDIS_CACHE_KEYS } from "@/lib/cache-redis";
 
 export type CmsSource = "supabase" | "fallback" | "mixed";
 type CmsSurfaceSource = "supabase" | "fallback";
@@ -646,6 +647,8 @@ function finalizeDiagnostics(diagnostics: PublicCmsDiagnostics) {
   diagnostics.invalidSurfaces = [];
 
   for (const [surfaceName, state] of Object.entries(diagnostics.surfaces) as Array<[CmsSurfaceName, CmsSurfaceDiagnostic]>) {
+    // Partial payloads (shell light) leave unevaluated surfaces at defaults — ignore them.
+    if (state.reason === "not evaluated") continue;
     if (state.source === "supabase") {
       diagnostics.remoteSurfaces.push(surfaceName);
     } else {
@@ -655,8 +658,22 @@ function finalizeDiagnostics(diagnostics: PublicCmsDiagnostics) {
   }
 }
 
+/** Only validate surfaces whose tables were included in the row payload. */
+function tableRequested(rowsByTable: CmsRowsByTable, ...keys: Array<keyof CmsRowsByTable>) {
+  return keys.some((key) => Object.prototype.hasOwnProperty.call(rowsByTable, key));
+}
+
 export function buildPublicCmsSnapshotFromRows(rowsByTable: CmsRowsByTable): PublicCmsSnapshot {
   const diagnostics = createDiagnostics();
+  const heroRequested = tableRequested(rowsByTable, "hero_banners");
+  const navigationRequested = tableRequested(rowsByTable, "site_navigation");
+  const footerRequested = tableRequested(rowsByTable, "footer_columns", "footer_links");
+  const faqRequested = tableRequested(rowsByTable, "faqs");
+  const reviewsRequested = tableRequested(rowsByTable, "product_reviews");
+  const categoriesRequested = tableRequested(rowsByTable, "category_metadata");
+  const campaignsRequested = tableRequested(rowsByTable, "promotional_campaigns");
+  const trustCardsRequested = tableRequested(rowsByTable, "trust_cards");
+
   const heroRows = publishedRows(rowsByTable.hero_banners);
   const navigationRows = publishedRows(rowsByTable.site_navigation);
   const footerColumnRows = publishedRows(rowsByTable.footer_columns);
@@ -668,79 +685,95 @@ export function buildPublicCmsSnapshotFromRows(rowsByTable: CmsRowsByTable): Pub
   const trustCardRows = publishedRows(rowsByTable.trust_cards);
 
   diagnostics.filteredDraftRows = [
-    heroRows,
-    navigationRows,
-    footerColumnRows,
-    footerLinkRows,
-    faqRows,
-    reviewRows,
-    categoryRows,
-    campaignRows,
-    trustCardRows
+    heroRequested ? heroRows : { filtered: 0 },
+    navigationRequested ? navigationRows : { filtered: 0 },
+    footerRequested ? footerColumnRows : { filtered: 0 },
+    footerRequested ? footerLinkRows : { filtered: 0 },
+    faqRequested ? faqRows : { filtered: 0 },
+    reviewsRequested ? reviewRows : { filtered: 0 },
+    categoriesRequested ? categoryRows : { filtered: 0 },
+    campaignsRequested ? campaignRows : { filtered: 0 },
+    trustCardsRequested ? trustCardRows : { filtered: 0 }
   ].reduce((total, entry) => total + entry.filtered, 0);
 
-  const navigationValue = surface(
-    diagnostics,
-    "navigation",
-    navigationRows.rows.length,
-    mapNavigationRows(navigationRows.rows),
-    fallbackSnapshot.navigation,
-    "missing or invalid published navigation rows"
-  );
-  const footerValue = surface(
-    diagnostics,
-    "footer",
-    footerColumnRows.rows.length + footerLinkRows.rows.length,
-    mapFooter(footerColumnRows.rows, footerLinkRows.rows),
-    fallbackSnapshot.footer,
-    "missing or invalid published footer rows"
-  );
-  const faqValue = surface(
-    diagnostics,
-    "faq",
-    faqRows.rows.length,
-    mapFaqRows(faqRows.rows),
-    fallbackSnapshot.productSupport.faqs,
-    "missing or invalid published FAQ rows"
-  );
-  const reviewValue = surface(
-    diagnostics,
-    "reviews",
-    reviewRows.rows.length,
-    mapReviewRows(reviewRows.rows),
-    fallbackSnapshot.productSupport.reviews,
-    "missing or invalid published review rows"
-  );
-  const heroValue = surface(
-    diagnostics,
-    "heroBanners",
-    heroRows.rows.length,
-    mapHeroRows(heroRows.rows),
-    fallbackSnapshot.home.heroBanners,
-    "missing or invalid published hero rows"
-  );
-  const categoryValue = surface(
-    diagnostics,
-    "categories",
-    categoryRows.rows.length,
-    mapCategoryRows(categoryRows.rows),
-    fallbackSnapshot.categories,
-    "missing or invalid published category metadata rows"
-  );
-  const campaignMapped = mapPromotionalCampaignRows(campaignRows.rows);
-  diagnostics.surfaces.promotionalCampaigns = {
-    source: campaignMapped ? "supabase" : "fallback",
-    status: campaignMapped ? "VERIFIED" : "FALLBACK",
-    reason: campaignMapped ? undefined : "missing or invalid published promotional campaign rows",
-    rowCount: campaignRows.rows.length
-  };
-  const trustCardMapped = mapTrustCardRows(trustCardRows.rows);
-  diagnostics.surfaces.trustCards = {
-    source: trustCardMapped ? "supabase" : "fallback",
-    status: trustCardMapped ? "VERIFIED" : "FALLBACK",
-    reason: trustCardMapped ? undefined : "missing or invalid published trust card rows",
-    rowCount: trustCardRows.rows.length
-  };
+  const navigationValue = navigationRequested
+    ? surface(
+      diagnostics,
+      "navigation",
+      navigationRows.rows.length,
+      mapNavigationRows(navigationRows.rows),
+      fallbackSnapshot.navigation,
+      "missing or invalid published navigation rows"
+    )
+    : fallbackSnapshot.navigation;
+  const footerValue = footerRequested
+    ? surface(
+      diagnostics,
+      "footer",
+      footerColumnRows.rows.length + footerLinkRows.rows.length,
+      mapFooter(footerColumnRows.rows, footerLinkRows.rows),
+      fallbackSnapshot.footer,
+      "missing or invalid published footer rows"
+    )
+    : fallbackSnapshot.footer;
+  const faqValue = faqRequested
+    ? surface(
+      diagnostics,
+      "faq",
+      faqRows.rows.length,
+      mapFaqRows(faqRows.rows),
+      fallbackSnapshot.productSupport.faqs,
+      "missing or invalid published FAQ rows"
+    )
+    : fallbackSnapshot.productSupport.faqs;
+  const reviewValue = reviewsRequested
+    ? surface(
+      diagnostics,
+      "reviews",
+      reviewRows.rows.length,
+      mapReviewRows(reviewRows.rows),
+      fallbackSnapshot.productSupport.reviews,
+      "missing or invalid published review rows"
+    )
+    : fallbackSnapshot.productSupport.reviews;
+  const heroValue = heroRequested
+    ? surface(
+      diagnostics,
+      "heroBanners",
+      heroRows.rows.length,
+      mapHeroRows(heroRows.rows),
+      fallbackSnapshot.home.heroBanners,
+      "missing or invalid published hero rows"
+    )
+    : fallbackSnapshot.home.heroBanners;
+  const categoryValue = categoriesRequested
+    ? surface(
+      diagnostics,
+      "categories",
+      categoryRows.rows.length,
+      mapCategoryRows(categoryRows.rows),
+      fallbackSnapshot.categories,
+      "missing or invalid published category metadata rows"
+    )
+    : fallbackSnapshot.categories;
+  const campaignMapped = campaignsRequested ? mapPromotionalCampaignRows(campaignRows.rows) : null;
+  if (campaignsRequested) {
+    diagnostics.surfaces.promotionalCampaigns = {
+      source: campaignMapped ? "supabase" : "fallback",
+      status: campaignMapped ? "VERIFIED" : "FALLBACK",
+      reason: campaignMapped ? undefined : "missing or invalid published promotional campaign rows",
+      rowCount: campaignRows.rows.length
+    };
+  }
+  const trustCardMapped = trustCardsRequested ? mapTrustCardRows(trustCardRows.rows) : null;
+  if (trustCardsRequested) {
+    diagnostics.surfaces.trustCards = {
+      source: trustCardMapped ? "supabase" : "fallback",
+      status: trustCardMapped ? "VERIFIED" : "FALLBACK",
+      reason: trustCardMapped ? undefined : "missing or invalid published trust card rows",
+      rowCount: trustCardRows.rows.length
+    };
+  }
 
   finalizeDiagnostics(diagnostics);
   const source: CmsSource = diagnostics.fallbackSurfaces.length === 0
@@ -748,9 +781,11 @@ export function buildPublicCmsSnapshotFromRows(rowsByTable: CmsRowsByTable): Pub
     : diagnostics.remoteSurfaces.length > 0
       ? "mixed"
       : "fallback";
-  const homeInterests = mapInterestRows(categoryRows.rows) ?? fallbackSnapshot.home.interests;
+  const homeInterests = categoriesRequested
+    ? (mapInterestRows(categoryRows.rows) ?? fallbackSnapshot.home.interests)
+    : fallbackSnapshot.home.interests;
 
-  if (heroValue?.length || homeInterests.length) {
+  if ((heroRequested && heroValue?.length) || (categoriesRequested && homeInterests.length)) {
     hydrateStorefrontMediaAssets({
       slides: heroValue ?? [],
       interests: homeInterests
@@ -793,7 +828,7 @@ const hasCmsSchema = cache(async () => {
   return rows !== null;
 });
 
-export const getPublicHeroBanners = cache(async (): Promise<HeroSlide[]> => {
+async function loadPublicHeroBannersUncached(): Promise<HeroSlide[]> {
   if (!(await hasCmsSchema())) {
     return fallbackSnapshot.home.heroBanners;
   }
@@ -806,6 +841,11 @@ export const getPublicHeroBanners = cache(async (): Promise<HeroSlide[]> => {
   const heroRows = await getCachedCmsTableRows("hero_banners", publicCmsQueries.heroBanners);
   const published = publishedRows(heroRows);
   return mapHeroRows(published.rows) ?? fallbackSnapshot.home.heroBanners;
+}
+
+/** Published homepage hero — Redis read-through (60s) + single-flight; preview path stays uncached. */
+export const getPublicHeroBanners = cache(async (): Promise<HeroSlide[]> => {
+  return readThroughCache(REDIS_CACHE_KEYS.cmsHero, 60, loadPublicHeroBannersUncached);
 });
 
 export const getPublicHeroBannersForCmsPreview = cache(async (): Promise<HeroSlide[]> => {
@@ -824,7 +864,7 @@ export const getPublicHeroBannersForCmsPreview = cache(async (): Promise<HeroSli
   return mapHeroRows(previewRows) ?? fallbackSnapshot.home.heroBanners;
 });
 
-async function loadPublicCmsSnapshot(): Promise<PublicCmsSnapshot> {
+async function loadPublicCmsSnapshot(options: { omitHero?: boolean } = {}): Promise<PublicCmsSnapshot> {
   if (!(await hasCmsSchema())) {
     if (process.env.MITHRON_CMS_STRICT === "true") {
       throw new Error("Supabase CMS schema is not available. Apply 20260523000100_enterprise_cms_rbac.sql before enabling strict CMS mode.");
@@ -835,6 +875,7 @@ async function loadPublicCmsSnapshot(): Promise<PublicCmsSnapshot> {
   const orchestration = await getHomepageCmsOrchestration();
   const load = (source: Parameters<typeof shouldLoadCmsSource>[1]) => shouldLoadCmsSource(orchestration, source);
   const loadFooterLead = load("footer_columns") || load("admin_settings");
+  const omitHero = options.omitHero === true;
 
   const [
     heroRows,
@@ -848,7 +889,11 @@ async function loadPublicCmsSnapshot(): Promise<PublicCmsSnapshot> {
     trustCardRows,
     footerLead
   ] = await Promise.all([
-    load("hero_banners") ? getCachedCmsTableRows("hero_banners", publicCmsQueries.heroBanners) : Promise.resolve(null),
+    // Homepage below-fold bundle skips hero — hero Suspense uses getPublicHeroBanners independently
+    // (same React.cache table key when both run; omit avoids redundant work when hero already streamed).
+    omitHero || !load("hero_banners")
+      ? Promise.resolve(null)
+      : getCachedCmsTableRows("hero_banners", publicCmsQueries.heroBanners),
     load("site_navigation") ? getCachedCmsTableRows("site_navigation", publicCmsQueries.siteNavigation) : Promise.resolve(null),
     load("footer_columns") ? getCachedCmsTableRows("footer_columns", publicCmsQueries.footerColumns) : Promise.resolve(null),
     load("footer_links") ? getCachedCmsTableRows("footer_links", publicCmsQueries.footerLinks) : Promise.resolve(null),
@@ -884,6 +929,11 @@ async function loadPublicCmsSnapshot(): Promise<PublicCmsSnapshot> {
 
 export const getPublicCmsSnapshot = cache(async () => {
   return loadPublicCmsSnapshot();
+});
+
+/** Homepage below-fold CMS — skips hero_banners (hero Suspense loads them separately). */
+export const getPublicCmsSnapshotForHomepageBelowFold = cache(async () => {
+  return loadPublicCmsSnapshot({ omitHero: true });
 });
 
 export type StorefrontShellCms = {

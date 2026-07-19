@@ -5,6 +5,7 @@ import { fetchWithTimeout, mapWithConcurrency } from "@/lib/fetch-with-timeout";
 import { upsertMediaAssetRecord } from "@/services/admin-actions";
 import {
   assertAllowedMediaMimeType,
+  assertMediaMimeMatchesContent,
   buildMediaAssetId,
   buildMediaAssetRecordFromFormData,
   buildStorageObjectPath
@@ -214,13 +215,18 @@ export async function uploadSingleProductImageBuffer(
   input: ProductImageBufferUploadInput
 ): Promise<UploadedProductImage & { width: number | null; height: number | null }> {
   const bucket = "mithron-products";
-  const mimeType = assertAllowedMediaMimeType(input.mimeType || "application/octet-stream", bucket);
-  if (!mimeType.startsWith("image/")) {
+  const declaredMime = assertAllowedMediaMimeType(input.mimeType || "application/octet-stream", bucket);
+  if (!declaredMime.startsWith("image/")) {
     throw new Error("Product image upload must be an image file.");
   }
   if (input.sizeBytes > MAX_PRODUCT_IMAGE_BYTES) {
     throw new Error("Product image upload must be 12 MB or smaller.");
   }
+
+  const mimeType = assertMediaMimeMatchesContent({
+    declaredMime,
+    bytes: new Uint8Array(input.buffer)
+  });
 
   const uploadedAt = new Date(Date.now() + (input.fileIndex ?? 0)).toISOString();
   let buffer = input.buffer;

@@ -1,11 +1,7 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { getHomepageBaseCmsContent, resolveEffectiveHomepageCmsContent, resolveHomepageLandingState, resolveShelfEditorState } from "@/lib/home/homepage-resolution";
 import { getDefaultHomepageCmsContent } from "@/config/homepage-cms";
 import type { Product } from "@/config/types";
-
-const editorSource = readFileSync("features/admin/cms/cms-section-editor.tsx", "utf8");
-const actionsSource = readFileSync("app/admin/cms/actions.ts", "utf8");
 
 function product(partial: Partial<Product> & Pick<Product, "slug" | "name" | "category">): Product {
   return {
@@ -37,6 +33,19 @@ describe("homepage CMS storefront parity", () => {
     expect(shelf.guideTitle).toBeUndefined();
   });
 
+  it("falls back to base shelf title when stored title is blank", () => {
+    const cms = resolveEffectiveHomepageCmsContent({
+      shelves: {
+        droneWorld: {
+          title: "",
+          eyebrow: "Featured Collection"
+        }
+      }
+    });
+    expect(cms.shelves.droneWorld.title).toBe("Drone World");
+    expect(cms.shelves.droneWorld.eyebrow).toBe("Featured Collection");
+  });
+
   it("resolver landing state matches shelf editor config", () => {
     const catalog = [
       product({ slug: "drone-a", name: "Drone A", category: "Agri Drones" }),
@@ -48,16 +57,5 @@ describe("homepage CMS storefront parity", () => {
 
     expect(editor.config.title).toBe(landing.shelfConfigs["drone-world"].title);
     expect(editor.chapter.id).toBe("drone-world");
-  });
-
-  it("preserves v2 payload keys when saving v1 homepage content", () => {
-    expect(actionsSource).toContain("draftV2: homepageStored.draftV2");
-    expect(actionsSource).toContain("v2: homepageStored.v2");
-  });
-
-  it("removes guide card editor fields from CMS shelf form", () => {
-    expect(editorSource).not.toContain("guide_label");
-    expect(editorSource).not.toContain("Buying Guides");
-    expect(editorSource).not.toContain("Guide card (manual)");
   });
 });

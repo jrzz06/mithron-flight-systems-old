@@ -6,7 +6,7 @@ import type { CmsPreviewDevice } from "@/features/admin/cms/cms-editor-action-ba
 import { cn } from "@/lib/utils";
 
 export const CMS_PREVIEW_DEVICE_WIDTHS: Record<CmsPreviewDevice, number> = {
-  desktop: 1440,
+  desktop: 1280,
   tablet: 768,
   mobile: 390
 };

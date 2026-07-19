@@ -26,8 +26,12 @@ describe("final enterprise security hardening", () => {
     expect(proxy).toContain("security.admin_shell_denied");
     expect(proxy).toContain("security.invalid_jwt");
     expect(proxy).toContain("defaultPathForRole");
-    expect(adminLayout).toContain("assertRouteAccessOrRedirect");
+    expect(adminLayout).toContain("getCurrentAuthContext");
+    expect(adminLayout).toContain("canAccessProtectedPath");
+    expect(adminLayout).toContain('canAccessProtectedPath(context.role, "/admin")');
     expect(readWorkspaceFile("services/auth.ts")).toContain("security.admin_shell_denied");
+    expect(readWorkspaceFile("services/auth.ts")).toContain("readSessionHandoff");
+    expect(readWorkspaceFile("app/admin/@shell/default.tsx")).toContain("readSessionHandoff");
   });
 
   it("adds app-level direct REST/RLS denial telemetry without weakening Supabase RLS", () => {
@@ -84,20 +88,17 @@ describe("final enterprise security hardening", () => {
 
   it("exposes realtime security diagnostics and security monitoring feeds to admin only", () => {
     const realtime = readWorkspaceFile("services/enterprise-realtime.ts");
-    const panel = readWorkspaceFile("components/admin/enterprise-realtime-panel.tsx");
     const adminService = readWorkspaceFile("services/admin.ts");
-    const auditPage = readWorkspaceFile("app/admin/audit/page.tsx");
+    const auditFeeds = readWorkspaceFile("components/admin/admin-audit-live-feeds.tsx");
     const storefrontPage = readWorkspaceFile("app/(storefront)/page.tsx");
 
     expect(realtime).toContain('"security_events"');
     expect(realtime).toContain("subscriptionErrors");
     expect(realtime).toContain("securityAnomalies");
-    expect(panel).toContain("data-realtime-security-diagnostics");
-    expect(panel).toContain("Subscription security");
     expect(adminService).toContain("restDenials");
     expect(adminService).toContain("realtimeAnomalies");
-    expect(auditPage).toContain("Privilege escalation attempts");
-    expect(auditPage).toContain("Realtime anomalies");
+    expect(auditFeeds).toContain("Privilege escalation attempts");
+    expect(auditFeeds).toContain("Realtime anomalies");
     expect(storefrontPage).not.toContain("security_events");
     expect(storefrontPage).not.toContain("useEnterpriseRealtime");
   });

@@ -1,9 +1,9 @@
 const FULFILLMENT_STEP_LABELS: Record<string, string> = {
-  pending: "Waiting",
-  packing: "Packing",
-  processing: "Packing",
-  picked: "Packing",
-  packed: "Packing",
+  pending: "Received",
+  packing: "Picking",
+  processing: "Picking",
+  picked: "Picking",
+  packed: "Picking",
   ready_to_dispatch: "Dispatched",
   shipped: "Dispatched",
   dispatched: "Dispatched",
@@ -13,11 +13,11 @@ const FULFILLMENT_STEP_LABELS: Record<string, string> = {
 };
 
 const EMPLOYEE_FULFILLMENT_LABELS: Record<string, string> = {
-  pending: "Awaiting Receipt",
-  packing: "Packing",
-  processing: "Packing",
-  picked: "Packing",
-  packed: "Packing",
+  pending: "Received",
+  packing: "Picking",
+  processing: "Picking",
+  picked: "Picking",
+  packed: "Picking",
   ready_to_dispatch: "Dispatched",
   shipped: "Dispatched",
   dispatched: "Dispatched",
@@ -52,8 +52,8 @@ export function shipmentStatusLabel(status: string) {
 
 export const ORDER_STEP_FILTER_OPTIONS = [
   { value: "", label: "All" },
-  { value: "pending", label: "Awaiting Receipt" },
-  { value: "packing", label: "Packing" },
+  { value: "pending", label: "Received" },
+  { value: "packing", label: "Picking" },
   { value: "dispatched", label: "Dispatched" },
   { value: "cancelled", label: "Cancelled" }
 ] as const;
@@ -62,7 +62,7 @@ export const RECEIVED_FULFILLMENT_STATUSES = ["packing"] as const;
 
 export function matchesEmployeeFulfillmentFilter(fulfillmentStatus: string, filter: string) {
   if (!filter) return true;
-  if (filter === "received" || filter === "packing") {
+  if (filter === "received" || filter === "packing" || filter === "picking") {
     return fulfillmentStatus === "packing"
       || ["processing", "picked", "packed"].includes(fulfillmentStatus);
   }

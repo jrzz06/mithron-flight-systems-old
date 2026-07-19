@@ -37,6 +37,28 @@ type AdminOrdersLiveStateContextValue = {
 
 const AdminOrdersLiveStateContext = createContext<AdminOrdersLiveStateContextValue | null>(null);
 
+const PAYMENT_VERSION_LRU_MAX = 200;
+
+function bumpPaymentVersion(current: Record<string, number>, orderId: string): Record<string, number> {
+  const next: Record<string, number> = {
+    ...current,
+    [orderId]: (current[orderId] ?? 0) + 1
+  };
+  const keys = Object.keys(next);
+  if (keys.length <= PAYMENT_VERSION_LRU_MAX) return next;
+
+  // Drop oldest keys first (insertion order), keeping the bumped orderId.
+  const overflow = keys.length - PAYMENT_VERSION_LRU_MAX;
+  let removed = 0;
+  for (const key of keys) {
+    if (removed >= overflow) break;
+    if (key === orderId) continue;
+    delete next[key];
+    removed += 1;
+  }
+  return next;
+}
+
 export function AdminOrdersLiveStateProvider({
   orders,
   orderItems = [],
@@ -98,15 +120,14 @@ export function AdminOrdersLiveStateProvider({
               ? String((event.record as AdminOrderRow).order_id ?? "").trim()
               : "";
           if (!orderId) return;
-          setPaymentVersionByOrderId((current) => ({
-            ...current,
-            [orderId]: (current[orderId] ?? 0) + 1
-          }));
+          setPaymentVersionByOrderId((current) => bumpPaymentVersion(current, orderId));
         }
       }
     });
   }, [enabled, useSharedStore]);
 
+  // Shared realtime bus (ref-counted): listen for payments to bump paymentVersion
+  // without opening a second WebSocket. Local-only mode handles payments above.
   useEffect(() => {
     if (!useSharedStore || !realtime) return undefined;
 
@@ -118,10 +139,7 @@ export function AdminOrdersLiveStateProvider({
             ? String((event.record as AdminOrderRow).order_id ?? "").trim()
             : "";
         if (!orderId) return;
-        setPaymentVersionByOrderId((current) => ({
-          ...current,
-          [orderId]: (current[orderId] ?? 0) + 1
-        }));
+        setPaymentVersionByOrderId((current) => bumpPaymentVersion(current, orderId));
       }
     });
   }, [realtime, useSharedStore]);

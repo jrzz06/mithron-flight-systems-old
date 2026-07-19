@@ -79,7 +79,6 @@ export const ROLE_WORKFLOWS: Record<WorkflowRole, RoleWorkflow> = {
       { path: "/admin/orders", label: "Orders", description: "Order lifecycle" },
       { path: "/admin/suppliers", label: "Suppliers", description: "Supplier approvals" },
       { path: "/admin/leads", label: "Leads", description: "Customer leads" },
-      { path: "/admin/cms", label: "CMS", description: "Content and merchandising" },
       { path: "/admin/audit", label: "System Diagnostics", description: "Operational diagnostics" }
     ],
     actions: [

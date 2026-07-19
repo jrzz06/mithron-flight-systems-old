@@ -14,6 +14,7 @@ import { AdminOrdersFilterBar } from "@/components/admin/orders/admin-orders-fil
 import { AdminOrdersShell } from "@/components/admin/orders/admin-orders-shell";
 import { AdminOrdersToolbar } from "@/components/admin/orders/admin-orders-toolbar";
 import { useAdminOrdersKeyboard } from "@/components/admin/orders/use-admin-orders-keyboard";
+import { useAdminLiveCollectionRows } from "@/components/admin/realtime/use-admin-live-collection-rows";
 import { useUnreadOrderNotifications } from "@/hooks/use-unread-order-notifications";
 import {
   buildOrdersUrl,
@@ -113,6 +114,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
     orderStatus,
     orderMessage,
     blockedReason,
+    snapshotLimitWarning,
     createAdminManualOrderAction,
     confirmAdminOrderAction,
     rejectAdminOrderAction,
@@ -132,6 +134,21 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { liveOrders, liveOrderItems } = useAdminOrdersLiveState();
+  const liveEnabled = props.realtimeUpdatesEnabled !== false;
+  const liveShipments = useAdminLiveCollectionRows(
+    "orders",
+    "shipments",
+    shipments,
+    ["id"],
+    liveEnabled
+  );
+  const liveInventory = useAdminLiveCollectionRows(
+    "orders",
+    "inventory",
+    inventory,
+    ["id", "product_slug"],
+    liveEnabled
+  );
   const createOpen = searchParams.get("tool") === "create";
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -145,7 +162,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
   const selectedKey = selectedOrderKey || (selectedOrder ? orderSelectionKey(selectedOrder) : "");
 
   const { unreadOrderIds, markOrderViewed } = useUnreadOrderNotifications(
-    props.realtimeUpdatesEnabled !== false ? "admin" : undefined
+    liveEnabled ? "admin" : undefined
   );
 
   // Viewing an order clears its unread notifications (and the row highlight).
@@ -324,7 +341,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
             : liveSelectedOrder;
           const activeItems = activeOrder ? orderItemsForOrder(selectedOrderId, liveOrderItems) : [];
           const activeShipments = activeOrder
-            ? shipments.filter((shipment) => text(shipment.order_id) === selectedOrderId)
+            ? liveShipments.filter((shipment) => text(shipment.order_id) === selectedOrderId)
             : [];
           const activeFirstItem = activeItems[0] ?? null;
 
@@ -366,6 +383,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
                 selectedKey={selectedKey}
                 filtersQuery={filters.query}
                 sort={filters.sort}
+                snapshotLimitWarning={snapshotLimitWarning}
               />
             }
             list={
@@ -373,7 +391,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
                 orders={optimisticOrders}
                 orderItems={liveOrderItems}
                 products={products}
-                shipments={shipments}
+                shipments={liveShipments}
                 defaultWarehouseCode={defaultWarehouseCode}
                 unreadOrderIds={unreadOrderIds}
                 selectedKey={selectedKey}
@@ -398,8 +416,8 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
                     allOrders={liveOrders}
                     orderItems={liveOrderItems}
                     products={products}
-                    inventory={inventory}
-                    shipments={shipments}
+                    inventory={liveInventory}
+                    shipments={liveShipments}
                     catalogProducts={catalogProducts}
                     defaultWarehouseCode={defaultWarehouseCode}
                     queue={queue}

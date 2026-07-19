@@ -45,6 +45,19 @@ export type CmsReviewsSettings = {
   sortOrder: "newest" | "rating" | "manual";
 };
 
+export type CmsTestimonialCard = {
+  id: string;
+  enabled: boolean;
+  authorName: string;
+  body: string;
+  rating: number;
+  productSlug: string;
+  hrefOverride: string;
+  avatarSrc: string;
+  avatarAlt: string;
+  sortOrder: number;
+};
+
 export type CmsRelatedArticle = {
   id: string;
   enabled: boolean;
@@ -54,6 +67,12 @@ export type CmsRelatedArticle = {
   title: string;
   content: string;
   href: string;
+  ctaLabel: string;
+};
+
+export type CmsRelatedArticleSelection = {
+  source: "press" | "blog";
+  id: string;
 };
 
 export type HomepageCmsV2Content = {
@@ -66,13 +85,20 @@ export type HomepageCmsV2Content = {
     fullViewport: [CmsFullViewportBanner, CmsFullViewportBanner];
   };
   reviews: CmsReviewsSettings;
+  /** CMS-owned homepage testimonial cards (1A). */
+  testimonialCards: CmsTestimonialCard[];
   relatedArticles: {
     enabled: boolean;
-    items: [CmsRelatedArticle, CmsRelatedArticle, CmsRelatedArticle];
+    sectionTitle: string;
+    sectionLead: string;
+    browseAllHref: string;
+    items: CmsRelatedArticle[];
+    /** Legacy press/blog picks — kept for merge fallback; not edited in homepage CMS UI. */
+    selectedItems: Array<CmsRelatedArticleSelection | null>;
   };
 };
 
-function emptyInterShelfBanner(): CmsInterShelfBanner {
+export function emptyInterShelfBanner(): CmsInterShelfBanner {
   return {
     enabled: true,
     imageSrc: "",
@@ -86,7 +112,7 @@ function emptyInterShelfBanner(): CmsInterShelfBanner {
   };
 }
 
-function emptyFullViewportBanner(): CmsFullViewportBanner {
+export function emptyFullViewportBanner(): CmsFullViewportBanner {
   return {
     enabled: true,
     desktopImageSrc: "",
@@ -102,7 +128,7 @@ function emptyFullViewportBanner(): CmsFullViewportBanner {
   };
 }
 
-function emptyRelatedArticle(index: number): CmsRelatedArticle {
+export function emptyRelatedArticle(index: number): CmsRelatedArticle {
   return {
     id: `related-article-${index + 1}`,
     enabled: true,
@@ -111,7 +137,23 @@ function emptyRelatedArticle(index: number): CmsRelatedArticle {
     eyebrow: "",
     title: "",
     content: "",
-    href: ""
+    href: "",
+    ctaLabel: "Read Article"
+  };
+}
+
+export function emptyTestimonialCard(index: number): CmsTestimonialCard {
+  return {
+    id: `testimonial-${index + 1}`,
+    enabled: true,
+    authorName: "",
+    body: "",
+    rating: 5,
+    productSlug: "",
+    hrefOverride: "",
+    avatarSrc: "",
+    avatarAlt: "",
+    sortOrder: index
   };
 }
 
@@ -129,9 +171,14 @@ export const defaultHomepageCmsV2Content: HomepageCmsV2Content = {
     maxCount: 6,
     sortOrder: "manual"
   },
+  testimonialCards: [],
   relatedArticles: {
     enabled: true,
-    items: [emptyRelatedArticle(0), emptyRelatedArticle(1), emptyRelatedArticle(2)]
+    sectionTitle: "",
+    sectionLead: "",
+    browseAllHref: "/blog",
+    items: [],
+    selectedItems: []
   }
 };
 
@@ -146,6 +193,7 @@ export function mergeHomepageCmsV2Content(stored: unknown): HomepageCmsV2Content
     ? (root.relatedArticles as Record<string, unknown>)
     : {};
   const relatedArticleItems = Array.isArray(relatedArticles.items) ? relatedArticles.items : [];
+  const testimonialRaw = Array.isArray(root.testimonialCards) ? root.testimonialCards : [];
 
   const mergeBanner = (partial: unknown, fallback: CmsInterShelfBanner): CmsInterShelfBanner => {
     const row = partial && typeof partial === "object" ? (partial as Record<string, unknown>) : {};
@@ -206,9 +254,41 @@ export function mergeHomepageCmsV2Content(stored: unknown): HomepageCmsV2Content
       eyebrow: typeof row.eyebrow === "string" ? row.eyebrow : fallback.eyebrow,
       title: typeof row.title === "string" ? row.title : fallback.title,
       content: typeof row.content === "string" ? row.content : fallback.content,
-      href: typeof row.href === "string" ? row.href : fallback.href
+      href: typeof row.href === "string" ? row.href : fallback.href,
+      ctaLabel: typeof row.ctaLabel === "string" && row.ctaLabel.trim() ? row.ctaLabel : "Read Article"
     };
   };
+
+  const mergeTestimonialCard = (partial: unknown, index: number): CmsTestimonialCard => {
+    const row = partial && typeof partial === "object" ? (partial as Record<string, unknown>) : {};
+    const fallback = emptyTestimonialCard(index);
+    const ratingRaw = typeof row.rating === "number" ? row.rating : Number(row.rating);
+    return {
+      id: typeof row.id === "string" && row.id ? row.id : fallback.id,
+      enabled: row.enabled !== false,
+      authorName: typeof row.authorName === "string" ? row.authorName : fallback.authorName,
+      body: typeof row.body === "string" ? row.body : fallback.body,
+      rating: Number.isFinite(ratingRaw) ? Math.min(5, Math.max(1, Math.round(ratingRaw))) : 5,
+      productSlug: typeof row.productSlug === "string" ? row.productSlug : "",
+      hrefOverride: typeof row.hrefOverride === "string" ? row.hrefOverride : "",
+      avatarSrc: typeof row.avatarSrc === "string" ? row.avatarSrc : "",
+      avatarAlt: typeof row.avatarAlt === "string" ? row.avatarAlt : "",
+      sortOrder: typeof row.sortOrder === "number" ? row.sortOrder : index
+    };
+  };
+
+  const mergeSelectedItem = (partial: unknown): CmsRelatedArticleSelection | null => {
+    if (!partial || typeof partial !== "object" || Array.isArray(partial)) return null;
+    const row = partial as Record<string, unknown>;
+    const id = typeof row.id === "string" ? row.id.trim() : "";
+    if (!id) return null;
+    if (row.source === "press" || row.source === "blog") {
+      return { source: row.source, id };
+    }
+    return null;
+  };
+
+  const selectedRaw = Array.isArray(relatedArticles.selectedItems) ? relatedArticles.selectedItems : [];
 
   const defaults = defaultHomepageCmsV2Content;
 
@@ -233,13 +313,84 @@ export function mergeHomepageCmsV2Content(stored: unknown): HomepageCmsV2Content
       maxCount: typeof reviews.maxCount === "number" ? Math.max(1, Math.min(12, reviews.maxCount)) : defaults.reviews.maxCount,
       sortOrder: reviews.sortOrder === "newest" || reviews.sortOrder === "rating" ? reviews.sortOrder : defaults.reviews.sortOrder
     },
+    testimonialCards: testimonialRaw.map(mergeTestimonialCard),
     relatedArticles: {
       enabled: relatedArticles.enabled !== false,
-      items: [
-        mergeRelatedArticle(relatedArticleItems[0], 0),
-        mergeRelatedArticle(relatedArticleItems[1], 1),
-        mergeRelatedArticle(relatedArticleItems[2], 2)
-      ]
+      sectionTitle: typeof relatedArticles.sectionTitle === "string" ? relatedArticles.sectionTitle : "",
+      sectionLead: typeof relatedArticles.sectionLead === "string" ? relatedArticles.sectionLead : "",
+      browseAllHref:
+        typeof relatedArticles.browseAllHref === "string" && relatedArticles.browseAllHref.trim()
+          ? relatedArticles.browseAllHref
+          : "/blog",
+      items: relatedArticleItems.map(mergeRelatedArticle),
+      selectedItems: selectedRaw.map(mergeSelectedItem).filter(Boolean) as CmsRelatedArticleSelection[]
     }
   };
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergeIndexedSlots(
+  liveSlots: Array<Record<string, unknown>>,
+  draftSlots: unknown[],
+  length: number
+): Array<Record<string, unknown>> {
+  return Array.from({ length }, (_, index) => {
+    const live = liveSlots[index] ?? {};
+    const draft = draftSlots[index];
+    if (!isPlainRecord(draft)) return live;
+    return { ...live, ...draft };
+  });
+}
+
+/**
+ * Deep-merge a draftV2 overlay onto published v2 content.
+ * Prevents a partial `draft.banners` object from wiping live banner slots.
+ */
+export function overlayHomepageCmsV2Draft(
+  live: HomepageCmsV2Content,
+  draft: unknown
+): HomepageCmsV2Content {
+  if (!isPlainRecord(draft)) return live;
+
+  const draftBanners = isPlainRecord(draft.banners) ? draft.banners : null;
+  const banners = draftBanners
+    ? {
+        interShelf: mergeIndexedSlots(
+          live.banners.interShelf as unknown as Array<Record<string, unknown>>,
+          Array.isArray(draftBanners.interShelf) ? draftBanners.interShelf : [],
+          3
+        ),
+        fullViewport: mergeIndexedSlots(
+          live.banners.fullViewport as unknown as Array<Record<string, unknown>>,
+          Array.isArray(draftBanners.fullViewport) ? draftBanners.fullViewport : [],
+          2
+        )
+      }
+    : live.banners;
+
+  const draftMini = isPlainRecord(draft.miniCarousel) ? draft.miniCarousel : null;
+  const miniCarousel = draftMini ? { ...live.miniCarousel, ...draftMini } : live.miniCarousel;
+
+  const draftReviews = isPlainRecord(draft.reviews) ? draft.reviews : null;
+  const reviews = draftReviews ? { ...live.reviews, ...draftReviews } : live.reviews;
+
+  const draftRelated = isPlainRecord(draft.relatedArticles) ? draft.relatedArticles : null;
+  const relatedArticles = draftRelated
+    ? { ...live.relatedArticles, ...draftRelated }
+    : live.relatedArticles;
+
+  return mergeHomepageCmsV2Content({
+    ...live,
+    ...draft,
+    miniCarousel,
+    banners,
+    reviews,
+    relatedArticles,
+    testimonialCards: Array.isArray(draft.testimonialCards)
+      ? draft.testimonialCards
+      : live.testimonialCards
+  });
 }

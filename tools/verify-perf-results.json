@@ -1,0 +1,293 @@
+{
+  "meta": {
+    "baseUrl": "http://127.0.0.1:3004",
+    "startedAt": "2026-07-19T09:59:11.574Z",
+    "node": "v22.22.0"
+  },
+  "health": {
+    "status": "ok",
+    "supabase": {
+      "ok": true
+    },
+    "redis": {
+      "ok": true,
+      "configured": true
+    }
+  },
+  "sequential": {
+    "/": {
+      "n": 5,
+      "ok": 5,
+      "errorRatePct": 0,
+      "avgMs": 48,
+      "p50Ms": 30,
+      "p95Ms": 113,
+      "p99Ms": 113,
+      "maxMs": 113,
+      "statuses": {
+        "200": 5
+      }
+    },
+    "/products": {
+      "n": 5,
+      "ok": 5,
+      "errorRatePct": 0,
+      "avgMs": 32,
+      "p50Ms": 31,
+      "p95Ms": 47,
+      "p99Ms": 47,
+      "maxMs": 47,
+      "statuses": {
+        "200": 5
+      }
+    },
+    "/category/agri-drones": {
+      "n": 5,
+      "ok": 5,
+      "errorRatePct": 0,
+      "avgMs": 21,
+      "p50Ms": 15,
+      "p95Ms": 38,
+      "p99Ms": 38,
+      "maxMs": 38,
+      "statuses": {
+        "200": 5
+      }
+    },
+    "/product/source-agri-kisan-drone-small-8-liter": {
+      "n": 5,
+      "ok": 5,
+      "errorRatePct": 0,
+      "avgMs": 27,
+      "p50Ms": 19,
+      "p95Ms": 60,
+      "p99Ms": 60,
+      "maxMs": 60,
+      "statuses": {
+        "200": 5
+      }
+    },
+    "/api/health": {
+      "n": 5,
+      "ok": 5,
+      "errorRatePct": 0,
+      "avgMs": 11,
+      "p50Ms": 9,
+      "p95Ms": 17,
+      "p99Ms": 17,
+      "maxMs": 17,
+      "statuses": {
+        "200": 5
+      }
+    },
+    "/api/checkout/status": {
+      "n": 5,
+      "ok": 5,
+      "errorRatePct": 0,
+      "avgMs": 26,
+      "p50Ms": 29,
+      "p95Ms": 39,
+      "p99Ms": 39,
+      "maxMs": 39,
+      "statuses": {
+        "400": 5
+      }
+    },
+    "/api/cart/pricing": {
+      "n": 5,
+      "ok": 5,
+      "errorRatePct": 0,
+      "avgMs": 746,
+      "p50Ms": 517,
+      "p95Ms": 1659,
+      "p99Ms": 1659,
+      "maxMs": 1659,
+      "statuses": {
+        "200": 5
+      }
+    },
+    "/api/cart/pricing#warm": {
+      "n": 8,
+      "ok": 8,
+      "errorRatePct": 0,
+      "avgMs": 612,
+      "p50Ms": 516,
+      "p95Ms": 1289,
+      "p99Ms": 1289,
+      "maxMs": 1289,
+      "statuses": {
+        "200": 8
+      }
+    }
+  },
+  "concurrency": {
+    "cart@5": {
+      "n": 10,
+      "ok": 10,
+      "errorRatePct": 0,
+      "avgMs": 508,
+      "p50Ms": 495,
+      "p95Ms": 521,
+      "p99Ms": 521,
+      "maxMs": 521,
+      "statuses": {
+        "200": 10
+      }
+    },
+    "cart@10": {
+      "n": 20,
+      "ok": 20,
+      "errorRatePct": 0,
+      "avgMs": 509,
+      "p50Ms": 509,
+      "p95Ms": 511,
+      "p99Ms": 512,
+      "maxMs": 512,
+      "statuses": {
+        "200": 20
+      }
+    },
+    "cart@20": {
+      "n": 40,
+      "ok": 17,
+      "errorRatePct": 57.5,
+      "avgMs": 374,
+      "p50Ms": 186,
+      "p95Ms": 670,
+      "p99Ms": 672,
+      "maxMs": 672,
+      "statuses": {
+        "200": 17,
+        "429": 23
+      }
+    },
+    "health@10": {
+      "n": 30,
+      "ok": 30,
+      "errorRatePct": 0,
+      "avgMs": 98,
+      "p50Ms": 31,
+      "p95Ms": 249,
+      "p99Ms": 249,
+      "maxMs": 249,
+      "statuses": {
+        "200": 30
+      }
+    },
+    "health@20": {
+      "n": 60,
+      "ok": 60,
+      "errorRatePct": 0,
+      "avgMs": 50,
+      "p50Ms": 46,
+      "p95Ms": 99,
+      "p99Ms": 114,
+      "maxMs": 114,
+      "statuses": {
+        "200": 60
+      }
+    },
+    "pdp@10": {
+      "n": 10,
+      "ok": 10,
+      "errorRatePct": 0,
+      "avgMs": 132,
+      "p50Ms": 131,
+      "p95Ms": 141,
+      "p99Ms": 141,
+      "maxMs": 141,
+      "statuses": {
+        "200": 10
+      }
+    },
+    "pdp@25": {
+      "n": 25,
+      "ok": 25,
+      "errorRatePct": 0,
+      "avgMs": 229,
+      "p50Ms": 193,
+      "p95Ms": 295,
+      "p99Ms": 328,
+      "maxMs": 328,
+      "statuses": {
+        "200": 25
+      }
+    },
+    "multiRoute@30": {
+      "n": 60,
+      "ok": 60,
+      "errorRatePct": 0,
+      "avgMs": 241,
+      "p50Ms": 256,
+      "p95Ms": 283,
+      "p99Ms": 284,
+      "maxMs": 284,
+      "statuses": {
+        "200": 60
+      }
+    }
+  },
+  "grades": {
+    "homepage": {
+      "score": 98,
+      "grade": "A+"
+    },
+    "products": {
+      "score": 98,
+      "grade": "A+"
+    },
+    "pdp": {
+      "score": 98,
+      "grade": "A+"
+    },
+    "healthApi": {
+      "score": 98,
+      "grade": "A+"
+    },
+    "cartApi": {
+      "score": 92,
+      "grade": "A"
+    },
+    "customer": {
+      "score": 97,
+      "grade": "A+"
+    },
+    "api": {
+      "score": 95,
+      "grade": "A+"
+    },
+    "scalability": {
+      "score": 92,
+      "grade": "A"
+    },
+    "caching": {
+      "score": 96,
+      "grade": "A+"
+    },
+    "overall": {
+      "score": 96,
+      "grade": "A+"
+    }
+  },
+  "healthAfterMulti": {
+    "status": "ok",
+    "supabase": {
+      "ok": true
+    },
+    "redis": {
+      "ok": true,
+      "configured": true
+    }
+  },
+  "finishedAt": "2026-07-19T09:59:26.526Z",
+  "healthAtEnd": {
+    "status": "ok",
+    "supabase": {
+      "ok": true
+    },
+    "redis": {
+      "ok": true,
+      "configured": true
+    }
+  }
+}

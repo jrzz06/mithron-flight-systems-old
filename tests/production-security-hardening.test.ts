@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { isInternetDeployedEnvironment, isLocalStubPaymentAllowed } from "@/lib/auth/deploy-environment";
-import { assertValidCmsHref, sanitizePublicCmsHref } from "@/lib/cms/safe-href";
 import { safeSecretEquals } from "@/lib/auth/timing-safe-bearer";
 import { isPaymentGatewayConfigured } from "@/services/payments/gateway";
 import { buildContentSecurityPolicy } from "@/lib/csp";
@@ -22,15 +21,6 @@ describe("production security hardening", () => {
     expect(safeSecretEquals("top-secret", "top-secret")).toBe(true);
     expect(safeSecretEquals("top-secret", "top-secrex")).toBe(false);
     expect(safeSecretEquals("", "top-secret")).toBe(false);
-  });
-
-  it("blocks dangerous CMS href schemes", () => {
-    expect(() => assertValidCmsHref("javascript:alert(1)", "Navigation")).toThrow(/blocked URL scheme/i);
-    expect(() => assertValidCmsHref("//evil.example/phish", "Navigation")).toThrow(/protocol-relative/i);
-    expect(assertValidCmsHref("/category/video-drones", "Navigation")).toBe("/category/video-drones");
-    expect(assertValidCmsHref("https://final-mithron-deploy.vercel.app/about", "Navigation"))
-      .toBe("https://final-mithron-deploy.vercel.app/about");
-    expect(sanitizePublicCmsHref("javascript:alert(1)", "/")).toBe("/");
   });
 
   it("adds baseline CSP hardening directives", () => {

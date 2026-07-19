@@ -1,4 +1,5 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { AdminSuppliersLiveSync } from "@/components/admin/admin-suppliers-live-sync";
 import {
   AdminSupplierProductsQueue,
@@ -32,7 +33,7 @@ function readGalleryItems(gallery: unknown): PendingProductGalleryItem[] {
 async function fetchPendingProducts(supplierId?: string): Promise<PendingProduct[]> {
   const config = assertSupabaseAdminConfig(process.env);
   const supplierFilter = supplierId ? `&supplier_id=eq.${encodeURIComponent(supplierId)}` : "";
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${config.url}/rest/v1/mithron_products?select=slug,name,category,price,supplier_id,workflow_status,updated_at,description,image,hero,gallery&workflow_status=eq.pending_review${supplierFilter}&order=updated_at.desc&limit=100`,
     {
       headers: {
@@ -49,7 +50,7 @@ async function fetchPendingProducts(supplierId?: string): Promise<PendingProduct
   const profileById = new Map<string, string>();
 
   if (supplierIds.length) {
-    const profilesResponse = await fetch(
+    const profilesResponse = await fetchWithTimeout(
       `${config.url}/rest/v1/profiles?select=id,email,display_name&id=in.(${supplierIds.map(encodeURIComponent).join(",")})`,
       {
         headers: {
@@ -101,14 +102,13 @@ export default async function AdminSupplierProductsPage({
 }) {
   const params = await searchParams;
   const supplierFilter = typeof params.supplier === "string" ? params.supplier.trim() : "";
-  const [products, policy, defaultWarehouseCode] = await Promise.all([
+  const [products, policy, defaultWarehouseCode, pendingCountUncached] = await Promise.all([
     fetchPendingProducts(supplierFilter || undefined),
     getAdminSettingsPolicy(),
-    getDefaultWarehouseCode()
+    getDefaultWarehouseCode(),
+    supplierFilter ? Promise.resolve(null as number | null) : getCachedPendingSupplierProductCount()
   ]);
-  const pendingCount = supplierFilter
-    ? products.length
-    : await getCachedPendingSupplierProductCount();
+  const pendingCount = supplierFilter ? products.length : (pendingCountUncached ?? 0);
 
   return (
     <div className="grid gap-5">

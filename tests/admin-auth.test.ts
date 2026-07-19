@@ -4,8 +4,6 @@ import { canAccessAdminSection, isAdminProtectedPath, isAuthPublicPath, sectionF
 describe("admin auth route boundaries", () => {
   it("protects only admin and operations control routes, preserving the public storefront", () => {
     expect(isAdminProtectedPath("/admin")).toBe(true);
-    expect(isAdminProtectedPath("/admin/cms/hero")).toBe(true);
-    expect(isAdminProtectedPath("/admin/media")).toBe(true);
     expect(isAdminProtectedPath("/admin/products")).toBe(true);
     expect(isAdminProtectedPath("/admin/inventory")).toBe(true);
     expect(isAdminProtectedPath("/warehouse")).toBe(true);
@@ -40,8 +38,6 @@ describe("admin auth route boundaries", () => {
   });
 
   it("maps protected routes to the least-privilege permission section", () => {
-    expect(sectionFromPath("/admin/cms")).toBe("cms");
-    expect(sectionFromPath("/admin/media")).toBe("cms");
     expect(sectionFromPath("/admin/settings")).toBe("overview");
     expect(sectionFromPath("/admin/products")).toBe("products");
     expect(sectionFromPath("/admin/inventory")).toBe("warehouse");

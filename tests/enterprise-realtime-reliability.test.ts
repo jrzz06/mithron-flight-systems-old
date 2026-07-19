@@ -131,26 +131,22 @@ describe("enterprise realtime reliability", () => {
     expect(diagnostics.lastError).toBe("network reset");
   });
 
-  it("adds protected diagnostics UI only to admin, CMS, warehouse, and operations surfaces", () => {
-    const panelPath = join(process.cwd(), "components/admin/enterprise-realtime-panel.tsx");
-    expect(existsSync(panelPath)).toBe(true);
-
-    const panel = readFileSync(panelPath, "utf8");
+  it("adds protected diagnostics UI only to warehouse, operations, and storefront live-sync surfaces", () => {
     const hook = readWorkspaceFile("hooks/use-enterprise-realtime.ts");
     const warehousePage = readWorkspaceFile("app/warehouse/page.tsx");
     const operationsPage = readWorkspaceFile("app/operations/page.tsx");
-    const cmsPage = readWorkspaceFile("app/admin/cms/page.tsx");
+    const adminLayout = readWorkspaceFile("app/admin/layout.tsx");
     const storefrontPage = readWorkspaceFile("app/(storefront)/page.tsx");
     const storefrontLayout = readWorkspaceFile("app/(storefront)/layout.tsx");
     const storefrontLiveSync = readWorkspaceFile("components/storefront/storefront-live-sync.tsx");
 
-    expect(panel).toContain("data-enterprise-realtime-panel");
     expect(hook).not.toContain("router.refresh");
     expect(hook).toContain("refreshOnEvent");
     expect(warehousePage).not.toContain("EnterpriseRealtimePanel");
     expect(operationsPage).not.toContain("EnterpriseRealtimePanel");
     expect(operationsPage).toContain("data-operations-route");
-    expect(cmsPage).not.toContain("EnterpriseRealtimePanel");
+    expect(adminLayout).toContain("AdminRealtimeShell");
+    expect(adminLayout).not.toContain("EnterpriseRealtimePanel");
     expect(storefrontPage).not.toContain("EnterpriseRealtimePanel");
     expect(storefrontPage).not.toContain("useEnterpriseRealtime");
     expect(storefrontLayout).toContain("StorefrontLiveSync");

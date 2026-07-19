@@ -15,9 +15,3 @@ export function formatINR(value: number) {
 export function formatFromINR(value: number) {
   return `From ${formatINR(value)}`;
 }
-
-export const STORE_CURRENCY_CODE = "INR" as const;
-
-export function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}

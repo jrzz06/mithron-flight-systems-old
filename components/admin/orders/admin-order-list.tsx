@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { AdminTableShell } from "@/components/admin/module-panel";
 import { AdminOrderListItem } from "@/components/admin/orders/admin-order-list-item";
 import { orderMatchesSelectionKey, orderSelectionKey, text, type AdminRow } from "@/components/admin/orders/order-view-helpers";
@@ -25,6 +26,8 @@ type AdminOrderListProps = {
   cancelAdminOrderAction: AdminOrderFormAction;
   permanentDeleteAdminOrderAction: (formData: FormData) => Promise<void>;
 };
+
+const ESTIMATED_ROW_HEIGHT = 148;
 
 export function AdminOrderList({
   orders,
@@ -59,6 +62,17 @@ export function AdminOrderList({
     onSelectOrderRef.current(selectionKey);
   }, []);
 
+  const rowVirtualizer = useVirtualizer({
+    count: orders.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: 8,
+    measureElement:
+      typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
+        ? (element) => element.getBoundingClientRect().height
+        : undefined
+  });
+
   useEffect(() => {
     const parent = parentRef.current;
     if (!parent) return;
@@ -75,6 +89,13 @@ export function AdminOrderList({
     parent.scrollTop = listScrollTopRef.current;
   }, [selectedKey, selectedOrderId]);
 
+  useEffect(() => {
+    if (focusedIndex < 0 || focusedIndex >= orders.length) return;
+    rowVirtualizer.scrollToIndex(focusedIndex, { align: "auto" });
+  }, [focusedIndex, orders.length, rowVirtualizer]);
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
   return (
     <AdminTableShell
       title={`Orders (${orders.length})`}
@@ -89,36 +110,48 @@ export function AdminOrderList({
           data-admin-orders-list
           className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
         >
-          <div className="flex flex-col">
-            {orders.map((order, index) => {
+          <div
+            className="relative w-full"
+            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          >
+            {virtualItems.map((virtualRow) => {
+              const order = orders[virtualRow.index]!;
               const orderId = text(order.id);
               const selectionKey = orderSelectionKey(order);
               const isSelected =
                 orderMatchesSelectionKey(order, selectedKey, orders) || selectedOrderId === orderId;
               const hasShipment = shipments.some((s) => text(s.order_id) === orderId);
+              const index = virtualRow.index;
 
               return (
-                <AdminOrderListItem
+                <div
                   key={orderId || selectionKey}
-                  order={order}
-                  orderItems={orderItems}
-                  products={products}
-                  defaultWarehouseCode={defaultWarehouseCode}
-                  selected={isSelected}
-                  unread={Boolean(unreadOrderIds?.has(orderId))}
-                  isPending={Boolean(order._optimistic_pending)}
-                  hasShipment={hasShipment}
-                  href={buildOrderHref(selectionKey)}
-                  selectionKey={selectionKey}
-                  index={index}
-                  onSelectKey={handleSelectKey}
-                  onFocusIndex={onFocusIndex}
-                  tabIndex={focusedIndex === index ? 0 : -1}
-                  queue={queue}
-                  query={query}
-                  cancelAdminOrderAction={cancelAdminOrderAction}
-                  permanentDeleteAdminOrderAction={permanentDeleteAdminOrderAction}
-                />
+                  data-index={index}
+                  ref={rowVirtualizer.measureElement}
+                  className="absolute left-0 top-0 w-full"
+                  style={{ transform: `translateY(${virtualRow.start}px)` }}
+                >
+                  <AdminOrderListItem
+                    order={order}
+                    orderItems={orderItems}
+                    products={products}
+                    defaultWarehouseCode={defaultWarehouseCode}
+                    selected={isSelected}
+                    unread={Boolean(unreadOrderIds?.has(orderId))}
+                    isPending={Boolean(order._optimistic_pending)}
+                    hasShipment={hasShipment}
+                    href={buildOrderHref(selectionKey)}
+                    selectionKey={selectionKey}
+                    index={index}
+                    onSelectKey={handleSelectKey}
+                    onFocusIndex={onFocusIndex}
+                    tabIndex={focusedIndex === index ? 0 : -1}
+                    queue={queue}
+                    query={query}
+                    cancelAdminOrderAction={cancelAdminOrderAction}
+                    permanentDeleteAdminOrderAction={permanentDeleteAdminOrderAction}
+                  />
+                </div>
               );
             })}
           </div>

@@ -24,7 +24,12 @@ import {
   updateOrderShippingAddressFormAction
 } from "@/app/admin/orders/actions";
 import { createShipmentFormAction, updateWarehouseOrderLifecycleFormAction } from "@/app/warehouse/actions";
-import { getWarehouseSnapshot } from "@/services/admin";
+import {
+  getWarehouseSnapshot,
+  loadAdminOrdersCatalogProducts,
+  loadInventoryForProductSlugs,
+  loadWarehouseOrderDetail
+} from "@/services/admin";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { listActiveWarehouses } from "@/services/warehouses";
 
@@ -143,19 +148,22 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
   const pageSize = 80;
   const offset = (page - 1) * pageSize;
 
-  const [snapshot, warehouses, policy] = await Promise.all([
+  const [snapshot, warehouses, policy, catalogProducts] = await Promise.all([
     getWarehouseSnapshot({
-      scope: "orders",
+      scope: "ordersList",
       ordersFilter: "all",
       limit: pageSize,
       offset,
       status: statusFilter || undefined,
-      search: query || undefined
+      search: query || undefined,
+      queue: queue || undefined
     }),
     listActiveWarehouses(process.env, { includeOperatorCounts: false }),
-    getAdminSettingsPolicy()
+    getAdminSettingsPolicy(),
+    loadAdminOrdersCatalogProducts()
   ]);
 
+  // Snapshot is already queue-scoped when `queue` is set; keep a defensive filter for selection.
   const queueOrders = snapshot.data.orders.filter((order) => orderMatchesViewQueue(order, queue));
   const selectedOrder =
     resolveOrderBySelectionKey(queueOrders, selectedKey)
@@ -163,13 +171,36 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
   const selectedOrderId = selectedOrder ? text(selectedOrder.id) : "";
   const selectedOrderKey = selectedOrder ? orderSelectionKey(selectedOrder) : selectedKey;
 
-  // Lazy-load timeline (and full row) for the selected order detail panel.
+  // List uses ordersList (orders + line items only). Detail joins load only for the selected order.
   let hydratedSelectedOrder = selectedOrder;
+  let detailOrderItems = snapshot.data.orderItems;
+  let detailProducts = catalogProducts;
+  let detailShipments = snapshot.data.shipments;
+  let detailInventory = snapshot.data.inventory;
+
   if (selectedOrderId) {
-    const { fetchAdminRecordsByColumn } = await import("@/services/admin-actions");
-    const detailRows = await fetchAdminRecordsByColumn("orders", "id", selectedOrderId).catch(() => []);
-    if (detailRows[0]) {
-      hydratedSelectedOrder = { ...selectedOrder!, ...detailRows[0] };
+    const detail = await loadWarehouseOrderDetail(selectedOrderId);
+    if (detail.data.order) {
+      hydratedSelectedOrder = detail.data.order;
+      const otherItems = snapshot.data.orderItems.filter(
+        (item) => text(item.order_id) !== selectedOrderId
+      );
+      detailOrderItems = [...otherItems, ...detail.data.orderItems];
+      const productBySlug = new Map(
+        catalogProducts.map((product) => [text(product.slug), product] as const)
+      );
+      for (const product of detail.data.products) {
+        const slug = text(product.slug);
+        if (!slug) continue;
+        const existing = productBySlug.get(slug);
+        productBySlug.set(slug, existing ? { ...existing, ...product } : product);
+      }
+      detailProducts = [...productBySlug.values()];
+      detailShipments = detail.data.shipments;
+      const slugs = detail.data.orderItems
+        .map((item) => text(item.product_slug))
+        .filter(Boolean);
+      detailInventory = await loadInventoryForProductSlugs(slugs);
     }
   }
 
@@ -179,10 +210,10 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
       <AdminOrdersWorkspace
         orders={snapshot.data.orders}
         realtimeUpdatesEnabled={policy.realtimeUpdatesEnabled}
-        orderItems={snapshot.data.orderItems}
-        inventory={snapshot.data.inventory}
-        shipments={snapshot.data.shipments}
-        products={snapshot.data.products}
+        orderItems={detailOrderItems}
+        inventory={detailInventory}
+        shipments={detailShipments}
+        products={detailProducts}
         warehouses={warehouses}
         defaultWarehouseCode={policy.defaultWarehouseCode}
         selectedOrder={hydratedSelectedOrder}

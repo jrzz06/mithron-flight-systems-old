@@ -24,7 +24,7 @@ export async function GET(_request: Request, context: RouteContext) {
       }
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to load admin live resource.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[admin-live] Failed to load resource.", error);
+    return NextResponse.json({ error: "Unable to load admin live resource." }, { status: 500 });
   }
 }

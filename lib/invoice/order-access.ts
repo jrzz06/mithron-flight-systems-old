@@ -3,6 +3,10 @@ import "server-only";
 import { requireClientAuditToken } from "@/lib/api/require-client-audit-token";
 import { fetchAdminRecordsByColumn } from "@/services/admin-actions";
 
+/**
+ * Invoice access uses a service-role read then an ownership / guest-audit check.
+ * Callers must not treat a successful fetch as authorization — only `ok: true`.
+ */
 export async function assertInvoiceOrderAccess(input: {
   orderId: string;
   userId: string | null;
@@ -10,7 +14,9 @@ export async function assertInvoiceOrderAccess(input: {
   request?: Request;
   allowStaff?: boolean;
 }) {
-  const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) {
     return { ok: false as const, status: 404, error: "Order not found." };

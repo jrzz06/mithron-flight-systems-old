@@ -88,26 +88,21 @@ describe("data archive helpers", () => {
 
   it("applies hot-window filters in admin list services", () => {
     const admin = readFileSync(join(process.cwd(), "services/admin.ts"), "utf8");
-    const enquiries = readFileSync(join(process.cwd(), "services/enquiries.ts"), "utf8");
-    const contacts = readFileSync(join(process.cwd(), "services/contact-requests.ts"), "utf8");
+    const ordersExport = readFileSync(join(process.cwd(), "services/orders-export.ts"), "utf8");
 
     expect(admin).toContain("operationalArchiveHotCutoffIso");
     expect(admin).toContain("created_at=gte.");
-    expect(enquiries).toContain("operationalArchiveHotCutoffIso");
-    expect(contacts).toContain("operationalArchiveHotCutoffIso");
+    expect(ordersExport).toContain("operationalArchiveHotCutoffIso");
   });
 
   it("exposes archives admin surface", () => {
     const page = readFileSync(join(process.cwd(), "app/admin/archives/page.tsx"), "utf8");
-    const downloadBar = readFileSync(join(process.cwd(), "components/admin/admin-archive-download-bar.tsx"), "utf8");
-    const nav = readFileSync(join(process.cwd(), "components/platform/nav-config.ts"), "utf8");
+    const exportAllRoute = readFileSync(join(process.cwd(), "app/admin/archives/export/all/[entity]/route.ts"), "utf8");
     const settings = readFileSync(join(process.cwd(), "app/admin/settings/actions.ts"), "utf8");
 
-    expect(page).toContain("data-admin-archives-route");
-    expect(page).toContain("AdminArchiveDownloadBar");
-    expect(downloadBar).toContain("data-archive-download-bar");
-    expect(downloadBar).toContain("/admin/archives/export/all/");
-    expect(nav).toContain("/admin/archives");
+    expect(page).toContain('redirect("/admin/orders")');
+    expect(exportAllRoute).toContain("exportArchiveEntityCsvBySlug");
+    expect(exportAllRoute).toContain("guardExportRoute");
     expect(settings).toContain("archive_operational_data");
   });
 });

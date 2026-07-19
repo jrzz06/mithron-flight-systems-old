@@ -260,6 +260,8 @@ export function AdminOrderProductsSection({
                       <OperationalSubmitButton
                         pendingLabel="Removing..."
                         confirmMessage={`Remove ${productName} from this order?`}
+                        confirmDescription="This removes the line item from the order. Stock will be recalculated."
+                        confirmLabel="Remove item"
                         className={`${orderInlineButtonClass} border-rose-700/60 text-rose-200 hover:bg-rose-950/30`}
                       >
                         Remove

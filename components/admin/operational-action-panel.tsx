@@ -166,19 +166,38 @@ export function OperationalDangerAction({
   action,
   buttonLabel,
   pendingLabel,
-  children
+  children,
+  confirmMessage,
+  confirmDescription,
+  requireTypedText,
+  typedTextLabel,
+  confirmLabel
 }: {
   action: OperationalFormAction;
   buttonLabel: string;
   pendingLabel: string;
   children?: ReactNode;
+  confirmMessage?: string;
+  confirmDescription?: string;
+  requireTypedText?: string;
+  typedTextLabel?: string;
+  confirmLabel?: string;
 }) {
   const { timedAction, isPending } = useTimedOperationalAction(action, pendingLabel || buttonLabel);
 
   return (
     <form action={timedAction} className="grid gap-2">
       {children}
-      <OperationalSubmitButton busy={isPending} pendingLabel={pendingLabel} className={dangerButtonClass}>
+      <OperationalSubmitButton
+        busy={isPending}
+        pendingLabel={pendingLabel}
+        className={dangerButtonClass}
+        confirmMessage={confirmMessage}
+        confirmDescription={confirmDescription}
+        requireTypedText={requireTypedText}
+        typedTextLabel={typedTextLabel}
+        confirmLabel={confirmLabel}
+      >
         {buttonLabel}
       </OperationalSubmitButton>
     </form>

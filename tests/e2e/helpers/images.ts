@@ -43,7 +43,7 @@ export async function assertProductMediaDelivery(page: Page) {
     return;
   }
 
-  const image = page.locator("[data-media-viewer] img").first();
+  const image = page.locator('section[aria-label="Product showcase"] img, [role="tablist"][aria-label="Product gallery"] ~ * img').first();
   if (await image.count() === 0 || !(await image.isVisible().catch(() => false))) {
     const fallback = page.locator("main img").first();
     await waitForImageLoaded(fallback);

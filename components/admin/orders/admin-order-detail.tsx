@@ -88,7 +88,7 @@ export function AdminOrderDetail({
     <OrderDetailShell scrollRef={detailScrollRef} header={backHeader}>
       <OrderStickyHeader order={order} defaultWarehouseCode={defaultWarehouseCode} />
       {handedOffToWarehouse ? (
-        <div className="rounded-[8px] border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+        <div className="rounded-[8px] border border-cyan-400/55 bg-cyan-500/15 px-3 py-2.5 text-sm font-medium leading-5 text-cyan-50">
           Handed off to warehouse — admin view is read-only.
         </div>
       ) : null}

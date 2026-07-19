@@ -8,14 +8,17 @@ Pre-optimization Stage 0 snapshot for the Production-Safe Optimization Rollout.
 - **Production URL:** `https://final-mithron-deploy.vercel.app`
 - **Sentry:** Client/server configs call `initSentry()` via `@/lib/sentry`; `next.config.ts` wraps with `withSentryConfig`. Runtime DSN depends on env (`SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`) — treat as available for post-deploy regression monitoring when configured.
 
-## Production HEAD latency (2026-07-18)
+## Production HEAD latency (2026-07-18 evening remeasure)
 
 | Route | Status | Round-trip |
 | --- | --- | --- |
-| `/` | 200 | ~3004 ms |
-| `/products` | 200 | ~824 ms |
-| `/category/agri-drones` | 200 | ~423 ms |
-| `/product/agrione-x1` | 200 | ~453 ms |
+| `/` | 200 | ~802 ms (was ~3004 ms morning) |
+| `/products` | 200 | ~970 ms |
+| `/category/agri-drones` | 200 | ~516 ms |
+| `/product/agrione-x1` | 200 | ~448 ms |
+
+See also `docs/perf-action-baseline-2026-07-18.md` for full action matrix.
+
 
 ## Comparison to 2026-07-09 baseline
 

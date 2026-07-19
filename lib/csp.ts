@@ -128,14 +128,24 @@ export function buildPaymentContentSecurityPolicy(_nonce: string, env: EnvSource
   ].join("; ");
 }
 
-export function buildContentSecurityPolicy(nonce: string, env: EnvSource = process.env) {
+/**
+ * Storefront CSP.
+ *
+ * Important: do **not** require a per-request script nonce here.
+ * Home/catalog pages are ISR/prerendered (`revalidate`), so the HTML (and React
+ * flight/bootstrap inline scripts) is cached without matching nonces. A fresh
+ * `nonce-…` in the CSP header on each request blocks those scripts → Suspense
+ * skeletons never resolve (gray nav + black hero). Checkout already uses
+ * `'unsafe-inline'` for the same class of reason.
+ */
+export function buildContentSecurityPolicy(_nonce: string, env: EnvSource = process.env) {
   const devScriptDirectives = env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : [];
   const devConnectDirectives = env.NODE_ENV !== "production" ? ["ws:", "wss:"] : [];
   const razorpayOrigins = razorpayDirectiveOrigins();
   const cashfreeOrigins = cashfreeDirectiveOrigins();
   const scriptSrc = [
     "'self'",
-    `'nonce-${nonce}'`,
+    "'unsafe-inline'",
     ...devScriptDirectives,
     ...razorpayOrigins,
     ...cashfreeOrigins,
@@ -146,6 +156,7 @@ export function buildContentSecurityPolicy(nonce: string, env: EnvSource = proce
   const connectSrc = [
     "'self'",
     "https://*.supabase.co",
+    "wss://*.supabase.co",
     "https://accounts.google.com",
     "https://www.googleapis.com",
     "https://www.google.com",

@@ -235,6 +235,14 @@ export async function checkDistributedRateLimit(
     const result = await withRedisTimeout(`RATE_LIMIT ${key}`, () => limiter.limit(key));
     return mapRateLimitResponse(result.success, result.remaining, result.reset, maxRequests);
   } catch (error) {
+    // fail_open endpoints (e.g. authenticated cart) must not wait on a slow
+    // Postgres fallback after Redis already burned ~REDIS_OP_TIMEOUT_MS — that
+    // stack alone can exceed client fetchWithTimeout (15s) and surface as
+    // FetchTimeoutError on /api/account/cart.
+    if (degradedMode === "fail_open") {
+      logDegraded(degradedMode, error);
+      return degradedRateLimitResult(degradedMode, maxRequests, windowMs);
+    }
     const postgres = await bumpPostgresRateLimit(key, maxRequests, windowMs);
     if (postgres) return { ...postgres, degraded: true };
     if (isProductionRuntime()) {

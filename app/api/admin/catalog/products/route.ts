@@ -86,6 +86,7 @@ export async function GET(request: Request) {
     ? slugsParam.split(",").map((slug) => slug.trim()).filter(Boolean)
     : [];
   const limit = Math.min(120, Math.max(1, Number(url.searchParams.get("limit") ?? 20) || 20));
+  const offset = Math.max(0, Number(url.searchParams.get("offset") ?? 0) || 0);
   const includeDrafts = url.searchParams.get("includeDrafts") === "true";
 
   const config = getSupabaseAdminConfig();
@@ -115,7 +116,7 @@ export async function GET(request: Request) {
     const filterQuery = filters.length ? `&${filters.join("&")}` : "";
 
     let rows = await fetchProductRows(
-      `select=slug,name,category,price,image,hero,workflow_status,is_visible,tagline,variants,stock,badge&order=sort_order.asc&limit=${limit}${statusFilter}${filterQuery}`
+      `select=slug,name,category,price,image,hero,workflow_status,is_visible,tagline,variants,stock,badge&order=sort_order.asc&limit=${limit}&offset=${offset}${statusFilter}${filterQuery}`
     );
 
     if (sku) {
@@ -127,7 +128,9 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json({ products: rows.map(mapRow) });
+    const products = rows.map(mapRow);
+    const hasMore = products.length === limit;
+    return NextResponse.json({ products, hasMore, nextOffset: offset + products.length });
   } catch {
     return NextResponse.json({ error: "Catalog search failed." }, { status: 500 });
   }

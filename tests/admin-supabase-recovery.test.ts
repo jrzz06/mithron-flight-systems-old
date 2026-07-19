@@ -10,13 +10,17 @@ describe("admin Supabase-only workflow recovery", () => {
   it("removes storefront mock fallback from admin-managed hero content", () => {
     const cmsService = source("services/cms.ts");
     const heroCarousel = source("sections/home/hero-carousel.tsx");
+    const resolveHero = source("lib/media/resolve-hero-carousel-slides.ts");
 
     expect(cmsService).toContain("export const emptySupabaseOnlySnapshot");
     expect(cmsService).not.toContain("import { heroSlides");
     expect(cmsService).not.toContain("home: {\n    heroBanners: heroSlides");
     expect(cmsService).toContain("source: \"supabase\"");
     expect(heroCarousel).not.toContain("slides = heroSlides");
-    expect(heroCarousel).toContain("slides.length ? slides : defaultHeroSlides");
+    expect(heroCarousel).not.toContain("defaultHeroSlides");
+    expect(heroCarousel).not.toContain("heroSlideCopyById");
+    expect(resolveHero).not.toContain("config/products");
+    expect(resolveHero).not.toContain("defaultHeroSlides");
     expect(heroCarousel).toContain('data-hero-slide-state="active"');
     expect(heroCarousel).toContain("<video");
   });
@@ -51,9 +55,8 @@ describe("admin Supabase-only workflow recovery", () => {
     expect(frame).not.toContain("bg-[#070B14]");
   });
 
-  it("turns product and CMS forms into layman-editable structured media workflows", () => {
+  it("turns product forms into layman-editable structured media workflows", () => {
     const productsPage = source("app/admin/products/page.tsx");
-    const cmsWorkspace = source("features/admin/cms/cms-visual-workspace.tsx");
 
     expect(productsPage).toContain("data-product-media-picker");
     expect(productsPage).toContain("ProductCreateDetailFields");
@@ -65,20 +68,10 @@ describe("admin Supabase-only workflow recovery", () => {
     expect(productsPage).not.toContain("data-product-advanced-json");
     expect(productsPage).not.toContain("<span className=\"text-white/70\">Variants</span>");
     expect(productsPage).not.toContain("defaultValue=\"[]\" rows={4} className=\"rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2 font-mono");
-
-    expect(cmsWorkspace).toContain("data-cms-media-picker");
-    expect(cmsWorkspace).toContain("data-cms-section-preview");
-    expect(cmsWorkspace).not.toContain("data-cms-advanced-json");
-    expect(cmsWorkspace).toContain("composition_mode");
-    expect(cmsWorkspace).not.toContain("Image JSON");
-    expect(cmsWorkspace).not.toContain("Poster JSON");
-    expect(cmsWorkspace).not.toContain("Video JSON");
-    expect(cmsWorkspace).not.toContain("Composition JSON");
   });
 
-  it("supports CMS/product video uploads and rejects unsupported files clearly", () => {
+  it("supports product video uploads and rejects unsupported files clearly", () => {
     const mediaManager = source("services/media-manager.ts");
-    const cmsActions = source("app/admin/cms/actions.ts");
     const productsActions = source("app/admin/products/actions.ts");
 
     expect(mediaManager).toContain("videoMimeTypes");
@@ -86,7 +79,6 @@ describe("admin Supabase-only workflow recovery", () => {
     expect(mediaManager).toContain("video/webm");
     expect(mediaManager).toContain("video/quicktime");
     expect(mediaManager).toContain("ALLOWED_MEDIA_MIME_TYPES");
-    expect(cmsActions).toContain("assertAllowedMediaMimeType");
     expect(productsActions).toContain("assertAllowedMediaMimeType");
     expect(productsActions).toContain("upsertMediaAssetRecord");
   });

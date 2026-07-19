@@ -10,6 +10,10 @@ export function OperationalSubmitButton({
   pendingLabel = "Saving",
   className = "platform-btn-primary platform-btn-md",
   confirmMessage,
+  confirmDescription,
+  confirmLabel = "Confirm",
+  requireTypedText,
+  typedTextLabel,
   onClick,
   name,
   value,
@@ -21,6 +25,12 @@ export function OperationalSubmitButton({
   pendingLabel?: string;
   className?: string;
   confirmMessage?: string;
+  /** Optional longer body when title is short; overrides auto-split of confirmMessage. */
+  confirmDescription?: string;
+  confirmLabel?: string;
+  /** When set, operator must type this exact text before confirm is enabled. */
+  requireTypedText?: string;
+  typedTextLabel?: string;
   onClick?: () => void;
   name?: string;
   value?: string;
@@ -56,7 +66,15 @@ export function OperationalSubmitButton({
     return trimmed.length > 60 ? "Confirm action" : trimmed;
   }, [confirmMessage]);
 
+  const resolvedDescription = useMemo(() => {
+    if (confirmDescription?.trim()) return confirmDescription.trim();
+    if (!confirmMessage) return undefined;
+    const trimmed = confirmMessage.trim();
+    return confirmTitle === trimmed ? undefined : trimmed;
+  }, [confirmDescription, confirmMessage, confirmTitle]);
+
   const label = pending ? pendingLabel : children;
+  const needsConfirm = Boolean(confirmMessage?.trim() || requireTypedText?.trim());
 
   return (
     <>
@@ -74,7 +92,7 @@ export function OperationalSubmitButton({
             return;
           }
           onClick?.();
-          if (confirmMessage) {
+          if (needsConfirm) {
             event.preventDefault();
             setQueuedSubmit(event.currentTarget);
             setConfirmOpen(true);
@@ -84,13 +102,15 @@ export function OperationalSubmitButton({
       >
         {label}
       </button>
-      {confirmMessage ? (
+      {needsConfirm ? (
         <ConfirmDialog
           open={confirmOpen}
           title={confirmTitle}
-          description={confirmTitle === confirmMessage.trim() ? undefined : confirmMessage}
-          confirmLabel="Confirm"
+          description={resolvedDescription}
+          confirmLabel={confirmLabel}
           variant="danger"
+          requireTypedText={requireTypedText}
+          typedTextLabel={typedTextLabel}
           onClose={() => setConfirmOpen(false)}
           onConfirm={() => {
             queuedSubmit?.closest("form")?.requestSubmit(queuedSubmit);

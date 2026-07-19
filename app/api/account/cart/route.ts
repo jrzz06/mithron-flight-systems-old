@@ -22,13 +22,15 @@ export async function GET() {
   const { supabase, userId } = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const limit = await checkDistributedRateLimit(`account-cart:${userId}`, 60, 60_000);
+  // Session-auth + low abuse risk: fail open so a Redis outage cannot stall cart load
+  // behind a slow Postgres rate-limit fallback (client aborts at 15s).
+  const limit = await checkDistributedRateLimit(`account-cart:${userId}`, 60, 60_000, "fail_open");
   if (!limit.allowed) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
 
   try {
-    const cart = await getCustomerCart(supabase);
+    const cart = await getCustomerCart(supabase, userId);
     return NextResponse.json(cart);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load cart.";
@@ -40,7 +42,7 @@ export async function PUT(request: Request) {
   const { supabase, userId } = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const limit = await checkDistributedRateLimit(`account-cart-write:${userId}`, 120, 60_000);
+  const limit = await checkDistributedRateLimit(`account-cart-write:${userId}`, 120, 60_000, "fail_open");
   if (!limit.allowed) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
@@ -58,7 +60,7 @@ export async function PUT(request: Request) {
   try {
     const items = validateCustomerCartItems(body.items ?? []);
     if (expectedUpdatedAt) {
-      const current = await getCustomerCart(supabase);
+      const current = await getCustomerCart(supabase, userId);
       if (current.updatedAt && current.updatedAt !== expectedUpdatedAt) {
         return NextResponse.json(
           {
@@ -70,7 +72,7 @@ export async function PUT(request: Request) {
         );
       }
     }
-    const cart = await replaceCustomerCart(supabase, items);
+    const cart = await replaceCustomerCart(supabase, items, userId);
     return NextResponse.json(cart);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to save cart.";
@@ -83,13 +85,13 @@ export async function DELETE() {
   const { supabase, userId } = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const limit = await checkDistributedRateLimit(`account-cart-write:${userId}`, 120, 60_000);
+  const limit = await checkDistributedRateLimit(`account-cart-write:${userId}`, 120, 60_000, "fail_open");
   if (!limit.allowed) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
 
   try {
-    await clearCustomerCart(supabase);
+    await clearCustomerCart(supabase, userId);
     return NextResponse.json({ items: [], updatedAt: null });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to clear cart.";

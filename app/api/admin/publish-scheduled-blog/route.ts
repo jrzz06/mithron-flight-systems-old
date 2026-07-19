@@ -28,10 +28,6 @@ async function handlePublishScheduled(request: Request) {
       revalidateTag("blog", "max");
       revalidatePath("/blog");
       revalidatePath("/");
-      for (const id of result.ids) {
-        revalidatePath("/admin/blog");
-        void id;
-      }
     }
     return result;
   });

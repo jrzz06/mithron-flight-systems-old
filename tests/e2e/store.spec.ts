@@ -622,7 +622,7 @@ test.describe("Mithron cinematic storefront", () => {
     await page.goto("/product/source-agri-kisan-drone-small-8-liter");
 
     await expect(page.getByRole("heading", { name: "Agri Kisan Drone Small - 8 Liter" }).first()).toBeVisible();
-    await expect(page.locator("[data-media-viewer='mithron-native-assets'] img[src*='mithron-products']").first()).toBeVisible();
+    await expect(page.locator('section[aria-label="Product showcase"] img[src*="mithron-products"]').first()).toBeVisible();
     await page.getByRole("button", { name: "Add to cart" }).click({ force: true });
 
     await expect(page.locator(".cart-drawer-root.is-open")).toBeVisible();

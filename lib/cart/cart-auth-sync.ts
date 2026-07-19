@@ -219,16 +219,30 @@ export async function initializeCartSession() {
 }
 
 export async function handleCartAuthSignedIn() {
-  markCartSessionPending();
+  // Coalesce with in-flight initializeCartSession to avoid duplicate cart fetches.
+  if (sessionInitPromise) {
+    await sessionInitPromise;
+    return;
+  }
+
+  sessionInitPromise = (async () => {
+    markCartSessionPending();
+    try {
+      const guestSnapshot = readGuestCartSnapshot();
+      await loadAuthenticatedCartSession({
+        mergeGuestItems: guestSnapshot.items,
+        preserveCheckout: guestSnapshot.checkout
+      });
+      await rehydrateBuyNowSession();
+    } finally {
+      markCartSessionReady();
+    }
+  })();
+
   try {
-    const guestSnapshot = readGuestCartSnapshot();
-    await loadAuthenticatedCartSession({
-      mergeGuestItems: guestSnapshot.items,
-      preserveCheckout: guestSnapshot.checkout
-    });
-    await rehydrateBuyNowSession();
+    await sessionInitPromise;
   } finally {
-    markCartSessionReady();
+    sessionInitPromise = null;
   }
 }
 

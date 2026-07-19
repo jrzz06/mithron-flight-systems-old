@@ -91,9 +91,11 @@ function parseStoredItems(value: unknown): PersistedCartItem[] {
 }
 
 export async function getCustomerCart(
-  supabase: CustomerCartClient
+  supabase: CustomerCartClient,
+  /** When the route already resolved auth, skip a second getClaims/getUser round-trip. */
+  knownUserId?: string
 ): Promise<{ items: PersistedCartItem[]; updatedAt: string | null }> {
-  const userId = await requireAuthenticatedUserId(supabase);
+  const userId = knownUserId ?? (await requireAuthenticatedUserId(supabase));
   const { data, error } = await supabase
     .from("customer_carts")
     .select("items, updated_at")
@@ -112,9 +114,10 @@ export async function getCustomerCart(
 
 export async function replaceCustomerCart(
   supabase: CustomerCartClient,
-  items: PersistedCartItem[]
+  items: PersistedCartItem[],
+  knownUserId?: string
 ): Promise<{ items: PersistedCartItem[]; updatedAt: string }> {
-  const userId = await requireAuthenticatedUserId(supabase);
+  const userId = knownUserId ?? (await requireAuthenticatedUserId(supabase));
   const normalizedItems = validateCustomerCartItems(items);
   const updatedAt = new Date().toISOString();
 
@@ -141,8 +144,11 @@ export async function replaceCustomerCart(
   };
 }
 
-export async function clearCustomerCart(supabase: CustomerCartClient): Promise<void> {
-  const userId = await requireAuthenticatedUserId(supabase);
+export async function clearCustomerCart(
+  supabase: CustomerCartClient,
+  knownUserId?: string
+): Promise<void> {
+  const userId = knownUserId ?? (await requireAuthenticatedUserId(supabase));
   const { error } = await supabase.from("customer_carts").delete().eq("user_id", userId);
 
   if (error) {

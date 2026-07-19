@@ -71,9 +71,34 @@ function supabaseImageHostname() {
 
 function mediaCdnImageHostname() {
   const raw = process.env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN?.trim();
-  if (!raw) return null;
+  if (raw) {
+    try {
+      return new URL(raw.startsWith("http") ? raw : `https://${raw}`).hostname;
+    } catch {
+      return null;
+    }
+  }
+  // Vercel edge media CDN serves from the site origin (`/cdn-media/...`).
+  const viaVercel = process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL?.trim().toLowerCase();
+  const autoVercel =
+    viaVercel !== "0" &&
+    viaVercel !== "false" &&
+    (viaVercel === "1" || viaVercel === "true" || Boolean(process.env.VERCEL));
+  if (!autoVercel) return null;
   try {
-    return new URL(raw.startsWith("http") ? raw : `https://${raw}`).hostname;
+    const site = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+    if (site) return new URL(site.startsWith("http") ? site : `https://${site}`).hostname;
+  } catch {
+    /* fall through */
+  }
+  return "final-mithron-deploy.vercel.app";
+}
+
+function supabaseStorageOriginForRewrite() {
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!rawUrl) return null;
+  try {
+    return new URL(rawUrl).origin;
   } catch {
     return null;
   }
@@ -168,6 +193,17 @@ const nextConfig: NextConfig = {
       { source: "/supplier/orders", destination: "/supplier", permanent: true }
     ];
   },
+  async rewrites() {
+    const supabaseOrigin = supabaseStorageOriginForRewrite();
+    if (!supabaseOrigin) return [];
+    // Vercel Edge Network caches `/cdn-media/*` (see headers) and proxies to Supabase Storage.
+    return [
+      {
+        source: "/cdn-media/storage/v1/object/public/:path*",
+        destination: `${supabaseOrigin}/storage/v1/object/public/:path*`
+      }
+    ];
+  },
   async headers() {
     return [
       {
@@ -177,6 +213,23 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: storefrontSecurityHeaders
+      },
+      {
+        source: "/cdn-media/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable"
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "public, max-age=31536000, immutable"
+          },
+          {
+            key: "Vercel-CDN-Cache-Control",
+            value: "public, max-age=31536000, immutable"
+          }
+        ]
       },
       {
         source: "/optimized/:path*",

@@ -1,3 +1,4 @@
+import { ACTIVE_PRODUCT_FILTER, ARCHIVED_PRODUCT_FILTER } from "@/lib/catalog-product-filters";
 import { getSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
@@ -25,11 +26,8 @@ export type InventoryParityReport = {
   orphanInventory: number;
 };
 
-const ACTIVE_PRODUCT_QUERY =
-  "select=slug&workflow_status=neq.archived&archived_at=is.null&merge_status=neq.archived_merged";
-
-const ARCHIVED_PRODUCT_QUERY =
-  "select=slug&or=(workflow_status.eq.archived,archived_at.not.is.null)";
+const ACTIVE_PRODUCT_QUERY = `select=slug&${ACTIVE_PRODUCT_FILTER}`;
+const ARCHIVED_PRODUCT_QUERY = `select=slug&${ARCHIVED_PRODUCT_FILTER}`;
 
 /** Opt-in row scan fallback when parity RPC is missing. Default is a capped HEAD/count path. */
 const PARITY_ROW_SCAN_LIMIT = 500;
@@ -61,17 +59,12 @@ async function countWithQuery(
 }
 
 export async function getProductCatalogMetrics(env: EnvSource = process.env): Promise<ProductCatalogMetrics> {
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see services/admin.ts getAdminDashboardSnapshot comment.
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneProductManagerCatalogMetrics,
-    30,
-    () =>
-      cacheControlPlaneRead(
-        ["control-plane", "product-catalog-metrics"],
-        () => resolveProductCatalogMetrics(env),
-        { revalidate: 30, tags: ["admin-products", "control-plane-catalog"] }
-      )
+  return cacheControlPlaneRead(
+    ["control-plane", "product-catalog-metrics", "v3"],
+    () => resolveProductCatalogMetrics(env),
+    { revalidate: 30, tags: ["admin-products", "control-plane-catalog"] }
   );
 }
 
@@ -91,17 +84,12 @@ async function resolveProductCatalogMetrics(env: EnvSource = process.env): Promi
 }
 
 export async function getInventoryStockMetrics(env: EnvSource = process.env): Promise<InventoryStockMetrics> {
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see services/admin.ts getAdminDashboardSnapshot comment.
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneInventoryMetrics,
-    30,
-    () =>
-      cacheControlPlaneRead(
-        ["control-plane", "inventory-stock-metrics"],
-        () => resolveInventoryStockMetrics(env),
-        { revalidate: 30, tags: ["inventory-metrics"] }
-      )
+  return cacheControlPlaneRead(
+    ["control-plane", "inventory-stock-metrics"],
+    () => resolveInventoryStockMetrics(env),
+    { revalidate: 30, tags: ["inventory-metrics"] }
   );
 }
 

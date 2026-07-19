@@ -29,7 +29,9 @@ async function assertOrderAccess(input: {
   email?: string;
   request: Request;
 }) {
-  const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) return { ok: false as const, status: 404, error: "Order not found." };
 
@@ -117,7 +119,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }
 
-  const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId);
+  const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const payment = selectPaymentForVerify(payments, provider);
   if (!payment?.provider_intent_id) {
     return NextResponse.json({ error: "No active payment session found for this order." }, { status: 404 });

@@ -29,9 +29,10 @@ describe("CSP headers", () => {
     expect(policy).toContain("https://*.razorpay.com");
     expect(policy).toContain("https://*.cashfree.com");
     expect(policy).toContain("/api/csp-report");
-    expect(policy).toContain("script-src 'self' 'nonce-test-nonce'");
+    // ISR/prerendered storefront HTML cannot carry per-request script nonces.
+    expect(policy).toContain("script-src 'self' 'unsafe-inline'");
+    expect(policy).not.toContain("'nonce-test-nonce'");
     expect(policy).toContain("frame-src 'self'");
-    expect(policy).not.toContain("script-src 'self' 'unsafe-inline'");
 
     const paymentPolicyFrame = buildPaymentContentSecurityPolicy("test-nonce", { NODE_ENV: "production" });
     expect(paymentPolicyFrame).toContain("frame-src 'self'");

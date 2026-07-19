@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import type { ProductPageReview, ProductReviewSummary, ProductReviewsPayload } from "@/lib/product-reviews/types";
 import {
@@ -206,13 +207,21 @@ export async function getProductReviewsPayload(
   options: { sort?: ReviewSort } = {},
   env: EnvSource = process.env
 ): Promise<ProductReviewsPayload> {
-  const reviews = (await listPublishedProductReviews(productSlug, options, env)).map((review) =>
-    toProductPageReview(review, productName)
+  const sort = options.sort ?? "recent";
+  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  return readThroughCache(
+    REDIS_CACHE_KEYS.productReviews(productSlug.trim(), sort),
+    90,
+    async () => {
+      const reviews = (await listPublishedProductReviews(productSlug, { sort }, env)).map((review) =>
+        toProductPageReview(review, productName)
+      );
+      return { reviews, summary: buildSummary(reviews) };
+    }
   );
-  return { reviews, summary: buildSummary(reviews) };
 }
 
-export async function listFeaturedHomeReviews(
+export const listFeaturedHomeReviews = cache(async function listFeaturedHomeReviews(
   options: { limit?: number; candidateMultiplier?: number; sortOrder?: "newest" | "rating" | "manual" } = {},
   env: EnvSource = process.env
 ) {
@@ -240,7 +249,7 @@ export async function listFeaturedHomeReviews(
   const mappedSort: ReviewSort =
     sortOrder === "rating" ? "highest" : sortOrder === "newest" ? "recent" : "manual";
   return sortReviews(rows, mappedSort).slice(0, limit * candidateMultiplier);
-}
+});
 
 export async function listAdminProductReviews(
   options: { status?: string; productSlug?: string; rating?: number; q?: string } = {},
@@ -250,18 +259,13 @@ export async function listAdminProductReviews(
   const productSlug = options.productSlug ?? "";
   const rating = typeof options.rating === "number" ? String(options.rating) : "";
   const q = text(options.q).trim();
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see services/admin.ts getAdminDashboardSnapshot comment.
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
 
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneAdminReviews(status, productSlug, rating, q),
-    30,
-    () =>
-      cacheControlPlaneRead(
-        ["admin-reviews", status, productSlug, rating, q],
-        () => resolveAdminProductReviews(options, env),
-        { revalidate: 30, tags: ["admin-reviews", "control-plane-reviews"] }
-      )
+  return cacheControlPlaneRead(
+    ["admin-reviews", status, productSlug, rating, q],
+    () => resolveAdminProductReviews(options, env),
+    { revalidate: 30, tags: ["admin-reviews", "control-plane-reviews"] }
   );
 }
 

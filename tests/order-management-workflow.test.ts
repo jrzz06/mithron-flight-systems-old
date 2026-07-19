@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  ORDER_FULFILLMENT_STATES,
   buildOrderCreateWorkflowFromFormData,
   buildOrderLifecycleUpdateFromFormData,
   assertOrderFulfillmentTransition
@@ -26,7 +27,7 @@ describe("enterprise order management workflow", () => {
       metadata: "{\"source\":\"admin\"}",
       status: "confirmed",
       payment_status: "not_required",
-      fulfillment_status: "processing",
+      fulfillment_status: "packing",
       currency: "INR",
       note: "Create deployment order",
       change_summary: "Admin order capture"
@@ -45,7 +46,7 @@ describe("enterprise order management workflow", () => {
       },
       status: "confirmed",
       paymentStatus: "not_required",
-      fulfillmentStatus: "processing",
+      fulfillmentStatus: "packing",
       currency: "INR",
       note: "Create deployment order",
       changeSummary: "Admin order capture"
@@ -57,9 +58,9 @@ describe("enterprise order management workflow", () => {
       order_id: "11111111-1111-1111-1111-111111111111",
       status: "active",
       payment_status: "not_required",
-      fulfillment_status: "packed",
+      fulfillment_status: "dispatched",
       shipment_tracking: "{\"carrier\":\"Mithron Field\",\"tracking\":\"MTH-100\"}",
-      note: "Packed for field dispatch"
+      note: "Dispatched for field delivery"
     }));
 
     const timeline = appendOrderTimeline([], buildOrderTimelineEntry({
@@ -74,7 +75,7 @@ describe("enterprise order management workflow", () => {
     expect(update).toMatchObject({
       orderId: "11111111-1111-1111-1111-111111111111",
       status: "active",
-      fulfillmentStatus: "packed",
+      fulfillmentStatus: "dispatched",
       shipmentTracking: {
         carrier: "Mithron Field",
         tracking: "MTH-100"
@@ -84,41 +85,83 @@ describe("enterprise order management workflow", () => {
     expect(timeline[0]).toMatchObject({
       event: "order.lifecycle_update",
       status: "active",
-      note: "Packed for field dispatch"
+      note: "Dispatched for field delivery"
     });
   });
 
-  it("rejects invalid, duplicate, and skipped fulfillment lifecycle transitions", () => {
-    expect(assertOrderFulfillmentTransition("pending", "processing")).toBe("processing");
-    expect(assertOrderFulfillmentTransition("processing", "picked")).toBe("picked");
-    expect(assertOrderFulfillmentTransition("picked", "packed")).toBe("packed");
-    expect(assertOrderFulfillmentTransition("packed", "ready_to_dispatch")).toBe("ready_to_dispatch");
-    expect(assertOrderFulfillmentTransition("ready_to_dispatch", "shipped")).toBe("shipped");
-    expect(assertOrderFulfillmentTransition("processing", "packed")).toBe("packed");
-    expect(assertOrderFulfillmentTransition("packed", "shipped")).toBe("shipped");
-    expect(assertOrderFulfillmentTransition("shipped", "delivered")).toBe("delivered");
+  it("only accepts the simplified pending/packing/dispatched/delivered fulfillment states", () => {
+    expect(ORDER_FULFILLMENT_STATES).toEqual(["pending", "packing", "dispatched", "delivered", "returned", "cancelled"]);
+  });
+
+  it("walks the full pending -> packing -> dispatched -> delivered -> returned fulfillment lifecycle", () => {
+    expect(assertOrderFulfillmentTransition("pending", "packing")).toBe("packing");
+    expect(assertOrderFulfillmentTransition("packing", "dispatched")).toBe("dispatched");
+    expect(assertOrderFulfillmentTransition("dispatched", "delivered")).toBe("delivered");
     expect(assertOrderFulfillmentTransition("delivered", "returned")).toBe("returned");
     expect(assertOrderFulfillmentTransition("pending", "cancelled")).toBe("cancelled");
+    expect(assertOrderFulfillmentTransition("packing", "cancelled")).toBe("cancelled");
+  });
 
-    expect(() => assertOrderFulfillmentTransition("pending", "delivered")).toThrow("Invalid order fulfillment transition pending -> delivered.");
-    expect(() => assertOrderFulfillmentTransition("packed", "packed")).toThrow("Duplicate order fulfillment transition packed -> packed.");
-    expect(() => assertOrderFulfillmentTransition("delivered", "shipped")).toThrow("Invalid order fulfillment transition delivered -> shipped.");
+  it("rejects invalid, duplicate, skipped, and legacy fulfillment lifecycle transitions", () => {
+    expect(() => assertOrderFulfillmentTransition("pending", "dispatched")).toThrow(
+      "Invalid order fulfillment transition pending -> dispatched."
+    );
+    expect(() => assertOrderFulfillmentTransition("packing", "packing")).toThrow(
+      "Duplicate order fulfillment transition packing -> packing."
+    );
+    expect(() => assertOrderFulfillmentTransition("delivered", "dispatched")).toThrow(
+      "Invalid order fulfillment transition delivered -> dispatched."
+    );
+    expect(() => assertOrderFulfillmentTransition("dispatched", "cancelled")).toThrow(
+      "Invalid order fulfillment transition dispatched -> cancelled."
+    );
+
     expect(() => buildOrderLifecycleUpdateFromFormData(formData({
       order_id: "11111111-1111-1111-1111-111111111111",
       fulfillment_status: "teleported"
-    }))).toThrow("Order lifecycle fulfillment_status must be one of: pending, processing, picked, packed, ready_to_dispatch, shipped, delivered, returned, cancelled.");
+    }))).toThrow("Order lifecycle fulfillment_status must be one of: pending, packing, dispatched, delivered, returned, cancelled.");
+
+    // Legacy pre-simplification literals (processing/picked/packed/ready_to_dispatch/shipped) are no
+    // longer valid fulfillment_status values and must be rejected the same way as any unknown string.
+    expect(() => buildOrderLifecycleUpdateFromFormData(formData({
+      order_id: "11111111-1111-1111-1111-111111111111",
+      fulfillment_status: "processing"
+    }))).toThrow("Order lifecycle fulfillment_status must be one of: pending, packing, dispatched, delivered, returned, cancelled.");
+  });
+
+  it("never leaves a fulfillment state without a legal next move (no dead ends before delivery)", () => {
+    // Every non-terminal state must have at least one allowed transition. "returned" and "cancelled"
+    // are the only intentional terminal states in the simplified fulfillment machine.
+    const terminalStates = new Set(["returned", "cancelled"]);
+    for (const state of ORDER_FULFILLMENT_STATES) {
+      if (terminalStates.has(state)) continue;
+      const reachableStates = ORDER_FULFILLMENT_STATES.filter((next) => next !== state).filter((next) => {
+        try {
+          assertOrderFulfillmentTransition(state, next);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      expect(reachableStates.length).toBeGreaterThan(0);
+    }
+
+    // The forward-progress path from receipt to delivery must always be unblocked.
+    expect(assertOrderFulfillmentTransition("pending", "packing")).toBe("packing");
+    expect(assertOrderFulfillmentTransition("packing", "dispatched")).toBe("dispatched");
+    expect(assertOrderFulfillmentTransition("dispatched", "delivered")).toBe("delivered");
   });
 
   it("preserves advanced fulfillment when assigning warehouse to a confirmed order", () => {
     expect(buildWarehouseAssignmentUpdate("confirmed", "pending")).toEqual({
       nextStatus: "processing",
-      nextFulfillment: "processing"
+      nextFulfillment: "packing"
     });
-    expect(buildWarehouseAssignmentUpdate("confirmed", "packed")).toEqual({
-      nextStatus: "packed",
-      nextFulfillment: "packed"
+    expect(buildWarehouseAssignmentUpdate("confirmed", "dispatched")).toEqual({
+      nextStatus: "dispatched",
+      nextFulfillment: "dispatched"
     });
-    expect(syncOrderStatusFromFulfillment("assigned", "packed")).toBe("packed");
+    expect(syncOrderStatusFromFulfillment("assigned", "dispatched")).toBe("dispatched");
     expect(() => buildWarehouseAssignmentUpdate("assigned", "processing")).toThrow(
       "Order cannot be assigned to warehouse from status assigned."
     );
@@ -146,7 +189,20 @@ describe("enterprise order management workflow", () => {
   it("wires admin and warehouse pages to the existing order persistence actions", () => {
     const adminOrdersPage = readFileSync(join(process.cwd(), "app/admin/orders/page.tsx"), "utf8");
     const adminOrdersWorkspace = readFileSync(join(process.cwd(), "components/admin/admin-orders-workspace.tsx"), "utf8");
-    const adminOrdersUi = `${adminOrdersPage}\n${adminOrdersWorkspace}`;
+    const adminOrdersFilterBar = readFileSync(join(process.cwd(), "components/admin/orders/admin-orders-filter-bar.tsx"), "utf8");
+    const adminOrderDetail = readFileSync(join(process.cwd(), "components/admin/orders/admin-order-detail.tsx"), "utf8");
+    const adminOrderDetailPanel = readFileSync(join(process.cwd(), "components/admin/orders/admin-order-detail-panel.tsx"), "utf8");
+    const adminOrderProductsSection = readFileSync(join(process.cwd(), "components/admin/orders/admin-order-products-section.tsx"), "utf8");
+    const adminOrderActionsRail = readFileSync(join(process.cwd(), "components/admin/orders/admin-order-actions-rail.tsx"), "utf8");
+    const adminOrdersUi = [
+      adminOrdersPage,
+      adminOrdersWorkspace,
+      adminOrdersFilterBar,
+      adminOrderDetail,
+      adminOrderDetailPanel,
+      adminOrderProductsSection,
+      adminOrderActionsRail
+    ].join("\n");
     const warehouseOrdersPage = readFileSync(join(process.cwd(), "app/warehouse/orders/page.tsx"), "utf8");
     const operationsOrdersPage = readFileSync(join(process.cwd(), "app/operations/orders/page.tsx"), "utf8");
     const fulfillmentPage = readFileSync(join(process.cwd(), "app/warehouse/fulfillment/page.tsx"), "utf8");
@@ -157,7 +213,7 @@ describe("enterprise order management workflow", () => {
     expect(adminOrdersUi).toContain("data-order-filter-form");
     expect(adminOrdersUi).toContain("data-order-detail-panel");
     expect(adminOrdersUi).toContain("data-inventory-allocation");
-    expect(adminOrdersUi).toContain("data-shipment-actions");
+    expect(adminOrdersUi).toContain("data-admin-order-actions-rail");
 
     expect(warehouseOrdersPage).toContain("cancelWarehouseOrderFormAction");
     expect(operationsOrdersPage).toContain("createWarehouseOrderFormAction");

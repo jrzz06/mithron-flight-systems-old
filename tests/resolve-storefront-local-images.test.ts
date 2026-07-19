@@ -37,7 +37,7 @@ describe("storefront local image resolution", () => {
 
     expect(resolveStorefrontSrc(agriOwner)).toMatch(/^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\//);
     expect(resolveStorefrontSrc(cityRental)).toMatch(/^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\//);
-    expect(getStorefrontResponsiveAsset(agriOwner)?.variants.webp?.some((variant) => variant.src.includes("restored-v1"))).toBe(true);
-    expect(getStorefrontResponsiveAsset(cityRental)?.variants.webp?.some((variant) => variant.src.includes("restored-v1"))).toBe(true);
+    expect(getStorefrontResponsiveAsset(agriOwner)?.variants.webp?.some((variant) => /enh-v1|restored-v1/.test(variant.src))).toBe(true);
+    expect(getStorefrontResponsiveAsset(cityRental)?.variants.webp?.some((variant) => /enh-v1|restored-v1/.test(variant.src))).toBe(true);
   });
 });

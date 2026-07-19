@@ -29,7 +29,9 @@ export type PaidOrderFulfillment = {
  * Read invoice and email status for a paid order without generating anything.
  */
 export async function getPaidOrderFulfillment(orderId: string): Promise<PaidOrderFulfillment | null> {
-  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) return null;
 
@@ -61,7 +63,9 @@ export async function fulfillOrderOnPaymentVerified(
   orderId: string,
   env: Record<string, string | undefined> = process.env
 ): Promise<PaidOrderFulfillment | null> {
-  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) return null;
 

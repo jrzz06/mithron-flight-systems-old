@@ -4,7 +4,7 @@
  */
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
-import { formatLeadReference } from "@/lib/leads/shared";
+import { formatLeadReference, LEADS_REST_SELECT } from "@/lib/leads/shared";
 import {
   ADMIN_MUTATION_TIMEOUT_MS,
   createNotificationRecord,
@@ -104,23 +104,25 @@ export async function notifyAdminsAboutPaidOrder(
   if (!policy.orderAlertsEnabled) return;
 
   const adminIds = await listAdminRecipientIds("admin", env);
-  for (const recipientId of adminIds) {
-    await createNotificationRecord(
-      {
-        recipient_id: recipientId,
-        channel: "in_app",
-        title: "New paid order",
-        body: `Order ${input.orderNumber} was paid and is ready for review.`,
-        status: "unread",
-        priority: "high",
-        entity_table: "orders",
-        entity_id: input.orderId,
-        dedupe_key: notificationDedupeKey("order-paid", input.orderId, recipientId)
-      },
-      input.actorId ?? null,
-      env
-    ).catch(() => undefined);
-  }
+  await Promise.all(
+    adminIds.map((recipientId) =>
+      createNotificationRecord(
+        {
+          recipient_id: recipientId,
+          channel: "in_app",
+          title: "New paid order",
+          body: `Order ${input.orderNumber} was paid and is ready for review.`,
+          status: "unread",
+          priority: "high",
+          entity_table: "orders",
+          entity_id: input.orderId,
+          dedupe_key: notificationDedupeKey("order-paid", input.orderId, recipientId)
+        },
+        input.actorId ?? null,
+        env
+      ).catch(() => undefined)
+    )
+  );
 }
 
 export async function listAdminEnquiries(
@@ -140,7 +142,7 @@ export async function listAdminEnquiries(
 export async function listOwnEnquiries(userId: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/leads?select=*&customer_user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc&limit=50`,
+    `${config.url}/rest/v1/leads?select=${LEADS_REST_SELECT}&customer_user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc&limit=50`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
   if (!response.ok) {
@@ -159,7 +161,7 @@ export async function listOwnEnquiries(userId: string, env: EnvSource = process.
 export async function getOwnEnquiryById(userId: string, enquiryId: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/leads?id=eq.${encodeURIComponent(enquiryId)}&customer_user_id=eq.${encodeURIComponent(userId)}&select=*&limit=1`,
+    `${config.url}/rest/v1/leads?id=eq.${encodeURIComponent(enquiryId)}&customer_user_id=eq.${encodeURIComponent(userId)}&select=${LEADS_REST_SELECT}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
   if (!response.ok) return null;
@@ -170,7 +172,7 @@ export async function getOwnEnquiryById(userId: string, enquiryId: string, env: 
 export async function getEnquiryById(enquiryId: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/leads?id=eq.${encodeURIComponent(enquiryId)}&select=*&limit=1`,
+    `${config.url}/rest/v1/leads?id=eq.${encodeURIComponent(enquiryId)}&select=${LEADS_REST_SELECT}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
   if (!response.ok) return null;
@@ -300,7 +302,7 @@ export async function findCheckoutEnquiryByIdempotencyKey(
 ) {
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/leads?select=*&payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&limit=1`,
+    `${config.url}/rest/v1/leads?select=${LEADS_REST_SELECT}&payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&limit=1`,
     { headers: headers(config.serviceRoleKey), cache: "no-store", signal: AbortSignal.timeout(ADMIN_MUTATION_TIMEOUT_MS) }
   );
   if (!response.ok) return null;

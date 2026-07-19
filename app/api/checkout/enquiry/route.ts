@@ -153,7 +153,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[checkout/enquiry] failed", error);
-    const message = error instanceof Error ? error.message : "Could not submit checkout enquiry.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Could not submit checkout enquiry." }, { status: 500 });
   }
 }

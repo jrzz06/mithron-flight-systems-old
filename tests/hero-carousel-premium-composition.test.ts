@@ -29,7 +29,8 @@ describe("hero carousel premium composition", () => {
     expect(hero).not.toContain("usePremiumPointerField");
     expect(hero).toContain("HeroControl");
     expect(hero).toContain("HeroCta");
-    expect(hero).toContain("heroSlideCopyById");
+    expect(hero).not.toContain("heroSlideCopyById");
+    expect(hero).not.toContain("HERO_EXTERNAL_CTA");
     expect(hero).toContain('data-testid="hero-pagination"');
 
     expect(globals).toContain(".hero-dji-title");

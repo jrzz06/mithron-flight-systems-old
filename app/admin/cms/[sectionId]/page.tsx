@@ -1,12 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CmsSectionEditor } from "@/components/admin/cms-section-editor-loader";
 import { AdminCmsLiveSync } from "@/components/admin/admin-cms-live-sync";
 import { getHomepageSectionDefinition, shelfKeyFromSectionId, type HomepageSectionId } from "@/config/homepage-section-registry";
 import { SHELF_PRODUCT_CARD_SLOTS } from "@/config/homepage-shelf";
 import { getCmsCoreSnapshot } from "@/services/admin";
 import { getHomepageProducts } from "@/services/catalog";
-import { getHomepageCmsDraftPreviewContent } from "@/services/homepage-cms";
-import { getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
+import { getHomepageCmsContent, getHomepageCmsDraftPreviewContent } from "@/services/homepage-cms";
+import { getHomepageCmsV2Content, getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
 import {
   CMS_SHELF_KEY_TO_ID,
   resolveEffectiveShelfSlugs,
@@ -15,7 +15,7 @@ import {
 } from "@/lib/home/shelf-product-resolution";
 import { mapProductsToSlotItems } from "@/lib/admin/shelf-slot-product";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
-import { listFeaturedHomeReviews, toProductPageReview } from "@/services/customer-product-reviews";
+import { buildHomepageOutlineStatuses } from "@/lib/cms/section-content-status";
 
 export const dynamic = "force-dynamic";
 
@@ -32,14 +32,24 @@ export default async function CmsSectionPage({ params }: SectionPageProps) {
   const { sectionId } = await params;
   const definition = getHomepageSectionDefinition(sectionId);
   if (!definition) notFound();
+  if (definition.editorKind === "footer-view") redirect("/admin/cms");
 
-  const [homepageContent, homepageV2, snapshot, products, policy, customerReviews] = await Promise.all([
+  const [
+    homepageContentPublished,
+    homepageContent,
+    homepageV2Published,
+    homepageV2,
+    snapshot,
+    products,
+    policy
+  ] = await Promise.all([
+    getHomepageCmsContent(),
     getHomepageCmsDraftPreviewContent(),
+    getHomepageCmsV2Content(),
     getHomepageCmsV2DraftPreviewContent(),
     getCmsCoreSnapshot(),
     getHomepageProducts(),
-    getAdminSettingsPolicy(),
-    listFeaturedHomeReviews({ limit: 6 })
+    getAdminSettingsPolicy()
   ]);
 
   const heroRows = snapshot?.data.tables.find((table) => table.table === "hero_banners")?.rows ?? [];
@@ -91,18 +101,23 @@ export default async function CmsSectionPage({ params }: SectionPageProps) {
       )
     : undefined;
   const browseCatalog = mapProductsToSlotItems(products);
-  const productReviews = customerReviews.map((review) => {
-    const productName = products.find((product) => product.slug === review.productSlug)?.name;
-    return toProductPageReview(review, productName);
-  });
   const syncError = !products.length
     ? "Homepage catalog could not be loaded. Product shelves and previews require published catalog products."
     : null;
 
+  const sectionStatus = buildHomepageOutlineStatuses({
+    homepageContent: homepageContentPublished,
+    homepageContentDraft: homepageContent,
+    homepageV2Published,
+    homepageV2Draft: homepageV2,
+    heroRows
+  });
+
   return (
-    <div data-admin-cms-section-route>
+    <div data-admin-cms-section-route className="flex min-h-0 flex-1 flex-col">
       <AdminCmsLiveSync enabled={policy.realtimeUpdatesEnabled} />
       <CmsSectionEditor
+        key={sectionId}
         sectionId={sectionId as HomepageSectionId}
         homepageContent={homepageContent}
         homepageV2={homepageV2}
@@ -113,8 +128,8 @@ export default async function CmsSectionPage({ params }: SectionPageProps) {
         effectiveSlotProducts={effectiveSlotProducts}
         browseCatalog={browseCatalog}
         shelfCategoryHint={shelfKey ? shelfCategoryHintForShelfKey(shelfKey) : undefined}
-        productReviews={productReviews}
         syncError={syncError}
+        sectionStatus={sectionStatus}
       />
     </div>
   );

@@ -70,17 +70,25 @@ async function checkIdempotency(supabase: Awaited<ReturnType<typeof createClient
     .select("user_id")
     .single();
 
-  if (!error) return { replay: false };
+  if (!error) return { replay: false as const };
   // Postgres unique violation -> replay
-  if (typeof error.code === "string" && error.code === "23505") return { replay: true };
-  throw new Error(`Unable to validate cart request: ${error.message}`);
+  if (typeof error.code === "string" && error.code === "23505") return { replay: true as const };
+  console.error("[account/cart/items] idempotency check failed", error.message);
+  return { replay: false as const, unavailable: true as const };
+}
+
+function cartUnavailableResponse() {
+  return NextResponse.json(
+    { error: "Cart temporarily unavailable. Please try again.", retryable: true },
+    { status: 503 }
+  );
 }
 
 export async function POST(request: Request) {
   const { supabase, userId } = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const limit = await checkDistributedRateLimit(`account-cart-items:${userId}`, 240, 60_000);
+  const limit = await checkDistributedRateLimit(`account-cart-items:${userId}`, 240, 60_000, "fail_open");
   if (!limit.allowed) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
 
   const idempotencyKey = request.headers.get("X-Idempotency-Key")?.trim() ?? "";
@@ -93,14 +101,15 @@ export async function POST(request: Request) {
   const delta = readDelta((body as CartLineInput | null)?.delta);
   if (delta === null) return NextResponse.json({ error: "We couldn't update your cart. Please try again." }, { status: 400 });
 
-  const idempotency = await checkIdempotency(supabase, userId, idempotencyKey, "add");
-  if (idempotency.replay) {
-    const cart = await getCustomerCart(supabase);
-    return NextResponse.json(cart);
-  }
-
   try {
-    const current = await getCustomerCart(supabase);
+    const idempotency = await checkIdempotency(supabase, userId, idempotencyKey, "add");
+    if ("unavailable" in idempotency && idempotency.unavailable) return cartUnavailableResponse();
+    if (idempotency.replay) {
+      const cart = await getCustomerCart(supabase, userId);
+      return NextResponse.json(cart);
+    }
+
+    const current = await getCustomerCart(supabase, userId);
     const nextItems = [...current.items];
     const index = nextItems.findIndex(
       (line) =>
@@ -120,7 +129,7 @@ export async function POST(request: Request) {
 
     await verifyCheckoutStockAvailability(nextItems.map((item) => ({ productSlug: item.productSlug, quantity: item.quantity })));
 
-    const saved = await replaceCustomerCart(supabase, nextItems);
+    const saved = await replaceCustomerCart(supabase, nextItems, userId);
     return NextResponse.json(saved);
   } catch (error) {
     await supabase.from("customer_cart_idempotency").delete().eq("user_id", userId).eq("idempotency_key", idempotencyKey);
@@ -131,8 +140,8 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-    const message = error instanceof Error ? error.message : "Unable to update cart.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[account/cart/items] POST failed", error);
+    return NextResponse.json({ error: "Unable to update cart.", retryable: true }, { status: 500 });
   }
 }
 
@@ -140,7 +149,7 @@ export async function PATCH(request: Request) {
   const { supabase, userId } = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const limit = await checkDistributedRateLimit(`account-cart-items:${userId}`, 240, 60_000);
+  const limit = await checkDistributedRateLimit(`account-cart-items:${userId}`, 240, 60_000, "fail_open");
   if (!limit.allowed) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
 
   const idempotencyKey = request.headers.get("X-Idempotency-Key")?.trim() ?? "";
@@ -153,14 +162,15 @@ export async function PATCH(request: Request) {
   const quantity = readQuantity((body as CartLineInput | null)?.quantity);
   if (quantity === null) return NextResponse.json({ error: "Invalid quantity." }, { status: 400 });
 
-  const idempotency = await checkIdempotency(supabase, userId, idempotencyKey, "set_quantity");
-  if (idempotency.replay) {
-    const cart = await getCustomerCart(supabase);
-    return NextResponse.json(cart);
-  }
-
   try {
-    const current = await getCustomerCart(supabase);
+    const idempotency = await checkIdempotency(supabase, userId, idempotencyKey, "set_quantity");
+    if ("unavailable" in idempotency && idempotency.unavailable) return cartUnavailableResponse();
+    if (idempotency.replay) {
+      const cart = await getCustomerCart(supabase, userId);
+      return NextResponse.json(cart);
+    }
+
+    const current = await getCustomerCart(supabase, userId);
     const nextItems = current.items.map((line) => {
       if (
         line.productSlug === identity.productSlug
@@ -174,7 +184,7 @@ export async function PATCH(request: Request) {
 
     await verifyCheckoutStockAvailability(nextItems.map((item) => ({ productSlug: item.productSlug, quantity: item.quantity })));
 
-    const saved = await replaceCustomerCart(supabase, nextItems);
+    const saved = await replaceCustomerCart(supabase, nextItems, userId);
     return NextResponse.json(saved);
   } catch (error) {
     await supabase.from("customer_cart_idempotency").delete().eq("user_id", userId).eq("idempotency_key", idempotencyKey);
@@ -185,8 +195,8 @@ export async function PATCH(request: Request) {
         { status: 409 }
       );
     }
-    const message = error instanceof Error ? error.message : "Unable to update cart.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[account/cart/items] PATCH failed", error);
+    return NextResponse.json({ error: "Unable to update cart.", retryable: true }, { status: 500 });
   }
 }
 
@@ -194,7 +204,7 @@ export async function DELETE(request: Request) {
   const { supabase, userId } = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const limit = await checkDistributedRateLimit(`account-cart-items:${userId}`, 240, 60_000);
+  const limit = await checkDistributedRateLimit(`account-cart-items:${userId}`, 240, 60_000, "fail_open");
   if (!limit.allowed) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
 
   const idempotencyKey = request.headers.get("X-Idempotency-Key")?.trim() ?? "";
@@ -204,23 +214,30 @@ export async function DELETE(request: Request) {
   const identity = parseLineIdentity(body);
   if (!identity) return NextResponse.json({ error: "We couldn't update your cart. Please refresh and try again." }, { status: 400 });
 
-  const idempotency = await checkIdempotency(supabase, userId, idempotencyKey, "remove");
-  if (idempotency.replay) {
-    const cart = await getCustomerCart(supabase);
-    return NextResponse.json(cart);
+  try {
+    const idempotency = await checkIdempotency(supabase, userId, idempotencyKey, "remove");
+    if ("unavailable" in idempotency && idempotency.unavailable) return cartUnavailableResponse();
+    if (idempotency.replay) {
+      const cart = await getCustomerCart(supabase, userId);
+      return NextResponse.json(cart);
+    }
+
+    const current = await getCustomerCart(supabase, userId);
+    const nextItems = current.items.filter(
+      (line) =>
+        !(
+          line.productSlug === identity.productSlug
+          && line.bundleId === identity.bundleId
+          && (line.variantId ?? "") === (identity.variantId ?? "")
+        )
+    );
+
+    const saved = await replaceCustomerCart(supabase, nextItems, userId);
+    return NextResponse.json(saved);
+  } catch (error) {
+    await supabase.from("customer_cart_idempotency").delete().eq("user_id", userId).eq("idempotency_key", idempotencyKey);
+    console.error("[account/cart/items] DELETE failed", error);
+    return NextResponse.json({ error: "Unable to update cart.", retryable: true }, { status: 500 });
   }
-
-  const current = await getCustomerCart(supabase);
-  const nextItems = current.items.filter(
-    (line) =>
-      !(
-        line.productSlug === identity.productSlug
-        && line.bundleId === identity.bundleId
-        && (line.variantId ?? "") === (identity.variantId ?? "")
-      )
-  );
-
-  const saved = await replaceCustomerCart(supabase, nextItems);
-  return NextResponse.json(saved);
 }
 

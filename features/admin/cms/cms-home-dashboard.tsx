@@ -10,6 +10,7 @@ export type CmsDashboardSectionCard = {
   duplicateEnabled: boolean;
   visibilityKey: string;
   hasDraftChanges: boolean;
+  contentReady?: boolean;
 };
 
 export { CmsHomeDashboardClient as CmsHomeDashboard } from "@/features/admin/cms/cms-home-dashboard-client";

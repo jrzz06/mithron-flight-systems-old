@@ -1,6 +1,7 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout, SUPABASE_FETCH_TIMEOUT_MS } from "@/lib/fetch-with-timeout";
 import type { EnterprisePermission } from "@/lib/auth/permissions";
+import { LEADS_REST_SELECT } from "@/lib/leads/shared";
 import { requirePermission } from "@/services/auth";
 
 type EnvSource = Record<string, string | undefined>;
@@ -172,7 +173,7 @@ const adminReadColumnsByTable: Record<string, string> = {
   roles: "key,label,description,sort_order",
   enquiries: "id,customer_user_id,customer_email,subject,body,status,region,related_product_slug,assigned_to,converted_order_id,enquiry_kind,enquiry_number,payload,archived_at,deleted_at,created_at,updated_at",
   contact_requests: "id,request_number,customer_user_id,customer_email,customer_phone,customer_full_name,customer_company,subject,body,status,assigned_to,converted_order_id,created_at,updated_at",
-  leads: "id,lead_number,name,phone,email,address,product_slug,product_name,message,source,status,converted_order_id,customer_user_id,payload,created_at,updated_at",
+  leads: LEADS_REST_SELECT,
   customer_addresses: "id,user_id,label,line1,city,region,postal_code,country,phone,is_default,is_billing,is_shipping,created_at,updated_at",
   payments: "id,order_id,provider,provider_intent_id,provider_payment_id,amount,currency,status,verified_at,created_at,updated_at",
   customer_order_reviews:
@@ -460,12 +461,18 @@ export async function fetchAdminRecordsByColumn(
   column: string,
   value: string,
   env: EnvSource = process.env,
-  options: { requiredPermission?: EnterprisePermission; limit?: number } = {}
+  options: {
+    requiredPermission?: EnterprisePermission;
+    /** Explicit opt-out for guest/system paths that authorize separately. Runtime default is unchanged: no permission check unless requiredPermission is set. */
+    skipPermissionCheck?: true;
+    limit?: number;
+  } = {}
 ) {
   assertMutableTable(table);
   if (options.requiredPermission) {
     await requirePermission(options.requiredPermission);
   }
+  // skipPermissionCheck is documentation for intentional service-role reads; it does not change runtime.
   const config = assertSupabaseAdminConfig(env);
   const limit = options.limit ?? 50;
   const response = await adminRestFetch(

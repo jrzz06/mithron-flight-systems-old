@@ -1,15 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import type { ShelfSlotProductItem } from "@/lib/admin/shelf-slot-product";
-import { formatINR } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { catalogCategoryDefinitions } from "@/lib/catalog-category-taxonomy";
+import { cn, formatINR } from "@/lib/utils";
 
 export type ProductReplaceItem = ShelfSlotProductItem;
 
 const RECENT_KEY = "mithron:cms-recent-products";
+const PAGE_SIZE = 20;
+
+const TAXONOMY_CATEGORY_LABELS = catalogCategoryDefinitions.map((definition) => definition.label);
 
 function readRecentSlugs() {
   if (typeof window === "undefined") return [] as string[];
@@ -27,27 +30,14 @@ function writeRecentSlug(slug: string) {
   window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
 }
 
-function filterCatalogItems(
-  items: ProductReplaceItem[],
-  query: string,
-  category: string,
-  collection: string,
-  brand: string,
-  sku: string
-) {
+function filterBrowseFallback(items: ProductReplaceItem[], query: string, category: string) {
   const normalizedQuery = query.trim().toLowerCase();
   const normalizedCategory = category.trim().toLowerCase();
-  const normalizedCollection = collection.trim().toLowerCase();
-  const normalizedBrand = brand.trim().toLowerCase();
-  const normalizedSku = sku.trim().toLowerCase();
 
   return items.filter((item) => {
     const haystack = [item.name, item.slug, item.sku, item.category, item.brand].join(" ").toLowerCase();
     if (normalizedQuery && !haystack.includes(normalizedQuery)) return false;
     if (normalizedCategory && !item.category.toLowerCase().includes(normalizedCategory)) return false;
-    if (normalizedCollection && !haystack.includes(normalizedCollection)) return false;
-    if (normalizedBrand && !item.brand.toLowerCase().includes(normalizedBrand)) return false;
-    if (normalizedSku && !item.sku.toLowerCase().includes(normalizedSku)) return false;
     return true;
   });
 }
@@ -61,6 +51,12 @@ function sortByShelfHint(items: ProductReplaceItem[], shelfCategoryHint?: string
     return aMatch - bMatch || a.name.localeCompare(b.name);
   });
 }
+
+type CatalogPageResponse = {
+  products: ProductReplaceItem[];
+  hasMore?: boolean;
+  nextOffset?: number;
+};
 
 export function ProductReplacePicker({
   open,
@@ -85,50 +81,100 @@ export function ProductReplacePicker({
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(categoryFilter ?? "");
-  const [collection, setCollection] = useState("");
-  const [brand, setBrand] = useState("");
-  const [sku, setSku] = useState("");
-  const [apiResults, setApiResults] = useState<ProductReplaceItem[]>([]);
+  const [products, setProducts] = useState<ProductReplaceItem[]>([]);
   const [recent, setRecent] = useState<ProductReplaceItem[]>([]);
+  const [currentProduct, setCurrentProduct] = useState<ProductReplaceItem | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextOffset, setNextOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [useFallback, setUseFallback] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const requestIdRef = useRef(0);
+
+  const categoryOptions = useMemo(() => {
+    const labels = new Set(TAXONOMY_CATEGORY_LABELS);
+    for (const item of browseCatalog) {
+      const value = item.category?.trim();
+      if (value) labels.add(value);
+    }
+    const hint = (categoryFilter ?? shelfCategoryHint ?? "").trim();
+    if (hint) labels.add(hint);
+    return Array.from(labels).sort((a, b) => a.localeCompare(b));
+  }, [browseCatalog, categoryFilter, shelfCategoryHint]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setEntered(false);
+      return;
+    }
     setCategory(categoryFilter ?? shelfCategoryHint ?? "");
-    setCollection("");
     setQuery("");
-    setBrand("");
-    setSku("");
-    setApiResults([]);
+    setProducts([]);
     setError(null);
+    setHasMore(false);
+    setNextOffset(0);
+    setUseFallback(false);
+    setCurrentProduct(null);
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(frame);
   }, [categoryFilter, open, shelfCategoryHint]);
 
-  const search = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        limit: "40",
-        includeDrafts: "true",
-        q: query,
-        category,
-        brand,
-        sku
-      });
-      const response = await fetch(`/api/admin/catalog/products?${params.toString()}`);
-      if (!response.ok) {
-        setError("Could not load catalog. Retry or use the browse list below.");
-        return;
+  const fetchPage = useCallback(
+    async (offset: number, append: boolean) => {
+      const requestId = ++requestIdRef.current;
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setError(null);
+        setUseFallback(false);
       }
-      const payload = (await response.json()) as { products: ProductReplaceItem[] };
-      setApiResults(payload.products ?? []);
-    } catch {
-      setError("Could not load catalog. Retry or use the browse list below.");
-    } finally {
-      setLoading(false);
-    }
-  }, [brand, category, query, sku]);
+
+      try {
+        const params = new URLSearchParams({
+          limit: String(PAGE_SIZE),
+          offset: String(offset),
+          includeDrafts: "true",
+          q: query,
+          category
+        });
+        const response = await fetch(`/api/admin/catalog/products?${params.toString()}`);
+        if (!response.ok) {
+          throw new Error("Could not load catalog.");
+        }
+        const payload = (await response.json()) as CatalogPageResponse;
+        if (requestId !== requestIdRef.current) return;
+
+        const page = payload.products ?? [];
+        setProducts((prev) => (append ? [...prev, ...page] : page));
+        setHasMore(Boolean(payload.hasMore));
+        setNextOffset(payload.nextOffset ?? offset + page.length);
+
+        if (!append && page.length === 0) {
+          setUseFallback(true);
+        }
+      } catch {
+        if (requestId !== requestIdRef.current) return;
+        if (!append) {
+          setProducts([]);
+          setHasMore(false);
+          setNextOffset(0);
+          setUseFallback(true);
+          setError("Could not load catalog. Showing local browse list if available.");
+        } else {
+          setError("Could not load more products. Try again.");
+        }
+      } finally {
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
+      }
+    },
+    [category, query]
+  );
 
   const loadRecent = useCallback(async () => {
     const slugs = readRecentSlugs();
@@ -139,62 +185,85 @@ export function ProductReplacePicker({
     const params = new URLSearchParams({ slugs: slugs.join(","), includeDrafts: "true", limit: "12" });
     const response = await fetch(`/api/admin/catalog/products?${params.toString()}`);
     if (!response.ok) return;
-    const payload = (await response.json()) as { products: ProductReplaceItem[] };
+    const payload = (await response.json()) as CatalogPageResponse;
     setRecent(payload.products ?? []);
   }, []);
+
+  const loadCurrent = useCallback(async () => {
+    if (!currentSlug) {
+      setCurrentProduct(null);
+      return;
+    }
+    const params = new URLSearchParams({ slugs: currentSlug, includeDrafts: "true" });
+    const response = await fetch(`/api/admin/catalog/products?${params.toString()}`);
+    if (!response.ok) {
+      const fallback = browseCatalog.find((item) => item.slug === currentSlug) ?? null;
+      setCurrentProduct(fallback);
+      return;
+    }
+    const payload = (await response.json()) as CatalogPageResponse;
+    setCurrentProduct(payload.products?.[0] ?? browseCatalog.find((item) => item.slug === currentSlug) ?? null);
+  }, [browseCatalog, currentSlug]);
 
   useEffect(() => {
     if (!open) return;
     void loadRecent();
-    const timer = window.setTimeout(() => void search(), 250);
+    void loadCurrent();
+    const timer = window.setTimeout(() => void fetchPage(0, false), 250);
     return () => window.clearTimeout(timer);
-  }, [loadRecent, open, search]);
+  }, [fetchPage, loadCurrent, loadRecent, open]);
 
-  const filteredBrowse = useMemo(
-    () => sortByShelfHint(filterCatalogItems(browseCatalog, query, category, collection, brand, sku), shelfCategoryHint),
-    [brand, browseCatalog, category, collection, query, shelfCategoryHint, sku]
-  );
+  const fallbackResults = useMemo(() => {
+    if (!useFallback) return [] as ProductReplaceItem[];
+    return sortByShelfHint(filterBrowseFallback(browseCatalog, query, category), shelfCategoryHint);
+  }, [browseCatalog, category, query, shelfCategoryHint, useFallback]);
 
-  const collectionOptions = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of browseCatalog) {
-      if (item.category.trim()) values.add(item.category.trim());
-    }
-    return [...values].sort((a, b) => a.localeCompare(b));
-  }, [browseCatalog]);
-
-  const mergedResults = useMemo(() => {
-    const source = apiResults.length ? apiResults : filteredBrowse;
+  const sourceResults = useMemo(() => {
+    const base = useFallback ? fallbackResults : products;
     const seen = new Set<string>();
     const merged: ProductReplaceItem[] = [];
-    for (const item of source) {
+    for (const item of base) {
       if (seen.has(item.slug)) continue;
       seen.add(item.slug);
       merged.push(item);
     }
-    if (apiResults.length) {
-      for (const item of filteredBrowse) {
-        if (seen.has(item.slug)) continue;
-        seen.add(item.slug);
-        merged.push(item);
-      }
-    }
     return sortByShelfHint(merged, shelfCategoryHint);
-  }, [apiResults, filteredBrowse, shelfCategoryHint]);
+  }, [fallbackResults, products, shelfCategoryHint, useFallback]);
 
   const visibleResults = useMemo(() => {
-    const filtered = mergedResults.filter((item) => !excludeSlugs.includes(item.slug));
-    if (!currentSlug) return filtered;
-    const current = [...mergedResults, ...browseCatalog].find((item) => item.slug === currentSlug);
-    if (!current) return filtered;
-    return [current, ...filtered.filter((item) => item.slug !== currentSlug)];
-  }, [browseCatalog, currentSlug, excludeSlugs, mergedResults]);
+    const filtered = sourceResults.filter((item) => !excludeSlugs.includes(item.slug));
+    if (!currentSlug || !currentProduct) return filtered;
+    if (excludeSlugs.includes(currentSlug)) return filtered;
+    return [currentProduct, ...filtered.filter((item) => item.slug !== currentSlug)];
+  }, [currentProduct, currentSlug, excludeSlugs, sourceResults]);
+
+  const handleSelect = (item: ProductReplaceItem) => {
+    writeRecentSlug(item.slug);
+    onSelect(item);
+    onClose();
+  };
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--platform-border)] bg-[var(--platform-surface)] shadow-xl">
+    <div
+      className={cn(
+        "fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 transition-opacity duration-200 sm:items-center",
+        entered ? "opacity-100" : "opacity-0"
+      )}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        className={cn(
+          "flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--platform-border)] bg-[var(--platform-surface)] shadow-xl transition-all duration-200",
+          entered ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-[0.98] opacity-0 sm:translate-y-2"
+        )}
+      >
         <div className="flex items-center justify-between border-b border-[var(--platform-border)] px-5 py-4">
           <h3 className="text-base font-semibold text-[var(--platform-text-primary)]">{title}</h3>
           <button type="button" onClick={onClose} className="platform-btn-ghost platform-btn-sm" aria-label="Close">
@@ -203,8 +272,8 @@ export function ProductReplacePicker({
         </div>
 
         <div className="border-b border-[var(--platform-border)] px-5 py-4">
-          <div className="grid gap-3">
-            <label className="relative">
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px] sm:items-center">
+            <label className="relative min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--platform-text-muted)]" />
               <input
                 value={query}
@@ -214,56 +283,35 @@ export function ProductReplacePicker({
                 className="h-11 w-full rounded-[10px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] pl-10 pr-3 text-sm"
               />
             </label>
-            <div className="grid gap-2 md:grid-cols-4">
-              <input
+            <label className="min-w-0">
+              <span className="sr-only">Category</span>
+              <select
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
-                placeholder="Category"
-                className="h-10 rounded-[10px] border border-[var(--platform-border)] px-3 text-sm"
-              />
-              <select
-                value={collection}
-                onChange={(event) => setCollection(event.target.value)}
-                className="h-10 rounded-[10px] border border-[var(--platform-border)] bg-[var(--platform-surface)] px-3 text-sm"
+                className="h-11 w-full rounded-[10px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 text-sm"
               >
-                <option value="">Collection</option>
-                {collectionOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                <option value="">All categories</option>
+                {categoryOptions.map((label) => (
+                  <option key={label} value={label}>
+                    {label}
                   </option>
                 ))}
               </select>
-              <input
-                value={brand}
-                onChange={(event) => setBrand(event.target.value)}
-                placeholder="Brand"
-                className="h-10 rounded-[10px] border border-[var(--platform-border)] px-3 text-sm"
-              />
-              <input
-                value={sku}
-                onChange={(event) => setSku(event.target.value)}
-                placeholder="SKU"
-                className="h-10 rounded-[10px] border border-[var(--platform-border)] px-3 text-sm"
-              />
-            </div>
+            </label>
           </div>
         </div>
 
         {recent.length ? (
           <div className="border-b border-[var(--platform-border)] px-5 py-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Recently used</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+              Recently used
+            </p>
             <ul className="grid gap-1">
-              {recent.filter((item) => !excludeSlugs.includes(item.slug)).map((item) => (
-                <ProductRow
-                  key={`recent-${item.slug}`}
-                  item={item}
-                  onSelect={() => {
-                    writeRecentSlug(item.slug);
-                    onSelect(item);
-                    onClose();
-                  }}
-                />
-              ))}
+              {recent
+                .filter((item) => !excludeSlugs.includes(item.slug))
+                .map((item) => (
+                  <ProductRow key={`recent-${item.slug}`} item={item} onSelect={() => handleSelect(item)} />
+                ))}
             </ul>
           </div>
         ) : null}
@@ -271,10 +319,14 @@ export function ProductReplacePicker({
         <div className="flex min-h-[280px] flex-1 flex-col overflow-hidden px-5 py-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-sm text-[var(--platform-text-secondary)]">
-              {loading ? "Searching catalog…" : `Showing ${visibleResults.length} product${visibleResults.length === 1 ? "" : "s"}`}
+              {loading
+                ? "Loading catalog…"
+                : useFallback
+                  ? `Showing ${visibleResults.length} from browse list`
+                  : `Showing ${visibleResults.length} product${visibleResults.length === 1 ? "" : "s"}`}
             </p>
             {error ? (
-              <button type="button" onClick={() => void search()} className="text-sm font-semibold text-[var(--platform-accent)]">
+              <button type="button" onClick={() => void fetchPage(0, false)} className="text-sm font-semibold text-[var(--platform-accent)]">
                 Retry
               </button>
             ) : null}
@@ -298,14 +350,23 @@ export function ProductReplacePicker({
                 key={item.slug}
                 item={item}
                 isCurrent={item.slug === currentSlug}
-                onSelect={() => {
-                  writeRecentSlug(item.slug);
-                  onSelect(item);
-                  onClose();
-                }}
+                onSelect={() => handleSelect(item)}
               />
             ))}
           </ul>
+
+          {!useFallback && hasMore ? (
+            <div className="mt-4 border-t border-[var(--platform-border)] pt-4">
+              <button
+                type="button"
+                disabled={loadingMore}
+                onClick={() => void fetchPage(nextOffset, true)}
+                className="platform-btn-secondary platform-btn-sm w-full"
+              >
+                {loadingMore ? "Loading more…" : "Load more"}
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

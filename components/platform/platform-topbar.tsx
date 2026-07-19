@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, LogOut, Plus, Search, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
-import { CMS_WORKSPACE_LINKS } from "@/config/cms-workspace";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import type { PlatformRouteTitle, PlatformSearchItem, PlatformScope } from "@/components/platform/types";
 import { GlobalBusySpinner } from "@/components/ui/global-busy";
@@ -22,9 +21,7 @@ type PlatformTopbarProps = {
 };
 
 const defaultQuickActions: PlatformSearchItem[] = [
-  { label: "Create product", href: "/admin/products?tool=create#create-product", group: "Action" },
-  { label: "Edit hero banner", href: CMS_WORKSPACE_LINKS.hero, group: "Action" },
-  { label: "Edit category banners", href: CMS_WORKSPACE_LINKS.categoryBanners, group: "Action" }
+  { label: "Create product", href: "/admin/products?tool=create#create-product", group: "Action" }
 ];
 
 function normalizeRole(role: string | null) {
@@ -55,14 +52,6 @@ function resolvePrimaryAction(
   scope: PlatformScope | undefined,
   primaryAction: { label: string; href: string } | undefined
 ) {
-  if (scope === "admin") {
-    if (pathname.startsWith("/admin/blog") || pathname.startsWith("/admin/press")) {
-      return { label: "Add article", href: "/admin/blog?new=1" };
-    }
-    if (pathname.startsWith("/admin/reviews")) {
-      return { label: "Add review", href: "/admin/reviews?new=1" };
-    }
-  }
   return primaryAction ?? { label: "Add product", href: "/admin/products?tool=create#create-product" };
 }
 
@@ -77,6 +66,7 @@ export function PlatformTopbar({
   notificationHref = "/admin/suppliers/products"
 }: PlatformTopbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const page = titleForPath(pathname, routeTitles);
@@ -92,6 +82,12 @@ export function PlatformTopbar({
       .filter((item) => `${item.group} ${item.label} ${item.href}`.toLowerCase().includes(needle))
       .slice(0, 8);
   }, [commandItems, query]);
+
+  function prefetchHref(href: string) {
+    const target = href.split("#")[0] || href;
+    if (!target || target === pathname) return;
+    router.prefetch(target);
+  }
 
   return (
     <header
@@ -134,7 +130,10 @@ export function PlatformTopbar({
                     <Link
                       key={`${item.group}-${item.href}-${item.label}`}
                       href={item.href}
-                      className="grid gap-0.5 px-3 py-2.5 text-sm text-[var(--platform-text-secondary)] hover:bg-[var(--platform-surface-muted)] hover:text-[var(--platform-text-primary)]"
+                      prefetch
+                      onMouseEnter={() => prefetchHref(item.href)}
+                      onFocus={() => prefetchHref(item.href)}
+                      className="grid gap-0.5 px-3 py-2.5 text-sm text-[var(--platform-text-secondary)] transition-[background-color,color,transform] duration-100 hover:bg-[var(--platform-surface-muted)] hover:text-[var(--platform-text-primary)] active:scale-[0.98]"
                     >
                       <span className="font-medium">{item.label}</span>
                       <span className="text-xs text-[var(--platform-text-muted)]">{item.group}</span>
@@ -152,6 +151,9 @@ export function PlatformTopbar({
             {resolvedPrimaryAction ? (
               <Link
                 href={resolvedPrimaryAction.href}
+                prefetch
+                onMouseEnter={() => prefetchHref(resolvedPrimaryAction.href)}
+                onFocus={() => prefetchHref(resolvedPrimaryAction.href)}
                 className="platform-btn-primary h-9 rounded-[8px] px-3 text-sm font-medium"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />

@@ -69,26 +69,10 @@ describe("admin real workflow UX", () => {
     expect(orderForms).toContain("tracking_number");
   });
 
-  it("makes CMS hero/banner/carousel media directly editable from Supabase media rows", () => {
-    const cmsWorkspace = source("features/admin/cms/cms-visual-workspace.tsx");
-    const cmsForms = source("services/cms-admin-forms.ts");
-    const cmsActions = source("app/admin/cms/actions.ts");
+  it("keeps product media uploads and public CMS read mapping on structured media columns", () => {
     const productsActions = source("app/admin/products/actions.ts");
     const publicCms = source("services/cms.ts");
 
-    expect(cmsWorkspace).toContain("data-cms-media-picker");
-    expect(cmsWorkspace).toContain("data-cms-upload-image");
-    expect(cmsWorkspace).toContain("Select from media library");
-    expect(cmsWorkspace).toContain("Section image");
-    expect(cmsWorkspace).not.toContain("Hero image URL");
-    expect(cmsWorkspace).not.toContain("Poster image URL");
-    expect(cmsWorkspace).not.toContain("Hero video URL");
-    expect(cmsWorkspace).not.toContain("Carousel image URL");
-    expect(cmsWorkspace).not.toContain("Image JSON");
-    expect(cmsWorkspace).not.toContain("Video JSON");
-    expect(cmsActions).toContain("saveCmsMediaUploadFormAction");
-    expect(cmsForms).toContain("image_src");
-    expect(cmsForms).toContain("video_src");
     expect(publicCms).toContain("mediaFromColumns");
     expect(publicCms).not.toContain("slide.productSlug && slide.title");
     expect(productsActions).toContain("uploadProductImagesForDraft");

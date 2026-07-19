@@ -46,16 +46,18 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
   const detail = await getCustomerOrder(userId, id);
   if (!detail) notFound();
 
-  const reviews = await listCustomerReviewsForOrder(id, userId);
-
   const { order, items, payment, shippingAddress, billingAddress, billingSameAsShipping } = detail;
   const metadata = order.metadata && typeof order.metadata === "object" && !Array.isArray(order.metadata)
     ? order.metadata as Record<string, unknown>
     : {};
   const sourceEnquiryId = typeof metadata.source_enquiry_id === "string" ? metadata.source_enquiry_id : "";
-  const linkedEnquiry = sourceEnquiryId
-    ? await getEnquiryById(sourceEnquiryId).catch(() => null)
-    : null;
+
+  const [reviews, linkedEnquiry] = await Promise.all([
+    listCustomerReviewsForOrder(id, userId),
+    sourceEnquiryId
+      ? getEnquiryById(sourceEnquiryId).catch(() => null)
+      : Promise.resolve(null)
+  ]);
   const paymentIntentId = typeof payment?.provider_intent_id === "string" ? payment.provider_intent_id : null;
   const orderSource = resolveCustomerSource(order, paymentIntentId);
   const enquiryCreatedAt =

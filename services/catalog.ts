@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { readThroughCache, REDIS_CACHE_KEYS, setCachedJson } from "@/lib/cache-redis";
+import { readThroughCache, withSingleFlight, REDIS_CACHE_KEYS, setCachedJson } from "@/lib/cache-redis";
 import { rankYouMayAlsoLikeCandidates } from "@/lib/product-you-may-also-like";
 import { resolveCatalogPricing } from "@/lib/catalog-pricing";
 import type { Bundle, MediaAsset, Product, ProductVariant, StorySection } from "@/config/types";
@@ -186,24 +186,28 @@ export type CatalogSearchResult = {
 
 export type { CatalogSearchIndexEntry } from "@/lib/catalog-search-index";
 
-type CatalogSearchIndexRow = Pick<
-  MithronProductRow,
-  | "slug"
-  | "name"
-  | "tagline"
-  | "price"
-  | "badge"
-  | "badge_enabled"
-  | "badge_text"
-  | "badge_style"
-  | "category"
-  | "interests"
-  | "image"
-  | "source_catalog_id"
-  | "source_description"
-  | "source_availability"
-  | "sort_order"
->;
+type CatalogSearchIndexRow = Omit<
+  Pick<
+    MithronProductRow,
+    | "slug"
+    | "name"
+    | "tagline"
+    | "price"
+    | "badge"
+    | "badge_enabled"
+    | "badge_text"
+    | "badge_style"
+    | "category"
+    | "interests"
+    | "image"
+    | "source_catalog_id"
+    | "source_availability"
+    | "sort_order"
+  >,
+  never
+> & {
+  source_description?: string | null;
+};
 
 type CatalogSearchRow = {
   slug: string;
@@ -269,7 +273,8 @@ const PRODUCT_MEDIA_LIMIT = 2000;
 const CHECKOUT_PRICING_SELECT = "slug,name,price,compare_at,on_sale,discount_type,discount_value,category,charge_tax,tax_group,tax_rate,tax_included";
 const CART_PRICING_SELECT =
   "slug,name,price,compare_at,on_sale,discount_type,discount_value,category,charge_tax,tax_group,tax_rate,tax_included,bundles,image,specs";
-const catalogSearchIndexSelect = "slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,source_catalog_id,source_description,source_availability,sort_order";
+/** Slim index fields only — heavy blobs (description/hero/specs) load on PDP, not search. */
+const catalogSearchIndexSelect = "slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,source_catalog_id,source_availability,sort_order";
 import { publishedCatalogFilter } from "@/lib/catalog/filters";
 
 const enterpriseMenuSelect = [
@@ -1063,8 +1068,9 @@ function mapSearchIndexEntry(row: CatalogSearchIndexRow): CatalogSearchIndexEntr
     ...row,
     hero: null,
     gallery: null,
-    source_images: null
-  });
+    source_images: null,
+    source_description: row.source_description ?? null
+  } as MithronProductShellRow);
   if (!item) return null;
 
   return {
@@ -1168,11 +1174,13 @@ export const getFeaturedSearchProducts = cache(async (limit = 4): Promise<Catalo
 });
 
 export const getCartDrawerSuggestions = cache(async (): Promise<CatalogSearchResult[]> => {
-  const rows = await fetchCatalogRows<MithronProductShellRow & { source_availability?: string | null }>(
-    `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description,source_availability&${publishedCatalogFilter}&or=(interests.cs.{agriculture},interests.cs.{components})&order=sort_order.asc&limit=12`
-  );
-  const items = await mapRowsWithCatalogMedia(rows, mapProductShellRow);
-  return items.slice(0, 3).map((item, index) => toCatalogSearchResult(item, rows[index]?.source_availability));
+  return readThroughCache(REDIS_CACHE_KEYS.catalogCartSuggestions, 60, async () => {
+    const rows = await fetchCatalogRows<MithronProductShellRow & { source_availability?: string | null }>(
+      `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description,source_availability&${publishedCatalogFilter}&or=(interests.cs.{agriculture},interests.cs.{components})&order=sort_order.asc&limit=12`
+    );
+    const items = await mapRowsWithCatalogMedia(rows, mapProductShellRow);
+    return items.slice(0, 3).map((item, index) => toCatalogSearchResult(item, rows[index]?.source_availability));
+  });
 });
 
 export async function getCheckoutPricingBySlugs(slugs: string[]): Promise<OrderCatalogProduct[]> {
@@ -1222,67 +1230,72 @@ export async function getCheckoutPricingBySlugs(slugs: string[]): Promise<OrderC
 export async function getCartPricingByItems(
   items: Array<{ productSlug: string; bundleId: string; quantity: number; variantId?: string }>
 ) {
-  const slugs = [...new Set(items.map((item) => item.productSlug.trim()).filter(Boolean))];
+  const slugs = [...new Set(items.map((item) => item.productSlug.trim()).filter(Boolean))].sort();
   if (!slugs.length) return [];
 
-  const inFilter = `slug=in.(${slugs.map((slug) => encodeURIComponent(slug)).join(",")})`;
-  const rows = await fetchCatalogRows<
-    Pick<
-      MithronProductRow,
-      | "slug"
-      | "name"
-      | "price"
-      | "compare_at"
-      | "on_sale"
-      | "discount_type"
-      | "discount_value"
-      | "category"
-      | "charge_tax"
-      | "tax_group"
-      | "tax_rate"
-      | "tax_included"
-      | "bundles"
-      | "image"
-      | "specs"
-    >
-  >(
-    `select=${CART_PRICING_SELECT}&${inFilter}&${publishedCatalogFilter}&limit=${slugs.length}`
-  );
+  // Single-flight + short Redis TTL collapses flash-sale stampede on identical carts.
+  // Pricing math stays in the route; this only caches catalog product rows.
+  const fingerprint = slugs.join(",");
+  return withSingleFlight(REDIS_CACHE_KEYS.catalogCartPricing(fingerprint), 30, async () => {
+    const inFilter = `slug=in.(${slugs.map((slug) => encodeURIComponent(slug)).join(",")})`;
+    const rows = await fetchCatalogRows<
+      Pick<
+        MithronProductRow,
+        | "slug"
+        | "name"
+        | "price"
+        | "compare_at"
+        | "on_sale"
+        | "discount_type"
+        | "discount_value"
+        | "category"
+        | "charge_tax"
+        | "tax_group"
+        | "tax_rate"
+        | "tax_included"
+        | "bundles"
+        | "image"
+        | "specs"
+      >
+    >(
+      `select=${CART_PRICING_SELECT}&${inFilter}&${publishedCatalogFilter}&limit=${slugs.length}`
+    );
 
-  return rows.map((row) => {
-    const pricing = resolveCatalogPricing(row);
-    const bundles = row.bundles?.length
-      ? row.bundles.map((bundle) => ({
-          ...bundle,
-          price: pricing.salePrice,
-          compareAt: pricing.compareAt ?? undefined
-        }))
-      : [{
-          id: "standard",
-          name: "Standard setup",
-          price: pricing.salePrice,
-          compareAt: pricing.compareAt ?? undefined,
-          description: "",
-          includes: [] as string[]
-        }];
+    return rows.map((row) => {
+      const pricing = resolveCatalogPricing(row);
+      const bundles = row.bundles?.length
+        ? row.bundles.map((bundle) => ({
+            ...bundle,
+            price: pricing.salePrice,
+            compareAt: pricing.compareAt ?? undefined
+          }))
+        : [{
+            id: "standard",
+            name: "Standard setup",
+            price: pricing.salePrice,
+            compareAt: pricing.compareAt ?? undefined,
+            description: "",
+            includes: [] as string[]
+          }];
 
-    return {
-      slug: row.slug,
-      name: cleanText(row.name),
-      price: row.price,
-      compare_at: row.compare_at,
-      on_sale: row.on_sale,
-      discount_type: row.discount_type,
-      discount_value: row.discount_value,
-      category: row.category,
-      charge_tax: row.charge_tax,
-      tax_group: row.tax_group,
-      tax_rate: row.tax_rate,
-      tax_included: row.tax_included,
-      bundles,
-      image: mediaFromJson(row.image, cleanText(row.name)),
-      specs: row.specs ?? null
-    };
+      return {
+        slug: row.slug,
+        name: cleanText(row.name),
+        price: row.price,
+        compare_at: row.compare_at,
+        on_sale: row.on_sale,
+        discount_type: row.discount_type,
+        discount_value: row.discount_value,
+        category: row.category,
+        charge_tax: row.charge_tax,
+        tax_group: row.tax_group,
+        tax_rate: row.tax_rate,
+        tax_included: row.tax_included,
+        bundles,
+        image: mediaFromJson(row.image, cleanText(row.name)),
+        specs: row.specs ?? null
+      };
+    });
   });
 }
 
@@ -1332,7 +1345,26 @@ export async function getRelatedProductShellItems(slug: string, limit = 4): Prom
 }
 
 export async function getYouMayAlsoLikeShellItems(slug: string, limit = 4): Promise<ProductShellItem[]> {
-  const currentRow = await getProductAffinityRowBySlug(slug);
+  const normalized = slug.trim();
+  const safeLimit = Math.max(1, Math.min(12, limit));
+  return readThroughCache(
+    REDIS_CACHE_KEYS.productRelated(normalized, safeLimit),
+    90,
+    () => loadYouMayAlsoLikeShellItemsUncached(normalized, safeLimit)
+  );
+}
+
+async function loadYouMayAlsoLikeShellItemsUncached(slug: string, limit: number): Promise<ProductShellItem[]> {
+  // Prefer the in-request / Redis product-row cache (same as PDP) over a second affinity select.
+  const productRow = await getProductRowBySlug(slug);
+  const currentRow: ProductAffinityRow | null = productRow
+    ? {
+        slug: productRow.slug,
+        category: productRow.category,
+        interests: productRow.interests,
+        price: productRow.price
+      }
+    : await getProductAffinityRowBySlug(slug);
 
   if (!currentRow) {
     const rows = await fetchCatalogRows<MithronProductShellRow>(
@@ -1974,7 +2006,23 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
     ]);
   }
 
-  return rows.map((row) => mapper(row, catalogCutouts.get(row.slug) ?? primaryMedia.get(row.slug), galleryMedia.get(row.slug)));
+  const mapped: R[] = [];
+  for (const row of rows) {
+    try {
+      mapped.push(
+        mapper(row, catalogCutouts.get(row.slug) ?? primaryMedia.get(row.slug), galleryMedia.get(row.slug))
+      );
+    } catch (error) {
+      // Skip broken catalog rows (e.g. demo `testing-product`) so related/PLP/ISR
+      // builds do not fail the whole page when one product lacks a source image.
+      if (isMissingSourceImageError(error)) {
+        console.warn(`[catalog] skipping product without source image: ${row.slug}`);
+        continue;
+      }
+      throw error;
+    }
+  }
+  return mapped;
 }
 
 export const getHomepageProducts = cache(async (): Promise<Product[]> => {
@@ -2140,10 +2188,13 @@ export const getCatalogShowroomProducts = cache(async (): Promise<Product[]> => 
 export const getProductRowBySlug = cache(async (slug: string) => {
   const normalizedSlug = slug.trim();
   if (!normalizedSlug) return null;
-  const rows = await fetchCatalogRows<MithronProductRow>(
-    `select=${productSelect}&slug=eq.${encodeURIComponent(normalizedSlug)}&${publishedCatalogFilter}&limit=1`
-  );
-  return rows[0] ?? null;
+  // Single-flight collapses hot-PDP stampede under flash traffic (same row, same ISR window).
+  return withSingleFlight(REDIS_CACHE_KEYS.catalogProductRow(normalizedSlug), 60, async () => {
+    const rows = await fetchCatalogRows<MithronProductRow>(
+      `select=${productSelect}&slug=eq.${encodeURIComponent(normalizedSlug)}&${publishedCatalogFilter}&limit=1`
+    );
+    return rows[0] ?? null;
+  });
 });
 
 export type ProductCoreCacheEntry = {
@@ -2190,19 +2241,35 @@ async function mapLiveProductRow(row: MithronProductRow): Promise<Product> {
   // stay statically regenerable. Checkout paths still request freshness:"checkout".
   const [liveRow] = await overlayLiveInventoryAvailability([row], { freshness: "catalog" });
   const slug = liveRow.slug;
-  const [primaryMedia, catalogCutouts, galleryMedia] = await Promise.all([
-    getPrimaryProductMediaForSlugs([slug]),
-    getCatalogCutoutMediaForSlugs([slug]).catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[catalog] catalog cutout media lookup failed; falling back to primary product images: ${message}`);
-      return new Map<string, MediaAsset>();
-    }),
-    getGalleryProductMediaForSlugs([slug]).catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[catalog] gallery media lookup failed; gallery images will use inline JSON without responsive variants: ${message}`);
-      return new Map<string, MediaAsset[]>();
-    })
-  ]);
+  const { createHash } = await import("node:crypto");
+  const hash = createHash("sha1").update(slug).digest("hex").slice(0, 24);
+  const cached = await readThroughCache(
+    REDIS_CACHE_KEYS.catalogMediaMap(hash),
+    45,
+    async () => {
+      const [primary, cutouts, gallery] = await Promise.all([
+        getPrimaryProductMediaForSlugs([slug]),
+        getCatalogCutoutMediaForSlugs([slug]).catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : String(error);
+          console.warn(`[catalog] catalog cutout media lookup failed; falling back to primary product images: ${message}`);
+          return new Map<string, MediaAsset>();
+        }),
+        getGalleryProductMediaForSlugs([slug]).catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : String(error);
+          console.warn(`[catalog] gallery media lookup failed; gallery images will use inline JSON without responsive variants: ${message}`);
+          return new Map<string, MediaAsset[]>();
+        })
+      ]);
+      return {
+        primary: [...primary.entries()] as Array<[string, MediaAsset]>,
+        cutouts: [...cutouts.entries()] as Array<[string, MediaAsset]>,
+        gallery: [...gallery.entries()] as Array<[string, MediaAsset[]]>
+      };
+    }
+  );
+  const primaryMedia = new Map(cached.primary);
+  const catalogCutouts = new Map(cached.cutouts);
+  const galleryMedia = new Map(cached.gallery);
 
   return mapProductRow(liveRow, catalogCutouts.get(slug) ?? primaryMedia.get(slug), galleryMedia.get(slug));
 }
@@ -2215,11 +2282,13 @@ export const loadProductForPage = cache(async (slug: string): Promise<ProductPag
     try {
       const product = await mapLiveProductRow(row);
       // Warm product-core cache off the render critical path (do not await a second build).
-      void buildProductCoreEntry(slug).then((coreEntry) => {
-        if (coreEntry) {
-          void setCachedJson(REDIS_CACHE_KEYS.productCore(slug), coreEntry, 90);
-        }
-      });
+      void buildProductCoreEntry(slug)
+        .then((coreEntry) => {
+          if (coreEntry) {
+            void setCachedJson(REDIS_CACHE_KEYS.productCore(slug), coreEntry, 90).catch(() => undefined);
+          }
+        })
+        .catch(() => undefined);
       return {
         status: "ready",
         product
@@ -2310,14 +2379,6 @@ export const getFeaturedProducts = cache(async () => {
     .slice(0, 24);
 });
 
-export async function getDroneWorldProducts() {
-  return filterDroneWorldProducts(await fetchBoundedCatalogProducts());
-}
-
-export async function getDroneCareProducts() {
-  return filterDroneCareProducts(await fetchBoundedCatalogProducts());
-}
-
 export async function getProductsByInterest(interestSlug: string) {
   const normalized = interestSlug.trim();
   if (!normalized) return [];
@@ -2335,108 +2396,39 @@ export async function getProductsByInterest(interestSlug: string) {
   return filterDroneWorldProducts(matched);
 }
 
-export async function getProductsByCategory(category: string) {
-  const normalized = category.trim();
-  if (!normalized) return [];
-
-  const pattern = `"*${normalized.replace(/"/g, "\"\"")}*"`;
-  const rows = await overlayLiveInventoryAvailability(
-    await fetchCatalogRows<MithronProductRow>(
-      `select=${catalogListSelect}&${publishedCatalogFilter}&category=ilike.${encodeURIComponent(pattern)}&order=sort_order.asc,slug.asc&limit=${CATALOG_LEGACY_LIST_LIMIT}`
-    )
-  );
-  const products = await mapRowsWithCatalogMedia(rows, mapProductRow, { scopeToRows: true });
-  return dedupeProductsBySlug(products);
-}
-
-export async function searchProducts(query: string, limit = 24) {
-  const normalized = query.trim();
-  if (!normalized) return [];
-  const rows = await fetchCatalogSearchRows(normalized, limit);
-  return mapRowsWithCatalogMedia(
-    rows.map((row) => ({
-      slug: row.slug,
-      product_url: null,
-      workflow_status: "published" as const,
-      published_at: null,
-      archived_at: null,
-      is_visible: true,
-      name: row.name,
-      tagline: row.tagline,
-      seo_title: null,
-      seo_description: null,
-      og_title: null,
-      og_description: null,
-      og_image: null,
-      price: row.price,
-      compare_at: null,
-      badge: null,
-      badge_enabled: false,
-      badge_text: row.badge_text,
-      badge_style: row.badge_style ?? "default",
-      description: null,
-      on_sale: null,
-      discount_type: null,
-      discount_value: null,
-      cost_of_goods: null,
-      show_price_per_unit: null,
-      charge_tax: null,
-      tax_group: null,
-      tax_rate: null,
-      tax_included: null,
-      category: row.category,
-      interests: [],
-      image: row.image,
-      hero: row.hero,
-      gallery: [],
-      hotspots: [],
-      variants: [],
-      bundles: [],
-      story: [],
-      specs: {},
-      anchors: [],
-      sort_order: null,
-      source_url: null,
-      source_catalog_id: null,
-      source_description: null,
-      source_images: [],
-      source_availability: null,
-      source_currency: null
-    })),
-    mapProductRow
-  );
-}
-
 export async function searchCatalogProducts(query: string, limit = 24): Promise<CatalogSearchResult[]> {
   const normalized = query.trim();
   if (!normalized) return [];
 
   const boundedLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+  const cacheKey = REDIS_CACHE_KEYS.catalogSearchQuery(normalized, boundedLimit);
 
-  if (isTypesenseSearchEnabled()) {
-    const typesenseResults = await searchCatalogProductsTypesense(normalized, boundedLimit);
-    if (typesenseResults?.length) return typesenseResults;
-  }
-
-  // Try the (already tag-cached) in-memory index first. Only hit the Supabase RPC
-  // fallback — which also performs a live inventory-availability lookup — when the
-  // index can't fully answer the request, preserving today's behavior in that case.
-  const index = await getCatalogSearchIndex();
-  const localResults = index.length ? searchCatalogIndex(index, normalized, boundedLimit) : [];
-
-  if (index.length && localResults.length >= boundedLimit) {
-    return localResults;
-  }
-
-  const serverResults = await searchCatalogProductsFallback(normalized, boundedLimit);
-  if (!index.length) {
-    if (!serverResults.length) {
-      console.warn("[catalog] catalog search returned no matches for query:", normalized);
+  return readThroughCache(cacheKey, 30, async () => {
+    if (isTypesenseSearchEnabled()) {
+      const typesenseResults = await searchCatalogProductsTypesense(normalized, boundedLimit);
+      if (typesenseResults?.length) return typesenseResults;
     }
-    return serverResults;
-  }
 
-  return mergeSearchResultsBySlug(serverResults, localResults, boundedLimit);
+    // Try the (already tag-cached) in-memory index first. Only hit the Supabase RPC
+    // fallback — which also performs a live inventory-availability lookup — when the
+    // index can't fully answer the request, preserving today's behavior in that case.
+    const index = await getCatalogSearchIndex();
+    const localResults = index.length ? searchCatalogIndex(index, normalized, boundedLimit) : [];
+
+    if (index.length && localResults.length >= boundedLimit) {
+      return localResults;
+    }
+
+    const serverResults = await searchCatalogProductsFallback(normalized, boundedLimit);
+    if (!index.length) {
+      if (!serverResults.length) {
+        console.warn("[catalog] catalog search returned no matches for query:", normalized);
+      }
+      return serverResults;
+    }
+
+    return mergeSearchResultsBySlug(serverResults, localResults, boundedLimit);
+  });
 }
 
 export const getProductsByCategorySlug = cache(async (slug: CatalogCategorySlug): Promise<Product[]> => {
@@ -2475,28 +2467,3 @@ export async function getProductsForCatalog(route: "agriculture" | "videoDrones"
   return getProductsForCategorySlug(routeToSlug[route]);
 }
 
-export async function getRelatedProducts(slug: string, limit = 4) {
-  const current = await getProductBySlug(slug);
-  if (!current) {
-    return (await fetchBoundedCatalogProducts(limit)).slice(0, limit);
-  }
-
-  const interestFilter = current.interests?.[0];
-  const rows = await overlayLiveInventoryAvailability(
-    await fetchCatalogRows<MithronProductRow>(
-      interestFilter
-        ? `select=${catalogListSelect}&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&interests=cs.{${encodeURIComponent(interestFilter)}}&order=sort_order.asc&limit=${Math.max(limit * 3, 12)}`
-        : `select=${catalogListSelect}&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&category=eq.${encodeURIComponent(current.category)}&order=sort_order.asc&limit=${Math.max(limit * 3, 12)}`
-    )
-  );
-  const products = await mapRowsWithCatalogMedia(rows, mapProductRow, { scopeToRows: true });
-  const shelfProducts = classifyProductShelf(current) === "drone-care"
-    ? filterDroneCareProducts(products)
-    : filterDroneWorldProducts(products);
-
-  const related = shelfProducts.filter((product) => (
-    product.category === current.category ||
-    product.interests.some((interest) => (current.interests ?? []).includes(interest))
-  ));
-  return (related.length ? related : shelfProducts).slice(0, limit);
-}

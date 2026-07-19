@@ -75,6 +75,7 @@ import {
   type StoredOptimizedImageVariant
 } from "@/services/media-optimization";
 import { cleanupReplacedCmsMedia } from "@/lib/cms/cms-media-cleanup";
+import { extractV2SectionSlice } from "@/lib/cms/homepage-section-slice";
 
 type HeroBannerDraftActionInput = Omit<HeroBannerDraftInput, "actorId">;
 type HeroBannerStateActionInput = Omit<HeroBannerStateInput, "actorId">;
@@ -186,10 +187,11 @@ async function revalidateCmsCutoverPaths(table?: string, scope: CmsRevalidateSco
   revalidateTag("cms-footer-lead", "max");
   if (table) revalidateTag(`cms-${table}`, "max");
   revalidatePath("/admin/cms");
-  // Homepage content changes need page refresh; keep layout reserved for shell/nav tables.
+  // Homepage content changes need page refresh; layout too so shell-bound caches drop.
   revalidatePath("/", "page");
+  revalidatePath("/", "layout");
   if (table === "site_navigation" || table === "footer_columns" || table === "footer_links") {
-    revalidatePath("/", "layout");
+    // layout already revalidated above for all CMS cutovers
   }
   if (scope === "full" || scope === "cms-surface") {
     revalidatePath("/products");
@@ -367,7 +369,7 @@ export async function saveHomepageShelfFormAction(formData: FormData) {
         [shelfKey]: { ...current.shelves[shelfKey], ...patch }
       }
     }),
-    `${patch.title || "Shelf"} draft saved. Publish to update the live homepage.`
+    `${patch.title || "Shelf"} saved. Publish to update the live homepage.`
   );
 }
 
@@ -383,7 +385,7 @@ export async function saveHomepageShelfClientAction(formData: FormData): Promise
       }
     }));
     await revalidateCmsCutoverPaths("homepage_cms");
-    return { ok: true, message: `${patch.title || "Shelf"} draft saved.` };
+    return { ok: true, message: `${patch.title || "Shelf"} saved.` };
   } catch (error) {
     return { ok: false, message: cmsActionMessage(error) };
   }
@@ -501,7 +503,7 @@ export async function saveHomepageMissionFormAction(formData: FormData) {
         }
       }
     }),
-    `${patch.title || "Mission section"} draft saved. Publish to update the live homepage.`
+    `${patch.title || "Mission section"} saved. Publish to update the live homepage.`
   );
 }
 
@@ -550,7 +552,7 @@ export async function saveHomepageMissionClientAction(
     await revalidateCmsCutoverPaths("homepage_cms");
     return {
       ok: true,
-      message: `${patch.title || "Mission section"} draft saved.`
+      message: `${patch.title || "Mission section"} saved.`
     };
   } catch (error) {
     return { ok: false, message: cmsActionMessage(error) };
@@ -572,7 +574,7 @@ export async function saveHomepageTestimonialsHeaderFormAction(formData: FormDat
       ...current,
       testimonials: { ...current.testimonials, ...patch }
     }),
-    "Reviews header draft saved. Publish to update the live homepage."
+    "Reviews header saved. Publish to update the live homepage."
   );
 }
 
@@ -595,7 +597,7 @@ export async function saveHomepageTestimonialsHeaderClientAction(
       testimonials: { ...current.testimonials, ...patch }
     }));
     await revalidateCmsCutoverPaths("homepage_cms");
-    return { ok: true, message: "Reviews header draft saved." };
+    return { ok: true, message: "Reviews header saved." };
   } catch (error) {
     return { ok: false, message: cmsActionMessage(error) };
   }
@@ -1192,27 +1194,6 @@ async function publishHomepageV2SectionCore(sectionKey: string, patch: Record<st
   });
 }
 
-function extractV2SectionSlice(content: HomepageCmsV2Content, sectionKey: string): Record<string, unknown> {
-  if (sectionKey === "mini-carousel") {
-    return { enabled: content.miniCarousel.enabled, slides: content.miniCarousel.slides };
-  }
-  if (sectionKey.startsWith("banner-inter-shelf-")) {
-    const index = Number(sectionKey.split("-").pop()) - 1;
-    if (index >= 0 && index < 3) return { ...content.banners.interShelf[index] };
-  }
-  if (sectionKey.startsWith("banner-full-viewport-")) {
-    const index = Number(sectionKey.split("-").pop()) - 1;
-    if (index >= 0 && index < 2) return { ...content.banners.fullViewport[index] };
-  }
-  if (sectionKey === "testimonials" || sectionKey === "reviews") {
-    return { ...content.reviews };
-  }
-  if (sectionKey === "related-articles") {
-    return { enabled: content.relatedArticles.enabled, items: content.relatedArticles.items };
-  }
-  return {};
-}
-
 function applyHomepageV2SectionPatch(
   current: HomepageCmsV2Content,
   sectionKey: string,
@@ -1238,15 +1219,43 @@ function applyHomepageV2SectionPatch(
     }
   }
   if (sectionKey === "testimonials" || sectionKey === "reviews") {
-    return { ...current, reviews: { ...current.reviews, ...patch } };
+    const next = { ...current };
+    if (patch.maxCount !== undefined || patch.enabled !== undefined || patch.sortOrder !== undefined) {
+      next.reviews = {
+        ...current.reviews,
+        ...(typeof patch.enabled === "boolean" ? { enabled: patch.enabled } : {}),
+        ...(typeof patch.enabled === "string" ? { enabled: patch.enabled !== "false" } : {}),
+        ...(typeof patch.maxCount === "number" ? { maxCount: patch.maxCount } : {}),
+        ...(typeof patch.sortOrder === "string"
+          ? { sortOrder: patch.sortOrder as HomepageCmsV2Content["reviews"]["sortOrder"] }
+          : {})
+      };
+    }
+    if (Array.isArray(patch.testimonialCards)) {
+      next.testimonialCards = patch.testimonialCards as HomepageCmsV2Content["testimonialCards"];
+    }
+    if (patch.reviews && typeof patch.reviews === "object") {
+      next.reviews = { ...current.reviews, ...(patch.reviews as HomepageCmsV2Content["reviews"]) };
+    }
+    return next;
   }
   if (sectionKey === "related-articles") {
     return {
       ...current,
       relatedArticles: {
         ...current.relatedArticles,
-        ...patch
-      } as HomepageCmsV2Content["relatedArticles"]
+        ...(typeof patch.enabled === "boolean" ? { enabled: patch.enabled } : {}),
+        ...(typeof patch.enabled === "string" ? { enabled: patch.enabled !== "false" } : {}),
+        ...(typeof patch.browseAllHref === "string"
+          ? { browseAllHref: patch.browseAllHref.trim() || "/blog" }
+          : {}),
+        ...(typeof patch.sectionTitle === "string" ? { sectionTitle: patch.sectionTitle } : {}),
+        ...(typeof patch.sectionLead === "string" ? { sectionLead: patch.sectionLead } : {}),
+        ...(Array.isArray(patch.items) ? { items: patch.items as HomepageCmsV2Content["relatedArticles"]["items"] } : {}),
+        ...(Array.isArray(patch.selectedItems)
+          ? { selectedItems: patch.selectedItems as HomepageCmsV2Content["relatedArticles"]["selectedItems"] }
+          : {})
+      }
     };
   }
   return current;
@@ -1294,11 +1303,22 @@ export async function publishHomepageSectionClientAction(
       sectionKey.startsWith("mission-") ||
       sectionKey === "testimonials";
     if (isV1) {
-      // For testimonials, also publish the v2 reviews settings slice when form provided.
+      // For testimonials, persist header + V2 cards from the form, then publish both layers.
       if (sectionKey === "testimonials" && formData) {
-        const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);
-        await persistHomepageV1Draft("testimonials", (current) => current);
+        const headerPatch = {
+          eyebrow: readText(formData, "eyebrow"),
+          title: readText(formData, "title"),
+          titleAccent: readText(formData, "title_accent"),
+          lead: readText(formData, "lead"),
+          linkLabel: readText(formData, "link_label"),
+          linkHref: readText(formData, "link_href")
+        };
+        await persistHomepageV1Draft("testimonials", (current) => ({
+          ...current,
+          testimonials: { ...current.testimonials, ...headerPatch }
+        }));
         await publishHomepageV1Core();
+        const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);
         await publishHomepageV2SectionCore(sectionKey, patch);
       } else {
         await publishHomepageV1Core();
@@ -1316,11 +1336,74 @@ export async function publishHomepageSectionClientAction(
   }
 }
 
+function applyHomepageV1SectionFromPublished(
+  draft: HomepageCmsContent,
+  published: HomepageCmsContent,
+  sectionKey: string
+): HomepageCmsContent {
+  if (sectionKey === "shelf-drone-world") {
+    return { ...draft, shelves: { ...draft.shelves, droneWorld: { ...published.shelves.droneWorld } } };
+  }
+  if (sectionKey === "shelf-drone-care") {
+    return { ...draft, shelves: { ...draft.shelves, droneCare: { ...published.shelves.droneCare } } };
+  }
+  if (sectionKey === "shelf-global-products") {
+    return { ...draft, shelves: { ...draft.shelves, globalProducts: { ...published.shelves.globalProducts } } };
+  }
+  if (sectionKey === "mission-agri") {
+    return { ...draft, missions: { ...draft.missions, agri: { ...published.missions.agri } } };
+  }
+  if (sectionKey === "mission-city") {
+    return { ...draft, missions: { ...draft.missions, city: { ...published.missions.city } } };
+  }
+  if (sectionKey === "testimonials") {
+    return { ...draft, testimonials: { ...published.testimonials } };
+  }
+  return draft;
+}
+
+/** Restore draft for a section from the last published slice (does not change live). */
+export async function revertHomepageSectionClientAction(
+  sectionKey: string
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    await requirePermission("cms.write");
+    const isV1 =
+      sectionKey.startsWith("shelf-") ||
+      sectionKey.startsWith("mission-") ||
+      sectionKey === "testimonials";
+
+    if (isV1) {
+      const current = await loadAdminSettingsPayload();
+      const homepageStored = isPlainRecord(current.homepage) ? current.homepage : {};
+      const published = extractHomepageV1LiveFields(mergeHomepageCmsContent(homepageStored));
+      const v1Section =
+        sectionKey.startsWith("shelf-") || sectionKey.startsWith("mission-")
+          ? (sectionKey as HomepageCmsSectionId)
+          : ("testimonials" as HomepageCmsSectionId);
+      await persistHomepageV1Draft(v1Section, (draft) =>
+        applyHomepageV1SectionFromPublished(draft, published, sectionKey)
+      );
+    } else {
+      const current = await loadAdminSettingsPayload();
+      const homepageStored = isPlainRecord(current.homepage) ? current.homepage : {};
+      const published = mergeHomepageCmsV2Content(homepageStored.v2);
+      const slice = extractV2SectionSlice(published, sectionKey);
+      await mutateHomepageV2Draft((draft) => applyHomepageV2SectionPatch(draft, sectionKey, slice));
+    }
+
+    await revalidateCmsCutoverPaths("homepage_cms");
+    return { ok: true, message: "Section draft reverted to last published version." };
+  } catch (error) {
+    return { ok: false, message: cmsActionMessage(error) };
+  }
+}
+
 export async function saveHomepageV2SectionFormAction(formData: FormData) {
   const sectionKey = readText(formData, "section_key");
   const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);
 
-  await saveHomepageV2Draft((current) => applyHomepageV2SectionPatch(current, sectionKey, patch), "Section draft saved.");
+  await saveHomepageV2Draft((current) => applyHomepageV2SectionPatch(current, sectionKey, patch), "Section saved.");
 }
 
 /** In-place editor bridge — no redirect, so SPA pending state always clears. */
@@ -1333,7 +1416,7 @@ export async function saveHomepageV2SectionClientAction(
     const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);
     await mutateHomepageV2Draft((current) => applyHomepageV2SectionPatch(current, sectionKey, patch));
     await revalidateCmsCutoverPaths("homepage_cms_v2");
-    return { ok: true, message: "Section draft saved." };
+    return { ok: true, message: "Section saved." };
   } catch (error) {
     return { ok: false, message: cmsActionMessage(error) };
   }
@@ -1391,27 +1474,46 @@ function buildHomepageV2SectionPatchFromFormData(formData: FormData, sectionKey:
   }
 
   if (sectionKey === "reviews" || sectionKey === "testimonials") {
+    const maxCount = Math.max(1, Math.min(12, Number(readText(formData, "max_count", "6")) || 6));
+    const cardCount = Math.max(0, Math.min(maxCount, Number(readText(formData, "card_count", "0")) || 0));
+    const testimonialCards = Array.from({ length: cardCount }, (_, index) => ({
+      id: readText(formData, `card_${index}_id`, `testimonial-${index + 1}`),
+      enabled: readText(formData, `card_${index}_enabled`, "true") !== "false",
+      authorName: readText(formData, `card_${index}_author_name`),
+      body: readText(formData, `card_${index}_body`).slice(0, 200),
+      rating: Math.min(5, Math.max(1, Number(readText(formData, `card_${index}_rating`, "5")) || 5)),
+      productSlug: readText(formData, `card_${index}_product_slug`),
+      hrefOverride: readText(formData, `card_${index}_href_override`),
+      avatarSrc: assertOptionalCmsMediaSrc(readText(formData, `card_${index}_avatar_src`), `Testimonial ${index + 1} avatar`),
+      avatarAlt: readText(formData, `card_${index}_avatar_alt`),
+      sortOrder: Number(readText(formData, `card_${index}_sort_order`, String(index))) || index
+    }));
     return {
       enabled: readText(formData, "enabled", "true") !== "false",
-      maxCount: Number(readText(formData, "max_count", "6")) || 6,
-      sortOrder: readText(formData, "sort_order", "newest")
+      maxCount,
+      sortOrder: readText(formData, "sort_order", "manual"),
+      testimonialCards
     };
   }
 
   if (sectionKey === "related-articles") {
-    const count = Math.max(0, Math.min(3, Number(readText(formData, "article_count", "3")) || 3));
+    const count = Math.max(0, Math.min(3, Number(readText(formData, "article_count", "3")) || 0));
     const items = Array.from({ length: count }, (_, index) => ({
       id: readText(formData, `article_${index}_id`, `related-article-${index + 1}`),
-      enabled: formData.get(`article_${index}_enabled`) === "on",
+      enabled: readText(formData, `article_${index}_enabled`, "true") !== "false",
       imageSrc: assertOptionalCmsMediaSrc(readText(formData, `article_${index}_image_src`), `Related article ${index + 1} image`),
       imageAlt: readText(formData, `article_${index}_image_alt`),
       eyebrow: readText(formData, `article_${index}_eyebrow`),
       title: readText(formData, `article_${index}_title`),
       content: readText(formData, `article_${index}_content`),
-      href: readText(formData, `article_${index}_href`)
+      href: readText(formData, `article_${index}_href`),
+      ctaLabel: readText(formData, `article_${index}_cta_label`, "Read Article") || "Read Article"
     }));
     return {
       enabled: readText(formData, "enabled", "true") !== "false",
+      sectionTitle: readText(formData, "section_title"),
+      sectionLead: readText(formData, "section_lead"),
+      browseAllHref: readText(formData, "browse_all_href", "/blog") || "/blog",
       items
     };
   }

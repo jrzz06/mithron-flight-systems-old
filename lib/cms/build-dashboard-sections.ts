@@ -5,7 +5,12 @@ import type { HomepageCmsV2Content } from "@/config/homepage-cms-v2";
 import type { Product } from "@/config/types";
 import { pickHomeMiniCarouselItems } from "@/lib/home/mini-carousel";
 import { resolveShelfSlotAssignments, CMS_SHELF_KEY_TO_ID } from "@/lib/cms/homepage-slot-assignment";
-import { hasHomepageV1DraftChanges } from "@/services/homepage-cms";
+import { hasHomepageSectionDraftChanges } from "@/lib/cms/homepage-section-slice";
+import {
+  isHomepageSectionContentReady,
+  resolveCmsSectionDisplayStatus,
+  shouldShowInHomepageOutline
+} from "@/lib/cms/section-content-status";
 
 type AdminRow = Record<string, unknown>;
 
@@ -28,29 +33,9 @@ function heroImageSrc(row: AdminRow) {
   return "";
 }
 
-function hasV2DraftChanges(published: HomepageCmsV2Content, draft: HomepageCmsV2Content) {
-  return JSON.stringify(published) !== JSON.stringify(draft);
-}
-
-function isV1Section(sectionId: string) {
-  return (
-    sectionId.startsWith("shelf-") ||
-    sectionId.startsWith("mission-") ||
-    sectionId === "testimonials"
-  );
-}
-
-function isV2Section(sectionId: string) {
-  return (
-    sectionId === "mini-carousel" ||
-    sectionId.startsWith("banner-") ||
-    sectionId === "related-articles" ||
-    sectionId === "testimonials"
-  );
-}
-
 export function buildCmsDashboardSections(input: {
   homepageContent: HomepageCmsContent;
+  homepageContentDraft?: HomepageCmsContent;
   homepageV2Published: HomepageCmsV2Content;
   homepageV2Draft: HomepageCmsV2Content;
   heroRows: AdminRow[];
@@ -63,8 +48,14 @@ export function buildCmsDashboardSections(input: {
     input.visibilityRows.map((row) => [text(row.section_key), row.is_visible !== false])
   );
 
-  const v2DraftPending = hasV2DraftChanges(input.homepageV2Published, input.homepageV2Draft);
-  const v1DraftPending = hasHomepageV1DraftChanges(input.settingsPayload);
+  const publishedBundle = {
+    homepageContent: input.homepageContent,
+    homepageV2: input.homepageV2Published
+  };
+  const draftBundle = {
+    homepageContent: input.homepageContentDraft ?? input.homepageContent,
+    homepageV2: input.homepageV2Draft
+  };
 
   const thumbnailFor = (sectionId: string) => {
     const preview = input.homepageV2Draft;
@@ -114,24 +105,33 @@ export function buildCmsDashboardSections(input: {
 
   const heroHasDraft = input.heroRows.some((row) => text(row.status).toLowerCase() === "draft");
 
-  return homepageSectionRegistry.map((definition) => {
-    const hasDraftChanges =
-      definition.editorKind === "hero-carousel"
-        ? heroHasDraft
-        : (isV1Section(definition.id) && v1DraftPending) || (isV2Section(definition.id) && v2DraftPending);
+  return homepageSectionRegistry
+    .map((definition) => {
+      const hasDraftChanges =
+        definition.editorKind === "hero-carousel"
+          ? heroHasDraft
+          : hasHomepageSectionDraftChanges(definition.id, publishedBundle, draftBundle);
 
-    return {
-      id: definition.id,
-      label: definition.label,
-      description: definition.description,
-      thumbnailSrc: thumbnailFor(definition.id),
-      status: hasDraftChanges ? "Draft" : "Live",
-      updatedAt: formatDate(input.updatedAt),
-      isVisible: visibility[definition.visibilityKey] ?? true,
-      editable: definition.editable,
-      duplicateEnabled: false,
-      visibilityKey: definition.visibilityKey,
-      hasDraftChanges
-    };
-  });
+      const contentReady = isHomepageSectionContentReady(definition.id, {
+        homepageContent: draftBundle.homepageContent,
+        homepageV2: draftBundle.homepageV2,
+        heroRows: input.heroRows
+      });
+
+      return {
+        id: definition.id,
+        label: definition.label,
+        description: definition.description,
+        thumbnailSrc: thumbnailFor(definition.id),
+        status: resolveCmsSectionDisplayStatus({ hasDraftChanges, contentReady }),
+        updatedAt: formatDate(input.updatedAt),
+        isVisible: visibility[definition.visibilityKey] ?? true,
+        editable: definition.editable,
+        duplicateEnabled: false,
+        visibilityKey: definition.visibilityKey,
+        hasDraftChanges,
+        contentReady
+      };
+    })
+    .filter((card) => shouldShowInHomepageOutline(card.id, { contentReady: card.contentReady }));
 }

@@ -21,13 +21,10 @@ describe("dark enterprise control-plane theme", () => {
     expect(globals).not.toContain("Global dark performance pass");
   });
 
-  it("keeps admin products and CMS on compact dark surfaces without blur-heavy modals", () => {
+  it("keeps admin products on compact dark surfaces without blur-heavy modals", () => {
     const productsPage = source("app/admin/products/page.tsx");
-    const cmsPage = source("app/admin/cms/page.tsx");
 
     expect(productsPage).toContain("var(--platform-border)");
-    expect(cmsPage).toContain("CmsHomeDashboard");
-    expect(cmsPage).toContain("CmsWorkspaceNav");
     expect(productsPage).not.toContain("bg-white/[0.055]");
   });
 });

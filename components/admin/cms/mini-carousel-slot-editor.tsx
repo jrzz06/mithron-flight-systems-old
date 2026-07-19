@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import { ChevronDown, Replace } from "lucide-react";
+import { Replace } from "lucide-react";
 import { saveHomepageV2SectionClientAction } from "@/app/admin/cms/actions";
 import { CmsAssignmentSourceBadge } from "@/components/admin/cms/cms-assignment-source-badge";
 import { CmsEditorSection } from "@/components/admin/cms/cms-editor-section";
@@ -20,8 +20,7 @@ import type { Product } from "@/config/types";
 import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
 import { notify } from "@/lib/feedback/notify";
 import { raceWithTimeout } from "@/lib/fetch-with-timeout";
-import { formatINR } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { cn, formatINR } from "@/lib/utils";
 
 function assignmentsToSlides(assignments: MiniCarouselSlotAssignment[]): CmsMiniCarouselSlide[] {
   return buildMiniCarouselSlidesFromAssignments(assignments);
@@ -53,7 +52,6 @@ export function MiniCarouselSlotEditor({
 
   const [slots, setSlots] = useState(initialState.slots);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
-  const [expandedOverride, setExpandedOverride] = useState<number | null>(null);
 
   useEffect(() => {
     setSlots(initialState.slots);
@@ -77,25 +75,23 @@ export function MiniCarouselSlotEditor({
   );
 
   const replaceSlot = (index: number, product: ProductReplaceItem) => {
-    setSlots((current) => {
-      const next = current.map((slot, i) => {
-        if (i !== index) return slot;
-        return {
-          ...slot,
-          slug: product.slug,
-          product,
-          source: "pinned" as const,
-          heading: product.name,
-          description: product.name,
-          href: `/product/${product.slug}`,
-          imageSrc: product.imageSrc,
-          imageAlt: product.name,
-          slideId: `slide-${product.slug}-${Date.now()}`
-        };
-      });
-      syncDraft(next);
-      return next;
+    const next = slots.map((slot, i) => {
+      if (i !== index) return slot;
+      return {
+        ...slot,
+        slug: product.slug,
+        product,
+        source: "pinned" as const,
+        heading: product.name,
+        description: product.name,
+        href: `/product/${product.slug}`,
+        imageSrc: product.imageSrc,
+        imageAlt: product.name,
+        slideId: `slide-${product.slug}-${Date.now()}`
+      };
     });
+    setSlots(next);
+    syncDraft(next);
     onDirty?.();
   };
 
@@ -180,17 +176,21 @@ export function MiniCarouselSlotEditor({
         ) : null}
 
         <ul className="grid gap-4">
-          {slots.map((slot, index) => (
+          {slots.map((slot, index) => {
+            const displayProduct = slot.product;
+            const isMissing = Boolean(slot.slug) && !displayProduct;
+
+            return (
             <li
               key={`${slot.slideId}-${index}`}
               className="rounded-[12px] border border-[var(--platform-border)] bg-[var(--platform-surface)] p-4 shadow-sm"
             >
               <div className="flex items-start gap-4">
-                {slot.product ? (
+                {displayProduct ? (
                   <>
                     <div className="relative size-20 shrink-0 overflow-hidden rounded-[10px] border border-[var(--platform-border)] bg-white">
-                      {slot.product.imageSrc ? (
-                        <Image src={slot.product.imageSrc} alt="" fill sizes="80px" className="object-contain p-1" />
+                      {displayProduct.imageSrc ? (
+                        <Image src={displayProduct.imageSrc} alt="" fill sizes="80px" className="object-contain p-1" />
                       ) : null}
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
@@ -202,32 +202,41 @@ export function MiniCarouselSlotEditor({
                         <span
                           className={cn(
                             "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                            slot.product.available ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                            displayProduct.available ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
                           )}
                         >
-                          {slot.product.available ? "Published" : "Draft / hidden"}
+                          {displayProduct.available ? "Published" : "Draft / hidden"}
                         </span>
                       </div>
-                      <p className="truncate text-base font-semibold text-[var(--platform-text-primary)]">{slot.product.name}</p>
-                      <p className="text-sm text-[var(--platform-text-secondary)]">
-                        {slot.product.sku} · {slot.product.category}
-                      </p>
-                      <p className="text-sm font-semibold">{formatINR(slot.product.price)}</p>
+                      <p className="truncate text-base font-semibold text-[var(--platform-text-primary)]">{displayProduct.name}</p>
+                      <p className="text-sm font-semibold">{formatINR(displayProduct.price)}</p>
                       <p className="text-xs text-[var(--platform-text-muted)]">
-                        {slot.heading} · {slot.href}
+                        /product/{displayProduct.slug}
                       </p>
                     </div>
                   </>
                 ) : (
-                  <div className="min-w-0 flex-1 py-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
-                      Position {index + 1}
-                    </p>
-                    <CmsAssignmentSourceBadge source="missing" />
+                  <div className="min-w-0 flex-1 space-y-2 py-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                        Position {index + 1}
+                      </p>
+                      <CmsAssignmentSourceBadge source="missing" />
+                    </div>
+                    {isMissing ? (
+                      <div className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
+                        <p className="font-semibold">Product missing from catalog</p>
+                        <p className="mt-0.5 text-xs text-red-800">
+                          Slug <span className="font-mono">{slot.slug}</span> no longer exists. Replace this slot before publishing.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-[var(--platform-text-muted)]">No product assigned.</p>
+                    )}
                   </div>
                 )}
 
-                <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-2">
+                <div className="flex shrink-0 items-start justify-end">
                   <button
                     type="button"
                     onClick={() => setReplaceIndex(index)}
@@ -236,26 +245,11 @@ export function MiniCarouselSlotEditor({
                     <Replace className="size-3.5" aria-hidden="true" />
                     Replace
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedOverride(expandedOverride === index ? null : index)}
-                    className="platform-btn-ghost platform-btn-sm inline-flex items-center gap-1 text-[var(--platform-text-muted)]"
-                  >
-                    <ChevronDown className={cn("size-3.5 transition", expandedOverride === index && "rotate-180")} aria-hidden="true" />
-                    Override
-                  </button>
                 </div>
               </div>
-
-              {expandedOverride === index ? (
-                <div className="mt-4 grid gap-2 border-t border-[var(--platform-border)] pt-4 text-xs text-[var(--platform-text-secondary)]">
-                  <p>Heading: {slot.heading || "—"}</p>
-                  <p>Link: {slot.href || "—"}</p>
-                  <p>CTA: {slot.ctaLabel || "—"}</p>
-                </div>
-              ) : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
       </CmsEditorSection>
 

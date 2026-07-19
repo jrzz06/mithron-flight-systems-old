@@ -602,7 +602,7 @@ export function CheckoutPageClient() {
     let active = true;
     const controller = new AbortController();
 
-    fetch("/api/account/addresses", { signal: controller.signal })
+    fetchWithTimeout("/api/account/addresses", { signal: controller.signal }, 10_000)
       .then(async (response) => {
         if (response.status === 401) {
           if (active) {
@@ -711,7 +711,7 @@ export function CheckoutPageClient() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/payments/providers", { cache: "no-store" })
+    fetchWithTimeout("/api/payments/providers", { cache: "no-store" }, 10_000)
       .then(async (response) => (response.ok ? response.json() : { providers: [] }))
       .then((payload) => {
         if (!active) return;

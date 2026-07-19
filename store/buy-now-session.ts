@@ -178,10 +178,6 @@ export function waitForBuyNowPersist() {
   });
 }
 
-export function useBuyNowActive() {
-  return useBuyNowStore((state) => state.active && Boolean(state.item));
-}
-
 export function useBuyNowItem() {
   return useBuyNowStore((state) => (state.active ? state.item : null));
 }

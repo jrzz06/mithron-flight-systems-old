@@ -10,6 +10,7 @@ import { getCatalogShowcaseMedia } from "@/lib/catalog-showcase-media";
 import { resolveNavbarInkFromShowcase } from "@/lib/navbar-ink-sampling";
 import { catalogCinematicBannerFrame } from "@/config/catalog-routes";
 import type { CatalogProductGroup } from "@/lib/catalog-product-listing";
+import { slimCatalogListingProducts } from "@/lib/catalog-product-listing";
 import styles from "./catalog-page.module.css";
 
 function CatalogListingSkeleton() {
@@ -74,14 +75,15 @@ export function CatalogPage({
   initialQuery?: string;
   showBack?: boolean;
 }) {
+  const listingProducts = slimCatalogListingProducts(products);
   const isShowroom = presentation === "showroom";
   const optimizedShowcase = showcaseImage ? getCatalogShowcaseMedia(showcaseImage.src) : null;
   const showcaseAsset = showcaseImage ? getResponsiveAssetForSrc(showcaseImage.src) : null;
   const catalogNavbarInk = showcaseImage
     ? resolveNavbarInkFromShowcase(showcaseImage, showcaseAsset?.dominantColor)
     : null;
-  const heroProduct = products[0];
-  const heroMetrics = products.slice(0, 3);
+  const heroProduct = listingProducts[0];
+  const heroMetrics = listingProducts.slice(0, 3);
   const catalogTitle = title ?? heroProduct?.category ?? "Mithron products";
   const catalogSubtitle = subtitle ?? (heroProduct ? `Browse ${heroProduct.category.toLowerCase()} selected for professional use.` : "Browse drones, accessories, and work-ready products from Mithron.");
   const shouldRenderFallbackHero = !showcaseImage && title && subtitle && heroImage;
@@ -198,7 +200,7 @@ export function CatalogPage({
       >
         <Suspense fallback={<CatalogListingSkeleton />}>
           <CatalogFilteredListing
-            products={products}
+            products={listingProducts}
             mode={listingMode}
             presentation={presentation}
             title={catalogTitle}

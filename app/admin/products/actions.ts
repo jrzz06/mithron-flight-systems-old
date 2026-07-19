@@ -359,7 +359,6 @@ export async function saveProductCategoryFormAction(formData: FormData) {
     );
 
     revalidatePath("/admin/products");
-    revalidatePath("/admin/cms");
     revalidatePath("/products");
   });
 }
@@ -417,7 +416,6 @@ export async function deleteProductCategoryFormAction(formData: FormData) {
     );
 
     revalidatePath("/admin/products");
-    revalidatePath("/admin/cms");
   });
 }
 

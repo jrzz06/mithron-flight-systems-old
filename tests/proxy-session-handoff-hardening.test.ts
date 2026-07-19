@@ -17,4 +17,12 @@ describe("proxy session handoff hardening", () => {
     expect(proxySource).toMatch(/requestHeaders\.set\(SESSION_HANDOFF_ROLE_HEADER/);
     expect(proxySource).toMatch(/requestHeaders\.set\(SESSION_HANDOFF_VERIFIED_HEADER/);
   });
+
+  it("control-plane layouts resolve auth via getCurrentAuthContext (JWT cross-check)", () => {
+    for (const layout of ["app/admin/layout.tsx", "app/warehouse/layout.tsx", "app/supplier/layout.tsx"]) {
+      const layoutSource = readFileSync(join(process.cwd(), layout), "utf8");
+      expect(layoutSource).toContain("getCurrentAuthContext");
+      expect(layoutSource).not.toContain("readSessionHandoff");
+    }
+  });
 });

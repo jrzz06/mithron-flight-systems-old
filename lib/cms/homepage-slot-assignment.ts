@@ -4,8 +4,7 @@ import { SHELF_PRODUCT_CARD_SLOTS } from "@/config/homepage-shelf";
 import type { Product } from "@/config/types";
 import { mapProductToReplaceItem, type ShelfSlotProductItem } from "@/lib/admin/shelf-slot-product";
 import {
-  pickHomeMiniCarouselItems,
-  resolveHomeMiniCarouselItems
+  pickHomeMiniCarouselItems
 } from "@/lib/home/mini-carousel";
 import {
   CMS_SHELF_KEY_TO_ID,
@@ -80,6 +79,22 @@ export function resolveShelfSlotAssignments(
   });
 }
 
+/** Slot badge sources from live editor slugs (not stale server shelf). */
+export function resolveClientShelfSlotSources(
+  clientSlugs: string[],
+  isInferredAssignment: boolean,
+  products: Product[],
+  slotCount = SHELF_PRODUCT_CARD_SLOTS
+): SlotAssignmentSource[] {
+  const padded = padShelfSlugs(clientSlugs, slotCount);
+  const bySlug = new Set(products.map((product) => product.slug).filter(Boolean));
+  return padded.map((slug) => {
+    if (!slug) return "missing";
+    if (!bySlug.has(slug)) return "missing";
+    return isInferredAssignment ? "inferred" : "pinned";
+  });
+}
+
 function slideFromProduct(product: Product, index: number): CmsMiniCarouselSlide {
   return {
     id: `inferred-${product.slug}-${index}`,
@@ -117,7 +132,6 @@ export function resolveMiniCarouselSlotAssignments(
     .filter((slide) => slide.enabled !== false)
     .sort((a, b) => a.sortOrder - b.sortOrder);
   const usingInferredCatalog = storedSlides.length === 0;
-  const effectiveItems = resolveHomeMiniCarouselItems(products, miniCarousel);
 
   if (usingInferredCatalog) {
     const inferred = pickHomeMiniCarouselItems(products);
@@ -144,20 +158,23 @@ export function resolveMiniCarouselSlotAssignments(
 
   return storedSlides.map((slide, index) => {
     const product = slide.productSlug ? products.find((entry) => entry.slug === slide.productSlug) : undefined;
-    const effective = effectiveItems[index];
+    const mapped = product ? mapProductToReplaceItem(product) : null;
     const slug = slide.productSlug || (product?.slug ?? "");
+    const source: SlotAssignmentSource =
+      !slug || (slide.productSlug && !product) ? "missing" : miniCarouselSlotSource(storedSlides, index, slug, false);
+
     return {
       position: index,
       slug,
-      product: product ? mapProductToReplaceItem(product) : null,
-      source: miniCarouselSlotSource(storedSlides, index, slug, false),
+      product: mapped,
+      source,
       slideId: slide.id || `cms-slide-${index}`,
-      heading: slide.heading.trim() || effective?.label || product?.name || "",
-      description: slide.description.trim() || effective?.fullLabel || "",
+      heading: mapped?.name || slide.heading.trim() || "",
+      description: mapped?.name || slide.description.trim() || "",
       ctaLabel: slide.ctaLabel.trim() || "View",
-      href: slide.href.trim() || effective?.href || (product ? `/product/${product.slug}` : "/products"),
-      imageSrc: slide.imageSrc.trim() || product?.image?.src || effective?.media.src || "",
-      imageAlt: slide.imageAlt.trim() || product?.image?.alt || slide.heading,
+      href: mapped ? `/product/${mapped.slug}` : slide.href.trim() || "/products",
+      imageSrc: mapped?.imageSrc || slide.imageSrc.trim() || "",
+      imageAlt: mapped?.name || slide.imageAlt.trim() || slide.heading,
       enabled: slide.enabled !== false
     };
   });

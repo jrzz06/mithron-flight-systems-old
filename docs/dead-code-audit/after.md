@@ -123,3 +123,35 @@ See `review-queue.md` plus audit plan:
 - **Config:** removed `output: "standalone"` from `next.config.ts`
 - **Local:** deleted orphan `d:\mithuuu\node_modules` and `.env.vercel-backup`
 - **Validation:** `npm run typecheck` PASS, `npm run build` PASS
+
+## Batch — Safe cleanup allowlist (2026-07-19)
+
+### Leak fixes
+- `hooks/use-adaptive-navbar-tone.ts` — cancel recursive surface-ready RAF; reset mount flag on cleanup
+- `lib/control-plane/shared-live-sync-coordinator.ts` — remove armed visibility listener on teardown
+- `components/admin/orders/admin-orders-live-state.tsx` — LRU cap (~200) on `paymentVersionByOrderId`
+
+### Tier A + Tier B file deletes
+- 19 Tier A unused files (press forms, archive sync, CMS shells, config barrels, DataTable, etc.)
+- 12 Tier B files after contract-test retarget (stub actions, frames, badge, enterprise panel, media viewer, etc.)
+- Redirect pages **kept**: `/admin/enquiries`, `/admin/contact-requests`, `/admin/press`, `/admin/archives`
+
+### Dead export body removals
+- Catalog: `getDroneWorldProducts`, `getDroneCareProducts`, `getProductsByCategory`, `searchProducts`, `getRelatedProducts`
+- Store/search/utils: `useCartItems`, `useCartSource`, `useBuyNowActive`, search haystack/score helpers, `clearRecentSearches`, `STORE_CURRENCY_CODE`, `clamp`
+
+### Query / listing opts
+- Leads/enquiries: `select=*` → shared `LEADS_REST_SELECT`
+- Dashboard queue: `status=new&limit=8` at query time
+- Catalog listing: memoize `buildCatalogOriginalOrder`
+
+### Dead weight
+- Logs, `tmp-product-nav.mjs`, load-test before/after JSON, redundant 2026-07-18 docs (kept full-static + performance-baseline)
+- `.gitignore`: `tools/load-test-results*.json`
+
+### Validation (2026-07-19)
+- `npm run typecheck` PASS
+- `npm run build` PASS
+- Targeted Vitest (16 files / 101 tests) PASS
+- Knip remaining: ~183 unused exports (FormAction bodies kept exported for contract greps + lint)
+- Full suite still has pre-existing drift failures unrelated to this pass (e.g. warehouse-panel, workflows allocate)

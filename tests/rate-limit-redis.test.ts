@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { checkDistributedRateLimit, degradedRateLimitResult } from "@/lib/rate-limit-redis";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -27,6 +29,19 @@ describe("distributed rate limiting", () => {
     const result = degradedRateLimitResult("fail_open", 10, 60_000);
     expect(result.allowed).toBe(true);
     expect(result.degraded).toBe(true);
+  });
+
+  it("skips Postgres fallback after Redis failure when fail-open (cart timeout fix)", () => {
+    // Catch path must return degraded fail_open before bumpPostgresRateLimit so
+    // Redis timeout (~4s) + Postgres hang (~20s) cannot exceed client 15s abort.
+    const source = readFileSync(join(process.cwd(), "lib/rate-limit-redis.ts"), "utf8");
+    expect(source).toContain("fail_open endpoints");
+    expect(source).toContain("FetchTimeoutError on /api/account/cart");
+    const catchIdx = source.indexOf("withRedisTimeout(`RATE_LIMIT ${key}`");
+    const failOpenSkip = source.indexOf('if (degradedMode === "fail_open")', catchIdx);
+    const postgresFallback = source.indexOf("bumpPostgresRateLimit(key, maxRequests, windowMs)", catchIdx);
+    expect(failOpenSkip).toBeGreaterThan(catchIdx);
+    expect(postgresFallback).toBeGreaterThan(failOpenSkip);
   });
 
   it("keeps the in-memory limiter available for dev", () => {

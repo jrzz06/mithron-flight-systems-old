@@ -54,13 +54,22 @@ Handler patterns:
 
 ## Service-role reads
 
-`fetchAdminRecordsByColumn` bypasses RLS. Pass `requiredPermission` when calling it from user-facing code, or use an authenticated Supabase client for reads that should respect RLS.
+`fetchAdminRecordsByColumn` bypasses RLS. Runtime behavior is unchanged: a permission check runs **only** when `requiredPermission` is passed.
+
+For new call sites, pass one of:
+
+- `requiredPermission` — user-facing paths that should enforce RBAC here
+- `skipPermissionCheck: true` — guest/system paths that authorize separately (invoice access, payment webhooks/verify, checkout status)
+
+Prefer an authenticated Supabase client for reads that should respect RLS.
 
 Rotate `SUPABASE_SERVICE_ROLE_KEY` immediately if it was ever exposed (logs, client bundle, committed env file).
 
 ## Session handoff headers
 
 The proxy injects verified `x-mithron-auth-*` headers onto the **request** (not the response) after resolving the DB-backed role via `current_enterprise_role`. Inbound client-supplied handoff headers are **stripped** in `applyRequestSecurityHeaders()` before any downstream Server Component reads them. Never trust handoff headers set outside the proxy.
+
+Control-plane layouts (`admin` / `warehouse` / `supplier`) must call `getCurrentAuthContext()` so handoff role hints are cross-checked against the session JWT. Do not read handoff headers directly in layouts.
 
 ## Admin MFA
 
@@ -71,6 +80,7 @@ The proxy injects verified `x-mithron-auth-*` headers onto the **request** (not 
 - Public Supabase storage buckets (`mithron-products`, `mithron-cms`, etc.) are intentionally world-readable for storefront media.
 - Never upload sensitive documents to public buckets. Use `mithron-warehouse-documents` (private) for operational files.
 - SVG uploads are blocked server-side in `assertAllowedMediaMimeType()`.
+- Upload paths that have file bytes also call `assertMediaMimeMatchesContent()` to reject clear MIME spoofing. Inconclusive signatures keep the declared allowlisted MIME (no false rejects).
 
 ## Content Security Policy
 

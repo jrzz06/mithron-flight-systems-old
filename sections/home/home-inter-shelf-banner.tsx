@@ -8,11 +8,11 @@ export function HomeInterShelfBanner({
   testId,
   priority = false
 }: {
-  banner: CmsInterShelfBanner;
+  banner: CmsInterShelfBanner | null | undefined;
   testId: string;
   priority?: boolean;
 }) {
-  if (!banner.enabled || !banner.imageSrc.trim()) return null;
+  if (!banner?.enabled || !banner.imageSrc?.trim()) return null;
 
   const alignmentClass =
     banner.alignment === "center"

@@ -1,16 +1,12 @@
 import { getAdminNavMetricsPayload } from "@/services/nav-metrics";
 import {
   getWarehouseSnapshot,
-  getCmsWorkspaceSnapshot,
-  getMediaLibrarySnapshot,
   getProductManagerSnapshot
 } from "@/services/admin";
 import { getCsvInventoryRows } from "@/services/csv-inventory-source";
 import { listAdminLeads } from "@/services/leads";
 import { listActiveWarehouses } from "@/services/warehouses";
 import { getUserGovernanceSnapshot, getAdminSuppliersSnapshot, getAuditObservabilitySnapshot } from "@/services/admin";
-import { listAdminPressCoverage } from "@/services/press-coverage";
-import { listAdminProductReviews } from "@/services/customer-product-reviews";
 import type { AdminLiveResourceId } from "@/lib/admin/realtime/admin-entity-store";
 import type { AdminLiveResourcePayload } from "@/lib/admin/realtime/admin-resource-registry";
 import type { AdminEntityRow } from "@/lib/admin/realtime/admin-entity-store";
@@ -124,14 +120,6 @@ export async function loadAdminLiveResource(resource: AdminLiveResourceId): Prom
       const warehouses = await listActiveWarehouses().catch(() => []);
       return { resource, generatedAt, data: { warehouses: asRows(warehouses) } };
     }
-    case "reviews": {
-      const reviews = await listAdminProductReviews({ status: "all" }).catch(() => []);
-      return { resource, generatedAt, data: { customer_order_reviews: asRows(reviews) } };
-    }
-    case "articles": {
-      const articles = await listAdminPressCoverage({ status: "all", q: "" }).catch(() => []);
-      return { resource, generatedAt, data: { press_coverage: asRows(articles) } };
-    }
     case "audit": {
       const snapshot = await getAuditObservabilitySnapshot().catch(() => ({
         data: {
@@ -154,27 +142,6 @@ export async function loadAdminLiveResource(resource: AdminLiveResourceId): Prom
     }
     case "archives": {
       return { resource, generatedAt, data: { data_archive_runs: [] } };
-    }
-    case "cms": {
-      const snapshot = await getCmsWorkspaceSnapshot().catch(() => ({ data: { tables: [] as Array<{ table: string; rows: unknown[] }> } }));
-      const data: Record<string, AdminEntityRow[]> = {};
-      for (const table of snapshot.data.tables) {
-        data[table.table] = asRows(table.rows);
-      }
-      return { resource, generatedAt, data };
-    }
-    case "media": {
-      const snapshot = await getMediaLibrarySnapshot().catch(() => ({
-        data: { assets: [], productLinks: [] }
-      }));
-      return {
-        resource,
-        generatedAt,
-        data: {
-          media_assets: asRows(snapshot.data.assets),
-          product_media_assets: asRows(snapshot.data.productLinks)
-        }
-      };
     }
     default:
       return { resource, generatedAt, data: {} };

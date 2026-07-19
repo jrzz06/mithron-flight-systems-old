@@ -23,8 +23,13 @@ function canViewProduct(status: string) {
 }
 
 export default async function SupplierProductsPage() {
-  const [context, policy] = await Promise.all([getCurrentAuthContext(), getAdminSettingsPolicy()]);
-  const products = context.userId ? await listSupplierProducts(context.userId) : [];
+  const authPromise = getCurrentAuthContext();
+  const policyPromise = getAdminSettingsPolicy();
+  const context = await authPromise;
+  const [policy, products] = await Promise.all([
+    policyPromise,
+    context.userId ? listSupplierProducts(context.userId) : Promise.resolve([])
+  ]);
   const draftCount = products.filter((product) => {
     const status = String(product.workflow_status ?? "draft");
     return status === "draft" || status === "rejected";
@@ -69,15 +74,15 @@ export default async function SupplierProductsPage() {
 
               return (
                 <tr key={slug} className="border-t border-[var(--platform-border)]">
-                  <td className="px-4 py-3 align-top">
-                    <div className="truncate font-medium text-[var(--platform-text-primary)]">{String(product.name)}</div>
-                    {hint ? <p className="mt-1 line-clamp-2 text-xs text-[var(--platform-text-muted)]">{hint}</p> : null}
+                  <td className="px-4 py-3.5 align-top">
+                    <div className="truncate text-sm font-semibold tracking-[-0.01em] text-[var(--platform-text-primary)]">{String(product.name)}</div>
+                    {hint ? <p className="mt-1.5 line-clamp-2 text-xs leading-4 text-[var(--platform-text-muted)]">{hint}</p> : null}
                   </td>
-                  <td className="px-4 py-3 align-top">
+                  <td className="px-4 py-3.5 align-top">
                     <StatusPill status={status} />
                   </td>
-                  <td className="px-4 py-3 align-top text-[var(--platform-text-muted)]">{updated}</td>
-                  <td className="px-4 py-3 align-top">
+                  <td className="px-4 py-3.5 align-top text-xs text-[var(--platform-text-muted)]">{updated}</td>
+                  <td className="px-4 py-3.5 align-top">
                     <div className="flex flex-nowrap items-center justify-end gap-3">
                       {canEditProduct(status) ? (
                         <Link href={`/supplier/products/${slug}/edit`} className="shrink-0 text-[var(--platform-accent)] hover:underline">
@@ -106,7 +111,11 @@ export default async function SupplierProductsPage() {
                           <input type="hidden" name="slug" value={slug} />
                           <OperationalSubmitButton
                             pendingLabel="Deleting"
-                            confirmMessage={`Delete draft "${String(product.name)}"? This cannot be undone.`}
+                            confirmMessage={`Delete draft "${String(product.name)}"?`}
+                            confirmDescription="This cannot be undone. Type DELETE to confirm."
+                            requireTypedText="DELETE"
+                            typedTextLabel="Type DELETE to permanently remove this draft"
+                            confirmLabel="Delete draft"
                             className="text-rose-300 hover:text-rose-200"
                           >
                             Delete draft

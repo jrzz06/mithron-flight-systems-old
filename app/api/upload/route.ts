@@ -57,7 +57,6 @@ export async function POST(request: Request) {
       code: "UPLOAD_API_RETIRED",
       message: "Uploads are not available from this endpoint anymore.",
       alternatives: [
-        "/admin/media",
         "tools/regenerate-editorial-manifest.mjs",
         "tools/backfill-canonical-media.mjs"
       ]
@@ -132,10 +131,11 @@ export async function POST(request: Request) {
       "X-Mithron-Upload-Deprecated": "true"
     });
   } catch (error) {
+    console.error("[upload] Canonical media upload failed.", error);
     return json(500, {
       status: "FAILED",
       code: "UPLOAD_FAILED",
-      message: error instanceof Error ? error.message : "Canonical media upload failed."
+      message: "Canonical media upload failed."
     });
   }
 }

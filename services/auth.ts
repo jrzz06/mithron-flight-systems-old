@@ -4,7 +4,7 @@ import { authorizeRoute, defaultPathForRole, isStrictAdminRole } from "@/lib/aut
 import { readSessionHandoff } from "@/lib/auth/session-handoff";
 import { assertRolePermission, assertAnyRolePermission, PermissionDeniedError, normalizeCmsRole, type EnterprisePermission } from "@/lib/auth/permissions";
 import { ProfileDisabledError } from "@/lib/auth/profile-disabled";
-import { getCachedJson, REDIS_CACHE_KEYS, setCachedJson } from "@/lib/cache-redis";
+import { getCachedJson, REDIS_CACHE_KEYS, setCachedJson, withSingleFlight } from "@/lib/cache-redis";
 import { createClient } from "@/lib/server";
 import { provisionAuthenticatedUserIfMissing } from "@/services/auth-provisioning";
 import { recordSecurityEvent } from "@/services/security-observability";
@@ -26,9 +26,22 @@ export type AuthContext = {
 type CachedAuthRoleContext = {
   role: ReturnType<typeof normalizeCmsRole>;
   disabled?: boolean;
+  /** Aligned with proxy.ts — avoid clobbering profileComplete on SET. */
+  profileComplete?: boolean;
 };
 
 const AUTH_ROLE_CACHE_TTL_SECONDS = 30;
+
+function buildAuthRoleCachePayload(
+  role: ReturnType<typeof normalizeCmsRole>,
+  options?: { disabled?: boolean; profileComplete?: boolean }
+): CachedAuthRoleContext {
+  return {
+    role,
+    disabled: options?.disabled ?? false,
+    profileComplete: options?.profileComplete ?? (role !== null && role !== "user")
+  };
+}
 
 async function resolveCurrentEnterpriseRole(supabase: SupabaseServerClient) {
   const { data, error } = await supabase.rpc("current_enterprise_role");
@@ -137,34 +150,80 @@ export const getCurrentAuthContext = cache(async (): Promise<AuthContext> => {
     }
   }
 
+  // Prefer verified middleware handoff before issuing another profiles/RPC round-trip.
+  if (handoff && userId && handoff.userId === userId) {
+    if (authCacheKey) {
+      void setCachedJson(
+        authCacheKey,
+        buildAuthRoleCachePayload(handoff.role, { disabled: false, profileComplete: handoff.role !== "user" }),
+        AUTH_ROLE_CACHE_TTL_SECONDS
+      );
+    }
+    return withClaims({
+      userId,
+      role: handoff.role
+    });
+  }
+
+  if (authCacheKey && userId) {
+    const payload = await withSingleFlight(authCacheKey, AUTH_ROLE_CACHE_TTL_SECONDS, async () => {
+      const [gate, role] = await Promise.all([
+        resolveProfileGate(supabase, userId),
+        resolveCurrentEnterpriseRole(supabase)
+      ]);
+
+      if (gate.blocked) {
+        return buildAuthRoleCachePayload(null, { disabled: true, profileComplete: false });
+      }
+
+      if (sessionIat && gate.sessionRevokedAt) {
+        const revokedMs = Date.parse(gate.sessionRevokedAt);
+        if (Number.isFinite(revokedMs) && sessionIat * 1000 < revokedMs) {
+          return buildAuthRoleCachePayload(null, { disabled: true, profileComplete: false });
+        }
+      }
+
+      let resolvedRole = role;
+      if (!resolvedRole) {
+        try {
+          await provisionAuthenticatedUserIfMissing({
+            userId,
+            email,
+            preferredRole: "user"
+          });
+          resolvedRole = await resolveCurrentEnterpriseRole(supabase);
+        } catch (provisionError) {
+          if (provisionError instanceof ProfileDisabledError) {
+            return buildAuthRoleCachePayload(null, { disabled: true, profileComplete: false });
+          }
+          console.warn("[mithron-auth] Failed to auto-provision authenticated user access.", provisionError);
+        }
+      }
+
+      return buildAuthRoleCachePayload(resolvedRole, {
+        disabled: false,
+        profileComplete: resolvedRole !== null && resolvedRole !== "user"
+      });
+    });
+
+    if (payload.disabled) {
+      return withClaims({ userId: null, role: null, disabled: true });
+    }
+    return withClaims({ userId, role: payload.role });
+  }
+
   if (userId) {
     const gate = await resolveProfileGate(supabase, userId);
     if (gate.blocked) {
-      if (authCacheKey) {
-        void setCachedJson(authCacheKey, { role: null, disabled: true } satisfies CachedAuthRoleContext, AUTH_ROLE_CACHE_TTL_SECONDS);
-      }
       return withClaims({ userId: null, role: null, disabled: true });
     }
 
     if (sessionIat && gate.sessionRevokedAt) {
       const revokedMs = Date.parse(gate.sessionRevokedAt);
       if (Number.isFinite(revokedMs) && sessionIat * 1000 < revokedMs) {
-        if (authCacheKey) {
-          void setCachedJson(authCacheKey, { role: null, disabled: true } satisfies CachedAuthRoleContext, AUTH_ROLE_CACHE_TTL_SECONDS);
-        }
         return withClaims({ userId: null, role: null, disabled: true });
       }
     }
-  }
-
-  if (handoff && userId && handoff.userId === userId) {
-    if (authCacheKey) {
-      void setCachedJson(authCacheKey, { role: handoff.role, disabled: false } satisfies CachedAuthRoleContext, AUTH_ROLE_CACHE_TTL_SECONDS);
-    }
-    return withClaims({
-      userId,
-      role: handoff.role
-    });
   }
 
   let role = await resolveCurrentEnterpriseRole(supabase);
@@ -179,17 +238,10 @@ export const getCurrentAuthContext = cache(async (): Promise<AuthContext> => {
       role = await resolveCurrentEnterpriseRole(supabase);
     } catch (provisionError) {
       if (provisionError instanceof ProfileDisabledError) {
-        if (authCacheKey) {
-          void setCachedJson(authCacheKey, { role: null, disabled: true } satisfies CachedAuthRoleContext, AUTH_ROLE_CACHE_TTL_SECONDS);
-        }
         return withClaims({ userId: null, role: null, disabled: true });
       }
       console.warn("[mithron-auth] Failed to auto-provision authenticated user access.", provisionError);
     }
-  }
-
-  if (authCacheKey) {
-    void setCachedJson(authCacheKey, { role, disabled: false } satisfies CachedAuthRoleContext, AUTH_ROLE_CACHE_TTL_SECONDS);
   }
 
   return withClaims({

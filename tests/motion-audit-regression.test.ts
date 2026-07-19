@@ -79,7 +79,7 @@ describe("storefront motion audit regressions", () => {
     const compositeCss = `${source("sections/home/home-landing-composite.module.css")}\n${source("sections/home/home-shelf-shared.module.css")}`;
     const component = source("components/cards/product-hover-card.tsx");
     const button = source("components/ui/button.tsx");
-    const badge = source("components/ui/badge.tsx");
+    const badge = source("components/admin/orders/order-status-badge.tsx");
 
     expect(cardCss).not.toMatch(/\.card:hover\s*{[^}]*transform:/s);
     expect(cardCss).not.toMatch(/backdrop-filter:\s*blur\(20px\)/);

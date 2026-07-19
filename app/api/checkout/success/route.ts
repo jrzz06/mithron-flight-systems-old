@@ -11,7 +11,9 @@ async function assertPaidOrderAccess(input: {
   email?: string;
   request: Request;
 }) {
-  const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) return { ok: false as const, status: 404, error: "Order not found." };
 

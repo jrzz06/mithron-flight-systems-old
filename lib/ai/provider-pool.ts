@@ -9,14 +9,16 @@ export type AiProviderCredential = {
   model: string;
 };
 
-const DEFAULT_GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+/** Groq decommissioned llama-4-scout; use a currently listed chat model. */
+const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
 const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-3.1-8b-instruct";
 const DEFAULT_CEREBRAS_MODEL = "llama3.1-8b";
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 
 /** HTTP statuses where trying the next provider/key may succeed. */
 export function isRetryableProviderStatus(status: number) {
-  return status === 401 || status === 403 || status === 429 || status >= 500;
+  // 404: model removed / renamed — fall through to the next credential.
+  return status === 401 || status === 403 || status === 404 || status === 429 || status >= 500;
 }
 
 /** @deprecated Use isRetryableProviderStatus */

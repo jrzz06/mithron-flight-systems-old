@@ -134,6 +134,79 @@ export function assertAllowedMediaMimeType(mimeType: string, bucket: string) {
   return normalizedMimeType;
 }
 
+function bytesStartWith(bytes: Uint8Array, signature: number[]) {
+  if (bytes.length < signature.length) return false;
+  return signature.every((value, index) => bytes[index] === value);
+}
+
+function readAscii(bytes: Uint8Array, start: number, length: number) {
+  if (bytes.length < start + length) return "";
+  return String.fromCharCode(...bytes.subarray(start, start + length));
+}
+
+/**
+ * Best-effort content sniff for allowlisted media types.
+ * Returns null when the signature is inconclusive (caller must keep declared MIME).
+ */
+export function sniffMediaMimeFromBytes(bytes: Uint8Array): string | null {
+  if (!bytes.length) return null;
+
+  if (bytesStartWith(bytes, [0xff, 0xd8, 0xff])) return "image/jpeg";
+  if (bytesStartWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return "image/png";
+  if (bytesStartWith(bytes, [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]) || bytesStartWith(bytes, [0x47, 0x49, 0x46, 0x38, 0x39, 0x61])) {
+    return "image/gif";
+  }
+  if (bytesStartWith(bytes, [0x52, 0x49, 0x46, 0x46]) && readAscii(bytes, 8, 4) === "WEBP") {
+    return "image/webp";
+  }
+  if (bytesStartWith(bytes, [0x1a, 0x45, 0xdf, 0xa3])) return "video/webm";
+
+  // ISO BMFF (ftyp): AVIF / MP4 / QuickTime
+  if (bytes.length >= 12 && readAscii(bytes, 4, 4) === "ftyp") {
+    const brand = readAscii(bytes, 8, 4).toLowerCase();
+    const compatible = readAscii(bytes, 16, Math.min(24, Math.max(0, bytes.length - 16))).toLowerCase();
+    const brands = `${brand}${compatible}`;
+    if (brands.includes("avif") || brands.includes("avis")) return "image/avif";
+    if (brands.includes("qt  ") || brand === "qt  ") return "video/quicktime";
+    if (
+      brands.includes("isom")
+      || brands.includes("iso2")
+      || brands.includes("mp41")
+      || brands.includes("mp42")
+      || brands.includes("avc1")
+      || brands.includes("m4v ")
+    ) {
+      return "video/mp4";
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Reject only clear MIME spoofing. Inconclusive sniff keeps the declared allowlisted MIME.
+ */
+export function assertMediaMimeMatchesContent(input: {
+  declaredMime: string;
+  bytes: Uint8Array;
+}): string {
+  const declared = input.declaredMime.trim().toLowerCase();
+  if (!ALLOWED_MEDIA_MIME_TYPES.has(declared)) {
+    throw new Error(`Media MIME type ${input.declaredMime} is not allowed.`);
+  }
+
+  const sniffed = sniffMediaMimeFromBytes(input.bytes);
+  if (!sniffed) {
+    return declared;
+  }
+  if (sniffed === declared) {
+    return declared;
+  }
+  throw new Error(
+    `Uploaded file content looks like ${sniffed}, but the declared type was ${declared}.`
+  );
+}
+
 type EnvSource = Record<string, string | undefined>;
 
 type UploadSizeInput = {

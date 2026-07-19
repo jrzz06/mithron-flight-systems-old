@@ -445,8 +445,47 @@
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 150ms ease, opacity 150ms ease;
+  transition: background-color 150ms ease, opacity 150ms ease, transform 100ms ease;
   cursor: pointer;
+}
+
+[data-control-plane] .platform-btn-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+[data-control-plane] [data-platform-nav] a,
+[data-control-plane] [data-admin-nav] a,
+[data-control-plane] [data-admin-topbar] a,
+[data-control-plane] [data-admin-topbar] button {
+  transition: transform 100ms ease, opacity 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+[data-control-plane] [data-platform-nav] a:active,
+[data-control-plane] [data-admin-nav] a:active,
+[data-control-plane] [data-admin-topbar] a:active,
+[data-control-plane] [data-admin-topbar] button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+[data-control-plane] [data-platform-nav] a[aria-busy="true"],
+[data-control-plane] [data-admin-nav] a[aria-busy="true"] {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-control-plane] .platform-btn-primary:active:not(:disabled),
+  [data-control-plane] .platform-btn-secondary:active:not(:disabled),
+  [data-control-plane] .platform-btn-ghost:active:not(:disabled),
+  [data-control-plane] .platform-btn-danger:active:not(:disabled),
+  [data-control-plane] [data-platform-nav] a:active,
+  [data-control-plane] [data-admin-nav] a:active,
+  [data-control-plane] [data-admin-topbar] a:active,
+  [data-control-plane] [data-admin-topbar] button:active:not(:disabled),
+  [data-control-plane] [data-admin-order-row]:active,
+  [data-control-plane] [data-selectable-panel]:active {
+    transform: none;
+  }
 }
 
 [data-control-plane] a.platform-btn-primary,
@@ -479,7 +518,7 @@
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 100ms ease;
   cursor: pointer;
 }
 
@@ -492,6 +531,10 @@
   background-color: var(--platform-accent-soft);
   border-color: color-mix(in srgb, var(--platform-accent) 35%, var(--platform-border-strong));
   color: var(--platform-text-primary);
+}
+
+[data-control-plane] .platform-btn-secondary:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 [data-control-plane] .platform-btn-secondary:disabled {
@@ -515,13 +558,17 @@
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease, transform 100ms ease;
   cursor: pointer;
 }
 
 [data-control-plane] .platform-btn-ghost:hover {
   background-color: var(--platform-surface-muted);
   color: var(--platform-text-primary);
+}
+
+[data-control-plane] .platform-btn-ghost:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 [data-control-plane] .platform-btn-ghost:disabled {
@@ -609,7 +656,7 @@
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 100ms ease;
   cursor: pointer;
 }
 
@@ -624,9 +671,24 @@
   color: var(--platform-danger);
 }
 
+[data-control-plane] .platform-btn-danger:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 [data-control-plane] .platform-btn-danger:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Selectable list/panel press feedback */
+[data-control-plane] [data-admin-order-row],
+[data-control-plane] [data-selectable-panel] {
+  transition: background-color 150ms ease, transform 100ms ease, border-color 150ms ease;
+}
+
+[data-control-plane] [data-admin-order-row]:active,
+[data-control-plane] [data-selectable-panel]:active {
+  transform: scale(0.995);
 }
 
 [data-control-plane] .platform-feedback-success {
@@ -748,6 +810,34 @@
   }
 }
 
+@keyframes confirmBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes confirmDialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.confirm-dialog-backdrop {
+  animation: confirmBackdropIn 160ms ease-out;
+}
+
+.confirm-dialog-panel {
+  animation: confirmDialogIn 180ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .platform-loading-pulse {
     animation: none;
@@ -759,6 +849,11 @@
   [data-control-plane] textarea,
   [data-control-plane] tbody tr {
     transition-duration: 1ms;
+  }
+
+  .confirm-dialog-backdrop,
+  .confirm-dialog-panel {
+    animation: none;
   }
 }
 
@@ -882,4 +977,11 @@
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
   }
+}
+
+/* Prevent storefront #fafafa from showing below control-plane shells. */
+html:has([data-control-plane]),
+body:has([data-control-plane]) {
+  min-height: 100dvh;
+  background: var(--platform-bg);
 }

@@ -99,21 +99,14 @@ export async function listAdminWarehouses(
   options: { includeOperatorCounts?: boolean; activeOnly?: boolean } = {}
 ): Promise<WarehouseOption[]> {
   const activeOnly = options.activeOnly ?? false;
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin/warehouse pages — staff need current warehouse state, not a
+  // 30s-stale cache. Redis stays reserved for customer-facing storefront reads.
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
-  const cacheKey = activeOnly
-    ? REDIS_CACHE_KEYS.controlPlaneAdminWarehousesActive
-    : REDIS_CACHE_KEYS.controlPlaneAdminWarehouses;
 
-  return readThroughCache(
-    cacheKey,
-    30,
-    () =>
-      cacheControlPlaneRead(
-        ["admin-warehouses", activeOnly ? "active" : "all"],
-        () => loadAdminWarehouses(env, activeOnly, options),
-        { revalidate: 30, tags: ["admin-warehouses", "control-plane-warehouses"] }
-      )
+  return cacheControlPlaneRead(
+    ["admin-warehouses", activeOnly ? "active" : "all"],
+    () => loadAdminWarehouses(env, activeOnly, options),
+    { revalidate: 30, tags: ["admin-warehouses", "control-plane-warehouses"] }
   );
 }
 

@@ -47,7 +47,11 @@ import { deriveProductSku } from "@/lib/product-sku";
 import { upsertProductInventoryRecord } from "@/services/product-inventory";
 import { saveProductInventory } from "@/services/product-inventory-workflow";
 import { requirePermission, getCurrentAuthContext } from "@/services/auth";
-import { resolveWarehouseScope } from "@/services/warehouse-scope";
+import {
+  orderMatchesWarehouseScope,
+  resolveWarehouseScope
+} from "@/services/warehouse-scope";
+import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { roleHasPermission, PermissionDeniedError } from "@/lib/auth/permissions";
 import { ProfileDisabledError } from "@/lib/auth/profile-disabled";
 import {
@@ -79,7 +83,8 @@ type JsonRecord = Record<string, unknown>;
 type InventorySourceTable = "inventory" | "warehouse_stock";
 
 const warehouseActionReadColumns = {
-  orderLifecycle: "select=id,status,payment_status,fulfillment_status,shipment_tracking,timeline,created_by_user_id,order_number,customer_email"
+  orderLifecycle:
+    "select=id,status,payment_status,fulfillment_status,shipment_tracking,timeline,created_by_user_id,order_number,customer_email,metadata,updated_at"
 };
 
 async function currentActorId() {
@@ -94,6 +99,15 @@ async function requireWarehouseActor() {
 async function requireWarehouseScope() {
   const context = await requireWarehouseActor();
   return resolveWarehouseScope({ userId: context.userId, role: context.role });
+}
+
+async function assertOrderAccessibleInWarehouseScope(order: JsonRecord) {
+  const scope = await requireWarehouseScope();
+  const policy = await getAdminSettingsPolicy();
+  if (!orderMatchesWarehouseScope(order, scope, policy.defaultWarehouseCode)) {
+    throw new PermissionDeniedError("Order is outside your assigned warehouse.");
+  }
+  return scope;
 }
 
 async function requireProductCatalogActor() {
@@ -257,10 +271,15 @@ async function notifyCustomerAboutFulfillmentIfNeeded(input: {
 }
 
 async function resolveWarehouseCodeFromFormData(formData: FormData) {
+  const scope = await requireWarehouseScope();
+  // Non-global warehouse operators cannot spoof another site via form fields.
+  if (!scope.isGlobal) {
+    return scope.warehouseCode;
+  }
   const value = formData.get("warehouse_code");
   const raw = typeof value === "string" && value.trim()
     ? value.trim()
-    : await getDefaultWarehouseCode();
+    : scope.warehouseCode || (await getDefaultWarehouseCode());
   return assertValidWarehouseCode(raw);
 }
 
@@ -362,9 +381,10 @@ async function ensurePackedShipmentForOrder(input: {
   at: string;
 }) {
   const shipments = await fetchShipmentsByOrderId(input.orderId);
+  const activeShipmentStatuses = ["pending", "reserved", "packed", "ready_for_pickup"] as const;
   const existing = shipments.find((row) =>
-    ["pending", "packed", "ready_for_pickup"].includes(String(row.shipment_status ?? "pending"))
-  ) ?? shipments[0];
+    activeShipmentStatuses.includes(String(row.shipment_status ?? "pending") as typeof activeShipmentStatuses[number])
+  );
 
   if (existing) {
     const shipmentId = String(existing.id ?? "");
@@ -1177,8 +1197,9 @@ export async function updateWarehouseOrderLifecycleFormAction(
   const input = buildOrderLifecycleUpdateFromFormData(formData);
   const actorId = await currentActorId();
   const now = new Date().toISOString();
-  const warehouseCode = await resolveWarehouseCodeFromFormData(formData);
   const current = await fetchOrderRecord(input.orderId);
+  await assertOrderAccessibleInWarehouseScope(current);
+  const warehouseCode = await resolveWarehouseCodeFromFormData(formData);
   const expectedUpdatedAt = readExpectedUpdatedAt(formData, String(current.updated_at ?? ""));
   let nextStatus = input.status ?? String(current.status ?? "draft");
   const nextPayment = input.paymentStatus ?? String(current.payment_status ?? "not_required");
@@ -1328,21 +1349,6 @@ export async function completeWarehousePackingFormAction(formData: FormData) {
     },
     { actorId, at: now }
   );
-
-  const syncedFulfillment = String((result.order as JsonRecord)?.fulfillment_status ?? "");
-  if (syncedFulfillment !== "packed" && previousFulfillment === "picked") {
-    const nextFulfillment = assertOrderFulfillmentTransition(previousFulfillment, "packed");
-    const nextStatus = syncOrderStatusFromFulfillment(String(order.status ?? "assigned"), nextFulfillment);
-    await updateOrderRecord(
-      checklist.orderId,
-      {
-        status: nextStatus,
-        fulfillment_status: nextFulfillment,
-        updated_at: now
-      },
-      actorId
-    );
-  }
 
   await revalidateWarehouseFulfillmentPaths();
   revalidatePath("/warehouse/inventory");
@@ -1504,8 +1510,9 @@ export async function receiveWarehouseOrderFormAction(formData: FormData) {
   const orderId = readInventoryString(formData, "order_id");
   if (!orderId) throw new Error("Order is required.");
 
-  const warehouseCode = await resolveWarehouseCodeFromFormData(formData);
   const order = await fetchOrderRecord(orderId);
+  await assertOrderAccessibleInWarehouseScope(order);
+  const warehouseCode = await resolveWarehouseCodeFromFormData(formData);
   const fulfillment = String(order.fulfillment_status ?? "pending");
   if (fulfillment !== "pending") {
     throw new Error(`Only awaiting-receipt orders can be marked received. Current status is "${fulfillment}".`);
@@ -1527,6 +1534,9 @@ export async function cancelWarehouseOrderFormAction(formData: FormData) {
     || readInventoryString(formData, "reason")
     || "Emergency warehouse cancellation";
   if (!orderId) throw new Error("Order is required.");
+
+  const order = await fetchOrderRecord(orderId);
+  await assertOrderAccessibleInWarehouseScope(order);
 
   const expectedUpdatedAt = readOptionalExpectedUpdatedAt(formData, "expected_updated_at");
   await warehouseEmergencyDeleteOrderWorkflow({
@@ -1551,12 +1561,13 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
 
   const actorId = await currentActorId();
   const now = new Date().toISOString();
+  const order = await fetchOrderRecord(orderId);
+  await assertOrderAccessibleInWarehouseScope(order);
   const warehouseCode = await resolveWarehouseCodeFromFormData(formData);
   const warehouseConfig = await getWarehouseConfiguration();
   const carrierName = readInventoryString(formData, "carrier_name") || warehouseConfig.defaultCarrier;
   const trackingNumber = readInventoryString(formData, "tracking_number") || null;
 
-  let order = await fetchOrderRecord(orderId);
   let fulfillment = normalizeWarehouseFulfillmentStatus(String(order.fulfillment_status ?? "pending"));
   if (["dispatched", "delivered", "cancelled", "returned"].includes(fulfillment)) {
     throw new Error(`Order is already ${fulfillment}.`);
@@ -1571,8 +1582,8 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
       changeSummary: `Receive order ${orderId} for dispatch`,
       skipRevalidate: true
     });
-    order = await fetchOrderRecord(orderId);
-    fulfillment = normalizeWarehouseFulfillmentStatus(String(order.fulfillment_status ?? "packing"));
+    // Mutation succeeded — avoid a second round-trip; packing is the expected state.
+    fulfillment = "packing";
   }
 
   const shipmentId = await ensurePackedShipmentForOrder({
@@ -1599,14 +1610,19 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
   shipmentForm.set("change_summary", `Dispatch order ${orderId}`);
   await updateShipmentLifecycleFormAction(shipmentForm, { skipRevalidate: true });
 
-  await advanceOrderFulfillmentStep({
-    orderId,
-    warehouseCode,
-    nextFulfillment: "dispatched",
-    note: "Order dispatched from warehouse fulfillment",
-    changeSummary: `Dispatch order ${orderId}`,
-    skipRevalidate: true
-  });
+  // Shipment sync usually sets fulfillment to dispatched already; only advance if still behind.
+  const refreshed = await fetchOrderRecord(orderId);
+  fulfillment = normalizeWarehouseFulfillmentStatus(String(refreshed.fulfillment_status ?? "packing"));
+  if (fulfillment !== "dispatched" && fulfillment !== "delivered") {
+    await advanceOrderFulfillmentStep({
+      orderId,
+      warehouseCode,
+      nextFulfillment: "dispatched",
+      note: "Order dispatched from warehouse fulfillment",
+      changeSummary: `Dispatch order ${orderId}`,
+      skipRevalidate: true
+    });
+  }
 
   await revalidateWarehouseFulfillmentPaths();
   revalidatePath("/warehouse/inventory");

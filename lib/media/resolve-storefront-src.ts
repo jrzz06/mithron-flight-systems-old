@@ -1,12 +1,11 @@
 /**
- * H8 / Stage 5: Do NOT add `import "server-only"`.
- * This module is imported by client components (e.g. mithron-thumb-image,
- * mithron-mission-tile-image, mithron-brand-mark, hero-carousel). Splitting the
- * remote map fully server-side needs a dedicated follow-up pass.
+ * Shared by server + client image helpers. Uses the slim remote map (primary +
+ * webp variants only) so client bundles do not ship storagePath / unused formats.
+ * Do NOT add `import "server-only"` — client components import this module.
  */
 import pathAliases from "@/config/storefront-path-aliases.json";
 import { resolvePublicMediaUrl } from "@/lib/media/storage-provider";
-import remoteMapData from "@/data/mithron-storefront-remote-map.generated.json";
+import remoteMapData from "@/data/mithron-storefront-remote-map.slim.generated.json";
 import { storefrontMediaPaths } from "@/config/storefront-media-paths";
 import type { MithronAssetBucket, ResponsiveMediaAsset } from "@/config/types";
 

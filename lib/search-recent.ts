@@ -39,11 +39,3 @@ export function rememberRecentSearch(query: string) {
   }
 }
 
-export function clearRecentSearches() {
-  if (!isBrowser()) return;
-  try {
-    window.localStorage.removeItem(RECENT_SEARCHES_KEY);
-  } catch {
-    // Ignore storage failures.
-  }
-}

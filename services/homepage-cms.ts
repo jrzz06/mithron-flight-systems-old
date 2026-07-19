@@ -3,6 +3,7 @@ import { emptyHomepageCmsContent, type HomepageCmsContent } from "@/config/homep
 import {
   defaultHomepageCmsV2Content,
   mergeHomepageCmsV2Content,
+  overlayHomepageCmsV2Draft,
   type HomepageCmsV2Content
 } from "@/config/homepage-cms-v2";
 import { resolveEffectiveHomepageCmsContent } from "@/lib/home/homepage-resolution";
@@ -170,8 +171,8 @@ export function mergeUnifiedHomepageDraftPreview(payload: unknown): UnifiedHomep
   const liveV2 = mergeHomepageCmsV2Content(v2);
   return {
     v1: mergeHomepageV1DraftPreviewFromPayload(payload),
-    v2: draftV2 ? mergeHomepageCmsV2Content({ ...liveV2, ...draftV2 }) : liveV2
+    v2: draftV2 ? overlayHomepageCmsV2Draft(liveV2, draftV2) : liveV2
   };
 }
 
-export { defaultHomepageCmsV2Content, mergeHomepageCmsV2Content };
+export { defaultHomepageCmsV2Content, mergeHomepageCmsV2Content, overlayHomepageCmsV2Draft };

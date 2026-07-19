@@ -42,11 +42,13 @@ test.describe("Production admin testing", () => {
     await expect(page.getByRole("heading", { name: /supplier|approval|pending/i }).first()).toBeVisible({ timeout: 25_000 });
   });
 
-  test("admin CMS route loads", async ({ page }) => {
+  test("admin products route loads", async ({ page }) => {
     test.skip(!hasRoleCredentials("admin"), credentialsSkipMessage("admin"));
 
-    await loginAsRole(page, "admin", "/admin/cms");
-    await expect(page.locator("[data-admin-cms-route], [data-cms-home-dashboard]").first()).toBeVisible({ timeout: 25_000 });
+    await loginAsRole(page, "admin", "/admin/products");
+    await expect(page.locator("[data-product-search], [data-product-operational-grid]").first()).toBeVisible({
+      timeout: 25_000
+    });
   });
 
   test("admin inventory route loads", async ({ page }) => {

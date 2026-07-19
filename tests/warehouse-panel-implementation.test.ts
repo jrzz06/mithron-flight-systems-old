@@ -25,13 +25,12 @@ describe("warehouse panel implementation", () => {
       "app/warehouse/orders/page.tsx",
       "app/warehouse/fulfillment/page.tsx",
       "app/warehouse/fulfillment/[id]/page.tsx",
-      "app/warehouse/activity/page.tsx",
-      "components/warehouse/warehouse-frame.tsx"
+      "app/warehouse/activity/page.tsx"
     ]) {
       expect(exists(path), `${path} should exist`).toBe(true);
     }
 
-    const frame = source("components/warehouse/warehouse-frame.tsx");
+    const layout = source("app/warehouse/layout.tsx");
     const navConfig = source("components/platform/nav-config.ts");
     for (const label of ["Today", "Orders", "Fulfillment", "History"]) {
       expect(navConfig).toContain(label);
@@ -39,10 +38,10 @@ describe("warehouse panel implementation", () => {
     expect(navConfig).toContain("/warehouse/fulfillment");
     expect(navConfig).not.toContain("/warehouse/inventory");
     expect(navConfig).not.toContain("/warehouse/settings");
-    expect(frame).toContain("PlatformShell");
-    expect(frame).not.toContain("/admin/media");
-    expect(frame).not.toContain("/admin/users");
-    expect(frame).not.toContain("/admin/settings");
+    expect(layout).toContain("ControlPlaneParallelLayout");
+    expect(layout).toContain("data-warehouse-frame");
+    expect(navConfig).toContain("export const warehouseNavGroups");
+    expect(navConfig).not.toMatch(/warehouseNavGroups[\s\S]*\/admin\//);
   });
 
   it("keeps warehouse RBAC isolated from admin and sends warehouse users to the dashboard", () => {
@@ -53,28 +52,27 @@ describe("warehouse panel implementation", () => {
     expect(defaultPathForRole("warehouse")).toBe("/warehouse/dashboard");
 
     const layout = source("app/warehouse/layout.tsx");
-    expect(layout).toContain("readSessionHandoff");
+    expect(layout).toContain("getCurrentAuthContext");
     expect(layout).toContain("canAccessProtectedPath");
     expect(layout).toContain("ControlPlaneParallelLayout");
+    expect(source("app/warehouse/@shell/default.tsx")).toContain("readSessionHandoff");
   });
 
   it("extends the real order lifecycle without bypassing validation", () => {
     expect(ORDER_FULFILLMENT_STATES).toEqual([
       "pending",
-      "processing",
-      "picked",
-      "packed",
-      "ready_to_dispatch",
-      "shipped",
+      "packing",
+      "dispatched",
       "delivered",
       "returned",
       "cancelled"
     ]);
-    expect(assertOrderFulfillmentTransition("processing", "picked")).toBe("picked");
-    expect(assertOrderFulfillmentTransition("picked", "packed")).toBe("packed");
-    expect(assertOrderFulfillmentTransition("packed", "ready_to_dispatch")).toBe("ready_to_dispatch");
-    expect(assertOrderFulfillmentTransition("ready_to_dispatch", "shipped")).toBe("shipped");
-    expect(() => assertOrderFulfillmentTransition("pending", "shipped")).toThrow("Invalid order fulfillment transition pending -> shipped.");
+    expect(assertOrderFulfillmentTransition("pending", "packing")).toBe("packing");
+    expect(assertOrderFulfillmentTransition("packing", "dispatched")).toBe("dispatched");
+    expect(assertOrderFulfillmentTransition("dispatched", "delivered")).toBe("delivered");
+    expect(() => assertOrderFulfillmentTransition("pending", "dispatched")).toThrow(
+      /Invalid order fulfillment transition/
+    );
 
     const migration = source("supabase/migrations/20260526000400_warehouse_order_lifecycle_expansion.sql");
     expect(migration).toContain("'picked'");
@@ -94,7 +92,9 @@ describe("warehouse panel implementation", () => {
 
     for (const [key, page] of Object.entries(pages)) {
       if (key === "actions") continue;
-      expect(page).toContain("getWarehouseSnapshot");
+      const usesSnapshotOrDetail =
+        page.includes("getWarehouseSnapshot") || page.includes("loadWarehouseOrderDetail");
+      expect(usesSnapshotOrDetail).toBe(true);
       expect(page).not.toMatch(/\bmock\b|\bdemo data\b/i);
     }
 

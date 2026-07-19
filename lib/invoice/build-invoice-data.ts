@@ -50,14 +50,20 @@ function mapLineItems(items: JsonRecord[]): InvoiceLineItem[] {
 }
 
 export async function buildInvoiceData(orderId: string, serialNumber: number): Promise<InvoiceData> {
-  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) {
     throw new Error(`Order not found: ${orderId}`);
   }
 
-  const items = await fetchAdminRecordsByColumn("order_items", "order_id", orderId);
-  const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId);
+  const items = await fetchAdminRecordsByColumn("order_items", "order_id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
+  const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const payment = payments.find((row) => String(row.status ?? "") === "succeeded") ?? payments[0];
 
   const metadata = asRecord(order.metadata);

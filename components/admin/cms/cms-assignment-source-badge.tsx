@@ -7,6 +7,12 @@ const LABELS: Record<SlotAssignmentSource, string | null> = {
   missing: "Missing"
 };
 
+const TITLES: Record<SlotAssignmentSource, string | undefined> = {
+  pinned: undefined,
+  inferred: "System picked this in-stock item automatically. Clear to choose manually.",
+  missing: "This product is missing or unpublished. Clear and pick another."
+};
+
 export function CmsAssignmentSourceBadge({
   source,
   className
@@ -19,6 +25,7 @@ export function CmsAssignmentSourceBadge({
 
   return (
     <span
+      title={TITLES[source]}
       className={cn(
         "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
         source === "inferred" && "bg-amber-100 text-amber-900",

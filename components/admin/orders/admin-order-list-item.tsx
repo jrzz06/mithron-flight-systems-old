@@ -119,7 +119,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           window.open(href, "_blank", "noopener,noreferrer");
         }
       }}
-      className={`relative box-border block w-full shrink-0 cursor-pointer border-b border-[var(--platform-border)] px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${orderHoverClass()} hover:bg-[var(--platform-surface-muted)] ${
+      className={`relative box-border block w-full shrink-0 cursor-pointer border-b border-[var(--platform-border)] px-3 py-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${orderHoverClass()} hover:bg-[var(--platform-surface-muted)] ${
         selected
           ? "border-l-[3px] border-l-violet-500 bg-violet-500/10 pl-[calc(0.75rem-3px)] shadow-[inset_0_0_0_1px_rgba(124,106,247,0.12)]"
           : unread
@@ -127,7 +127,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
             : "border-l-[3px] border-l-transparent"
       } ${isPending ? "opacity-60" : ""}`}
     >
-      <div className="grid gap-2">
+      <div className="grid gap-2.5">
         <div className={`${orderWrapRow} justify-between gap-x-2 gap-y-1`}>
           <span className="flex min-w-0 flex-1 items-center gap-1.5">
             {unread && !selected ? (
@@ -137,10 +137,10 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
                 aria-label="New activity"
               />
             ) : null}
-            <OrderIdText value={orderNumber} className="min-w-0 flex-1 text-sm" showCopy={false} />
+            <OrderIdText value={orderNumber} className="min-w-0 flex-1 text-sm font-semibold tracking-[-0.01em]" showCopy={false} />
           </span>
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
-            <p className={`shrink-0 platform-type-label font-semibold text-[var(--platform-text-primary)] ${orderLongText}`}>
+            <p className={`shrink-0 text-sm font-semibold tabular-nums text-[var(--platform-text-primary)] ${orderLongText}`}>
               {moneyText(order.total)}
             </p>
             {incomplete ? (
@@ -164,16 +164,16 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           </div>
         </div>
 
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2.5">
           <OrderProductThumbnail src={thumbSrc} size="list" className="shrink-0" />
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <p className={`${orderClamp2} ${orderLongText} platform-type-label font-semibold text-[var(--platform-text-primary)]`}>
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className={`${orderClamp2} ${orderLongText} text-sm font-medium text-[var(--platform-text-primary)]`}>
               {customerName(order)}
             </p>
-            <p className={`truncate platform-type-caption`} title={text(order.customer_email, "No email")}>
+            <p className="truncate text-xs leading-4 text-[var(--platform-text-muted)]" title={text(order.customer_email, "No email")}>
               {text(order.customer_email, "No email")}
             </p>
-            <p className="line-clamp-1 platform-type-caption text-[var(--platform-text-secondary)]">
+            <p className="line-clamp-1 text-xs leading-4 text-[var(--platform-text-secondary)]">
               {summary.primary}
               {summary.extra > 0 ? ` +${summary.extra} more` : ""}
               {productQty ? ` · Qty ${productQty}` : ""}
@@ -181,7 +181,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--platform-border)]/60 pt-1.5 platform-type-caption text-[var(--platform-text-muted)]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--platform-border)]/50 pt-2 text-[11px] leading-4 text-[var(--platform-text-muted)]">
           <span>{warehouse}</span>
           <span aria-hidden>·</span>
           <span>{date}</span>
@@ -205,13 +205,15 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
         </div>
 
         {cancelAdminOrderAction && permanentDeleteAdminOrderAction ? (
-          <AdminOrderRowQuickActions
-            order={order}
-            queue={queue}
-            query={query}
-            cancelAdminOrderAction={cancelAdminOrderAction}
-            permanentDeleteAdminOrderAction={permanentDeleteAdminOrderAction}
-          />
+          <div className="opacity-80 transition-opacity hover:opacity-100 focus-within:opacity-100">
+            <AdminOrderRowQuickActions
+              order={order}
+              queue={queue}
+              query={query}
+              cancelAdminOrderAction={cancelAdminOrderAction}
+              permanentDeleteAdminOrderAction={permanentDeleteAdminOrderAction}
+            />
+          </div>
         ) : null}
       </div>
     </div>

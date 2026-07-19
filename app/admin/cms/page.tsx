@@ -6,7 +6,7 @@ import type { CmsRestoreRevision, CmsWorkspaceMedia, CmsWorkspacePage, CmsWorksp
 import { CMS_WORKSPACE_ANCHORS, CMS_WORKSPACE_PAGES } from "@/config/cms-workspace";
 import { ModulePanel, OperationalFeedback } from "@/components/admin/module-panel";
 import { getCmsAdvancedWorkspaceSnapshot, getCmsCoreSnapshot, getCmsMarketingWorkspaceSnapshot } from "@/services/admin";
-import { getHomepageCmsContent } from "@/services/homepage-cms";
+import { getHomepageCmsContent, getHomepageCmsDraftPreviewContent } from "@/services/homepage-cms";
 import { getHomepageProducts } from "@/services/catalog";
 import { getHomepageCmsV2Content, getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
@@ -222,11 +222,12 @@ function latestRestoreRevision(rows: ContentRevisionRow[]): CmsRestoreRevision {
 export default async function CmsPage({ searchParams }: CmsPageProps) {
   const params = await searchParams;
   const activePageId = params?.page && params.page !== "homepage" ? params.page : "homepage";
-  const [coreSnapshot, marketingSnapshot, advancedSnapshot, homepageContent, homepageV2Published, homepageV2Draft, catalogProducts, policy] = await Promise.all([
+  const [coreSnapshot, marketingSnapshot, advancedSnapshot, homepageContent, homepageContentDraft, homepageV2Published, homepageV2Draft, catalogProducts, policy] = await Promise.all([
     getCmsCoreSnapshot(),
     getCmsMarketingWorkspaceSnapshot(),
     getCmsAdvancedWorkspaceSnapshot(),
     getHomepageCmsContent(),
+    getHomepageCmsDraftPreviewContent(),
     getHomepageCmsV2Content(),
     getHomepageCmsV2DraftPreviewContent(),
     getHomepageProducts(),
@@ -505,6 +506,7 @@ export default async function CmsPage({ searchParams }: CmsPageProps) {
 
   const dashboardSections = buildCmsDashboardSections({
     homepageContent,
+    homepageContentDraft,
     homepageV2Published,
     homepageV2Draft,
     heroRows,

@@ -246,18 +246,13 @@ export async function listAdminBlogPosts(
 ) {
   const status = options.status ?? "all";
   const q = text(options.q).trim();
-  const { readThroughCache, REDIS_CACHE_KEYS } = await import("@/lib/cache-redis");
+  // No Redis on admin pages — see services/admin.ts getAdminDashboardSnapshot comment.
   const { cacheControlPlaneRead } = await import("@/lib/control-plane/query-cache");
 
-  return readThroughCache(
-    REDIS_CACHE_KEYS.controlPlaneAdminBlogPosts(status, q),
-    30,
-    () =>
-      cacheControlPlaneRead(
-        ["admin-blog-posts", status, q],
-        () => resolveAdminBlogPosts(options, env),
-        { revalidate: 30, tags: ["admin-blog", "control-plane-blog"] }
-      )
+  return cacheControlPlaneRead(
+    ["admin-blog-posts", status, q],
+    () => resolveAdminBlogPosts(options, env),
+    { revalidate: 30, tags: ["admin-blog", "control-plane-blog"] }
   );
 }
 

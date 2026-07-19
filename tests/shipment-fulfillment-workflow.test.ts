@@ -7,9 +7,11 @@ import {
   buildShipmentTimelineRecord,
   buildShipmentUpdateWorkflowFromFormData,
   deriveOrderFulfillmentStatusFromShipments,
+  resolveOrderItemSku,
   validateShipmentItemsAgainstOrder
 } from "@/services/shipments";
 import { deleteAdminRecord, updateAdminRecord } from "@/services/admin-actions";
+import { deriveProductSku } from "@/lib/product-sku";
 
 function formData(entries: Record<string, string>) {
   const data = new FormData();
@@ -20,6 +22,22 @@ function formData(entries: Record<string, string>) {
 }
 
 describe("shipment persistence and fulfillment lifecycle", () => {
+  it("resolves missing order-item SKUs from product slug for inventory deduction", () => {
+    expect(resolveOrderItemSku({
+      id: "dec69892-eb1c-4c32-bf8f-8a11a7da525a",
+      product_slug: "source-8kg-seed-spreader-drone-tc-certified",
+      sku: ""
+    })).toBe(deriveProductSku("source-8kg-seed-spreader-drone-tc-certified"));
+
+    expect(resolveOrderItemSku({
+      id: "item-1",
+      product_slug: "any-product",
+      sku: "CUSTOM-SKU"
+    })).toBe("CUSTOM-SKU");
+
+    expect(() => resolveOrderItemSku({ id: "item-2", sku: "" })).toThrow(/product slug is missing/);
+  });
+
   it("normalizes shipment creation input with partial, variant-aware shipment items", () => {
     const input = buildShipmentCreateWorkflowFromFormData(formData({
       order_id: "11111111-1111-1111-1111-111111111111",
@@ -115,7 +133,7 @@ describe("shipment persistence and fulfillment lifecycle", () => {
     ];
 
     expect(deriveOrderFulfillmentStatusFromShipments(orderItems, [], [])).toBe("pending");
-    expect(deriveOrderFulfillmentStatusFromShipments(orderItems, [{ order_item_id: "item-1", quantity: 1 }], [{ shipment_status: "packed" }])).toBe("processing");
+    expect(deriveOrderFulfillmentStatusFromShipments(orderItems, [{ order_item_id: "item-1", quantity: 1 }], [{ shipment_status: "packed" }])).toBe("packing");
     expect(deriveOrderFulfillmentStatusFromShipments(orderItems, [
       { order_item_id: "item-1", quantity: 2 },
       { order_item_id: "item-2", quantity: 1 }
@@ -205,6 +223,9 @@ describe("shipment persistence and fulfillment lifecycle", () => {
     expect(adminActions).toContain("createShipmentTimelineRecord");
     expect(shipmentService).toContain("createShipmentWorkflow");
     expect(shipmentService).toContain("updateShipmentWorkflow");
+    expect(shipmentService).toContain("resolveOrderItemSku");
+    expect(shipmentService).toContain("deriveProductSku");
+    expect(shipmentService).not.toContain("SKU is required for inventory deduction");
     expect(warehouseActions).toContain("createShipmentFormAction");
     expect(warehouseActions).toContain("updateShipmentLifecycleFormAction");
     expect(warehouseActions).toContain("dispatchWarehouseOrderFormAction");

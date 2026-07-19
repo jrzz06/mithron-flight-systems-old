@@ -28,7 +28,6 @@ async function HomeBelowHeroAsync({ cmsDraftPreview }: { cmsDraftPreview: boolea
       homepageCmsV2={bundle.homepageCmsV2}
       relatedArticles={bundle.relatedArticles}
       pressCoverage={bundle.pressCoverage}
-      customerReviews={bundle.customerReviews}
     />
   );
 }

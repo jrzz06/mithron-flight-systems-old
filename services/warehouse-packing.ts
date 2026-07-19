@@ -1,4 +1,5 @@
 import type { ShipmentCreateItemInput } from "@/services/shipments";
+import { deriveProductSku } from "@/lib/product-sku";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -9,6 +10,14 @@ function text(value: unknown, fallback = "") {
 function rowQuantity(row: JsonRecord) {
   const quantity = Number(row.quantity ?? 0);
   return Number.isFinite(quantity) ? Math.trunc(quantity) : 0;
+}
+
+function resolvePackingItemSku(orderItem: JsonRecord) {
+  const stored = text(orderItem.sku);
+  if (stored) return stored;
+  const productSlug = text(orderItem.product_slug);
+  if (!productSlug) return "";
+  return deriveProductSku(productSlug);
 }
 
 export type PackingChecklistInput = {
@@ -81,9 +90,12 @@ export function buildRemainingShipmentItems(
   for (const orderItem of orderItems) {
     const orderItemId = text(orderItem.id);
     const productId = text(orderItem.product_slug);
-    const sku = text(orderItem.sku);
-    if (!orderItemId || !productId || !sku) {
-      throw new Error(`Order item ${orderItemId || "unknown"} is missing product slug or SKU.`);
+    const sku = resolvePackingItemSku(orderItem);
+    if (!orderItemId || !productId) {
+      throw new Error(`Order item ${orderItemId || "unknown"} is missing product slug.`);
+    }
+    if (!sku) {
+      throw new Error(`Order item ${orderItemId} is missing product slug or SKU.`);
     }
     if (selectedIds && !selectedIds.has(orderItemId)) continue;
 

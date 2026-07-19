@@ -1,10 +1,10 @@
 import { cache } from "react";
-import { assertSupabaseAdminConfig } from "@/lib/env";
-import { readThroughCache, REDIS_CACHE_KEYS, deleteCachedKeys } from "@/lib/cache-redis";
+import { getSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 async function countTable(table: string, filter: string, idColumn = "id"): Promise<number> {
-  const config = assertSupabaseAdminConfig(process.env);
+  const config = getSupabaseAdminConfig(process.env);
+  if (!config.configured) return 0;
   const response = await fetchWithTimeout(
     `${config.url}/rest/v1/${table}?select=${encodeURIComponent(idColumn)}&${filter}&limit=1`,
     {
@@ -22,7 +22,6 @@ async function countTable(table: string, filter: string, idColumn = "id"): Promi
   const total = contentRange.split("/")[1];
   return Number(total ?? 0) || 0;
 }
-
 async function countRows(filter: string): Promise<number> {
   return countTable("orders", filter);
 }
@@ -49,7 +48,8 @@ export type SupplierNavMetricsPayload = {
 };
 
 async function countSupplierProducts(supplierId: string, filter: string): Promise<number> {
-  const config = assertSupabaseAdminConfig(process.env);
+  const config = getSupabaseAdminConfig(process.env);
+  if (!config.configured) return 0;
   const response = await fetchWithTimeout(
     `${config.url}/rest/v1/mithron_products?select=slug&supplier_id=eq.${encodeURIComponent(supplierId)}&${filter}&limit=1`,
     {
@@ -69,7 +69,8 @@ async function countSupplierProducts(supplierId: string, filter: string): Promis
 }
 
 async function countSupplierInventoryAlerts(supplierId: string): Promise<number> {
-  const config = assertSupabaseAdminConfig(process.env);
+  const config = getSupabaseAdminConfig(process.env);
+  if (!config.configured) return 0;
 
   const rpcResponse = await fetchWithTimeout(`${config.url}/rest/v1/rpc/get_supplier_inventory_alert_count`, {
     method: "POST",
@@ -120,42 +121,38 @@ async function countSupplierInventoryAlerts(supplierId: string): Promise<number>
   const total = contentRange.split("/")[1];
   return Number(total ?? 0) || 0;
 }
-
+// No Redis on admin/warehouse/supplier nav badges — these are staff-facing counts
+// (pending approvals, orders needing review, fulfillment queue) where a stale badge
+// is actively misleading. React `cache()` still dedupes within a single request.
 export const getAdminNavMetricsPayload = cache(async (): Promise<AdminNavMetricsPayload> => {
-  return readThroughCache(REDIS_CACHE_KEYS.adminNavMetrics, 30, async () => {
-    const [pendingSupplierApprovals, pendingOrdersReview, newEnquiries, newContactRequests] = await Promise.all([
-      countProducts("workflow_status=eq.pending_review"),
-      countRows("status=in.(paid,admin_review,pending_payment)"),
-      countTable("enquiries", "status=eq.new"),
-      countTable("contact_requests", "status=eq.new")
-    ]);
-    return {
-      pendingSupplierApprovals,
-      pendingOrdersReview,
-      newEnquiries,
-      newContactRequests
-    };
-  });
+  const [pendingSupplierApprovals, pendingOrdersReview, newEnquiries, newContactRequests] = await Promise.all([
+    countProducts("workflow_status=eq.pending_review"),
+    countRows("status=in.(paid,admin_review,pending_payment)"),
+    countTable("enquiries", "status=eq.new"),
+    countTable("contact_requests", "status=eq.new")
+  ]);
+  return {
+    pendingSupplierApprovals,
+    pendingOrdersReview,
+    newEnquiries,
+    newContactRequests
+  };
 });
 
-export const getWarehouseNavMetricsPayload = cache(async (): Promise<WarehouseNavMetricsPayload> => {
-  return readThroughCache(REDIS_CACHE_KEYS.warehouseNavMetrics, 30, async () => ({
-    fulfillmentPending: await countRows("fulfillment_status=in.(pending,packing)&status=in.(confirmed,assigned,processing,packed,dispatched,in_transit)")
-  }));
-});
+export const getWarehouseNavMetricsPayload = cache(async (): Promise<WarehouseNavMetricsPayload> => ({
+  fulfillmentPending: await countRows("fulfillment_status=in.(pending,packing)&status=in.(confirmed,assigned,processing,packed,dispatched,in_transit)")
+}));
 
 export const getSupplierNavMetricsPayload = cache(async (supplierId: string): Promise<SupplierNavMetricsPayload> => {
-  return readThroughCache(REDIS_CACHE_KEYS.supplierNavMetrics(supplierId), 30, async () => ({
-    pendingReview: await countSupplierProducts(supplierId, "workflow_status=eq.pending_review"),
-    needsAction: await countSupplierProducts(supplierId, "workflow_status=in.(draft,rejected)"),
-    inventoryAlerts: await countSupplierInventoryAlerts(supplierId)
-  }));
+  const [pendingReview, needsAction, inventoryAlerts] = await Promise.all([
+    countSupplierProducts(supplierId, "workflow_status=eq.pending_review"),
+    countSupplierProducts(supplierId, "workflow_status=in.(draft,rejected)"),
+    countSupplierInventoryAlerts(supplierId)
+  ]);
+  return { pendingReview, needsAction, inventoryAlerts };
 });
+// Kept as no-ops (rather than removed) so existing call sites that invalidate nav-metrics
+// after a write don't need to change; there is no Redis cache left to clear.
+export async function invalidateNavMetricsCacheEntries() {}
 
-export async function invalidateNavMetricsCacheEntries() {
-  await deleteCachedKeys([REDIS_CACHE_KEYS.adminNavMetrics, REDIS_CACHE_KEYS.warehouseNavMetrics]);
-}
-
-export async function invalidateSupplierNavMetricsCache(supplierId: string) {
-  await deleteCachedKeys([REDIS_CACHE_KEYS.supplierNavMetrics(supplierId)]);
-}
+export async function invalidateSupplierNavMetricsCache(_supplierId: string) {}

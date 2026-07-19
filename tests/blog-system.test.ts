@@ -48,24 +48,12 @@ describe("blog system wiring", () => {
     expect(estimateReadingTimeMinutes("")).toBe(1);
   });
 
-  it("wires admin articles module, nav, and cms access", () => {
+  it("keeps storefront blog routes wired without admin Articles UI", () => {
     const nav = source("components/platform/nav-config.ts");
-    const access = source("lib/auth/access-control.ts");
-    const page = source("app/admin/blog/page.tsx");
-    const actions = source("app/admin/blog/actions.ts");
-
-    expect(nav).toContain('href: "/admin/blog"');
-    expect(nav).toContain('label: "Articles"');
-    expect(nav).not.toContain('label: "In the Press"');
-    expect(access).toContain('normalized.startsWith("/admin/blog")');
-    expect(page).toContain("Articles");
-    expect(page).toContain("ArticleEditorForm");
-    expect(page).toContain("listAdminPressCoverage");
-    expect(actions).toContain("requireAdminPermission");
-    expect(actions).toContain('revalidateTag("press"');
-    expect(actions).toContain('revalidateTag("blog"');
-    expect(actions).toContain('revalidatePath("/")');
-    expect(actions).toContain('revalidatePath("/admin/blog")');
+    expect(nav).not.toContain('href: "/admin/blog"');
+    expect(nav).not.toContain('label: "Articles"');
+    expect(nav).toContain('label: "Homepage"');
+    expect(nav).toContain('href: "/admin/cms"');
   });
 
   it("exposes storefront blog listing and article detail routes", () => {
@@ -78,7 +66,7 @@ describe("blog system wiring", () => {
     expect(list).toContain("Suspense");
     expect(list).toContain("BlogArticleCard");
     expect(detail).toContain("getBlogPostBySlug");
-    expect(detail).toContain("EditorRenderedContent");
+    expect(detail).toContain("BlogArticleContent");
     expect(detail).toContain("related_product_slugs");
     expect(card).toContain("`/blog/${post.slug}`");
     expect(card).toContain('loading="lazy"');
@@ -103,22 +91,27 @@ describe("blog system wiring", () => {
     expect(section).toContain("visiblePressItems");
     expect(section).not.toContain("pressLinkCards");
     expect(section).toContain("Browse all articles");
-    expect(section).toContain('href="/blog"');
+    expect(section).toContain("browseHref");
+    expect(section).toContain("sectionTitle");
+    expect(section).toContain("if (!hasCards) return null");
+    expect(section).not.toContain("homepageLiveFallbacks");
     expect(composite).toContain("HomeRelatedArticlesSection");
     expect(composite).toContain("HomeClientTestimonialsSection");
     expect(composite).not.toContain("HomeCustomerTestimonialsSection");
     expect(composite).toContain("customItems={cmsV2.relatedArticles.enabled");
+    expect(composite).toContain("browseAllHref={cmsV2.relatedArticles.browseAllHref}");
+    expect(composite).toContain("sectionTitle={cmsV2.relatedArticles.sectionTitle}");
     expect(composite.lastIndexOf("<HomeRelatedArticlesSection")).toBeGreaterThan(
       composite.lastIndexOf("<HomeClientTestimonialsSection")
     );
     expect(composite.indexOf('id="home-about-footer"')).toBeGreaterThan(
       composite.lastIndexOf("<HomeRelatedArticlesSection")
     );
-    expect(bundle).toContain("listPublishedBlogPosts({ limit: 3 })");
-    expect(bundle).toContain("listPublishedPressCoverage({ limit: 3 })");
+    expect(bundle).toContain("listPublishedBlogPosts({ limit: 40 })");
+    expect(bundle).toContain("listPublishedPressCoverage({ limit: 40 })");
     expect(bundle).toContain("relatedArticles");
     expect(bundle).toContain("pressCoverage");
-    expect(bundle).toContain("listFeaturedHomeReviews");
+    expect(bundle).toContain("testimonialCards");
     expect(belowHero).toContain("relatedArticles={relatedArticles}");
     expect(belowHero).toContain("pressCoverage={pressCoverage}");
     expect(homePage).toContain("relatedArticles={bundle.relatedArticles}");

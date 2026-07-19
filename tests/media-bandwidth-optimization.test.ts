@@ -9,12 +9,12 @@ function readWorkspaceFile(path: string) {
 describe("safe media bandwidth optimization contract", () => {
   it("reserves high-priority image loading for homepage hero media only", () => {
     const heroCarousel = readWorkspaceFile("sections/home/hero-carousel.tsx");
-    const productViewer = readWorkspaceFile("sections/product/product-media-viewer.tsx");
+    const productGallery = readWorkspaceFile("sections/product/showcase/product-immersive-gallery.tsx");
     const catalogPage = readWorkspaceFile("sections/catalog/catalog-page.tsx");
 
     expect(heroCarousel).toContain("priority={Boolean(slide.image.priority)}");
-    expect(productViewer).not.toMatch(/<MithronPageHeroImage[\s\S]*?\spriority[\s\S]*?\/>/);
-    expect(catalogPage).not.toContain('fetchPriority="high"');
+    expect(productGallery).toContain("priority={index === 0}");
+    expect(productGallery).not.toContain('fetchPriority="high"');
     expect(catalogPage).not.toMatch(/<MithronPageHeroImage[\s\S]*?\spriority[\s\S]*?\/>/);
     expect(catalogPage).not.toContain('sizes="100vw"');
     expect(catalogPage.match(/sizes="\(min-width: 1440px\) 1440px, 100vw"/g)?.length).toBeGreaterThanOrEqual(2);
@@ -46,11 +46,11 @@ describe("safe media bandwidth optimization contract", () => {
     expect(nextConfig).toContain("max-age=31536000, immutable");
   });
 
-  it("keeps admin media upload revalidation scoped to product and CMS surfaces", () => {
+  it("keeps admin product upload revalidation scoped to products", () => {
     const actions = readWorkspaceFile("app/admin/products/actions.ts");
 
     expect(actions).toContain('revalidatePath("/admin/products")');
-    expect(actions).toContain('revalidatePath("/admin/cms")');
+    expect(actions).not.toContain('revalidatePath("/admin/cms")');
     expect(actions).not.toContain('revalidatePath("/admin/media")');
   });
 

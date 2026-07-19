@@ -98,16 +98,38 @@ export function validateSectionForPublish(
       if (!slides.some((slide) => slide && typeof slide === "object" && (slide as Record<string, unknown>).enabled !== false)) {
         errors.push({ field: "slides", message: "At least one enabled slide is required." });
       }
+      const orphanedSlugs = data.orphanedSlugs instanceof Set ? data.orphanedSlugs : new Set<string>();
+      if (orphanedSlugs.size > 0) {
+        errors.push({
+          field: "slides",
+          message: `${orphanedSlugs.size} carousel slot${orphanedSlugs.size > 1 ? "s" : ""} reference ${orphanedSlugs.size > 1 ? "products" : "a product"} missing from the live catalog. Replace before publishing.`
+        });
+      }
       break;
     }
     case "product-shelf": {
       errors.push(...validateRequired(String(data.title ?? ""), "title", "Shelf title"));
-      const slugs = Array.isArray(data.productSlugs) ? data.productSlugs : [];
-      if (!slugs.length) {
-        errors.push({ field: "productSlugs", message: "Pick at least one product for this shelf." });
+      const slugs = Array.isArray(data.productSlugs)
+        ? data.productSlugs.filter((slug) => typeof slug === "string" && slug.trim())
+        : [];
+      if (slugs.length !== 4) {
+        errors.push({
+          field: "productSlugs",
+          message: `Shelf requires exactly 4 product slots. Selected: ${slugs.length}.`
+        });
+      }
+      // Guard: block publish if any explicitly-assigned slug cannot be found in the live catalog.
+      const orphanedSlugs = data.orphanedSlugs instanceof Set ? data.orphanedSlugs : new Set<string>();
+      const orphaned = slugs.filter((slug) => orphanedSlugs.has(slug));
+      if (orphaned.length > 0) {
+        errors.push({
+          field: "productSlugs",
+          message: `${orphaned.length} product slot${orphaned.length > 1 ? "s" : ""} reference ${orphaned.length > 1 ? "products" : "a product"} that no longer exist in the live catalog. Replace before publishing.`
+        });
       }
       break;
     }
+
     case "inter-shelf-banner":
     case "full-viewport-banner": {
       errors.push(...validateRequired(String(data.heading ?? ""), "heading", "Heading"));
@@ -117,21 +139,61 @@ export function validateSectionForPublish(
     }
     case "reviews-section": {
       errors.push(...validateRequired(String(data.title ?? ""), "title", "Reviews heading"));
+      const cards = Array.isArray(data.cards) ? data.cards : [];
+      if (!cards.length) {
+        errors.push({ field: "cards", message: "Add at least one testimonial card." });
+      }
+      for (const [index, item] of cards.entries()) {
+        const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+        if (row.enabled === false) continue;
+        errors.push(...validateRequired(String(row.authorName ?? ""), `cards.${index}.authorName`, `Card ${index + 1} name`));
+        errors.push(...validateRequired(String(row.body ?? ""), `cards.${index}.body`, `Card ${index + 1} review text`));
+        const body = String(row.body ?? "");
+        if (body.length > 200) {
+          errors.push({ field: `cards.${index}.body`, message: `Card ${index + 1} review text must be ≤200 characters.` });
+        }
+        const rating = Number(row.rating);
+        if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+          errors.push({ field: `cards.${index}.rating`, message: `Card ${index + 1} rating must be 1–5.` });
+        }
+        const productSlug = String(row.productSlug ?? "").trim();
+        const hrefOverride = String(row.hrefOverride ?? "").trim();
+        if (!productSlug && !hrefOverride) {
+          errors.push({
+            field: `cards.${index}.link`,
+            message: `Card ${index + 1} needs a linked product or a manual link.`
+          });
+        }
+        if (hrefOverride && !isValidCmsLink(hrefOverride)) {
+          errors.push({ field: `cards.${index}.hrefOverride`, message: `Card ${index + 1} link is invalid.` });
+        }
+      }
       break;
     }
     case "related-articles": {
       const items = Array.isArray(data.items) ? data.items : [];
-      if (items.length !== 3) {
-        errors.push({ field: "items", message: "Configure all three related article cards." });
-      }
+      let completeCount = 0;
       for (const [index, item] of items.entries()) {
-        const row = item && typeof item === "object" ? item as Record<string, unknown> : {};
-        errors.push(...validateRequired(String(row.title ?? ""), `items.${index}.title`, `Article ${index + 1} title`));
-        errors.push(...validateRequired(String(row.imageSrc ?? ""), `items.${index}.imageSrc`, `Article ${index + 1} image`));
-        errors.push(...validateRequired(String(row.href ?? ""), `items.${index}.href`, `Article ${index + 1} link`));
-        if (String(row.href ?? "").trim() && !isValidCmsLink(String(row.href))) {
-          errors.push({ field: `items.${index}.href`, message: `Article ${index + 1} link must start with /, #, http://, or https://.` });
+        const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+        if (row.enabled === false) continue;
+        const title = String(row.title ?? "").trim();
+        const imageSrc = String(row.imageSrc ?? "").trim();
+        const href = String(row.href ?? "").trim();
+        // Empty slots stay empty — skip validation until the admin fills them.
+        if (!title && !imageSrc && !href) continue;
+        completeCount += 1;
+        errors.push(...validateRequired(title, `items.${index}.title`, `Article ${index + 1} title`));
+        errors.push(...validateRequired(imageSrc, `items.${index}.imageSrc`, `Article ${index + 1} image`));
+        errors.push(...validateRequired(href, `items.${index}.href`, `Article ${index + 1} link`));
+        if (href && !isValidCmsLink(href)) {
+          errors.push({
+            field: `items.${index}.href`,
+            message: `Article ${index + 1} link must start with /, #, http://, or https://.`
+          });
         }
+      }
+      if (!completeCount) {
+        errors.push({ field: "items", message: "Add at least one related article with title, image, and link." });
       }
       break;
     }

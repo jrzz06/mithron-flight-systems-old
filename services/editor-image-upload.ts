@@ -2,6 +2,7 @@ import { assertSupabaseAdminConfig } from "@/lib/env";
 import { upsertMediaAssetRecord } from "@/services/admin-actions";
 import {
   assertAllowedMediaMimeType,
+  assertMediaMimeMatchesContent,
   buildMediaAssetId,
   buildMediaAssetRecordFromFormData,
   buildStorageObjectPath
@@ -84,8 +85,8 @@ export async function uploadEditorInlineImage(input: {
   actorId: string | null;
 }) {
   const bucket = "mithron-products";
-  const mimeType = assertAllowedMediaMimeType(input.file.type || "application/octet-stream", bucket);
-  if (!mimeType.startsWith("image/")) {
+  const declaredMime = assertAllowedMediaMimeType(input.file.type || "application/octet-stream", bucket);
+  if (!declaredMime.startsWith("image/")) {
     throw new Error("Only image uploads are supported in the editor.");
   }
   if (input.file.size > 12 * 1024 * 1024) {
@@ -101,6 +102,10 @@ export async function uploadEditorInlineImage(input: {
     at: uploadedAt
   });
   const buffer = Buffer.from(await input.file.arrayBuffer());
+  const mimeType = assertMediaMimeMatchesContent({
+    declaredMime,
+    bytes: new Uint8Array(buffer)
+  });
   const metadata = await readImageBufferMetadata(buffer, mimeType);
   const publicUrl = await uploadStorageObject(bucket, storagePath, mimeType, buffer);
   const optimizedVariants = await uploadThumbnailVariant(bucket, storagePath, buffer, mimeType);

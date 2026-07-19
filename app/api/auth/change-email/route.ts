@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createSupabaseServiceClient } from "@supabase/supabase-js";
 import { findAuthUserByEmail } from "@/lib/auth/admin-user-lookup";
 import { mapOtpSendErrorForClient } from "@/lib/auth/otp-send-errors";
-import { assertSupabaseAdminConfig } from "@/lib/env";
+import { getSupabaseAdminConfig } from "@/lib/env";
 import { buildAuthConfirmUrl, resolveRequestOrigin } from "@/lib/auth/request-origin";
 import { normalizeSignupEmail, rejectClientSuppliedRole } from "@/lib/auth/signup-validation";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
@@ -37,7 +37,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "New email must be different from the current email." }, { status: 400 });
   }
 
-  const config = assertSupabaseAdminConfig();
+  const config = getSupabaseAdminConfig();
+  if (!config.configured) {
+    return NextResponse.json(
+      { error: "Email change temporarily unavailable. Please try again later.", retryable: true },
+      { status: 503 }
+    );
+  }
   const admin = createSupabaseServiceClient(config.url, config.serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false }
   });

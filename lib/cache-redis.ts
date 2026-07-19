@@ -1,8 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { getRedisClient, withRedisTimeout } from "@/lib/redis-client";
+import { getRedisClient, withRedisTimeout, REDIS_CACHE_READ_TIMEOUT_MS, REDIS_CACHE_WRITE_TIMEOUT_MS } from "@/lib/redis-client";
+import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 
 const SINGLE_FLIGHT_LOCK_TTL_SECONDS = 8;
 const SINGLE_FLIGHT_WAIT_BUDGET_MS = 6_000;
+/** Extra wait for waiters after a single fallback loader is elected. */
+const SINGLE_FLIGHT_FALLBACK_WAIT_MS = 4_000;
+const SINGLE_FLIGHT_HEARTBEAT_MS = 2_500;
+/** Wall-clock cap for the lock-holder loader (waiters already have budgets). */
+const SINGLE_FLIGHT_LOADER_TIMEOUT_MS = 12_000;
 
 function isProductionRuntime() {
   // Bracket access avoids Vite/Next statically inlining NODE_ENV so tests can stub it.
@@ -18,9 +24,18 @@ export const REDIS_CACHE_KEYS = {
   catalogShowroom: "catalog:showroom:v1",
   catalogCategory: (slug: string) => `catalog:category:${slug}:v1`,
   catalogMediaMap: (hash: string) => `catalog:media:${hash}:v1`,
+  catalogSearchQuery: (query: string, limit: number) =>
+    `catalog:search-q:${query.toLowerCase()}:${limit}:v1`,
+  catalogCartSuggestions: "catalog:cart-suggestions:v1",
+  catalogCartPricing: (fingerprint: string) => `catalog:cart-pricing:${fingerprint}:v1`,
+  catalogProductRow: (slug: string) => `catalog:product-row:${slug}:v1`,
+  categoryOptions: "catalog:category-options:v1",
   cmsHomepage: "cms:homepage:v1",
   cmsShell: "cms:shell:v1",
+  cmsHero: "cms:hero:v1",
   productCore: (slug: string) => `product:core:${slug}`,
+  productReviews: (slug: string, sort: string) => `product:reviews:${slug}:${sort}:v1`,
+  productRelated: (slug: string, limit: number) => `product:related:${slug}:${limit}:v1`,
   authRoleContext: (userId: string, sessionIat: number) => `auth:role:${userId}:${sessionIat}`,
   authRoleContextPrefix: (userId: string) => `auth:role:${userId}:`,
   adminNavMetrics: "metrics:admin-nav:v1",
@@ -36,14 +51,14 @@ export const REDIS_CACHE_KEYS = {
   ) =>
     `cp:warehouse-snapshot:${scope}:${ordersFilter}:v2:${limit}:${offset}:${status}`,
   controlPlaneInventoryMetrics: "cp:inventory-metrics:v1",
-  controlPlaneProductManagerSnapshot: "cp:product-manager:v1",
+  controlPlaneProductManagerSnapshot: "cp:product-manager:v3",
   controlPlaneProductManagerList: (
     limit: number,
     offset: number,
     workflowStatus: string,
     q: string
-  ) => `cp:product-manager:v2:${limit}:${offset}:${workflowStatus}:${q}`,
-  controlPlaneProductManagerCatalogMetrics: "cp:product-manager:v1:catalog-metrics",
+  ) => `cp:product-manager:v3:${limit}:${offset}:${workflowStatus}:${q}`,
+  controlPlaneProductManagerCatalogMetrics: "cp:product-manager:v3:catalog-metrics",
   controlPlaneSuppliersSnapshot: "cp:suppliers-snapshot:v1",
   controlPlaneCmsCoreSnapshot: "cp:cms-core:v1",
   controlPlaneCmsMarketingSnapshot: "cp:cms-marketing:v1",
@@ -135,6 +150,7 @@ export async function invalidateControlPlaneRedisCaches(options?: {
   const tasks: Promise<void>[] = [];
   if (keys.length) tasks.push(deleteCachedKeys(keys));
   if (options?.warehouseSnapshots) tasks.push(invalidateRedisKeyPattern(WAREHOUSE_SNAPSHOT_CACHE_PREFIX));
+  if (options?.productManagerSnapshot) tasks.push(invalidateRedisKeyPattern("cp:product-manager:"));
   if (options?.supplierNavMetrics) tasks.push(invalidateSupplierNavMetricCaches());
   if (options?.adminEnquiries) tasks.push(invalidateRedisKeyPattern("cp:admin-enquiries:"));
   if (options?.adminReviews) tasks.push(invalidateRedisKeyPattern("cp:admin-reviews:"));
@@ -216,19 +232,19 @@ export async function invalidateSupplierNavMetricCaches() {
 export async function getCachedJson<T>(key: string): Promise<T | null> {
   const redis = getRedisClient();
   if (!redis) return null;
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    try {
-      const value = await withRedisTimeout(`GET ${key}`, () => redis.get<T>(key));
-      return value ?? null;
-    } catch (error) {
-      lastError = error;
-      const timedOut = error instanceof Error && /timed out/i.test(error.message);
-      if (!timedOut || attempt === 2) break;
-    }
+  try {
+    // Single attempt with a short budget — retrying a timed-out GET doubles TTFB
+    // when Upstash is region-mismatched (production observed 500–1700ms RTTs).
+    const value = await withRedisTimeout(
+      `GET ${key}`,
+      () => redis.get<T>(key),
+      REDIS_CACHE_READ_TIMEOUT_MS
+    );
+    return value ?? null;
+  } catch (error) {
+    console.warn(`[mithron-cache] Redis GET failed for ${key}.`, error);
+    return null;
   }
-  console.warn(`[mithron-cache] Redis GET failed for ${key}.`, lastError);
-  return null;
 }
 
 export async function setCachedJson(key: string, value: unknown, ttlSeconds: number): Promise<void> {
@@ -237,7 +253,8 @@ export async function setCachedJson(key: string, value: unknown, ttlSeconds: num
   try {
     await withRedisTimeout(
       `SET ${key}`,
-      () => redis.set(key, value, { ex: Math.max(1, ttlSeconds) })
+      () => redis.set(key, value, { ex: Math.max(1, ttlSeconds) }),
+      REDIS_CACHE_WRITE_TIMEOUT_MS
     );
   } catch (error) {
     console.warn(`[mithron-cache] Redis SET failed for ${key}.`, error);
@@ -365,6 +382,14 @@ end
 return 0
 `;
 
+/** Extend lock TTL only when the owner token still holds the key. */
+const RENEW_OWNED_LOCK_LUA = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('EXPIRE', KEYS[1], tonumber(ARGV[2]))
+end
+return 0
+`;
+
 /** Delete a lock key only when the stored value matches the owner token. */
 export async function releaseRedisLockOwned(key: string, token: string): Promise<void> {
   const redis = getRedisClient();
@@ -376,6 +401,31 @@ export async function releaseRedisLockOwned(key: string, token: string): Promise
     );
   } catch (error) {
     console.warn(`[mithron-cache] Redis owned lock release failed for ${key}.`, error);
+  }
+}
+
+/** Heartbeat: refresh owned lock TTL so slow loaders do not expire mid-flight. */
+export async function renewRedisLockOwned(
+  key: string,
+  token: string,
+  ttlSeconds: number
+): Promise<boolean> {
+  const redis = getRedisClient();
+  if (!redis || !token) return false;
+  try {
+    const result = await withRedisTimeout(
+      `LOCK_OWNED_RENEW ${key}`,
+      () =>
+        redis.eval(
+          RENEW_OWNED_LOCK_LUA,
+          [key],
+          [token, String(Math.max(1, ttlSeconds))]
+        )
+    );
+    return Number(result) === 1;
+  } catch (error) {
+    console.warn(`[mithron-cache] Redis owned lock renew failed for ${key}.`, error);
+    return false;
   }
 }
 
@@ -410,6 +460,10 @@ export async function hasCooldownKey(key: string): Promise<boolean> {
  * Redis-backed single-flight: only one instance runs `loader` on a cold miss.
  * Waiters poll the cache briefly instead of stampeding. If Redis is unavailable,
  * acquireRedisLock fails open and every caller loads independently.
+ *
+ * Under flood, waiters must NOT all call `loader()` after the wait budget —
+ * that thundering herd previously drove multi-GB RSS hangs. Instead elect a
+ * single fallback loader via a short secondary lock; others keep polling.
  */
 export async function withSingleFlight<T>(
   key: string,
@@ -420,16 +474,33 @@ export async function withSingleFlight<T>(
   if (cached != null) return cached;
 
   const lockKey = `lock:sf:${key}`;
-  const gotLock = await acquireRedisLock(lockKey, SINGLE_FLIGHT_LOCK_TTL_SECONDS);
-  if (gotLock) {
+  const { acquired, token } = await acquireRedisLockWithOwner(lockKey, SINGLE_FLIGHT_LOCK_TTL_SECONDS);
+  if (acquired) {
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
     try {
       const lockedCached = await getCachedJson<T>(key);
       if (lockedCached != null) return lockedCached;
-      const value = await loader();
+      if (token) {
+        heartbeat = setInterval(() => {
+          void renewRedisLockOwned(lockKey, token, SINGLE_FLIGHT_LOCK_TTL_SECONDS);
+        }, SINGLE_FLIGHT_HEARTBEAT_MS);
+        // Unref so heartbeats cannot keep the event loop alive in Node.
+        if (typeof heartbeat.unref === "function") heartbeat.unref();
+      }
+      const value = await raceWithTimeout(
+        loader(),
+        SINGLE_FLIGHT_LOADER_TIMEOUT_MS,
+        `single-flight:${key}`
+      );
       await setCachedJson(key, value, ttlSeconds);
       return value;
     } finally {
-      await releaseRedisLock(lockKey);
+      if (heartbeat) clearInterval(heartbeat);
+      if (token) {
+        await releaseRedisLockOwned(lockKey, token);
+      } else {
+        await releaseRedisLock(lockKey);
+      }
     }
   }
 
@@ -440,8 +511,54 @@ export async function withSingleFlight<T>(
     await wait(150 + Math.random() * 150);
   }
 
-  // Lock holder is taking too long — load directly rather than block forever.
-  return loader();
+  // One more cache read — lock holder may have just written.
+  const lateCached = await getCachedJson<T>(key);
+  if (lateCached != null) return lateCached;
+
+  // Elect a single fallback loader instead of N parallel loaders.
+  const fallbackLockKey = `lock:sf:fb:${key}`;
+  const fallback = await acquireRedisLockWithOwner(fallbackLockKey, SINGLE_FLIGHT_LOCK_TTL_SECONDS);
+  if (fallback.acquired) {
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
+    try {
+      const again = await getCachedJson<T>(key);
+      if (again != null) return again;
+      if (fallback.token) {
+        heartbeat = setInterval(() => {
+          void renewRedisLockOwned(fallbackLockKey, fallback.token!, SINGLE_FLIGHT_LOCK_TTL_SECONDS);
+        }, SINGLE_FLIGHT_HEARTBEAT_MS);
+        if (typeof heartbeat.unref === "function") heartbeat.unref();
+      }
+      const value = await raceWithTimeout(
+        loader(),
+        SINGLE_FLIGHT_LOADER_TIMEOUT_MS,
+        `single-flight-fallback:${key}`
+      );
+      await setCachedJson(key, value, ttlSeconds);
+      return value;
+    } finally {
+      if (heartbeat) clearInterval(heartbeat);
+      if (fallback.token) {
+        await releaseRedisLockOwned(fallbackLockKey, fallback.token);
+      } else {
+        await releaseRedisLock(fallbackLockKey);
+      }
+    }
+  }
+
+  const fallbackDeadline = Date.now() + SINGLE_FLIGHT_FALLBACK_WAIT_MS;
+  while (Date.now() < fallbackDeadline) {
+    const waited = await getCachedJson<T>(key);
+    if (waited != null) return waited;
+    await wait(150 + Math.random() * 150);
+  }
+
+  const finalCached = await getCachedJson<T>(key);
+  if (finalCached != null) return finalCached;
+
+  // Last resort: load once. Prefer this over hanging forever; stampede risk is
+  // already greatly reduced by the two lock stages above.
+  return raceWithTimeout(loader(), SINGLE_FLIGHT_LOADER_TIMEOUT_MS, `single-flight-last:${key}`);
 }
 
 export async function readThroughCache<T>(

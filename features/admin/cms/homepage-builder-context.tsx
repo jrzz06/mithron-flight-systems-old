@@ -20,6 +20,7 @@ type HomepageBuilderContextValue = {
   patchHomepageV2: (patch: Partial<HomepageCmsV2Content>) => void;
   patchHomepageCms: (patch: Partial<HomepageCmsContent>) => void;
   patchShelf: (shelfKey: keyof HomepageCmsContent["shelves"], patch: Partial<HomepageCmsContent["shelves"]["droneWorld"]>) => void;
+  resetDraft: () => void;
 };
 
 const HomepageBuilderContext = createContext<HomepageBuilderContextValue | null>(null);
@@ -101,9 +102,18 @@ export function HomepageBuilderProvider({
     []
   );
 
+  const resetDraft = useCallback(() => {
+    setDraft({
+      homepageCms,
+      homepageV2,
+      products,
+      shelfProductSlugs: shelfProductSlugs ?? {}
+    });
+  }, [homepageCms, homepageV2, products, shelfProductSlugs]);
+
   const value = useMemo(
-    () => ({ sectionId, draft, setShelfSlugs, patchHomepageV2, patchHomepageCms, patchShelf }),
-    [draft, patchHomepageCms, patchHomepageV2, patchShelf, sectionId, setShelfSlugs]
+    () => ({ sectionId, draft, setShelfSlugs, patchHomepageV2, patchHomepageCms, patchShelf, resetDraft }),
+    [draft, patchHomepageCms, patchHomepageV2, patchShelf, resetDraft, sectionId, setShelfSlugs]
   );
 
   return <HomepageBuilderContext.Provider value={value}>{children}</HomepageBuilderContext.Provider>;

@@ -17,6 +17,9 @@ const MithronAssistantPanel = dynamic(
 );
 
 function useJitteredInterval(callback: () => void, baseMs: number, jitterMs: number) {
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -25,7 +28,7 @@ function useJitteredInterval(callback: () => void, baseMs: number, jitterMs: num
       if (!alive) return;
       const next = baseMs + Math.floor(Math.random() * jitterMs);
       timer = setTimeout(() => {
-        callback();
+        callbackRef.current();
         schedule();
       }, next);
     };
@@ -35,7 +38,7 @@ function useJitteredInterval(callback: () => void, baseMs: number, jitterMs: num
       alive = false;
       if (timer) clearTimeout(timer);
     };
-  }, [callback, baseMs, jitterMs]);
+  }, [baseMs, jitterMs]);
 }
 
 function productSlugFromPathname(pathname: string) {
@@ -48,15 +51,22 @@ export function MithronAssistantLauncher() {
   const [open, setOpen] = useState(false);
   const [bump, setBump] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const bumpClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pathname = usePathname() ?? "";
   const selectedProductSlug = useMemo(() => productSlugFromPathname(pathname), [pathname]);
 
+  useEffect(() => {
+    return () => {
+      if (bumpClearRef.current) clearTimeout(bumpClearRef.current);
+    };
+  }, []);
+
   useJitteredInterval(() => {
     if (open) return;
     setBump(true);
-    const id = setTimeout(() => setBump(false), 820);
-    return () => clearTimeout(id);
+    if (bumpClearRef.current) clearTimeout(bumpClearRef.current);
+    bumpClearRef.current = setTimeout(() => setBump(false), 820);
   }, 8000, 4000);
 
   return (

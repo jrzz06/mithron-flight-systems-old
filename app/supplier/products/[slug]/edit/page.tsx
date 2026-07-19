@@ -19,9 +19,11 @@ export default async function SupplierEditProductPage({ params }: { params: Prom
   const [context, policy] = await Promise.all([getCurrentAuthContext(), getAdminSettingsPolicy()]);
   if (!context.userId) notFound();
 
-  const product = await getSupplierOwnedProduct(context.userId, slug);
+  const [product, categoryOptions] = await Promise.all([
+    getSupplierOwnedProduct(context.userId, slug),
+    getProductCategoryOptions()
+  ]);
   if (!product) notFound();
-  const categoryOptions = await getProductCategoryOptions();
 
   const workflowStatus = String(product.workflow_status ?? "draft");
   const rejectionReason = typeof product.rejection_reason === "string" ? product.rejection_reason : null;

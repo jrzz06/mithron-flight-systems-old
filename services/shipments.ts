@@ -1,5 +1,6 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { isAdminWarehouseReleased } from "@/lib/orders/lifecycle";
+import { deriveProductSku } from "@/lib/product-sku";
 import {
   createActivityLogRecord,
   createNotificationRecord,
@@ -96,6 +97,18 @@ function normalizeRequired(value: string, label: string) {
 
 function normalizeOptional(value: string | null | undefined) {
   return value?.trim() ? value.trim() : null;
+}
+
+/** Prefer stored order-item SKU; fall back to derived SKU from product slug (matches inventory RPC). */
+export function resolveOrderItemSku(orderItem: JsonRecord) {
+  const stored = normalizeOptional(String(orderItem.sku ?? ""));
+  if (stored) return stored;
+  const productSlug = normalizeOptional(String(orderItem.product_slug ?? ""))
+    || normalizeOptional(String(orderItem.product_id ?? ""));
+  if (!productSlug) {
+    throw new Error(`Cannot resolve SKU for order item ${String(orderItem.id ?? "")}; product slug is missing.`);
+  }
+  return deriveProductSku(productSlug);
 }
 
 function normalizeTimestamp(value: string | Date) {
@@ -588,10 +601,8 @@ export async function createShipmentWorkflow(input: ShipmentCreateWorkflowInput,
     for (const item of input.items) {
       const orderItem = orderItemMap.get(item.orderItemId);
       if (!orderItem) throw new Error(`Order item ${item.orderItemId} was not found.`);
-      const sku = normalizeOptional(String(orderItem.sku ?? ""));
-      if (!sku) {
-        throw new Error(`Cannot ship order item ${item.orderItemId}; SKU is required for inventory deduction.`);
-      }
+      // Ensure SKU can be resolved for inventory (stored or derived from product slug).
+      resolveOrderItemSku(orderItem);
 
       const shipmentItem = await createShipmentItemRecord(
         {
@@ -689,13 +700,13 @@ async function restoreShipmentStock(input: {
   const orderItemMap = new Map(input.orderItems.map((item) => [String(item.id ?? ""), item]));
   for (const shipmentItem of input.shipmentItems) {
     const orderItem = orderItemMap.get(String(shipmentItem.order_item_id ?? ""));
-    const sku = normalizeOptional(String(orderItem?.sku ?? ""));
-    if (!orderItem || !sku) {
-      throw new Error(`Cannot restore shipment item ${String(shipmentItem.id ?? "")}; order item SKU is missing.`);
+    if (!orderItem) {
+      throw new Error(`Cannot restore shipment item ${String(shipmentItem.id ?? "")}; order item is missing.`);
     }
+    const sku = resolveOrderItemSku(orderItem);
     await applyWarehouseStockMovement(
       {
-        productSlug: String(shipmentItem.product_id ?? ""),
+        productSlug: String(shipmentItem.product_id ?? orderItem.product_slug ?? ""),
         sku,
         variantId: normalizeOptional(String(shipmentItem.variant_id ?? "")),
         warehouseCode: String(input.shipment.warehouse_id ?? ""),

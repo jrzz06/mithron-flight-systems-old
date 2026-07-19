@@ -107,7 +107,9 @@ export async function generateAndStoreInvoice(orderId: string): Promise<{ invoic
     };
   }
 
-  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId);
+  const orders = await fetchAdminRecordsByColumn("orders", "id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const order = orders[0];
   if (!order) {
     throw new Error(`Order not found: ${orderId}`);

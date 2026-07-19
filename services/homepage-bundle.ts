@@ -1,22 +1,18 @@
 import { cache } from "react";
 import {
-  acquireRedisLock,
-  getCachedJson,
   readThroughCache,
-  REDIS_CACHE_KEYS,
-  releaseRedisLock,
-  setCachedJson
+  REDIS_CACHE_KEYS
 } from "@/lib/cache-redis";
 import { emptyHomepageCmsContent, type HomepageCmsContent } from "@/config/homepage-cms";
 import { defaultHomepageCmsV2Content, type HomepageCmsV2Content } from "@/config/homepage-cms-v2";
 import type { HeroSlide, Product } from "@/config/types";
-import { listFeaturedHomeReviews, type CustomerProductReview } from "@/services/customer-product-reviews";
+import type { CustomerProductReview } from "@/services/customer-product-reviews";
 import { listPublishedBlogPosts, type BlogPost } from "@/services/blog-posts";
 import { listPublishedPressCoverage, type PressCoverageItem } from "@/services/press-coverage";
 import { getHomepageProducts, getPublishedProductsBySlugs } from "@/services/catalog";
 import {
   fallbackSnapshot,
-  getPublicCmsSnapshot,
+  getPublicCmsSnapshotForHomepageBelowFold,
   getPublicHeroBanners,
   getPublicHeroBannersForCmsPreview,
   type PublicCmsSnapshot
@@ -37,14 +33,6 @@ export type HomepageBundle = {
 
 export type HomepageBelowFoldData = Omit<HomepageBundle, "heroBanners">;
 
-const HOMEPAGE_BUNDLE_LOCK_KEY = "lock:cms:homepage:v1";
-const HOMEPAGE_BUNDLE_LOCK_TTL_SECONDS = 8;
-const HOMEPAGE_BUNDLE_WAIT_BUDGET_MS = 6_000;
-
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function settledValue<T>(result: PromiseSettledResult<T>, fallback: T, label: string): T {
   if (result.status === "fulfilled") return result.value;
   const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
@@ -62,39 +50,15 @@ function mergeProductsBySlug(primary: Product[], extra: Product[]) {
 }
 
 /**
- * Redis-backed single-flight: only one instance regenerates the homepage bundle
- * on a cold cache miss. Waiters poll the cache briefly instead of re-running the
- * 7-way Supabase fan-out. If Redis is unavailable, acquireRedisLock fails open
- * and every caller loads independently (same as before).
+ * Homepage cold-miss regeneration. Coalescing / stampede protection lives in
+ * `readThroughCache` → `withSingleFlight` (lock + heartbeat + fallback elect).
+ * Do not nest a second lock/fallback here — that previously multiplied loaders.
  */
-async function loadHomepageBundleSingleFlight(): Promise<HomepageBundle> {
-  const gotLock = await acquireRedisLock(HOMEPAGE_BUNDLE_LOCK_KEY, HOMEPAGE_BUNDLE_LOCK_TTL_SECONDS);
-  if (gotLock) {
-    try {
-      const value = await loadHomepageBundleUncached(false);
-      await setCachedJson(REDIS_CACHE_KEYS.cmsHomepage, value, 60);
-      return value;
-    } finally {
-      await releaseRedisLock(HOMEPAGE_BUNDLE_LOCK_KEY);
-    }
-  }
-
-  const deadlineAt = Date.now() + HOMEPAGE_BUNDLE_WAIT_BUDGET_MS;
-  while (Date.now() < deadlineAt) {
-    const cached = await getCachedJson<HomepageBundle>(REDIS_CACHE_KEYS.cmsHomepage);
-    if (cached) return cached;
-    await wait(150 + Math.random() * 150);
-  }
-
-  // Lock holder is taking too long — load directly rather than block forever.
-  return loadHomepageBundleUncached(false);
-}
-
 export const getHomepageBundle = cache(async (cmsDraftPreview = false): Promise<HomepageBundle> => {
   if (cmsDraftPreview) {
     return loadHomepageBundleUncached(true);
   }
-  return readThroughCache(REDIS_CACHE_KEYS.cmsHomepage, 60, loadHomepageBundleSingleFlight);
+  return readThroughCache(REDIS_CACHE_KEYS.cmsHomepage, 60, () => loadHomepageBundleUncached(false));
 });
 
 /** Hero-only loader so Suspense can resolve independently of the below-fold bundle. */
@@ -116,16 +80,14 @@ async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<Home
     homepageCmsResult,
     homepageCmsV2Result,
     relatedArticlesResult,
-    pressCoverageResult,
-    customerReviewsResult
+    pressCoverageResult
   ] = await Promise.allSettled([
-    getPublicCmsSnapshot(),
+    getPublicCmsSnapshotForHomepageBelowFold(),
     getHomepageProducts(),
     cmsDraftPreview ? getHomepageCmsDraftPreviewContent() : getHomepageCmsContent(),
     cmsDraftPreview ? getHomepageCmsV2DraftPreviewContent() : getHomepageCmsV2Content(),
-    listPublishedBlogPosts({ limit: 3 }),
-    listPublishedPressCoverage({ limit: 3 }),
-    listFeaturedHomeReviews({ limit: 6 })
+    listPublishedBlogPosts({ limit: 40 }),
+    listPublishedPressCoverage({ limit: 40 })
   ]);
 
   const cms = settledValue(cmsResult, fallbackSnapshot, "CMS snapshot");
@@ -134,42 +96,35 @@ async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<Home
   const homepageCmsV2 = settledValue(homepageCmsV2Result, defaultHomepageCmsV2Content, "homepage CMS v2");
   const relatedArticles = settledValue(relatedArticlesResult, [] as BlogPost[], "blog posts");
   const pressCoverage = settledValue(pressCoverageResult, [] as PressCoverageItem[], "press coverage");
-  const reviewCandidates = settledValue(customerReviewsResult, [] as CustomerProductReview[], "customer reviews");
 
-  const reviewSlugs = [...new Set(reviewCandidates.map((review) => review.productSlug).filter(Boolean))];
-  const reviewProducts = reviewSlugs.length
-    ? await getPublishedProductsBySlugs(reviewSlugs).catch((error) => {
+  const testimonialSlugs = [
+    ...new Set(
+      (homepageCmsV2.testimonialCards ?? [])
+        .map((card) => card.productSlug)
+        .filter((slug): slug is string => Boolean(slug?.trim()))
+    )
+  ];
+  const shelfSlugSet = new Set(shelfProducts.map((product) => product.slug));
+  const missingTestimonialSlugs = testimonialSlugs.filter((slug) => !shelfSlugSet.has(slug));
+  const fetchedTestimonialProducts = missingTestimonialSlugs.length
+    ? await getPublishedProductsBySlugs(missingTestimonialSlugs).catch((error) => {
         console.warn(
-          `[homepage-bundle] review products failed: ${error instanceof Error ? error.message : String(error)}`
+          `[homepage-bundle] testimonial products failed: ${error instanceof Error ? error.message : String(error)}`
         );
         return [] as Product[];
       })
     : [];
-  const reviewProductSlugs = new Set(reviewProducts.map((product) => product.slug));
-  const maxReviews = Math.max(1, Math.min(6, homepageCmsV2.reviews.maxCount || 3));
-  const sortOrder = homepageCmsV2.reviews.sortOrder;
-  const sortedReviews = [...reviewCandidates].sort((left, right) => {
-    const pinDelta = Number(right.pinned) - Number(left.pinned);
-    if (pinDelta) return pinDelta;
-    if (sortOrder === "rating") return right.rating - left.rating || Date.parse(right.createdAt) - Date.parse(left.createdAt);
-    if (sortOrder === "manual") {
-      return left.displayOrder - right.displayOrder || Date.parse(right.createdAt) - Date.parse(left.createdAt);
-    }
-    return Date.parse(right.createdAt) - Date.parse(left.createdAt);
-  });
-  const customerReviews = sortedReviews
-    .filter((review) => reviewProductSlugs.has(review.productSlug) && review.isVisible !== false)
-    .slice(0, maxReviews);
-  const products = mergeProductsBySlug(shelfProducts, reviewProducts);
+  const products = mergeProductsBySlug(shelfProducts, fetchedTestimonialProducts);
 
   return {
-    heroBanners: cms.home.heroBanners,
+    // Hero is loaded by getHomepageHeroBanners / Suspense — do not duplicate here.
+    heroBanners: [],
     cms,
     products,
     homepageCms,
     homepageCmsV2,
     relatedArticles,
     pressCoverage,
-    customerReviews
+    customerReviews: []
   };
 }

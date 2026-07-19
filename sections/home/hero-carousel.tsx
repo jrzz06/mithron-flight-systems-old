@@ -14,43 +14,10 @@ import { useCarouselSwipe } from "@/hooks/use-carousel-swipe";
 import { useReducedMotionPreference } from "@/hooks/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
-const HERO_EXTERNAL_CTA = {
-  href: "https://www.mithronsmart.com",
-  label: "Visit Mithron Smart"
-} as const;
-
 const HERO_ADVANCE_MS = 5000;
 
-const heroSlideCopyById: Record<string, { title: string; subtitle: string }> = {
-  "ag10-arrival": {
-    title: "Drone is Mithron",
-    subtitle: "India's trusted drone store and service network"
-  },
-  "mapping-flight": {
-    title: "Global Drone Connect",
-    subtitle: "A marketplace for global product import, export, and live price bids"
-  },
-  "drone-ecosystem": {
-    title: "One Stop Drone Mithron",
-    subtitle: "Sales, rentals, troubleshooting, training, import, and financing in one place"
-  }
-};
-
-function applyHeroSlideCopy(slide: HeroSlide): HeroSlide {
-  const copy = heroSlideCopyById[slide.id];
-  if (!copy) return slide;
-
-  return {
-    ...slide,
-    title: copy.title,
-    subtitle: copy.subtitle,
-    cta: HERO_EXTERNAL_CTA.label,
-    href: HERO_EXTERNAL_CTA.href
-  };
-}
-
 function resolveHeroCarouselSlides(slides: HeroSlide[]) {
-  return pickHeroCarouselSlides(slides).map(applyHeroSlideCopy);
+  return pickHeroCarouselSlides(slides);
 }
 
 type HeroInkTone = "light" | "dark" | "split";

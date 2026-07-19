@@ -86,14 +86,25 @@ describe("shelf product resolution", () => {
     expect(resolved.map((item) => item.slug)).toEqual(["survey-drone", "agri-kisan-drone"]);
   });
 
-  it("falls back when explicit slugs do not resolve", () => {
+  it("does not auto-fill unrelated catalog products when pinned slugs are missing", () => {
     const shelf = {
       ...getDefaultHomepageCmsContent().shelves.droneWorld,
       productSlugs: ["missing-slug"]
     };
     const resolved = resolveEffectiveShelfProducts("drone-world", shelf, [battery, droneB, droneA], 4);
+    const slugs = resolveEffectiveShelfSlugs("drone-world", shelf, [battery, droneB, droneA], 4);
 
-    expect(resolved.map((item) => item.slug)).toEqual(["survey-drone", "agri-kisan-drone"]);
+    expect(resolved).toEqual([]);
+    expect(slugs).toEqual(["missing-slug", "", "", ""]);
+  });
+
+  it("honors CMS View All href when set", () => {
+    const shelf = {
+      ...getDefaultHomepageCmsContent().shelves.droneWorld,
+      href: "/products?filter=drones"
+    };
+    const config = buildShelfProductConfig("drone-world", shelf);
+    expect(config.href).toBe("/products?filter=drones");
   });
 
   it("resolves global shelf products from the global category", () => {

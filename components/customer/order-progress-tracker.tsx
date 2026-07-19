@@ -42,7 +42,10 @@ export function OrderProgressTracker({
   const currentStep = steps.find((step) => step.state === "current") ?? steps.at(-1);
   const showTracking = Boolean(
     tracking && (tracking.carrier || tracking.trackingNumber || tracking.trackingUrl)
-    && steps.some((step) => step.label === "Dispatched" && step.state !== "upcoming")
+    && steps.some((step) =>
+      (step.label === "Dispatched" || step.label === "Delivered")
+      && step.state !== "upcoming"
+    )
   );
 
   return (

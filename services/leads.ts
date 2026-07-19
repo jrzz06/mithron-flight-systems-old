@@ -4,7 +4,8 @@ import {
   type AdminLeadRow,
   type LeadSource,
   formatLeadReference,
-  normalizeLeadSource
+  normalizeLeadSource,
+  LEADS_REST_SELECT
 } from "@/lib/leads/shared";
 import {
   ADMIN_MUTATION_TIMEOUT_MS,
@@ -79,29 +80,31 @@ async function notifyAdminsAboutLead(
   if (!policy.orderAlertsEnabled) return;
 
   const adminIds = await listAdminRecipientIds("admin", env);
-  for (const recipientId of adminIds) {
-    await createNotificationRecord(
-      {
-        recipient_id: recipientId,
-        channel: "in_app",
-        title: input.title,
-        body: input.body,
-        status: "unread",
-        priority: "high",
-        entity_table: "leads",
-        entity_id: input.leadId
-      },
-      input.actorId,
-      env,
-      input.actorId ? {} : { allowSystemActor: true }
-    ).catch(() => undefined);
-  }
+  await Promise.all(
+    adminIds.map((recipientId) =>
+      createNotificationRecord(
+        {
+          recipient_id: recipientId,
+          channel: "in_app",
+          title: input.title,
+          body: input.body,
+          status: "unread",
+          priority: "high",
+          entity_table: "leads",
+          entity_id: input.leadId
+        },
+        input.actorId,
+        env,
+        input.actorId ? {} : { allowSystemActor: true }
+      ).catch(() => undefined)
+    )
+  );
 }
 
 async function findLeadByIdempotencyKey(idempotencyKey: string, env: EnvSource) {
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/leads?select=*&payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&limit=1`,
+    `${config.url}/rest/v1/leads?select=${LEADS_REST_SELECT}&payload->>idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&limit=1`,
     {
       headers: headers(config.serviceRoleKey),
       cache: "no-store",
@@ -189,7 +192,7 @@ export async function listAdminLeads(
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
   const offset = Math.max(options.offset ?? 0, 0);
   const filters: string[] = [
-    "select=*",
+    `select=${LEADS_REST_SELECT}`,
     "order=created_at.desc",
     `limit=${limit}`,
     `offset=${offset}`

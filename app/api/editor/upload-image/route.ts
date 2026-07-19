@@ -32,8 +32,18 @@ export async function POST(request: Request) {
 
     return NextResponse.json(uploaded);
   } catch (error) {
+    console.error("[editor-upload] Upload failed.", error);
     const message = error instanceof Error ? error.message : "Upload failed.";
-    const status = message.includes("Authentication") || message.includes("Unauthorized") ? 401 : 400;
-    return NextResponse.json({ error: message }, { status });
+    const status =
+      message.includes("Authentication") || message.includes("Unauthorized") || message.includes("permission")
+        ? 401
+        : 400;
+    const clientMessage =
+      status === 401
+        ? "Authentication required."
+        : message.includes("required") || message.includes("Too many") || message.includes("MIME") || message.includes("size")
+          ? message
+          : "Upload failed.";
+    return NextResponse.json({ error: clientMessage }, { status });
   }
 }

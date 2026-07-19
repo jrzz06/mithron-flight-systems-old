@@ -6,7 +6,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import type { Product } from "@/config/types";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MithronMissionTileImage } from "@/components/media/mithron-mission-tile-image";
-import { footerContent, MITHRON_ZRONEO_APP_PLAY_STORE_URL, type FooterContent } from "@/config/storefront-content";
+import { footerContent, type FooterContent } from "@/config/storefront-content";
 import { isCmsStrictMode } from "@/lib/cms/strict-mode";
 import type { HomepageCmsContent } from "@/config/homepage-cms";
 import { getHomepageBaseCmsContent } from "@/lib/home/homepage-resolution";
@@ -25,7 +25,7 @@ import { HomeFullViewportBanner } from "@/sections/home/home-full-viewport-banne
 import { HomeRelatedArticlesSection } from "@/sections/home/home-related-articles-section";
 import {
   HomeClientTestimonialsSection,
-  pickHomeTestimonialItems,
+  pickHomeTestimonialItemsFromCms,
   HOME_TESTIMONIAL_SHOWCASE_COUNT
 } from "@/sections/home/home-client-testimonials-section";
 import { resolveHomeMiniCarouselItems } from "@/lib/home/mini-carousel";
@@ -104,8 +104,8 @@ export function HomeLandingComposite({
   const cmsV2 = homepageCmsV2 ?? defaultHomepageCmsV2Content;
   const { shelfConfigs, missionConfigs, chapterById } = resolveHomepageLandingState(cms);
   const miniCarouselItems = resolveHomeMiniCarouselItems(products, cmsV2.miniCarousel);
-  const maxReviews = Math.max(1, Math.min(6, cmsV2.reviews.maxCount || HOME_TESTIMONIAL_SHOWCASE_COUNT));
-  const testimonialItems = pickHomeTestimonialItems(productReviews, products, maxReviews);
+  const maxReviews = Math.max(1, Math.min(12, cmsV2.reviews.maxCount || HOME_TESTIMONIAL_SHOWCASE_COUNT));
+  const testimonialItems = pickHomeTestimonialItemsFromCms(cmsV2.testimonialCards ?? [], products, maxReviews);
   const resolvedFooter = footer ?? (isCmsStrictMode() ? null : footerContent);
 
   if (strictWithoutCms) {
@@ -149,6 +149,12 @@ export function HomeLandingComposite({
         posts={relatedArticles}
         pressItems={pressCoverage}
         customItems={cmsV2.relatedArticles.enabled !== false ? cmsV2.relatedArticles.items : []}
+        selectedItems={
+          cmsV2.relatedArticles.enabled !== false ? cmsV2.relatedArticles.selectedItems : undefined
+        }
+        sectionTitle={cmsV2.relatedArticles.sectionTitle}
+        sectionLead={cmsV2.relatedArticles.sectionLead}
+        browseAllHref={cmsV2.relatedArticles.browseAllHref}
       />
 
       <div className={styles.aboutFooterWrap} id="home-about-footer" data-testid="home-about-footer">
@@ -626,7 +632,7 @@ function MissionWorldBentoSection({
     tile: MissionWorldTile,
     cardType: "tall" | "hero" | "standard" | "wide"
   ) => {
-    const resolvedTile = variant === "city" ? { ...tile, href: MITHRON_ZRONEO_APP_PLAY_STORE_URL } : tile;
+    const resolvedTile = tile;
     const imagePresentation =
       variant === "city"
         ? getCityImagePresentation(resolvedTile.media.src, cardType)

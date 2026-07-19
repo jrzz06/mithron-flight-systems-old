@@ -5,7 +5,7 @@ import { parseCheckoutRequestBody } from "@/lib/api/checkout-schema";
 import { buildCheckoutAddressMetadata } from "@/lib/addresses/resolve-server";
 import { requireClientAuditToken } from "@/lib/api/require-client-audit-token";
 import { createClient } from "@/lib/server";
-import { assertSupabaseAdminConfig } from "@/lib/env";
+import { getSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { assertCustomerAddressBelongsToUser } from "@/services/customer-addresses";
 import {
@@ -44,8 +44,9 @@ async function findCheckoutByIdempotencyKey(
   idempotencyKey: string,
   scope: { userId: string } | { guestEmail: string; guestPhone: string },
   options?: { refreshIfStale?: boolean }
-): Promise<CheckoutPaymentResponse | null> {
-  const config = assertSupabaseAdminConfig(process.env);
+): Promise<CheckoutPaymentResponse | null | "unavailable"> {
+  const config = getSupabaseAdminConfig(process.env);
+  if (!config.configured) return "unavailable";
   const filter =
     "userId" in scope
       ? `created_by_user_id=eq.${scope.userId}`
@@ -71,7 +72,9 @@ async function findCheckoutByIdempotencyKey(
   }
 
   const orderId = String(order.id);
-  const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId);
+  const payments = await fetchAdminRecordsByColumn("payments", "order_id", orderId, process.env, {
+    skipPermissionCheck: true
+  });
   const payment = payments.find((row) => !["failed", "cancelled"].includes(String(row.status ?? ""))) ?? payments[0];
   if (!payment?.provider_intent_id) return null;
 
@@ -215,6 +218,12 @@ export async function POST(request: Request) {
       const existing = userId
         ? await findCheckoutByIdempotencyKey(idempotencyKey, { userId })
         : await findCheckoutByIdempotencyKey(idempotencyKey, { guestEmail: body.email, guestPhone: body.phone });
+      if (existing === "unavailable") {
+        return NextResponse.json(
+          { error: "Checkout temporarily unavailable. Please try again in a moment.", retryable: true },
+          { status: 503 }
+        );
+      }
       if (existing) {
         return NextResponse.json(existing);
       }
@@ -224,6 +233,13 @@ export async function POST(request: Request) {
     const existing = userId
       ? await findCheckoutByIdempotencyKey(idempotencyKey, { userId })
       : await findCheckoutByIdempotencyKey(idempotencyKey, { guestEmail: body.email, guestPhone: body.phone });
+    if (existing === "unavailable") {
+      await releaseRedisLock(redisLockKey).catch(() => undefined);
+      return NextResponse.json(
+        { error: "Checkout temporarily unavailable. Please try again in a moment.", retryable: true },
+        { status: 503 }
+      );
+    }
     if (existing) {
       await releaseRedisLock(redisLockKey).catch(() => undefined);
       return NextResponse.json(existing);

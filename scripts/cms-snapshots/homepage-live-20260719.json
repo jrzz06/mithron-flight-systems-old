@@ -1,0 +1,342 @@
+{
+  "capturedAt": "2026-07-19T15:33:01.776Z",
+  "source": "resolved-live-render",
+  "hero": {
+    "slides": [
+      {
+        "id": "ag10-arrival",
+        "productSlug": "",
+        "title": "Drone is Mithron",
+        "subtitle": "India's trusted drone store and service network",
+        "cta": "Visit Mithron Smart",
+        "href": "https://www.mithronsmart.com",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w-enh-v1.74233e64.webp",
+        "imageAlt": "Mithron agriculture drone flying over alpine terrain at golden hour",
+        "theme": "light",
+        "composition": {
+          "mode": "full-bleed",
+          "textTone": "dark",
+          "mediaPosition": "59% 50%",
+          "productDominance": "flagship",
+          "mobileMediaPosition": "56% 42%"
+        },
+        "titleColor": null,
+        "subtitleColor": null,
+        "sortOrder": 10
+      },
+      {
+        "id": "mapping-flight",
+        "productSlug": "source-10x-seeker-optical-zoom-cmera-survey-drone",
+        "title": "Global Drone Connect",
+        "subtitle": "A marketplace for global product import, export, and live price bids",
+        "cta": "Visit Mithron Smart",
+        "href": "https://www.mithronsmart.com",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-02-3840w-enh-v1.2c3c6e0b.webp",
+        "imageAlt": "Mithron survey drone crossing a mountain valley at sunset",
+        "theme": "light",
+        "composition": {
+          "mode": "full-bleed",
+          "textTone": "dark",
+          "mediaPosition": "62% 28%",
+          "productDominance": "flagship",
+          "mobileMediaPosition": "center 42%"
+        },
+        "titleColor": null,
+        "subtitleColor": null,
+        "sortOrder": 20
+      },
+      {
+        "id": "drone-ecosystem",
+        "productSlug": "source-v9-flight-controller-for-agriculture-drones",
+        "title": "One Stop Drone Mithron",
+        "subtitle": "Sales, rentals, troubleshooting, training, import, and financing in one place",
+        "cta": "Visit Mithron Smart",
+        "href": "https://www.mithronsmart.com",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-03-3840w-enh-v1.15354ab6.webp",
+        "imageAlt": "Mithron modular drone ecosystem with airframe and payload components",
+        "theme": "light",
+        "composition": {
+          "mobileMediaPosition": "center 42%"
+        },
+        "titleColor": null,
+        "subtitleColor": null,
+        "sortOrder": 30
+      }
+    ],
+    "liveCopyOverridesApplied": true,
+    "liveCta": {
+      "href": "https://www.mithronsmart.com",
+      "label": "Visit Mithron Smart"
+    }
+  },
+  "miniCarousel": {
+    "enabled": true,
+    "slides": [
+      {
+        "index": 0,
+        "productSlug": "source-drone-soccer-150-mm",
+        "heading": "Drone Soccer (150 mm)",
+        "href": "/product/source-drone-soccer-150-mm",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-drone-soccer-150-mm-a0ce8638e1f0.webp",
+        "omitted": false
+      },
+      {
+        "index": 1,
+        "productSlug": "source-4k-cinema-drone",
+        "heading": "4K CINEMA DRONE",
+        "href": "/product/source-4k-cinema-drone",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/products/source-4k-cinema-drone/20260712T134051072Z-1fcb8c-cc1dac8c675a4688b3055ac56a13e0d6-mv2.jpg",
+        "omitted": false
+      },
+      {
+        "index": 2,
+        "productSlug": "source-5-liter-agri-drone",
+        "heading": "5 Liter Agri Drone",
+        "href": "/product/source-5-liter-agri-drone",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-5-liter-agri-drone-4a25acaa2fd4.webp",
+        "omitted": false
+      },
+      {
+        "index": 3,
+        "productSlug": "source-10l-drone-with-6-nozzle-system-tc-certified",
+        "heading": "10L DRONE WITH 6 NOZZLE SYSTEM [TC CERTIFIED]",
+        "href": "/product/source-10l-drone-with-6-nozzle-system-tc-certified",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/products/source-10l-drone-with-6-nozzle-system-tc-certified/20260712T134056367Z-07ffbb-d4a721a10326456db11eaa8441f24ed6-mv2.jpg",
+        "omitted": false
+      },
+      {
+        "index": 4,
+        "productSlug": "source-sky-pro-4k-videography-drone",
+        "heading": "SKY PRO 4K VIDEOGRAPHY DRONE",
+        "href": "/product/source-sky-pro-4k-videography-drone",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/products/source-sky-pro-4k-videography-drone/20260712T134123337Z-07ffbb-6bd5b009adfe4641bc2711555bc2eb13-mv2.jpeg",
+        "omitted": false
+      },
+      {
+        "index": 5,
+        "productSlug": "source-10l-agri-drone-with-basic-features",
+        "heading": "10L Agri Drone with Basic features",
+        "href": "/product/source-10l-agri-drone-with-basic-features",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/products/source-10l-agri-drone-with-basic-features/20260712T134133658Z-104910-1071f766e6244c33b3ec4e785ac5c96b-mv2.jpg",
+        "omitted": false
+      },
+      {
+        "index": 6,
+        "productSlug": "source-drone-soccer-200-mm",
+        "heading": "Drone Soccer (200 mm)",
+        "href": "/product/source-drone-soccer-200-mm",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-drone-soccer-200-mm-cecb335d8389.webp",
+        "omitted": false
+      },
+      {
+        "index": 7,
+        "productSlug": "source-agri-kisan-drone-small-8-liter",
+        "heading": "Agri Kisan Drone Small - 8 Liter",
+        "href": "/product/source-agri-kisan-drone-small-8-liter",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/products/source-agri-kisan-drone-small-8-liter/20260712T134159876Z-8df8b4-af99905018944d7b9ecc2288e7fe7401-mv2.jpg",
+        "omitted": false
+      },
+      {
+        "index": 8,
+        "productSlug": "source-soccer-drone",
+        "heading": "Soccer Drone",
+        "href": "/product/source-soccer-drone",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-soccer-drone-a5a34477e7c3.webp",
+        "omitted": false
+      },
+      {
+        "index": 9,
+        "productSlug": "source-16l-agri-drone-ver2",
+        "heading": "16L Agri Drone Ver2",
+        "href": "/product/source-16l-agri-drone-ver2",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-16l-agri-drone-ver2-889963b73636.webp",
+        "omitted": false
+      },
+      {
+        "index": 10,
+        "productSlug": "source-10x-seeker-optical-zoom-cmera-survey-drone",
+        "heading": "10X SEEKER OPTICAL ZOOM CMERA Survey Drone",
+        "href": "/product/source-10x-seeker-optical-zoom-cmera-survey-drone",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-10x-seeker-optical-zoom-cmera-survey-drone-b0a1853fe2ec.webp",
+        "omitted": false
+      },
+      {
+        "index": 11,
+        "productSlug": "source-15-liters-agri-drone",
+        "heading": "15 Liters Agri Drone",
+        "href": "/product/source-15-liters-agri-drone",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-15-liters-agri-drone-96c6e4d3a640.webp",
+        "omitted": false
+      },
+      {
+        "index": 12,
+        "productSlug": "source-guru-student-drone",
+        "heading": "Guru Student Drone",
+        "href": "/product/source-guru-student-drone",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/source-guru-student-drone-3666868dcfc5.webp",
+        "omitted": false
+      },
+      {
+        "index": 13,
+        "productSlug": "source-16-liters-agri-drone-tc-with-pilot-license",
+        "heading": "16 Liters Agri Drone TC with Pilot License",
+        "href": "/product/source-16-liters-agri-drone-tc-with-pilot-license",
+        "imageSrc": "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-products/products/source-16-liters-agri-drone-tc-with-pilot-license/20260712T134217263Z-07ffbb-f00de13926f5483caa048bd7f2cea07f-mv2.jpg",
+        "omitted": false
+      }
+    ],
+    "omittedMissing": []
+  },
+  "shelves": {
+    "droneWorld": {
+      "title": "Drone World",
+      "eyebrow": "Featured Collection",
+      "href": "/products?filter=drones",
+      "heroCtaHref": "/products?filter=drones",
+      "liveHref": "/products?filter=drones",
+      "heroImageSrc": "/media/mithron/showcase/drone_world_hero.png",
+      "productSlugs": [
+        "source-agri-kisan-drone-small-8-liter",
+        "source-10l-agri-drone-best-price",
+        "source-4k-cinema-drone",
+        "source-5-liter-agri-drone"
+      ],
+      "cmsHrefBeforeFix": "/products?filter=drones"
+    },
+    "droneCare": {
+      "title": "Drone Care",
+      "eyebrow": "Essential Care",
+      "href": "/products?filter=accessories-spare-parts",
+      "heroCtaHref": "/products?category=accessories",
+      "liveHref": "/products?filter=accessories-spare-parts",
+      "heroImageSrc": "/media/mithron/showcase/drone_care_hero.png",
+      "productSlugs": [],
+      "cmsHrefBeforeFix": "/products?category=accessories"
+    },
+    "globalProducts": {
+      "title": "Global Product",
+      "eyebrow": "Global Selection",
+      "href": "/products?filter=global-products",
+      "heroCtaHref": "/products?category=global-products",
+      "liveHref": "/products?filter=global-products",
+      "heroImageSrc": "/media/mithron/showcase/global_products_hero.png",
+      "productSlugs": [],
+      "cmsHrefBeforeFix": "/products?category=global-products"
+    }
+  },
+  "missions": {
+    "agri": {
+      "cta": "Explore Agri Drones",
+      "body": "<p style=\"text-align:left\">Register, book, and finance drones across India's AGRONE<span style=\"color:rgb(255, 0, 0)\"> network..... </span></p>",
+      "href": "/agriculture",
+      "tiles": [
+        {
+          "body": "<p>Register your drone on the AGRONE</p>",
+          "href": "https://drone.mithronsmart.com/droneowner_reg",
+          "label": "Drone Owner Registration",
+          "model": "DRONE OWNER NETWORK",
+          "imageAlt": "AGRONE drone owner registration",
+          "imageSrc": "/media/mithron/mission/agrone/agrone-drone-owner-registration.png",
+          "location": "Pan-India onboarding",
+          "operator": "AGRONE Network"
+        },
+        {
+          "body": "<p>Join certified pilots and receive AGRONE missions.</p>",
+          "href": "https://drone.mithronsmart.com/register",
+          "label": "Pilot Registration",
+          "model": "AGRONE PILOT NETWORK",
+          "imageAlt": "AGRONE pilot registration",
+          "imageSrc": "/media/mithron/mission/agrone/agrone-pilot-registration.png",
+          "location": "Pilot onboarding",
+          "operator": "AGRONE Network"
+        },
+        {
+          "body": "<p>Book spraying and crop monitoring across India.</p>",
+          "href": "",
+          "label": "Farmer Drone Booking",
+          "model": "NATIONWIDE BOOKING",
+          "imageAlt": "All India farmer drone booking",
+          "imageSrc": "/media/mithron/mission/agrone/all-india-drone-farmer.png",
+          "location": "Service booking desk",
+          "operator": "AGRONE Network"
+        },
+        {
+          "body": "<p>Access AGRONE services and on-demand drone support.</p>",
+          "href": "https://drone.mithronsmart.com/farmer",
+          "label": "Smart Farmer Registration",
+          "model": "SMART FARMER PROGRAM",
+          "imageAlt": "Smart farmer registration",
+          "imageSrc": "/media/mithron/mission/agrone/smart-farmer-register.png",
+          "location": "Farmer onboarding",
+          "operator": "AGRONE Network"
+        },
+        {
+          "body": "<p>Check eligibility and compare financing plans.</p>",
+          "href": "",
+          "label": "Drone Loan and EMI",
+          "model": "FINANCING SUPPORT",
+          "imageAlt": "Agri drone loan and EMI check",
+          "imageSrc": "/media/mithron/mission/agrone/agri-drone-loan.png",
+          "location": "Loan eligibility check",
+          "operator": "AGRONE Network"
+        }
+      ],
+      "title": "Agri Community World",
+      "eyebrow": "Solutions for Growth",
+      "mediaNote": ""
+    },
+    "city": {
+      "cta": "Explore City Drones",
+      "body": "<p>Urban platforms for rentals, training, care, and technician support.</p>",
+      "href": "/surveillance",
+      "tiles": [
+        {
+          "index": 0,
+          "label": "Dronelancer Model",
+          "imageSrc": "/media/mithron/mission/city/dronelancer-model.png",
+          "href": "https://play.google.com/store/apps/details?id=com.mithronfarmer",
+          "cmsHrefBeforeOverride": "https://play.google.com/store/apps/details?id=com.mithronfarmer"
+        },
+        {
+          "index": 1,
+          "label": "Drone Rental App",
+          "imageSrc": "/media/mithron/mission/city/city-drone-rental-services-app.png",
+          "href": "https://play.google.com/store/apps/details?id=com.mithronfarmer",
+          "cmsHrefBeforeOverride": "https://play.google.com/store/apps/details?id=com.mithronfarmer"
+        },
+        {
+          "index": 2,
+          "label": "Drone Academic",
+          "imageSrc": "/media/mithron/mission/city/all-drone-acadamic.png",
+          "href": "https://play.google.com/store/apps/details?id=com.mithronfarmer",
+          "cmsHrefBeforeOverride": "https://play.google.com/store/apps/details?id=com.mithronfarmer"
+        },
+        {
+          "index": 3,
+          "label": "FranchiseCare Center",
+          "imageSrc": "/media/mithron/mission/city/drone-franchisecare-center.png",
+          "href": "https://play.google.com/store/apps/details?id=com.mithronfarmer",
+          "cmsHrefBeforeOverride": "https://play.google.com/store/apps/details?id=com.mithronfarmer"
+        },
+        {
+          "index": 4,
+          "label": "Technician Network",
+          "imageSrc": "/media/mithron/mission/city/drone-technician-aggregation.png",
+          "href": "https://play.google.com/store/apps/details?id=com.mithronfarmer",
+          "cmsHrefBeforeOverride": "https://play.google.com/store/apps/details?id=com.mithronfarmer"
+        }
+      ],
+      "title": "City Drone World",
+      "eyebrow": "Solutions for Future Cities",
+      "mediaNote": ""
+    }
+  },
+  "relatedArticles": {
+    "sectionTitle": "Related Articles",
+    "sectionLead": "Explore drone technology, agriculture operations, aerial intelligence, precision farming, maintenance guidance, and industry insights from Mithron.",
+    "browseAllHref": "/blog",
+    "items": [],
+    "selectedItems": []
+  },
+  "playStoreUrl": "https://play.google.com/store/apps/details?id=com.mithronfarmer"
+}

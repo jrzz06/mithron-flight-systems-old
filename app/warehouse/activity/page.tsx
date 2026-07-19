@@ -14,26 +14,28 @@ function text(value: unknown, fallback = "—") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
-function trackingFromOrder(order: Record<string, unknown>) {
-  const tracking = order.shipment_tracking;
-  if (!tracking || typeof tracking !== "object" || Array.isArray(tracking)) {
-    return { carrier: "—", trackingNumber: "—" };
-  }
-  const record = tracking as Record<string, unknown>;
+function trackingFromShipment(shipment: Record<string, unknown> | undefined) {
+  if (!shipment) return { carrier: "—", trackingNumber: "—" };
   return {
-    carrier: text(record.carrier, "—"),
-    trackingNumber: text(record.tracking_number, "—")
+    carrier: text(shipment.carrier_name, "—"),
+    trackingNumber: text(shipment.tracking_number, "—")
   };
 }
 
 export default async function WarehouseActivityPage() {
-  const [snapshot, policy, auth] = await Promise.all([
-    getWarehouseSnapshot({ scope: "orders" }),
+  const authPromise = getCurrentAuthContext();
+  const [snapshot, policy, scope] = await Promise.all([
+    getWarehouseSnapshot({ scope: "ordersSummary" }),
     getAdminSettingsPolicy(),
-    getCurrentAuthContext()
+    authPromise.then((auth) => resolveWarehouseScope({ userId: auth.userId, role: auth.role }))
   ]);
-  const scope = await resolveWarehouseScope({ userId: auth.userId, role: auth.role });
   const scopedOrders = filterOrdersForWarehouseScope(snapshot.data.orders, scope, policy.defaultWarehouseCode);
+  const shipmentByOrderId = new Map<string, Record<string, unknown>>();
+  for (const shipment of snapshot.data.shipments) {
+    const orderId = text(shipment.order_id, "");
+    if (!orderId || shipmentByOrderId.has(orderId)) continue;
+    shipmentByOrderId.set(orderId, shipment);
+  }
   const dispatchedOrders = scopedOrders
     .filter((order) => ["shipped", "delivered"].includes(text(order.fulfillment_status, "pending")))
     .sort((left, right) => Date.parse(String(right.updated_at ?? "")) - Date.parse(String(left.updated_at ?? "")));
@@ -64,7 +66,8 @@ export default async function WarehouseActivityPage() {
             </thead>
             <tbody className="divide-y divide-[var(--platform-border)] text-[var(--platform-text-secondary)]">
               {dispatchedOrders.length ? dispatchedOrders.map((order) => {
-                const tracking = trackingFromOrder(order);
+                const orderId = text(order.id, "");
+                const tracking = trackingFromShipment(shipmentByOrderId.get(orderId));
                 return (
                   <tr key={text(order.id, text(order.order_number))}>
                     <td className="px-4 py-3 font-medium text-[var(--platform-text-primary)]">{text(order.order_number, text(order.id))}</td>

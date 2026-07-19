@@ -8,6 +8,10 @@ import {
 import { parseShipmentTracking } from "@/lib/customer/shipment-tracking";
 import { employeeFulfillmentLabel } from "@/lib/warehouse/operational-labels";
 import {
+  canCancelOrder,
+  canDispatchOrder,
+  EMPLOYEE_PROGRESS_STEPS,
+  employeeProgressStepIndex,
   formatOrderDate,
   assignedPicker,
   shippingMethod,
@@ -36,12 +40,62 @@ type WarehouseFulfillmentDetailProps = {
   cancelAction: (formData: FormData) => Promise<void>;
 };
 
-function canCancelFulfillment(status: string) {
-  return !["dispatched", "shipped", "delivered", "cancelled", "returned"].includes(status);
+function FulfillmentStepper({ status }: { status: string }) {
+  const activeIndex = employeeProgressStepIndex(status);
+  if (activeIndex < 0) {
+    return (
+      <p className="mt-3 text-sm font-medium text-[var(--platform-text-secondary)]">
+        Status: {employeeFulfillmentLabel(status)}
+      </p>
+    );
+  }
+
+  return (
+    <ol className="mt-4 flex min-w-0 flex-wrap items-center gap-2" aria-label="Fulfillment progress">
+      {EMPLOYEE_PROGRESS_STEPS.map((step, index) => {
+        const isComplete = index < activeIndex;
+        const isCurrent = index === activeIndex;
+        return (
+          <li key={step.key} className="flex min-w-0 items-center gap-2">
+            {index > 0 ? (
+              <span
+                className={`hidden h-px w-6 sm:block ${
+                  isComplete || isCurrent ? "bg-[var(--platform-accent)]" : "bg-[var(--platform-border)]"
+                }`}
+                aria-hidden
+              />
+            ) : null}
+            <span
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                isCurrent
+                  ? "bg-[var(--platform-accent-soft)] text-[var(--platform-accent)]"
+                  : isComplete
+                    ? "bg-[var(--platform-surface)] text-[var(--platform-text-primary)]"
+                    : "bg-[var(--platform-surface)] text-[var(--platform-text-muted)]"
+              }`}
+            >
+              <span
+                className={`grid size-5 place-items-center rounded-full text-[10px] ${
+                  isCurrent || isComplete
+                    ? "bg-[var(--platform-accent)] text-white"
+                    : "bg-[var(--platform-border)] text-[var(--platform-text-muted)]"
+                }`}
+              >
+                {isComplete ? "✓" : index + 1}
+              </span>
+              {step.label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
-function canDispatch(status: string) {
-  return ["pending", "packing", "processing", "picked", "packed", "ready_to_dispatch"].includes(status);
+function nextStepHint(status: string) {
+  if (!canDispatchOrder(status)) return null;
+  if (status === "pending") return "Next: review products, then dispatch this order.";
+  return "Next: dispatch this order.";
 }
 
 export function WarehouseFulfillmentDetail({
@@ -57,6 +111,7 @@ export function WarehouseFulfillmentDetail({
   const address = warehouseShippingAddress(order);
   const step = orderRow.fulfillmentStatus;
   const tracking = parseShipmentTracking(order.shipment_tracking);
+  const hint = nextStepHint(step);
 
   return (
     <div className="grid min-w-0 gap-5">
@@ -65,15 +120,20 @@ export function WarehouseFulfillmentDetail({
           <h2 className="min-w-0 break-words text-lg font-semibold text-[var(--platform-text-primary)]">
             {orderRow.orderNumber}
           </h2>
-          <p className="mt-1 min-w-0 break-words text-sm text-[var(--platform-text-secondary)]">
-            {employeeFulfillmentLabel(step)} · {orderRow.paymentStatus} · Priority {orderRow.priority}
+          <p className="mt-1 text-sm text-[var(--platform-text-secondary)]">
+            {employeeFulfillmentLabel(step)}
           </p>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--platform-text-muted)]">
-            Review the products below, then dispatch the complete order. Courier details appear on the customer order tracking page after dispatch.
-          </p>
+          <FulfillmentStepper status={step} />
+          {hint ? (
+            <p className="mt-3 text-sm font-medium text-[var(--platform-accent)]">{hint}</p>
+          ) : (
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--platform-text-muted)]">
+              This order is {employeeFulfillmentLabel(step).toLowerCase()}. Courier details appear on the customer order tracking page after dispatch.
+            </p>
+          )}
         </div>
         <div className="grid min-w-0 gap-3">
-          {canDispatch(step) ? (
+          {canDispatchOrder(step) ? (
             <OperationalPrimaryAction
               title="Dispatch order"
               description="One click receives, prepares, and dispatches this order."
@@ -86,12 +146,17 @@ export function WarehouseFulfillmentDetail({
             </OperationalPrimaryAction>
           ) : null}
 
-          {canCancelFulfillment(step) ? (
+          {canCancelOrder(step) ? (
             <OperationalMoreActions>
               <OperationalDangerAction
                 action={cancelAction}
                 buttonLabel="Cancel & Delete Order"
                 pendingLabel="Cancelling"
+                confirmMessage={`Cancel & delete order ${orderRow.orderNumber}?`}
+                confirmDescription="This permanently deletes the order from the warehouse queue. Type the order number to confirm."
+                requireTypedText={orderRow.orderNumber}
+                typedTextLabel={`Type ${orderRow.orderNumber} to confirm`}
+                confirmLabel="Cancel & delete"
               >
                 <input name="order_id" type="hidden" value={orderRow.orderId} />
                 <input name="expected_updated_at" type="hidden" value={orderRow.updatedAt} />
@@ -108,41 +173,60 @@ export function WarehouseFulfillmentDetail({
         </div>
       </section>
 
-      <section className="@container grid min-w-0 gap-4 rounded-[var(--platform-radius)] bg-[var(--platform-surface-muted)] p-4 @sm:grid-cols-2">
+      <section className="@container grid min-w-0 gap-4 rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-4 @sm:grid-cols-2">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Customer</h3>
-          <dl className="mt-3 grid gap-2 text-sm">
+          <dl className="mt-3 grid gap-3 text-sm">
             <div>
               <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Name</dt>
-              <dd className="mt-0.5 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerName}</dd>
+              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerName}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Phone</dt>
-              <dd className="mt-0.5 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerPhone}</dd>
+              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerPhone}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Email</dt>
-              <dd className="mt-0.5 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerEmail}</dd>
+              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerEmail}</dd>
             </div>
           </dl>
         </div>
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Shipping</h3>
-          <p className="mt-2 min-w-0 break-words text-sm text-[var(--platform-text-secondary)]">{shippingMethod(order)}</p>
-          <p className="min-w-0 break-words text-sm text-[var(--platform-text-secondary)]">Assigned: {assignedPicker(order)}</p>
-          <p className="min-w-0 break-words text-sm text-[var(--platform-text-secondary)]">Created: {formatOrderDate(order.created_at)}</p>
-          {tracking?.carrier ? (
-            <p className="min-w-0 break-words text-sm text-[var(--platform-text-secondary)]">Carrier: {tracking.carrier}</p>
-          ) : null}
-          {tracking?.trackingNumber ? (
-            <p className="min-w-0 break-words text-sm text-[var(--platform-text-secondary)]">Tracking: {tracking.trackingNumber}</p>
-          ) : null}
-          <p className="mt-3 text-xs font-medium uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">Ship to</p>
-          {address && address !== "—" ? (
-            <p className="mt-2 min-w-0 whitespace-pre-line break-words text-sm text-[var(--platform-text-muted)]">{address}</p>
-          ) : (
-            <p className="mt-2 text-sm text-[var(--platform-text-muted)]">No shipping address on file.</p>
-          )}
+          <dl className="mt-3 grid gap-3 text-sm">
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Method</dt>
+              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{shippingMethod(order)}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Assigned</dt>
+              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{assignedPicker(order)}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Created</dt>
+              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{formatOrderDate(order.created_at)}</dd>
+            </div>
+            {tracking?.carrier ? (
+              <div>
+                <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Carrier</dt>
+                <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{tracking.carrier}</dd>
+              </div>
+            ) : null}
+            {tracking?.trackingNumber ? (
+              <div>
+                <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Tracking</dt>
+                <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{tracking.trackingNumber}</dd>
+              </div>
+            ) : null}
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Ship to</dt>
+              {address && address !== "—" ? (
+                <dd className="mt-1 min-w-0 whitespace-pre-line break-words text-[var(--platform-text-secondary)]">{address}</dd>
+              ) : (
+                <dd className="mt-1 text-[var(--platform-text-muted)]">No shipping address on file.</dd>
+              )}
+            </div>
+          </dl>
         </div>
       </section>
 

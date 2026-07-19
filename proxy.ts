@@ -34,7 +34,7 @@ import {
   resolveIntendedAuthNext
 } from "@/lib/auth/redirects";
 import { CUSTOMER_AUTH_HOME } from "@/lib/auth/guest-auth";
-import { getCachedJson, REDIS_CACHE_KEYS, setCachedJson } from "@/lib/cache-redis";
+import { getCachedJson, REDIS_CACHE_KEYS, setCachedJson, withSingleFlight } from "@/lib/cache-redis";
 
 const DEFAULT_SESSION_TIMEOUT_MINUTES = 60;
 
@@ -49,6 +49,7 @@ function applyRequestSecurityHeaders(request: NextRequest) {
   requestHeaders.delete(SESSION_HANDOFF_ROLE_HEADER);
   requestHeaders.delete(SESSION_HANDOFF_VERIFIED_HEADER);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("x-mithron-pathname", request.nextUrl.pathname);
   return { nonce, requestHeaders };
 }
 
@@ -210,6 +211,8 @@ async function resolveRoleAndProfileWithAuthRoleCache(params: {
   pathname: string;
   userId: string | null;
   sessionIat: number | null;
+  /** Optional Redis payload already read by the caller (avoids a duplicate GET). */
+  prefetchedAuthCache?: CachedAuthRoleContext | null;
 }): Promise<{
   roleResolution: Awaited<ReturnType<typeof resolveRequestRole>>;
   profileLookup: ProfileGateLookup | null;
@@ -217,46 +220,77 @@ async function resolveRoleAndProfileWithAuthRoleCache(params: {
   authCacheKey: string | null;
   profileCompleteFromCache: boolean;
 }> {
-  const { supabase, claims, pathname, userId, sessionIat } = params;
+  const { supabase, claims, pathname, userId, sessionIat, prefetchedAuthCache } = params;
   const authCacheKey = userId && sessionIat ? REDIS_CACHE_KEYS.authRoleContext(userId, sessionIat) : null;
 
-  if (authCacheKey) {
-    const cached = await getCachedJson<CachedAuthRoleContext>(authCacheKey);
-    if (cached) {
-      const claimsRole = resolveClaimsRoleFromClaims(claims);
+  const applyCachedPayload = async (cached: CachedAuthRoleContext) => {
+    const claimsRole = resolveClaimsRoleFromClaims(claims);
 
-      // If the cache says "disabled/revoked", still fall back to DB-backed
-      // role + profile so we can reliably compute the exact logout reason.
-      if (cached.disabled || !cached.role) {
-        const [roleResolution, profileLookup] = await Promise.all([
-          resolveRequestRole(supabase, claims),
-          userId ? loadProfileGateRow(supabase, userId) : Promise.resolve(null as ProfileGateLookup | null)
-        ]);
-        return {
-          roleResolution,
-          profileLookup,
-          usedAuthRoleCache: false,
-          authCacheKey,
-          profileCompleteFromCache: false
-        };
-      }
-
-      const role = cached.role;
-      const needIdentityGate = role === "user" && !isProfileCompletionExemptPath(pathname);
-      // Skip profiles when Redis already confirmed a complete customer profile.
-      const profileLookup =
-        userId && needIdentityGate && cached.profileComplete !== true
-          ? await loadProfileGateRow(supabase, userId)
-          : null;
-
+    // If the cache says "disabled/revoked", still fall back to DB-backed
+    // role + profile so we can reliably compute the exact logout reason.
+    if (cached.disabled || !cached.role) {
+      const [roleResolution, profileLookup] = await Promise.all([
+        resolveRequestRole(supabase, claims),
+        userId ? loadProfileGateRow(supabase, userId) : Promise.resolve(null as ProfileGateLookup | null)
+      ]);
       return {
-        roleResolution: { role, claimsRole, roleError: null },
+        roleResolution,
         profileLookup,
-        usedAuthRoleCache: true,
+        usedAuthRoleCache: false,
         authCacheKey,
-        profileCompleteFromCache: cached.profileComplete === true
+        profileCompleteFromCache: false
       };
     }
+
+    const role = cached.role;
+    const needIdentityGate = role === "user" && !isProfileCompletionExemptPath(pathname);
+    // Skip profiles when Redis already confirmed a complete customer profile.
+    const profileLookup =
+      userId && needIdentityGate && cached.profileComplete !== true
+        ? await loadProfileGateRow(supabase, userId)
+        : null;
+
+    return {
+      roleResolution: { role, claimsRole, roleError: null },
+      profileLookup,
+      usedAuthRoleCache: true,
+      authCacheKey,
+      profileCompleteFromCache: cached.profileComplete === true
+    };
+  };
+
+  if (authCacheKey) {
+    const existing =
+      prefetchedAuthCache !== undefined
+        ? prefetchedAuthCache
+        : await getCachedJson<CachedAuthRoleContext>(authCacheKey);
+    if (existing) {
+      return applyCachedPayload(existing);
+    }
+
+    // Cold miss: coalesce concurrent role+profile loads for the same session.
+    const payload = await withSingleFlight(authCacheKey, AUTH_ROLE_CACHE_TTL_SECONDS, async () => {
+      const [roleResolution, profileLookup] = await Promise.all([
+        resolveRequestRole(supabase, claims),
+        userId ? loadProfileGateRow(supabase, userId) : Promise.resolve(null as ProfileGateLookup | null)
+      ]);
+      const row = profileLookup?.row ?? null;
+      if (row?.governance_status === "disabled") {
+        return { role: null, disabled: true } satisfies CachedAuthRoleContext;
+      }
+      if (sessionIat && row?.session_revoked_at) {
+        const revokedMs = Date.parse(row.session_revoked_at);
+        if (Number.isFinite(revokedMs) && sessionIat * 1000 < revokedMs) {
+          return { role: null, disabled: true } satisfies CachedAuthRoleContext;
+        }
+      }
+      if (!roleResolution.role) {
+        return { role: null, disabled: false } satisfies CachedAuthRoleContext;
+      }
+      return buildAuthRoleCachePayload(roleResolution.role, profileLookup);
+    });
+
+    return applyCachedPayload(payload);
   }
 
   const [roleResolution, profileLookup] = await Promise.all([
@@ -643,8 +677,10 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
       // H2: claims-only / cached profileComplete fast path for public storefront —
       // skip full role + profile resolution when Redis already has a complete context
       // or when JWT claims alone are enough to decide control-panel confinement.
+      let prefetchedAuthCache: CachedAuthRoleContext | null | undefined;
       if (authCacheKey) {
         const cached = await getCachedJson<CachedAuthRoleContext>(authCacheKey);
+        prefetchedAuthCache = cached;
         if (cached?.role && !cached.disabled) {
           if (shouldConfineRoleToControlPanel(cached.role, pathname)) {
             return redirectToRoleHome(request, cached.role, "access_status", "control_panel_only");
@@ -675,7 +711,8 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
         claims,
         pathname,
         userId,
-        sessionIat
+        sessionIat,
+        prefetchedAuthCache
       });
       const authLookupsMs = Date.now() - authLookupsStartedAt;
       if (authLookupsMs >= 500) {
@@ -751,8 +788,13 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
     sessionIat
   });
   const authLookupsMs = Date.now() - authLookupsStartedAt;
-  if (authLookupsMs >= 500) {
-    console.warn(`[mithron-proxy] Protected-route auth lookups took ${authLookupsMs}ms`, { pathname });
+  // Baseline capture: always log when PERF_ACTION_TIMING=1; otherwise warn at ≥500ms.
+  if (process.env.PERF_ACTION_TIMING === "1" || authLookupsMs >= 500) {
+    console.warn(`[mithron-proxy] Protected-route auth lookups took ${authLookupsMs}ms`, {
+      pathname,
+      usedAuthRoleCache,
+      warm: usedAuthRoleCache
+    });
   }
 
   if (profileLookup) {

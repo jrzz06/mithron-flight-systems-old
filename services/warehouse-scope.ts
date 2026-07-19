@@ -48,8 +48,10 @@ export const resolveWarehouseScope = cache(async (
   input: { userId: string | null; role: ReturnType<typeof normalizeCmsRole> },
   env: EnvSource = process.env
 ): Promise<WarehouseScope> => {
-  const warehouses = await listActiveWarehouses(env);
-  const policy = await getAdminSettingsPolicy(env);
+  const [warehouses, policy] = await Promise.all([
+    listActiveWarehouses(env),
+    getAdminSettingsPolicy(env)
+  ]);
   const fallbackCode = policy.defaultWarehouseCode || warehouses[0]?.code || "";
   const fallbackName = warehouses.find((warehouse) => warehouse.code === fallbackCode)?.name ?? fallbackCode;
 
@@ -112,9 +114,9 @@ function filterStockForWarehouseScope<T extends Record<string, unknown>>(
 
 export function filterInventoryForWarehouseScope<T extends Record<string, unknown>>(
   inventory: T[],
-  _scope: WarehouseScope
+  scope: WarehouseScope
 ) {
-  return inventory;
+  return filterStockForWarehouseScope(inventory, scope);
 }
 
 export function filterShipmentsForWarehouseScope<T extends Record<string, unknown>>(

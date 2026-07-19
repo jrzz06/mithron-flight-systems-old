@@ -543,18 +543,10 @@ export function useCartItemCount() {
   return isReady ? count : 0;
 }
 
-export function useCartItems() {
-  return useCartStore((state) => state.items);
-}
-
 export function useCartHasHydrated() {
   return useCartStore((state) => state._hasHydrated);
 }
 
 export function useCartSessionReady() {
   return useCartStore((state) => state.isCartSessionReady);
-}
-
-export function useCartSource() {
-  return useCartStore((state) => state.cartSource);
 }

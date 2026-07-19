@@ -55,6 +55,7 @@ export function StorefrontShellStreamingLayout({
   const online = useOnlineStatus();
   const [searchPrewarmed, setSearchPrewarmed] = useState(false);
   const [cartPrewarmed, setCartPrewarmed] = useState(false);
+  const [assistantMounted, setAssistantMounted] = useState(false);
   const isMountedRef = useRef(false);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -97,6 +98,7 @@ export function StorefrontShellStreamingLayout({
     let active = true;
     let timerId: ReturnType<typeof globalThis.setTimeout> | undefined;
     let idleId: number | undefined;
+    let assistantTimerId: ReturnType<typeof globalThis.setTimeout> | undefined;
 
     const preloadSupportOverlays = () => {
       if (!active) return;
@@ -107,11 +109,18 @@ export function StorefrontShellStreamingLayout({
       });
     };
 
+    // Defer assistant chunk until idle — avoids first-load JS on every storefront route.
+    const mountAssistantWhenIdle = () => {
+      if (!active || !isMountedRef.current) return;
+      setAssistantMounted(true);
+    };
+
     if ("requestIdleCallback" in globalThis) {
       idleId = globalThis.requestIdleCallback(preloadSupportOverlays, { timeout: 3000 });
     } else {
       timerId = globalThis.setTimeout(preloadSupportOverlays, 3000);
     }
+    assistantTimerId = globalThis.setTimeout(mountAssistantWhenIdle, 4500);
 
     return () => {
       active = false;
@@ -120,6 +129,9 @@ export function StorefrontShellStreamingLayout({
       }
       if (timerId) {
         globalThis.clearTimeout(timerId);
+      }
+      if (assistantTimerId) {
+        globalThis.clearTimeout(assistantTimerId);
       }
     };
   }, [usesStorefrontChrome, requestSearchPreload]);
@@ -168,9 +180,11 @@ export function StorefrontShellStreamingLayout({
             <CartDrawer />
           </SoftErrorBoundary>
         ) : null}
-        <SoftErrorBoundary label="Assistant">
-          <MithronAssistantWidget />
-        </SoftErrorBoundary>
+        {assistantMounted ? (
+          <SoftErrorBoundary label="Assistant">
+            <MithronAssistantWidget />
+          </SoftErrorBoundary>
+        ) : null}
         <Suspense fallback={null}>
           <LogoutNoticeToastBridge />
         </Suspense>

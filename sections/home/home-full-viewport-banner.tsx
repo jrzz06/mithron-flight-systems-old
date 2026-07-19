@@ -8,13 +8,13 @@ export function HomeFullViewportBanner({
   testId,
   priority = true
 }: {
-  banner: CmsFullViewportBanner;
+  banner: CmsFullViewportBanner | null | undefined;
   testId: string;
   priority?: boolean;
 }) {
-  if (!banner.enabled) return null;
-  const desktopSrc = banner.desktopImageSrc.trim();
-  const mobileSrc = banner.mobileImageSrc.trim() || desktopSrc;
+  if (!banner?.enabled) return null;
+  const desktopSrc = banner.desktopImageSrc?.trim() ?? "";
+  const mobileSrc = (banner.mobileImageSrc?.trim() || desktopSrc);
   if (!desktopSrc && !mobileSrc) return null;
 
   const alignmentClass =

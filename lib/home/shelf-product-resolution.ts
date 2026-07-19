@@ -138,16 +138,21 @@ export function pickShelfProducts(products: Product[], config: ProductShelfConfi
 
 export function buildShelfProductConfig(shelfId: HomepageShelfId, cmsShelf: HomepageShelfCms): ProductShelfConfig {
   const base = baseShelfConfigs[shelfId];
+  const chapterTitle =
+    shelfId === "drone-world" ? "Drone World"
+    : shelfId === "drone-care" ? "Drone Care"
+    : "Global Products";
   return {
     ...base,
+    href: cmsShelf.href?.trim() || base.href,
     eyebrow: cmsShelf.eyebrow || base.id,
-    title: cmsShelf.title,
+    title: cmsShelf.title?.trim() || chapterTitle,
     viewAllLabel: cmsShelf.viewAllLabel,
     heroEyebrow: cmsShelf.heroEyebrow,
     heroSubtitle: cmsShelf.heroSubtitle,
     heroBody: cmsShelf.heroBody,
     featureCta: cmsShelf.featureCta,
-    heroCtaHref: cmsShelf.heroCtaHref || base.heroCtaHref,
+    heroCtaHref: cmsShelf.heroCtaHref?.trim() || base.heroCtaHref,
     productSlugs: cmsShelf.productSlugs,
     productCount: cmsShelf.productCount || 5
   };
@@ -160,11 +165,13 @@ export function resolveEffectiveShelfProducts(
   slotCount = SHELF_PRODUCT_CARD_SLOTS
 ): Product[] {
   const config = buildShelfProductConfig(shelfId, cmsShelf);
-  if (cmsShelf.productSlugs.length) {
-    const assigned = cmsShelf.productSlugs
+  const pinnedSlugs = cmsShelf.productSlugs.map((slug) => slug.trim()).filter(Boolean);
+  if (pinnedSlugs.length) {
+    // Explicit CMS assignments: only real catalog hits — never auto-fill unrelated products.
+    return pinnedSlugs
       .map((slug) => products.find((product) => product.slug === slug))
-      .filter((product): product is Product => Boolean(product));
-    if (assigned.length) return assigned.slice(0, slotCount);
+      .filter((product): product is Product => Boolean(product))
+      .slice(0, slotCount);
   }
   return pickShelfProducts(products, config, slotCount).slice(0, slotCount);
 }
@@ -175,9 +182,14 @@ export function resolveEffectiveShelfSlugs(
   products: Product[],
   slotCount = SHELF_PRODUCT_CARD_SLOTS
 ): string[] {
+  const pinnedSlugs = cmsShelf.productSlugs.map((slug) => slug.trim()).filter(Boolean);
+  if (pinnedSlugs.length) {
+    // Preserve CMS slot order including missing slugs (admin warning); pad to slotCount.
+    return padShelfSlugs(pinnedSlugs, slotCount);
+  }
   const resolved = resolveEffectiveShelfProducts(shelfId, cmsShelf, products, slotCount);
   const slugs = resolved.map((product) => product.slug);
-  return Array.from({ length: slotCount }, (_, index) => slugs[index] ?? "");
+  return padShelfSlugs(slugs, slotCount);
 }
 
 export function padShelfSlugs(slugs: string[], slotCount = SHELF_PRODUCT_CARD_SLOTS) {

@@ -12,6 +12,7 @@ tools/.migrate-*
 public/**/*.enhanced.json
 public/**/*.bak
 tools/load-test-results.json
+tools/load-test-results*.json
 
 # dependencies
 node_modules/

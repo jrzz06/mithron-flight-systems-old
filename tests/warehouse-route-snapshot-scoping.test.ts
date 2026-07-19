@@ -18,9 +18,9 @@ describe("warehouse route snapshot scoping", () => {
     };
 
     expect(pages.dashboard).toContain('getWarehouseSnapshot({ scope: "dashboard" })');
-    expect(pages.orders).toContain('getWarehouseSnapshot({ scope: "orders" })');
-    expect(pages.fulfillment).toContain('getWarehouseSnapshot({ scope: "orders" })');
-    expect(pages.activity).toContain('getWarehouseSnapshot({ scope: "orders" })');
+    expect(pages.orders).toContain('scope: "ordersList"');
+    expect(pages.fulfillment).toContain('scope: "ordersList"');
+    expect(pages.activity).toContain('getWarehouseSnapshot({ scope: "ordersSummary" })');
   });
 
   it("defines explicit warehouse snapshot scopes that avoid unrelated table reads", () => {
@@ -28,7 +28,9 @@ describe("warehouse route snapshot scoping", () => {
 
     expect(adminService).toContain("type WarehouseSnapshotScope");
     expect(adminService).toContain("const warehouseSnapshotScopes");
-    expect(adminService).toContain('dashboard: new Set(["inventory", "stock", "movements", "orders", "orderItems", "shipments"])');
+    expect(adminService).toContain('dashboard: new Set(["orders", "orderItems"])');
+    expect(adminService).toContain('ordersList: new Set(["orders", "orderItems"])');
+    expect(adminService).toContain('ordersSummary: new Set(["orders", "shipments"])');
     expect(adminService).toContain('dispatch: new Set(["shipments", "shipmentItems", "shipmentTimeline", "orders", "orderItems"])');
     expect(adminService).toContain("quantity,created_at&order=created_at.desc&limit=120");
     expect(adminService).not.toContain("quantity_packed");
@@ -56,16 +58,18 @@ describe("warehouse route snapshot scoping", () => {
     }
   });
 
-  it("scopes fulfillment and history routes to order snapshots", () => {
+  it("scopes fulfillment and history routes to lean order snapshots", () => {
     const fulfillment = source("app/warehouse/fulfillment/page.tsx");
     const fulfillmentDetail = source("app/warehouse/fulfillment/[id]/page.tsx");
     const activity = source("app/warehouse/activity/page.tsx");
     const adminOrders = source("app/admin/orders/page.tsx");
 
-    expect(fulfillment).toContain('getWarehouseSnapshot({ scope: "orders" })');
-    expect(fulfillmentDetail).toContain('getWarehouseSnapshot({ scope: "orders" })');
-    expect(activity).toContain('getWarehouseSnapshot({ scope: "orders" })');
-    expect(adminOrders).toMatch(/getWarehouseSnapshot\(\{\s*scope:\s*"orders"/);
+    expect(fulfillment).toContain('scope: "ordersList"');
+    expect(fulfillmentDetail).toContain("loadWarehouseOrderDetail");
+    expect(activity).toContain('getWarehouseSnapshot({ scope: "ordersSummary" })');
+    expect(adminOrders).toContain('scope: "ordersList"');
+    expect(adminOrders).toContain("loadWarehouseOrderDetail");
+    expect(adminOrders).toContain("loadAdminOrdersCatalogProducts");
     expect(adminOrders).toContain("includeOperatorCounts: false");
   });
 

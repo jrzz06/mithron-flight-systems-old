@@ -113,6 +113,10 @@ export function AdminOrderRowQuickActions({
           <OperationalSubmitButton
             pendingLabel="Deleting..."
             confirmMessage={`Permanently delete order ${orderLabel}?`}
+            confirmDescription="This cannot be undone. Type the order ID to confirm."
+            requireTypedText={orderLabel}
+            typedTextLabel={`Type ${orderLabel} to permanently delete`}
+            confirmLabel="Delete permanently"
             className={`border border-rose-800 bg-rose-950/40 px-2 py-1 text-[11px] font-semibold text-rose-100 ${orderRadiusControl}`}
           >
             Confirm delete

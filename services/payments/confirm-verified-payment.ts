@@ -105,7 +105,9 @@ export async function confirmVerifiedPayment(
   const reason = typeof result.reason === "string" ? result.reason : undefined;
 
   if (!skipped) {
-    const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId);
+    const orders = await fetchAdminRecordsByColumn("orders", "id", input.orderId, process.env, {
+      skipPermissionCheck: true
+    });
     const order = orders[0];
     if (order) {
       const baseMetadata =

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useContext, useOptimistic, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useOptimistic, type ReactNode } from "react";
 import { useOptionalAdminRealtime } from "@/components/admin/realtime/admin-realtime-provider";
 import {
   type AdminOrderFormAction
@@ -160,8 +160,13 @@ export function AdminOrdersOptimisticProvider({
     })
   );
 
+  const contextValue = useMemo<AdminOrdersOptimisticContextValue>(
+    () => ({ markOrderUpdate, onActionFeedback }),
+    [markOrderUpdate, onActionFeedback]
+  );
+
   return (
-    <AdminOrdersOptimisticContext.Provider value={{ markOrderUpdate, onActionFeedback }}>
+    <AdminOrdersOptimisticContext.Provider value={contextValue}>
       {children(optimisticOrders)}
     </AdminOrdersOptimisticContext.Provider>
   );

@@ -16,6 +16,7 @@ export function CmsField({
   label,
   name,
   defaultValue,
+  placeholder,
   hint,
   type = "text",
   error,
@@ -24,6 +25,7 @@ export function CmsField({
   label: string;
   name: string;
   defaultValue?: string;
+  placeholder?: string;
   hint?: string;
   type?: string;
   error?: string;
@@ -31,7 +33,14 @@ export function CmsField({
 }) {
   return (
     <FormField label={label} htmlFor={name} hint={error ?? hint}>
-      <Input id={name} type={type} name={name} defaultValue={defaultValue} onChange={onChange} />
+      <Input
+        id={name}
+        type={type}
+        name={name}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
     </FormField>
   );
 }

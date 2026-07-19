@@ -28,11 +28,12 @@ describe("home landing composite contract", () => {
     expect(homePageContent).toContain("HomeHeroSection");
     expect(page).toContain("HomePageContent");
     expect(page).not.toContain("dynamic(");
-    expect(belowHero).toContain("listFeaturedHomeReviews");
-    expect(belowHero).toContain("productReviews={homepageReviews}");
+    expect(belowHero).toContain("testimonialCards");
+    expect(belowHero).toContain("getPublishedProductsBySlugs");
     expect(belowHero).toContain("footer={cms.footer}");
     expect(belowHero).toContain("homepageCms={homepageCms}");
     expect(belowHero).toContain("getHomepageProducts");
+    expect(belowHero).not.toContain("listFeaturedHomeReviews");
     expect(homePageContent).not.toContain("HomeProductShelves");
     expect(homePageContent).not.toContain("homeShelves");
   });
@@ -427,7 +428,7 @@ describe("home landing composite contract", () => {
     expect(component).not.toContain('modelUrl="/models/mithron-drone-showcase.glb"');
     expect(component).not.toContain('data-testid="home-three-cinematic-section"');
     expect(component).toContain("HomeClientTestimonialsSection");
-    expect(component).toContain("pickHomeTestimonialItems");
+    expect(component).toContain("pickHomeTestimonialItemsFromCms");
     expect(component).toContain("ProductPageReview");
     expect(component).not.toContain('data-testid="home-about-band"');
     expect(component).toContain('data-testid="home-about-footer"');
@@ -463,7 +464,8 @@ describe("home landing composite contract", () => {
     const hook = source("hooks/use-css-marquee.ts");
 
     expect(section).toContain('data-testid="home-client-testimonials"');
-    expect(section).toContain("pickHomeTestimonialItems");
+    expect(section).toContain("pickHomeTestimonialItemsFromCms");
+    expect(section).not.toContain("Verified Customer");
     expect(section).toContain("productHref");
     expect(carousel).toContain("useCssMarquee");
     expect(carousel).toContain("marqueeEnabled");

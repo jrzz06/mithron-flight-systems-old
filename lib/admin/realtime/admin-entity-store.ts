@@ -16,10 +16,6 @@ export type AdminLiveResourceId =
   | "suppliers"
   | "users"
   | "warehouses"
-  | "cms"
-  | "media"
-  | "reviews"
-  | "articles"
   | "audit"
   | "archives"
   | "dashboard"
@@ -178,23 +174,6 @@ export const ADMIN_RESOURCE_TABLES: Record<AdminLiveResourceId, AdminEntityTable
   suppliers: ["mithron_products", "profiles", "user_roles", "notifications"],
   users: ["profiles", "user_roles", "admin_invites", "roles", "activity_logs"],
   warehouses: ["warehouses"],
-  cms: [
-    "cms_pages",
-    "cms_sections",
-    "content_revisions",
-    "hero_banners",
-    "homepage_ordering",
-    "section_visibility",
-    "site_navigation",
-    "footer_columns",
-    "footer_links",
-    "promotional_campaigns",
-    "faqs",
-    "media_assets"
-  ],
-  media: ["media_assets", "product_media_assets"],
-  reviews: ["customer_order_reviews", "product_review_helpful_votes", "mithron_products"],
-  articles: ["press_coverage", "blog_posts"],
   audit: ["activity_logs", "security_events", "audit_logs", "notifications"],
   archives: ["data_archive_runs", "orders", "enquiries", "contact_requests"],
   dashboard: ["orders", "payments", "inventory", "mithron_products", "enquiries", "notifications", "activity_logs"],

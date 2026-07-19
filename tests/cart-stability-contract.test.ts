@@ -13,6 +13,9 @@ describe("cart & checkout stability contracts", () => {
     const route = source("app/api/account/cart/route.ts");
     expect(route).toContain("X-Cart-Updated-At");
     expect(route).toContain("status: 409");
+    // Avoid Redis→Postgres rate-limit cascade exceeding client 15s fetch timeout.
+    expect(route).toContain('"fail_open"');
+    expect(route).toContain("getCustomerCart(supabase, userId)");
   });
 
   it("uses idempotency keys + stock checks on authenticated cart mutations", () => {
@@ -21,6 +24,8 @@ describe("cart & checkout stability contracts", () => {
     expect(route).toContain("customer_cart_idempotency");
     expect(route).toContain("verifyCheckoutStockAvailability");
     expect(route).toContain("cart_stock_conflict");
+    expect(route).toContain('"fail_open"');
+    expect(route).toContain("getCustomerCart(supabase, userId)");
   });
 
   it("allows guests to add to cart and reach checkout without a login wall", () => {

@@ -62,13 +62,28 @@ export async function loginAsRole(page: Page, role: E2ERole, nextPath?: string) 
   await page.goto(`/login?next=${encodeURIComponent(destination)}`, { waitUntil: "domcontentloaded" });
 
   await page.locator('[data-testid="login-auth-form"]').waitFor({ state: "visible" });
-  await page.getByLabel("Email").fill(credentials.email);
-  await page.getByLabel("Password").fill(credentials.password);
+  const emailInput = page.locator('[data-testid="login-auth-form"] input[type="email"]');
+  const passwordInput = page.locator('[data-testid="login-auth-form"] input[type="password"], [data-testid="login-auth-form"] input[autocomplete="current-password"]');
+  await emailInput.click();
+  await emailInput.fill("");
+  await emailInput.pressSequentially(credentials.email, { delay: 15 });
+  await passwordInput.click();
+  await passwordInput.fill("");
+  await passwordInput.pressSequentially(credentials.password, { delay: 15 });
 
-  await Promise.all([
-    page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 45_000 }),
-    page.locator('[data-testid="login-auth-form"] button[type="submit"]').click()
-  ]);
+  const loginResponse = page.waitForResponse(
+    (response) => response.url().includes("/api/auth/login") && response.request().method() === "POST",
+    { timeout: 45_000 }
+  );
+
+  await page.locator('[data-testid="login-auth-form"] button[type="submit"]').click();
+  const response = await loginResponse;
+  if (!response.ok()) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`login failed status=${response.status()} body=${body.slice(0, 240)}`);
+  }
+
+  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 45_000 });
 
   await expect(page).not.toHaveURL(/\/login/);
 }

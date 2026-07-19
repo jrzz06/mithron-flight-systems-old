@@ -164,8 +164,46 @@ export const ORDER_PROGRESS_STEPS = [
   { key: "shipped", label: "Dispatched" }
 ] as const;
 
+/** Employee-facing fulfillment stages shown on the order detail panel. */
+export const EMPLOYEE_PROGRESS_STEPS = [
+  { key: "pending", label: "Received" },
+  { key: "packing", label: "Picking" },
+  { key: "dispatched", label: "Dispatched" }
+] as const;
+
+const TERMINAL_FULFILLMENT_STATUSES = [
+  "dispatched",
+  "shipped",
+  "in_transit",
+  "delivered",
+  "cancelled",
+  "returned"
+] as const;
+
+export function canDispatchOrder(status: string) {
+  return !(TERMINAL_FULFILLMENT_STATUSES as readonly string[]).includes(status);
+}
+
+export function canCancelOrder(status: string) {
+  return !(TERMINAL_FULFILLMENT_STATUSES as readonly string[]).includes(status);
+}
+
 export function progressStepIndex(fulfillmentStatus: string) {
   if (fulfillmentStatus === "ready_to_dispatch") return 4;
   const index = ORDER_PROGRESS_STEPS.findIndex((step) => step.key === fulfillmentStatus);
   return index >= 0 ? index : 0;
+}
+
+/** Map any fulfillment status onto the 3-step employee progress bar (0–2). */
+export function employeeProgressStepIndex(fulfillmentStatus: string) {
+  if (["dispatched", "ready_to_dispatch", "shipped", "in_transit", "delivered"].includes(fulfillmentStatus)) {
+    return 2;
+  }
+  if (["packing", "processing", "picked", "packed"].includes(fulfillmentStatus)) {
+    return 1;
+  }
+  if (fulfillmentStatus === "cancelled" || fulfillmentStatus === "returned") {
+    return -1;
+  }
+  return 0;
 }

@@ -108,7 +108,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[products/enquiry] failed", error);
-    const message = error instanceof Error ? error.message : "Could not submit product enquiry.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Could not submit product enquiry." }, { status: 500 });
   }
 }

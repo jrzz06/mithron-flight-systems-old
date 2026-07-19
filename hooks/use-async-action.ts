@@ -6,6 +6,7 @@ import {
   DEFAULT_ACTION_TIMEOUT_MS,
   raceWithTimeout
 } from "@/lib/fetch-with-timeout";
+import { markActionEnd, markActionStart } from "@/lib/perf/action-timer";
 
 export type AsyncActionStatus = "idle" | "loading" | "success" | "error";
 
@@ -31,7 +32,25 @@ export function wrapServerAction<TArgs extends unknown[], TResult>(
   const label = options.label ?? "Action";
 
   return async (...args: TArgs): Promise<TResult> => {
-    return raceWithTimeout(Promise.resolve(action(...args)), timeoutMs, label);
+    const token = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    markActionStart(label, token);
+    try {
+      const result = await raceWithTimeout(Promise.resolve(action(...args)), timeoutMs, label);
+      markActionEnd(label, { ok: true, phase: "settled", panel: "shared" }, token);
+      return result;
+    } catch (error) {
+      markActionEnd(
+        label,
+        {
+          ok: false,
+          phase: "settled",
+          panel: "shared",
+          error: error instanceof Error ? error.message : String(error)
+        },
+        token
+      );
+      throw error;
+    }
   };
 }
 

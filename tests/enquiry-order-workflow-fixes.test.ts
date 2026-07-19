@@ -21,31 +21,20 @@ describe("enquiry/order workflow collapse fixes", () => {
     expect(migration).toContain("v_enquiry.status = 'lost'");
     expect(migration).toContain("v_request.status in ('rejected', 'archived')");
 
-    const enquiries = source("services/enquiries.ts");
-    expect(enquiries).toContain("This enquiry is closed and cannot be converted to an order.");
-
-    const contactRequests = source("services/contact-requests.ts");
-    expect(contactRequests).toContain("This contact request is closed and cannot be converted to an order.");
+    const leads = source("services/leads.ts");
+    expect(leads).toContain("convert_lead_to_order");
+    expect(leads).toContain("Could not convert lead to order");
+    expect(leads).toContain("Converted leads cannot be deleted");
   });
 
   it("adds optimistic locking for enquiries and contact requests", () => {
     const adminActions = source("services/admin-actions.ts");
-    expect(adminActions).toContain('"enquiries"');
-    expect(adminActions).toContain('"contact_requests"');
+    expect(adminActions).toContain('"leads"');
+    expect(adminActions).toContain("expectedUpdatedAt");
 
-    const enquiries = source("services/enquiries.ts");
-    expect(enquiries).toContain("expectedUpdatedAt");
-
-    const contactRequests = source("services/contact-requests.ts");
-    expect(contactRequests).toContain("expectedUpdatedAt");
-
-    const enquiryActions = source("app/admin/enquiries/actions.ts");
-    expect(enquiryActions).toContain("readExpectedUpdatedAt");
-    expect(enquiryActions).toContain("isRecordConflictError");
-
-    const contactActions = source("app/admin/contact-requests/actions.ts");
-    expect(contactActions).toContain("readExpectedUpdatedAt");
-    expect(contactActions).toContain("isRecordConflictError");
+    const leadsActions = source("app/admin/leads/actions.ts");
+    expect(leadsActions).toContain("requireAdminPermission");
+    expect(leadsActions).toContain("isNextRedirect");
   });
 
   it("restricts order cancel to pre-dispatch statuses", () => {
@@ -55,19 +44,20 @@ describe("enquiry/order workflow collapse fixes", () => {
     expect(isCancellableOrderStatus("in_transit")).toBe(false);
     expect(canCancelOrder({ status: "admin_review", fulfillment_status: "pending" })).toBe(true);
     expect(canCancelOrder({ status: "dispatched", fulfillment_status: "shipped" })).toBe(false);
-    expect(canCancelOrder({ status: "packed", fulfillment_status: "packed" })).toBe(true);
+    expect(canCancelOrder({ status: "packed", fulfillment_status: "pending" })).toBe(true);
+    expect(canCancelOrder({ status: "packed", fulfillment_status: "packed" })).toBe(false);
 
     const workflow = source("services/order-workflow.ts");
     expect(workflow).toContain("Order cannot be cancelled after dispatch");
     expect(workflow).toContain("isCancellableOrderStatus");
   });
 
-  it("exposes a Converted tab for contact requests", () => {
-    const page = source("app/admin/contact-requests/page.tsx");
+  it("exposes a Converted tab for leads", () => {
+    const page = source("app/admin/leads/page.tsx");
     expect(page).toContain('key: "converted"');
     expect(page).toContain('label: "Converted"');
 
-    const shared = source("lib/contact-requests/shared.ts");
+    const shared = source("lib/leads/shared.ts");
     expect(shared).toContain('"converted"');
   });
 });

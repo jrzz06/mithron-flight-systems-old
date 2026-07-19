@@ -1,11 +1,15 @@
 import { PlatformSidebar } from "@/components/platform/platform-sidebar";
 import { PlatformTopbar } from "@/components/platform/platform-topbar";
 import { supplierNavGroups, supplierRouteTitles } from "@/components/platform/nav-config";
+import { readSessionHandoff } from "@/lib/auth/session-handoff";
 import { getCurrentAuthContext } from "@/services/auth";
 
 export default async function SupplierShellSlot() {
   // Auth redirect is enforced once in app/supplier/layout.tsx — shell only reads context for chrome.
-  const context = await getCurrentAuthContext();
+  const handoff = await readSessionHandoff();
+  const context = handoff
+    ? { userId: handoff.userId, role: handoff.role }
+    : await getCurrentAuthContext();
   const searchItems = supplierNavGroups.flatMap((group) =>
     group.items.map((item) => ({ label: item.label, href: item.href, group: group.label }))
   );
