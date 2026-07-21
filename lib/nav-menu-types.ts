@@ -31,10 +31,9 @@ export type MegaMenuConfig = {
   eyebrow: string;
   columnOneTitle: string;
   columnOne: EnterpriseMenuOption[];
-  columnTwoTitle: string;
-  columnTwo: EnterpriseMenuOption[];
   defaultFeatureKey: string;
   featured: FeaturedMenuCard[];
+  productCount: number;
 };
 
 export type CompactMenuConfig = {

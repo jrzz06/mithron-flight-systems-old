@@ -1,5 +1,6 @@
 import { getMediaDeliveryProfile, type MediaDeliveryRole } from "@/config/media-delivery-profiles";
 import type { ResponsiveMediaAsset } from "@/config/types";
+import { unwrapCdnStorageUrl } from "@/lib/media/cdn-url";
 import {
   createSrcSet,
   getBestVariant,
@@ -133,19 +134,33 @@ export function buildResponsiveImageModel(input: ResponsiveImageModelInput): Res
 export function buildImageFallbackChain(model: ResponsiveImageModel): string[] {
   const chain: string[] = [];
   const isSupabaseStorageSrc = (value: string) => /^https?:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(value);
-  const isTrustedRemoteSrc = (value: string) => /^https:\/\//i.test(value.trim());
+  const isCdnStorageSrc = (value: string) => /(?:^|\/)cdn-media\/storage\/v1\/object\/public\//i.test(value);
+  const isTrustedRemoteSrc = (value: string) => /^https:\/\//i.test(value.trim()) || value.startsWith("/cdn-media/");
+  const push = (value?: string | null) => {
+    const trimmed = value?.trim() ?? "";
+    if (!trimmed || chain.includes(trimmed)) return;
+    chain.push(trimmed);
+  };
   const pushSupabase = (value?: string | null) => {
-    if (!value || chain.includes(value) || !isSupabaseStorageSrc(value)) return;
-    chain.push(value);
+    if (!value || !isSupabaseStorageSrc(value)) return;
+    push(value);
+  };
+  const pushCdnOrSupabase = (value?: string | null) => {
+    if (!value) return;
+    if (isCdnStorageSrc(value) || isSupabaseStorageSrc(value) || value.startsWith("/cdn-media/")) {
+      push(value);
+      const unwrapped = unwrapCdnStorageUrl(value);
+      if (unwrapped !== value) pushSupabase(unwrapped);
+    }
   };
   const pushTrustedRemote = (value?: string | null) => {
-    if (!value || chain.includes(value) || !isTrustedRemoteSrc(value) || isSupabaseStorageSrc(value)) return;
-    chain.push(value);
+    if (!value || !isTrustedRemoteSrc(value) || isSupabaseStorageSrc(value) || isCdnStorageSrc(value)) return;
+    push(value);
   };
 
-  pushSupabase(model.primarySrc);
-  pushSupabase(model.optimizedSrc);
-  pushSupabase(model.resolvedSrc);
+  pushCdnOrSupabase(model.primarySrc);
+  pushCdnOrSupabase(model.optimizedSrc);
+  pushCdnOrSupabase(model.resolvedSrc);
 
   const skipResolvedMapFallback =
     Boolean(model.variantFallbackSrc) &&
@@ -153,10 +168,10 @@ export function buildImageFallbackChain(model: ResponsiveImageModel): string[] {
     model.requestedSrc !== model.resolvedSrc;
 
   if (model.variantFallbackSrc && !skipResolvedMapFallback) {
-    pushSupabase(model.variantFallbackSrc);
+    pushCdnOrSupabase(model.variantFallbackSrc);
   }
 
-  pushSupabase(model.responsive?.fallbackSrc);
+  pushCdnOrSupabase(model.responsive?.fallbackSrc);
 
   if (
     model.requestedSrc &&
@@ -165,7 +180,7 @@ export function buildImageFallbackChain(model: ResponsiveImageModel): string[] {
     model.requestedSrc !== model.variantFallbackSrc &&
     model.requestedSrc !== model.responsive?.fallbackSrc
   ) {
-    pushSupabase(model.requestedSrc);
+    pushCdnOrSupabase(model.requestedSrc);
   }
 
   if (model.useSourceImage && model.responsive) {
@@ -174,7 +189,7 @@ export function buildImageFallbackChain(model: ResponsiveImageModel): string[] {
       ...(model.responsive.variants.avif ?? []),
       ...(model.responsive.variants.png ?? [])
     ]) {
-      pushSupabase(variant.src);
+      pushCdnOrSupabase(variant.src);
     }
   }
 

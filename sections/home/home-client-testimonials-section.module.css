@@ -1,5 +1,5 @@
 .section {
-  --section-inline: var(--home-section-inline, clamp(24px, 4vw, 72px));
+  --section-inline: var(--home-section-inline, clamp(28px, 4.5vw, 88px));
   --testimonial-accent: var(--brand-accent, #1f6b46);
   --testimonial-heading: #0f2a1c;
   --testimonial-meta: rgba(15, 42, 28, 0.64);
@@ -82,7 +82,7 @@
 .title {
   margin: 0;
   color: var(--testimonial-heading);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-display);
   font-size: var(--type-section);
   font-weight: 700;
   line-height: var(--leading-heading);
@@ -99,7 +99,7 @@
   margin: 14px 0 0;
   max-width: 42ch;
   color: var(--testimonial-meta);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-body);
   line-height: var(--leading-body);
   font-weight: 400;

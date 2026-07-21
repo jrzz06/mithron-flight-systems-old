@@ -95,8 +95,12 @@ function mediaCdnImageHostname() {
 }
 
 function supabaseStorageOriginForRewrite() {
-  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  if (!rawUrl) return null;
+  const rawUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
+    process.env.SUPABASE_URL?.trim() ||
+    // Last-resort: keep /cdn-media rewrites alive if env is missing at build time.
+    // Without this, /cdn-media returns HTML that Vercel may cache for a year.
+    "https://ictnoydmxlywwxwnugal.supabase.co";
   try {
     return new URL(rawUrl).origin;
   } catch {
@@ -123,7 +127,8 @@ const nextConfig: NextConfig = {
     localPatterns: [
       { pathname: "/media/**" },
       { pathname: "/assets/**" },
-      { pathname: "/optimized/**" }
+      { pathname: "/optimized/**" },
+      { pathname: "/cdn-media/**" }
     ],
     remotePatterns: [
       { protocol: "https", hostname: supabaseImageHostname() },
@@ -218,16 +223,23 @@ const nextConfig: NextConfig = {
         source: "/cdn-media/:path*",
         headers: [
           {
+            // Proxied storage — never mark immutable. A mistaken HTML soft-404
+            // must not stick in the CDN for a year.
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable"
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400"
           },
           {
             key: "CDN-Cache-Control",
-            value: "public, max-age=31536000, immutable"
+            value: "public, max-age=604800, stale-while-revalidate=86400"
           },
           {
             key: "Vercel-CDN-Cache-Control",
-            value: "public, max-age=31536000, immutable"
+            value: "public, max-age=604800, stale-while-revalidate=86400"
+          },
+          {
+            // Allow preview / project hosts and <img> cross-origin loads.
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin"
           }
         ]
       },

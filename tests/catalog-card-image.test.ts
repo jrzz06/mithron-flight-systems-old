@@ -222,7 +222,7 @@ describe("buildCatalogCardImageCandidates", () => {
   });
 
   it("accepts CDN-rewritten Supabase storage URLs for card candidates", () => {
-    const cdnSrc = "https://final-mithron-deploy.vercel.app/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/5-liter-agri-drone.webp";
+    const cdnSrc = "/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/5-liter-agri-drone.webp";
     const candidates = buildCatalogCardImageCandidates(
       product({
         slug: "source-5-liter-agri-drone",

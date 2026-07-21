@@ -49,7 +49,7 @@
   min-width: 0;
   margin: 0;
   color: var(--home-ink);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-display);
   font-size: var(--type-section);
   font-weight: 700;
   letter-spacing: var(--tracking-section);
@@ -127,13 +127,11 @@
   position: absolute;
   inset: 0;
   display: block;
-  background: linear-gradient(
-    90deg,
-    rgba(8, 12, 20, 0.68) 0%,
-    rgba(8, 12, 20, 0.34) 38%,
-    rgba(8, 12, 20, 0.08) 58%,
-    transparent 72%
-  );
+  background: linear-gradient(90deg,
+      rgba(8, 12, 20, 0.68) 0%,
+      rgba(8, 12, 20, 0.34) 38%,
+      rgba(8, 12, 20, 0.08) 58%,
+      transparent 72%);
 }
 
 .productShelfSection[data-shelf-tone="care"] .shelfHeroBackdrop::after {
@@ -141,13 +139,11 @@
   position: absolute;
   inset: 0;
   display: block;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(255, 255, 255, 0.72) 34%,
-    rgba(255, 255, 255, 0.18) 56%,
-    transparent 72%
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 255, 255, 0.72) 34%,
+      rgba(255, 255, 255, 0.18) 56%,
+      transparent 72%);
 }
 
 .shelfHeroContextImage {
@@ -180,7 +176,7 @@
 
 .shelfHeroEyebrow {
   color: var(--shelf-hero-muted);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-featured-eyebrow);
   font-weight: var(--type-featured-eyebrow-weight);
   letter-spacing: 0.01em;
@@ -194,7 +190,7 @@
   margin: 0;
   max-width: none;
   color: var(--shelf-hero-ink, #111113);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-display);
   font-size: var(--type-featured-title);
   font-weight: var(--type-featured-title-weight);
   letter-spacing: var(--tracking-display);
@@ -218,7 +214,7 @@
 .shelfHeroCopy strong {
   display: block;
   max-width: 18ch;
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-display);
   font-size: var(--type-featured-title);
   font-weight: var(--type-featured-title-weight);
   letter-spacing: var(--tracking-display);
@@ -233,7 +229,7 @@
   max-width: 32ch;
   margin: 0;
   color: var(--shelf-hero-muted);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-tagline);
   font-weight: 400;
   letter-spacing: 0;
@@ -257,7 +253,7 @@
   background: var(--shelf-hero-cta-bg);
   box-shadow: var(--shelf-hero-cta-shadow);
   color: var(--shelf-hero-cta-ink);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-cta);
   font-weight: var(--type-cta-weight);
   letter-spacing: 0;
@@ -282,11 +278,10 @@
 
 .productShelfGrid {
   display: grid;
-  gap: var(--shelf-row-gap, clamp(6px, 0.7vw, 12px));
+  gap: var(--shelf-row-gap, clamp(10px, 1.05vw, 16px));
   padding-block: var(--shelf-card-shadow-gutter, 12px);
   grid-template-columns:
-    repeat(4, minmax(0, var(--shelf-product-col, calc((100% - 4 * var(--card-gap)) / 5))))
-    minmax(0, var(--shelf-view-all-col, calc((100% - 4 * var(--card-gap)) / 5 + 4 * (var(--card-gap) - var(--shelf-row-gap, clamp(6px, 0.7vw, 12px))))));
+    repeat(4, minmax(0, var(--shelf-product-col, calc((100% - 4 * var(--card-gap)) / 5)))) minmax(0, var(--shelf-view-all-col, calc((100% - 4 * var(--card-gap)) / 5 + 4 * (var(--card-gap) - var(--shelf-row-gap, clamp(10px, 1.05vw, 16px))))));
   align-items: stretch;
   justify-content: start;
 }
@@ -297,7 +292,7 @@
   padding-inline: 0;
   border: none;
   border-radius: 0;
-  gap: var(--shelf-row-gap, clamp(6px, 0.7vw, 12px));
+  gap: var(--shelf-row-gap, clamp(10px, 1.05vw, 16px));
   overflow: visible;
   background: transparent;
   box-shadow: none;
@@ -455,7 +450,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--home-muted);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-product-kicker);
   font-weight: var(--type-product-kicker-weight);
   letter-spacing: 0;
@@ -475,7 +470,7 @@
   margin: 0;
   overflow: hidden;
   color: var(--home-ink);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-display);
   font-size: var(--type-product-title);
   font-weight: var(--type-product-title-weight);
   letter-spacing: -0.01em;
@@ -538,7 +533,7 @@
   border-radius: 999px;
   background: #d4f5e0;
   color: #0f172a;
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-cta);
   font-weight: var(--type-cta-weight);
   letter-spacing: 0;
@@ -584,6 +579,7 @@
 }
 
 @media (min-width: 1280px) {
+
   .productShelfSection[data-shelf-tone="world"] .productCard,
   .productShelfSection[data-shelf-tone="care"] .productCard,
   .productShelfSection[data-shelf-tone="global"] .productCard {
@@ -647,18 +643,18 @@
   }
 
   .productShelfGrid {
-    margin-inline: calc(-1 * var(--home-section-inline, clamp(16px, 4vw, 64px)));
-    width: calc(100% + 2 * var(--home-section-inline, clamp(16px, 4vw, 64px)));
+    margin-inline: calc(-1 * var(--home-section-inline, clamp(20px, 4.5vw, 80px)));
+    width: calc(100% + 2 * var(--home-section-inline, clamp(20px, 4.5vw, 80px)));
     grid-auto-columns: var(--shelf-card-width);
-    gap: var(--shelf-row-gap, clamp(6px, 0.7vw, 12px));
+    gap: var(--shelf-row-gap, clamp(10px, 1.05vw, 16px));
     grid-auto-flow: column;
     grid-template-columns: none;
     overflow-x: auto;
     overflow-y: visible;
     overscroll-behavior-x: contain;
-    padding-inline: var(--home-section-inline, clamp(16px, 4vw, 64px));
+    padding-inline: var(--home-section-inline, clamp(20px, 4.5vw, 80px));
     padding-block: var(--shelf-card-shadow-gutter, 12px);
-    scroll-padding-inline: var(--home-section-inline, clamp(16px, 4vw, 64px));
+    scroll-padding-inline: var(--home-section-inline, clamp(20px, 4.5vw, 80px));
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -675,7 +671,7 @@
     touch-action: pan-x pan-y;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding-inline: var(--home-section-inline, clamp(16px, 4vw, 64px));
+    padding-inline: var(--home-section-inline, clamp(20px, 4.5vw, 80px));
   }
 
   .productShelfGrid::-webkit-scrollbar {
@@ -788,7 +784,7 @@
 
 @media (max-width: 767px) {
   .productShelfGrid {
-    gap: var(--shelf-row-gap, clamp(6px, 0.7vw, 12px));
+    gap: var(--shelf-row-gap, clamp(10px, 1.05vw, 16px));
   }
 
   .productCard {
@@ -840,7 +836,7 @@
     width: 100%;
   }
 
-  .productFooter > span:first-child {
+  .productFooter>span:first-child {
     min-width: 0;
     overflow: hidden;
     font-size: clamp(0.68rem, 3.2vw, 0.78rem);
@@ -914,4 +910,3 @@
     font-size: var(--type-cta);
   }
 }
-

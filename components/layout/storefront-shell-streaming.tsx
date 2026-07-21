@@ -58,6 +58,8 @@ export function StorefrontShellStreamingLayout({
   const [assistantMounted, setAssistantMounted] = useState(false);
   const isMountedRef = useRef(false);
   const navRef = useRef<HTMLDivElement>(null);
+  const headerShellRef = useRef<HTMLDivElement>(null);
+  const searchOpen = overlay === "search";
 
   useEffect(() => {
     const root = document.documentElement;
@@ -71,6 +73,13 @@ export function StorefrontShellStreamingLayout({
       root.removeAttribute("data-overlay-open");
     };
   }, [overlay]);
+
+  useEffect(() => {
+    // Panel measures its own bottom into --search-header-bottom (fixed sheet).
+    if (!searchOpen) {
+      document.documentElement.style.removeProperty("--search-header-bottom");
+    }
+  }, [searchOpen]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -151,7 +160,17 @@ export function StorefrontShellStreamingLayout({
   return (
     <NavAnchorProvider navRef={navRef}>
       <div data-storefront className="storefront-root">
-        {headerChrome}
+        <div
+          ref={headerShellRef}
+          className={cn("storefront-header-shell", searchOpen && "is-search-open")}
+        >
+          {headerChrome}
+          {searchPrewarmed || hasOpenedSearch ? (
+            <SoftErrorBoundary label="Search">
+              <SearchOverlay />
+            </SoftErrorBoundary>
+          ) : null}
+        </div>
         <main
           id="g-main"
           data-testid={isHome ? "home-page-canvas" : undefined}
@@ -170,11 +189,6 @@ export function StorefrontShellStreamingLayout({
           {children}
         </main>
         {isHome ? null : footerChrome}
-        {searchPrewarmed || hasOpenedSearch ? (
-          <SoftErrorBoundary label="Search">
-            <SearchOverlay />
-          </SoftErrorBoundary>
-        ) : null}
         {cartPrewarmed || hasOpenedCart ? (
           <SoftErrorBoundary label="Cart drawer">
             <CartDrawer />

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/icons/storefront-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MediaAsset, ProductHotspot } from "@/config/types";
 import { MithronPageHeroImage } from "@/components/media/mithron-page-hero-image";

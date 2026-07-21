@@ -127,7 +127,7 @@ describe("customer checkout workflow", () => {
     expect(checkoutPage).toContain("Send enquiry to Mithron");
     expect(checkoutPage).toContain("Send your enquiry");
     const enquiryRoute = readFileSync(join(process.cwd(), "app/api/checkout/enquiry/route.ts"), "utf8");
-    expect(enquiryRoute).toContain("submitCheckoutProductEnquiry");
+    expect(enquiryRoute).toContain("submitLead");
     expect(checkoutPage).toContain("CUSTOMER_CONTACT_REQUIRED_MESSAGE");
     expect(checkoutPage).toContain("isValidCheckoutEmail");
     expect(checkoutPage).not.toContain("Sign in to continue");
@@ -137,6 +137,9 @@ describe("customer checkout workflow", () => {
     expect(checkoutPage).toContain("checkoutFlow: flow");
     expect(checkoutPage).toContain("checkout-auth-prompt");
     expect(checkoutPage).toContain("setCheckoutContact");
+    // Post-enquiry: skip empty-session bounce; signed-in users go to enquiries.
+    expect(checkoutPage).toContain("if (completed) return;");
+    expect(checkoutPage).toContain('router.replace("/account/enquiries")');
     const cartNav = readFileSync(join(process.cwd(), "components/navigation/cart-nav-button.tsx"), "utf8");
     expect(cartNav).toContain("openCartDrawer");
     expect(cartNav).toContain("cart-drawer");

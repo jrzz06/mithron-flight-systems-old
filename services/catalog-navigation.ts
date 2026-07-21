@@ -16,7 +16,7 @@ import type {
 } from "@/lib/nav-menu-types";
 import { formatFromINR } from "@/lib/utils";
 
-const MENU_COLUMN_LIMIT = 5;
+const MENU_COLUMN_LIMIT = 7;
 
 function productSpecs(product: Product) {
   const entries = Object.entries(product.specs ?? {}).slice(0, 3);
@@ -45,7 +45,7 @@ function buildFeaturedMenuCard(product: Product, key = product.slug): FeaturedMe
   };
 }
 
-function pickFeaturedProducts(products: Product[], limit = 5) {
+function pickFeaturedProducts(products: Product[], limit = 7) {
   const featured = products.filter((product) => Boolean(product.badge));
   if (featured.length) return featured.slice(0, limit);
   if (products.length) return [products[0], ...products.slice(1, limit)];
@@ -68,32 +68,20 @@ function productMenuOptions(products: Product[]): EnterpriseMenuOption[] {
   }));
 }
 
-function splitMenuColumns(products: Product[], categoryHref: string) {
-  const options = productMenuOptions(products);
-  const columnOne = options.slice(0, MENU_COLUMN_LIMIT);
-  const columnTwo = options.slice(MENU_COLUMN_LIMIT, MENU_COLUMN_LIMIT * 2);
+function buildMenuColumn(products: Product[], categoryHref: string) {
+  const columnOne = productMenuOptions(products).slice(0, MENU_COLUMN_LIMIT);
 
   if (!columnOne.length) {
-    return {
-      columnOne: [{ label: "View all products", href: categoryHref, featureKey: "view-all" }],
-      columnTwo: []
-    };
+    return [{ label: "View all products", href: categoryHref, featureKey: "view-all" }];
   }
 
-  if (!columnTwo.length) {
-    return {
-      columnOne,
-      columnTwo: [{ label: "View all products", href: categoryHref, featureKey: "view-all" }]
-    };
-  }
-
-  return { columnOne, columnTwo };
+  return columnOne;
 }
 
 function buildMegaMenu(definition: CatalogCategoryDefinition, products: Product[]): MegaMenuConfig {
   const featuredProducts = pickFeaturedProducts(products);
   const featured = featuredProducts.map((product) => buildFeaturedMenuCard(product));
-  const { columnOne, columnTwo } = splitMenuColumns(products, definition.href);
+  const columnOne = buildMenuColumn(products, definition.href);
   const defaultFeatureKey = featured[0]?.key ?? "view-all";
 
   if (!featured.length) {
@@ -118,10 +106,9 @@ function buildMegaMenu(definition: CatalogCategoryDefinition, products: Product[
     eyebrow: "Mithron catalog",
     columnOneTitle: "Featured Products",
     columnOne,
-    columnTwoTitle: "Popular Products",
-    columnTwo,
     defaultFeatureKey,
-    featured
+    featured,
+    productCount: products.length
   };
 }
 

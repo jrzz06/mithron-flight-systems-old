@@ -13,7 +13,7 @@
   --login-text: #1a1a1a;
   --login-label: #5c5c5c;
   --login-border: #d9d9d9;
-  --login-font: var(--font-misans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --login-font: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   position: relative;
   width: 100%;

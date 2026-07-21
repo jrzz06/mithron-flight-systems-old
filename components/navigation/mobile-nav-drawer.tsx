@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, Search, UserRound, X } from "lucide-react";
+import { ChevronDown, Search, UserRound, X } from "@/components/icons/storefront-icons";
 import type { NavigationNode } from "@/config/types";
 import type { EnterpriseMenuConfig, EnterpriseMenuOption } from "@/lib/nav-menu-types";
 import { isStorefrontGuestOnly } from "@/lib/storefront/guest-demo";
 
 function getEnterpriseMenuSubLinks(menu: EnterpriseMenuConfig): EnterpriseMenuOption[] {
   if (menu.type === "mega") {
-    return [...menu.columnOne, ...menu.columnTwo];
+    return menu.columnOne;
   }
   if (menu.type === "franchise") {
     return menu.items;

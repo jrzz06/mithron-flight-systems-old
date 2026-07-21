@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getMediaCdnOrigin, isTrustedCatalogStorageSrc, rewriteStorageUrlForCdn } from "@/lib/media/cdn-url";
+import {
+  getMediaCdnOrigin,
+  isTrustedCatalogStorageSrc,
+  rewriteStorageUrlForCdn,
+  unwrapCdnStorageUrl
+} from "@/lib/media/cdn-url";
 
 describe("media CDN rewrite", () => {
   it("rewrites Supabase storage URLs to the configured CDN origin", () => {
@@ -25,13 +30,19 @@ describe("media CDN rewrite", () => {
       NEXT_PUBLIC_SITE_URL: "https://final-mithron-deploy.vercel.app",
       NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL: "1"
     });
-    expect(rewritten).toBe(
-      "https://final-mithron-deploy.vercel.app/cdn-media/storage/v1/object/public/mithron-products/foo.webp"
-    );
+    expect(rewritten).toBe("/cdn-media/storage/v1/object/public/mithron-products/foo.webp");
     expect(getMediaCdnOrigin({
       NEXT_PUBLIC_SITE_URL: "https://final-mithron-deploy.vercel.app",
       NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL: "1"
     })).toBe("https://final-mithron-deploy.vercel.app/cdn-media");
+  });
+
+  it("auto-enables relative /cdn-media on Vercel without an explicit flag", () => {
+    const src = "https://abc.supabase.co/storage/v1/object/public/mithron-products/foo.webp";
+    expect(rewriteStorageUrlForCdn(src, {
+      NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co",
+      VERCEL: "1"
+    })).toBe("/cdn-media/storage/v1/object/public/mithron-products/foo.webp");
   });
 
   it("prefers custom CDN over Vercel edge mode", () => {
@@ -60,9 +71,11 @@ describe("isTrustedCatalogStorageSrc", () => {
   });
 
   it("accepts Vercel /cdn-media rewritten storage URLs", () => {
-    const cdnSrc = "https://final-mithron-deploy.vercel.app/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/5-liter-agri-drone.webp";
-    expect(isTrustedCatalogStorageSrc(cdnSrc, vercelEnv)).toBe(true);
-    expect(isTrustedCatalogStorageSrc(cdnSrc)).toBe(true);
+    const relativeCdnSrc = "/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/5-liter-agri-drone.webp";
+    const absoluteCdnSrc = "https://final-mithron-deploy.vercel.app/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/5-liter-agri-drone.webp";
+    expect(isTrustedCatalogStorageSrc(relativeCdnSrc, vercelEnv)).toBe(true);
+    expect(isTrustedCatalogStorageSrc(absoluteCdnSrc, vercelEnv)).toBe(true);
+    expect(isTrustedCatalogStorageSrc(relativeCdnSrc)).toBe(true);
   });
 
   it("accepts custom CDN origin rewritten storage URLs", () => {
@@ -75,5 +88,16 @@ describe("isTrustedCatalogStorageSrc", () => {
   it("rejects external non-storage URLs", () => {
     expect(isTrustedCatalogStorageSrc("https://static.wixstatic.com/media/foo.jpg")).toBe(false);
     expect(isTrustedCatalogStorageSrc("https://example.com/cdn-media/not-storage/foo.webp")).toBe(false);
+  });
+});
+
+describe("unwrapCdnStorageUrl", () => {
+  it("converts relative and absolute /cdn-media URLs back to Supabase", () => {
+    const env = { NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co" };
+    const storagePath = "/storage/v1/object/public/mithron-products/foo.webp";
+    expect(unwrapCdnStorageUrl(`/cdn-media${storagePath}`, env)).toBe(`https://abc.supabase.co${storagePath}`);
+    expect(unwrapCdnStorageUrl(`https://final-mithron-deploy.vercel.app/cdn-media${storagePath}`, env)).toBe(
+      `https://abc.supabase.co${storagePath}`
+    );
   });
 });

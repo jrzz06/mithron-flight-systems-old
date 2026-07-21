@@ -85,16 +85,12 @@ describe("hero carousel premium composition", () => {
     expect(hero).not.toContain("previousIndex");
     expect(hero).not.toContain("stagger: 0.085");
 
-    expect(globals).toContain('--font-misans: "MiSans VF"');
-    expect(existsSync(join(process.cwd(), "lib/fonts/misans.ts"))).toBe(true);
-    expect(existsSync(join(process.cwd(), "lib/fonts/misans-faces.css"))).toBe(true);
-    const faces = source("lib/fonts/misans-faces.css");
-    expect(faces).toContain('font-family: "MiSans VF"');
-    expect(faces).toContain("font-weight: 100 900");
-    expect(faces).toContain("font-display: block");
-    expect(faces).toContain("/fonts/b8005e4731c12f9b1655028b1e379a35.woff2");
-    expect(faces).not.toContain("MiSansLatin-");
-    expect(existsSync(join(process.cwd(), "public/fonts/b8005e4731c12f9b1655028b1e379a35.woff2"))).toBe(true);
+    expect(globals).toContain("--font-instrument-sans-family");
+    expect(existsSync(join(process.cwd(), "lib/fonts/storefront.ts"))).toBe(true);
+    expect(existsSync(join(process.cwd(), "lib/fonts/misans.ts"))).toBe(false);
+    const fonts = source("lib/fonts/storefront.ts");
+    expect(fonts).toContain("Instrument_Sans");
+    expect(fonts).toContain("GeistSans");
     expect(globals).toContain(".hero-banner-product-image :is(img, video)");
     expect(globals).not.toContain("@keyframes heroSlideCrossfade");
     expect(globals).toContain("object-fit: cover");
@@ -128,8 +124,8 @@ describe("hero carousel premium composition", () => {
     expect(globals).toContain("font-weight: 700");
     expect(globals).toContain("white-space: nowrap");
 
-    expect(layout).toContain("misans");
-    expect(layout).toContain("@/lib/fonts/misans");
+    expect(layout).toContain("storefront");
+    expect(layout).toContain("@/lib/fonts/storefront");
     expect(layout).not.toContain("misans-vf");
     expect(layout).not.toContain("Manrope");
     expect(layout).not.toContain("Montserrat");

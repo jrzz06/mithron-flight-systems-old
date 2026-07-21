@@ -5,13 +5,13 @@ import Link from "next/link";
 import { CartNavButton } from "@/components/navigation/cart-nav-button";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
-import { ChevronDown, Eye, Globe2, Map as MapIcon, Menu, Palette, Search, Sprout, UserRound, Video, Wrench } from "lucide-react";
+import { ChevronDown, Globe2, Menu, Search, UserRound } from "lucide-react";
 import { useAdaptiveNavbarTone } from "@/hooks/use-adaptive-navbar-tone";
 import { useNavAnchor } from "@/hooks/use-nav-anchor";
 import { normalizeStorefrontPath, resolveInitialNavbarTone } from "@/lib/navbar-ink-sampling";
 import { MithronBrandMark } from "@/components/brand/mithron-brand-mark";
 import type { NavigationNode } from "@/config/types";
-import type { EnterpriseMenuConfig } from "@/lib/nav-menu-types";
+import type { EnterpriseMenuConfig, MegaMenuConfig } from "@/lib/nav-menu-types";
 import { catalogCategoryDefinitions, ACCESSORIES_CATALOG_HREF } from "@/lib/catalog-categories";
 import { isStorefrontGuestOnly } from "@/lib/storefront/guest-demo";
 import { useUiStore } from "@/store/ui";
@@ -40,16 +40,6 @@ const NAV_LABEL_ALIASES: Record<string, string> = {
   "Global products": "Global Products",
   "Agriculture Drones": "Agri Drones",
   "Agricultural Drones": "Agri Drones"
-};
-
-const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  "Agri Drones": Sprout,
-  "Video Drones": Video,
-  "Creative Drones": Palette,
-  "Survey Drones": MapIcon,
-  "Surveillance Drones": Eye,
-  "Accessories": Wrench,
-  "Global Products": Globe2
 };
 
 function resolveNavigationItem(item: NavigationNode, menuByLabel: Map<string, EnterpriseMenuConfig>): NavigationNode {
@@ -93,6 +83,10 @@ export const StoreNav = forwardRef(function StoreNav(
   const normalizedPathname = useMemo(() => normalizeStorefrontPath(pathname), [pathname]);
   const initialNavbarTone = useMemo(() => resolveInitialNavbarTone(normalizedPathname), [normalizedPathname]);
   const { tone } = useAdaptiveNavbarTone(initialNavbarTone);
+  const megaMenus = useMemo(
+    () => enterpriseMenuConfigs.filter((menu): menu is MegaMenuConfig => menu.type === "mega"),
+    [enterpriseMenuConfigs]
+  );
   const enterpriseMenuByLabel = useMemo(
     () => new Map(enterpriseMenuConfigs.map((menu) => [menu.label, menu])),
     [enterpriseMenuConfigs]
@@ -158,9 +152,13 @@ export const StoreNav = forwardRef(function StoreNav(
 
   const openEnterpriseMenu = useCallback((menuKey: string) => {
     clearCloseTimer();
+    // Search → mega handoff: close search when hovering a category label
+    if (useUiStore.getState().overlay === "search") {
+      setOverlay(null);
+    }
     setRenderedMenuKey(menuKey);
     setActiveMenuKey(menuKey);
-  }, [clearCloseTimer]);
+  }, [clearCloseTimer, setOverlay]);
 
   const scheduleEnterpriseMenuClose = useCallback(() => {
     clearCloseTimer();
@@ -173,6 +171,25 @@ export const StoreNav = forwardRef(function StoreNav(
     clearCloseTimer();
     setActiveMenuKey(null);
   }, [clearCloseTimer]);
+
+  /** Hover/focus opens search; does not close on leave. */
+  const openSearch = useCallback(() => {
+    if (useUiStore.getState().overlay === "search") return;
+    preloadSearchOverlay();
+    closeEnterpriseMenu();
+    setOverlay("search");
+  }, [closeEnterpriseMenu, preloadSearchOverlay, setOverlay]);
+
+  /** Click toggles: open ↔ close. */
+  const toggleSearch = useCallback(() => {
+    if (useUiStore.getState().overlay === "search") {
+      setOverlay(null);
+      return;
+    }
+    preloadSearchOverlay();
+    closeEnterpriseMenu();
+    setOverlay("search");
+  }, [closeEnterpriseMenu, preloadSearchOverlay, setOverlay]);
 
   const setFeaturedCard = useCallback((menuKey: string, featureKey: string | undefined) => {
     if (!featureKey) return;
@@ -266,7 +283,8 @@ export const StoreNav = forwardRef(function StoreNav(
     return () => window.clearTimeout(hideTimer);
   }, [mobileMenuOpen, mobileDrawerMounted]);
 
-  const renderedMenu = renderedMenuKey ? enterpriseMenuByKey.get(renderedMenuKey) : undefined;
+  const panelOpen = Boolean(activeMenuKey && renderedMenuKey);
+  const activeCategoryKey = activeMenuKey ?? renderedMenuKey ?? megaMenus[0]?.key ?? "";
 
   const isLoginNav = variant === "login";
 
@@ -360,11 +378,15 @@ export const StoreNav = forwardRef(function StoreNav(
                 <button
                   className="adaptive-navbar__icon nav-interactive nav-interactive--subtle inline-flex size-11 items-center justify-center rounded-full text-current"
                   aria-label="Search Mithron products"
+                  aria-expanded={searchOpen}
                   type="button"
                   onFocus={preloadSearchOverlay}
-                  onClick={() => setOverlay("search")}
+                  onClick={toggleSearch}
                   onPointerDown={preloadSearchOverlay}
-                  onPointerEnter={preloadSearchOverlay}
+                  onPointerEnter={(event) => {
+                    // Hover-open on mouse only — touch uses click toggle (avoids open-then-close).
+                    if (event.pointerType === "mouse") openSearch();
+                  }}
                 >
                   <Search className="size-[18px]" />
                 </button>
@@ -391,12 +413,21 @@ export const StoreNav = forwardRef(function StoreNav(
           </div>
         </div>
       </header>
-      {renderedMenu ? (
+      {renderedMenuKey && megaMenus.length ? (
         <EnterpriseMegaMenuPanel
-          menu={renderedMenu}
-          open={activeMenuKey === renderedMenu.key}
-          featuredKey={featuredByMenu[renderedMenu.key]}
-          onFeatureIntent={(featureKey) => setFeaturedCard(renderedMenu.key, featureKey)}
+          menus={megaMenus}
+          activeCategoryKey={activeCategoryKey}
+          open={panelOpen}
+          featuredKey={featuredByMenu[activeCategoryKey]}
+          onCategoryIntent={(categoryKey) => {
+            clearCloseTimer();
+            if (useUiStore.getState().overlay === "search") {
+              setOverlay(null);
+            }
+            setRenderedMenuKey(categoryKey);
+            setActiveMenuKey(categoryKey);
+          }}
+          onFeatureIntent={(featureKey) => setFeaturedCard(activeCategoryKey, featureKey)}
           onRouteIntent={debouncedPrefetchRoute}
           onClose={closeEnterpriseMenu}
         />
@@ -407,7 +438,7 @@ export const StoreNav = forwardRef(function StoreNav(
           enterpriseMenuConfigs={enterpriseMenuConfigs}
           open={mobileMenuOpen}
           onClose={() => setOverlay(null)}
-          onSearch={isLoginNav ? undefined : () => setOverlay("search")}
+          onSearch={isLoginNav ? undefined : toggleSearch}
           onSearchIntent={isLoginNav ? undefined : preloadSearchOverlay}
         />
       ) : null}
@@ -433,8 +464,7 @@ function NavLinkItem({
   const isActive = activeNavIndex === index;
   const menu = enterpriseMenuByLabel.get(item.label);
   const isMenuActive = menu ? activeMenuKey === menu.key : false;
-  const menuId = menu ? `enterprise-menu-${menu.key}` : undefined;
-  const Icon = CATEGORY_ICONS[item.label];
+  const menuId = menu ? "enterprise-mega-menu" : undefined;
 
   return (
     <div
@@ -453,7 +483,6 @@ function NavLinkItem({
         className={`adaptive-navbar__link type-nav nav-interactive group relative inline-flex h-10 items-center whitespace-nowrap text-current ${isActive ? "is-active" : ""}`}
       >
         <span className="adaptive-navbar__label relative z-[1]">
-          {Icon ? <Icon className="adaptive-navbar__category-icon" aria-hidden="true" /> : null}
           {item.label}
         </span>
         {menu ? (

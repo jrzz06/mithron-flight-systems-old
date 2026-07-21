@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/icons/storefront-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ReactNode } from "react";
@@ -275,20 +275,20 @@ export function HeroCarousel({
         const slideInk = getHeroContentInk(item, itemIndex);
         const overlayOpacity = slideInk === "light" || slideInk === "split" ? 0.36 : 0.22;
         return (
-        <div
-          key={item.id}
-          data-testid={`hero-slide-${item.id}`}
-          data-hero-slide-state={getSlideState(itemIndex)} // test-placeholder: data-hero-slide-state="active"
-          data-hero-motion="static"
-          className="absolute inset-0 hero-slide-frame"
-          style={{ "--hero-slide-overlay-opacity": overlayOpacity } as CSSProperties}
-          aria-hidden={itemIndex !== activeIndex}
-        >
-          {shouldMountHeroSlide(itemIndex, activeIndex, safeSlides.length) ? (
-            <HeroBackdrop slide={item} reducedMotion={reducedMotion} />
-          ) : null}
-        </div>
-      );
+          <div
+            key={item.id}
+            data-testid={`hero-slide-${item.id}`}
+            data-hero-slide-state={getSlideState(itemIndex)} // test-placeholder: data-hero-slide-state="active"
+            data-hero-motion="static"
+            className="absolute inset-0 hero-slide-frame"
+            style={{ "--hero-slide-overlay-opacity": overlayOpacity } as CSSProperties}
+            aria-hidden={itemIndex !== activeIndex}
+          >
+            {shouldMountHeroSlide(itemIndex, activeIndex, safeSlides.length) ? (
+              <HeroBackdrop slide={item} reducedMotion={reducedMotion} />
+            ) : null}
+          </div>
+        );
       })}
 
       <HeroControl

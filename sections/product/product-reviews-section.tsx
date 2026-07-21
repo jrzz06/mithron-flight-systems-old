@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ThumbsUp } from "lucide-react";
+import { ThumbsUp } from "@/components/icons/storefront-icons";
 import { useMemo, useState } from "react";
 import type { ProductPageReview, ProductReviewSummary, ReviewSort } from "@/lib/product-reviews/types";
 import { cn } from "@/lib/utils";

@@ -74,7 +74,7 @@
   flex: 1 1 auto;
   margin: 0;
   color: var(--card-muted);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-body);
   font-weight: 400;
   line-height: var(--leading-body);
@@ -147,7 +147,7 @@
 .name {
   margin: 0;
   color: var(--card-ink);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-display);
   font-size: 15px;
   font-weight: 700;
   line-height: 1.25;
@@ -162,7 +162,7 @@
 .productName {
   margin: 3px 0 0;
   color: var(--card-faint);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: var(--type-product-kicker);
   font-weight: 400;
   line-height: 1.35;
@@ -177,7 +177,7 @@
 .viewProduct {
   margin: 5px 0 0;
   color: var(--card-accent);
-  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--type-ui);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0;

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@/lib/fonts/misans";
+import { fontBody, fontDisplay } from "@/lib/fonts/storefront";
 import "./globals.css";
 import { NavbarInkBootstrapScript } from "@/components/navigation/navbar-ink-bootstrap-script";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -44,25 +44,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="fonts-pending">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${fontDisplay.variable} ${fontBody.variable} fonts-pending`}
+    >
       <head>
-        <link
-          rel="preload"
-          href="/fonts/b8005e4731c12f9b1655028b1e379a35.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/f68542001156732bb26af687f85956e2.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=document.documentElement;function ready(){d.classList.remove("fonts-pending");d.classList.add("fonts-ready");}if(!document.fonts||!document.fonts.load){ready();return;}Promise.all([document.fonts.load('400 1em "MiSans VF"'),document.fonts.load('700 1em "MiSans VF"')]).then(ready).catch(ready);setTimeout(ready,2500);}catch(e){document.documentElement.classList.add("fonts-ready");}})();`
+            __html: `(function(){try{var d=document.documentElement;function ready(){d.classList.remove("fonts-pending");d.classList.add("fonts-ready");}if(!document.fonts||!document.fonts.ready){ready();return;}document.fonts.ready.then(ready).catch(ready);setTimeout(ready,2500);}catch(e){document.documentElement.classList.add("fonts-ready");}})();`
           }}
         />
         <NavbarInkBootstrapScript />

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search } from "@/components/icons/storefront-icons";
 import { StoreBackButton } from "@/components/navigation/store-back-button";
 import {
   CATALOG_GROUP_OPTIONS,

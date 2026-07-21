@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "@/components/icons/storefront-icons";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import type { ProductEnquiryProduct } from "@/components/product/product-enquiry-modal";

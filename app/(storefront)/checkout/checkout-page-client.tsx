@@ -561,11 +561,8 @@ export function CheckoutPageClient() {
     orderNumber: string,
     total = grandTotal
   ) => {
-    if (isBuyNowFlow) {
-      clearBuyNow();
-    } else {
-      clearCart();
-    }
+    // Set completed before clearing cart/buy-now so the empty-session guard
+    // never races and redirects away from the success UI.
     setCheckoutOrderMeta({ orderId });
     setCompleted({
       mode,
@@ -577,16 +574,25 @@ export function CheckoutPageClient() {
       total,
       isSignedIn
     });
+    if (isBuyNowFlow) {
+      clearBuyNow();
+    } else {
+      clearCart();
+    }
     reportCheckoutError("");
     if (mode === "payment") {
       notify.success(FEEDBACK_MESSAGES.checkoutSuccess, { source: "checkout", id: `order:complete:${orderId}` });
       notify.success(FEEDBACK_MESSAGES.paymentSuccess, { source: "checkout", id: `pay:complete:${orderId}` });
     } else {
       notify.success(FEEDBACK_MESSAGES.productEnquirySent, { source: "checkout", id: `enquiry:complete:${orderId}` });
+      if (isSignedIn && !isStorefrontGuestOnly()) {
+        router.replace("/account/enquiries");
+      }
     }
-  }, [reportCheckoutError, setCheckoutOrderMeta, checkout.email, phone, fullName, grandTotal, isSignedIn, clearCart, clearBuyNow, isBuyNowFlow]);
+  }, [reportCheckoutError, setCheckoutOrderMeta, checkout.email, phone, fullName, grandTotal, isSignedIn, clearCart, clearBuyNow, isBuyNowFlow, router]);
 
   useEffect(() => {
+    if (completed) return;
     if (!isCartSessionReady) return;
     if (isBuyNowFlow && !buyNowHasHydrated) return;
     if (isBuyNowSessionMissing) {
@@ -596,7 +602,7 @@ export function CheckoutPageClient() {
     if (!isBuyNowFlow && !checkoutItems.length) {
       router.replace("/cart");
     }
-  }, [buyNowHasHydrated, checkoutItems.length, isBuyNowFlow, isBuyNowSessionMissing, isCartSessionReady, router]);
+  }, [buyNowHasHydrated, checkoutItems.length, completed, isBuyNowFlow, isBuyNowSessionMissing, isCartSessionReady, router]);
 
   useEffect(() => {
     let active = true;

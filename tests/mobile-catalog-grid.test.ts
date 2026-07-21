@@ -54,7 +54,7 @@ describe("mobile catalog grid layout", () => {
     const globalsCss = source("app/globals.css");
     expect(globalsCss).toContain("--catalog-inline:");
     expect(globalsCss).toMatch(
-      /@media \(max-width: 1279px\)[\s\S]*\.catalog-page-shell[\s\S]*--catalog-inline:\s*clamp\(20px,\s*4vw,\s*32px\)/
+      /@media \(max-width: 1279px\)[\s\S]*\.catalog-page-shell[\s\S]*--catalog-inline:\s*clamp\(10px,\s*2vw,\s*16px\)/
     );
     expect(globalsCss).toMatch(
       /@media \(max-width: 767px\)[\s\S]*\.catalog-grid-section[\s\S]*padding-inline:\s*var\(--catalog-inline\) !important/

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons/storefront-icons";
 import { ProductCardImage } from "@/components/media/product-card-image";
 import { clipProductPreviewText } from "@/lib/product-preview-text";
 import { formatINR } from "@/lib/utils";

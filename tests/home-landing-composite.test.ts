@@ -231,7 +231,7 @@ describe("home landing composite contract", () => {
     expect(missionCss).not.toContain("width: min(100%, 1440px)");
     expect(missionCss).toContain("min-height: clamp(760px, 88svh, 980px)");
     expect(missionCss).toContain("padding: clamp(calc(88px * var(--storefront-section-space-scale, 1)), 9vh, calc(128px * var(--storefront-section-space-scale, 1))) 0 clamp(calc(96px * var(--storefront-section-space-scale, 1)), 10vh, calc(140px * var(--storefront-section-space-scale, 1)))");
-    expect(missionCss).toContain("padding: 0 clamp(24px, 4vw, 72px)");
+    expect(missionCss).toContain("padding: 0 clamp(28px, 4.5vw, 88px)");
     expect(missionCss).toContain("align-items: end");
     expect(shelfCss).toContain(".productShelfSection+.missionWorldSection");
     expect(shelfCss).toContain("padding-top: clamp(48px, 5vh, 72px)");

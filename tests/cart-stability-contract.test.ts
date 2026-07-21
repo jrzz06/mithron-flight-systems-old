@@ -34,6 +34,9 @@ describe("cart & checkout stability contracts", () => {
     expect(checkoutClient).toContain("checkout-auth-prompt");
     expect(checkoutClient).toContain("Send enquiry to Mithron");
     expect(checkoutClient).toContain("setCheckoutContact");
+    // Empty buy-now/cart must not redirect after successful enquiry submit.
+    expect(checkoutClient).toContain("if (completed) return;");
+    expect(checkoutClient).toContain('router.replace("/account/enquiries")');
 
     const productConfigurator = source("sections/product/product-configurator.tsx");
     expect(productConfigurator).toContain("/checkout?flow=buy-now");

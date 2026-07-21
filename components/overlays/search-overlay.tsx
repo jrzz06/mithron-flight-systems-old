@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ArrowRight, Clock3, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Search, X } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { buildProductsCatalogHref } from "@/lib/catalog-product-listing";
-import { POPULAR_SEARCH_QUERIES } from "@/lib/catalog-search-popular";
+import { SEARCH_QUICK_LINKS } from "@/lib/catalog-search-popular";
 import { categoryMatchesSearchQuery } from "@/lib/product-search-engine";
 import {
   searchCatalogIndex,
@@ -16,7 +16,7 @@ import {
 } from "@/lib/catalog-search-index";
 import { catalogCategoryDefinitions } from "@/lib/catalog-categories";
 import { ProductCardImage } from "@/components/media/product-card-image";
-import { rememberRecentSearch, readRecentSearches } from "@/lib/search-recent";
+import { rememberRecentSearch } from "@/lib/search-recent";
 import { SearchHighlight } from "@/lib/search-highlight";
 import { SEARCH_DEBOUNCE_MS, mergeSearchResultsBySlug } from "@/lib/search-query";
 import type { CatalogSearchResult } from "@/services/catalog";
@@ -246,7 +246,6 @@ export function SearchOverlay() {
   const [remoteResults, setRemoteResults] = useState<CatalogSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [activeResultIndex, setActiveResultIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -267,11 +266,6 @@ export function SearchOverlay() {
     const timer = window.setTimeout(() => setDebouncedQuery(activeQuery), SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [activeQuery, hasActiveQuery]);
-
-  useEffect(() => {
-    if (!open) return;
-    setRecentSearches(readRecentSearches());
-  }, [open]);
 
   const localResults = useMemo(
     () => (debouncedQuery && catalogIndex.length ? searchCatalogIndex(catalogIndex, debouncedQuery, 24) : []),
@@ -315,36 +309,91 @@ export function SearchOverlay() {
       if (!trimmed) return;
       rememberRecentSearch(trimmed);
       closeOverlay();
-      router.push(buildProductsCatalogHref({ q: trimmed }));
+      window.setTimeout(() => {
+        router.push(buildProductsCatalogHref({ q: trimmed }));
+      }, 0);
     },
     [activeQuery, closeOverlay, router]
   );
 
   const openResult = useCallback(
     (product: CatalogSearchResult) => {
-      rememberRecentSearch(debouncedQuery || product.name);
+      rememberRecentSearch(product.name);
       closeOverlay();
-      router.push(`/product/${product.slug}`);
+      // Defer navigation so overlay unmount / inert cleanup finish before route commit.
+      window.setTimeout(() => {
+        router.push(`/product/${product.slug}`);
+      }, 0);
     },
-    [closeOverlay, debouncedQuery, router]
+    [closeOverlay, router]
   );
 
   useEffect(() => {
     if (!open) return;
-    const focusInput = () => inputRef.current?.focus();
-    window.requestAnimationFrame(focusInput);
-    const timer = window.setTimeout(focusInput, 220);
-    return () => window.clearTimeout(timer);
+    const focusInput = () => inputRef.current?.focus({ preventScroll: true });
+    const raf = window.requestAnimationFrame(focusInput);
+    const timer = window.setTimeout(focusInput, 340);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      document.documentElement.style.removeProperty("--search-header-bottom");
+      return;
+    }
+
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const syncHeaderBottom = () => {
+      // Use layout height (offsetHeight), not clipped getBoundingClientRect — clip-path
+      // would otherwise pull the backdrop up while the sheet is still sliding open.
+      const top = panel.getBoundingClientRect().top;
+      const bottom = top + panel.offsetHeight;
+      document.documentElement.style.setProperty("--search-header-bottom", `${Math.ceil(bottom)}px`);
+    };
+
+    syncHeaderBottom();
+    const resizeObserver = new ResizeObserver(syncHeaderBottom);
+    resizeObserver.observe(panel);
+    window.addEventListener("resize", syncHeaderBottom);
+    window.addEventListener("scroll", syncHeaderBottom, { passive: true });
+
+    // Re-measure after the clip-path open transition settles.
+    const settleTimer = window.setTimeout(syncHeaderBottom, 360);
+
+    return () => {
+      window.clearTimeout(settleTimer);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", syncHeaderBottom);
+      window.removeEventListener("scroll", syncHeaderBottom);
+      document.documentElement.style.removeProperty("--search-header-bottom");
+    };
+  }, [open, hasActiveQuery, visibleProducts.length, isLoading]);
 
   useEffect(() => {
     if (!open) return;
 
     const main = document.getElementById("g-main");
-    main?.setAttribute("inert", "");
+    if (!main) return;
+
+    // Defer inert so React can finish the open commit before the browser mutates focus trees.
+    let applied = false;
+    const raf = window.requestAnimationFrame(() => {
+      main.setAttribute("inert", "");
+      main.setAttribute("aria-hidden", "true");
+      applied = true;
+    });
 
     return () => {
-      main?.removeAttribute("inert");
+      window.cancelAnimationFrame(raf);
+      if (applied || main.hasAttribute("inert")) {
+        main.removeAttribute("inert");
+        main.removeAttribute("aria-hidden");
+      }
     };
   }, [open]);
 
@@ -520,103 +569,154 @@ export function SearchOverlay() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeResultIndex, closeOverlay, open, openResult, visibleProducts]);
 
-  return (
-    <div
-      className={cn(styles.root, "fixed inset-0", open && styles.isOpen)}
-      aria-hidden={!open}
-      aria-label="Search products"
-      aria-modal={open ? "true" : undefined}
-      role="dialog"
-    >
+  const overlayNode = (
+    <>
       <button
         type="button"
         tabIndex={open ? 0 : -1}
-        className={styles.backdrop}
+        className={cn(styles.backdrop, open && styles.isOpen)}
         aria-label="Dismiss search overlay"
         onClick={closeOverlay}
       />
-      <div ref={panelRef} className={styles.panel}>
-        <div className={styles.inner}>
-          <form
-            className={styles.searchForm}
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (activeResultIndex >= 0 && visibleProducts[activeResultIndex]) {
-                openResult(visibleProducts[activeResultIndex]!);
-                return;
-              }
-              submitSearch();
-            }}
-          >
-            <Search className={styles.searchIcon} aria-hidden="true" />
-            <input
-              ref={inputRef}
-              autoFocus={open}
-              aria-label="Search Mithron products"
-              aria-controls="search-results-list"
-              aria-activedescendant={
-                activeResultIndex >= 0 ? `search-result-${activeResultIndex}` : undefined
-              }
-              name="q"
-              type="search"
-              enterKeyHint="search"
-              autoComplete="off"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search products, categories, SKU, brands..."
-              tabIndex={open ? 0 : -1}
-              className={styles.searchInput}
-            />
-            <button
-              type="submit"
-              tabIndex={open ? 0 : -1}
-              aria-label="Search products"
-              className={styles.submitButton}
+      <div
+        ref={panelRef}
+        className={cn(styles.sheet, open && styles.isOpen)}
+        aria-hidden={!open}
+        aria-label="Search products"
+        aria-modal={open ? "true" : undefined}
+        role="dialog"
+      >
+        <div className={styles.panel}>
+          <div className={styles.inner}>
+            <form
+              className={styles.searchForm}
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (activeResultIndex >= 0 && visibleProducts[activeResultIndex]) {
+                  openResult(visibleProducts[activeResultIndex]!);
+                  return;
+                }
+                submitSearch();
+              }}
             >
-              <span className={styles.submitLabel}>Search</span>
-              <Search className="size-3.5 md:hidden" aria-hidden="true" />
-            </button>
-            <button
-              tabIndex={open ? 0 : -1}
-              aria-label="Close search"
-              onClick={closeOverlay}
-              type="button"
-              className={styles.iconButton}
-            >
-              <X className="size-4" />
-            </button>
-          </form>
+              <Search className={styles.searchIcon} strokeWidth={1.75} aria-hidden="true" />
+              <input
+                ref={inputRef}
+                aria-label="Search Mithron products"
+                aria-controls="search-results-list"
+                aria-activedescendant={
+                  activeResultIndex >= 0 ? `search-result-${activeResultIndex}` : undefined
+                }
+                name="q"
+                type="search"
+                enterKeyHint="search"
+                autoComplete="off"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search products..."
+                tabIndex={open ? 0 : -1}
+                className={styles.searchInput}
+              />
+              <button
+                tabIndex={open ? 0 : -1}
+                aria-label="Close search"
+                onClick={closeOverlay}
+                type="button"
+                className={styles.iconButton}
+              >
+                <X className="size-5" strokeWidth={1.75} />
+              </button>
+            </form>
 
-          <div ref={scrollRef} className={styles.scrollRegion}>
-            <div className={styles.content}>
-              {hasActiveQuery ? (
-                <>
-                  <div className={styles.resultsHeader}>
-                    <p className={styles.status} aria-live="polite" aria-atomic="true">
-                      {statusLabel}
-                    </p>
-                    {awaitingRemote && localResults.length ? (
-                      <p className={styles.statusSubtle} aria-live="polite">
-                        Refining...
+            <div ref={scrollRef} className={styles.scrollRegion}>
+              <div className={styles.content}>
+                {hasActiveQuery ? (
+                  <>
+                    <div className={styles.resultsHeader}>
+                      <p className={styles.status} aria-live="polite" aria-atomic="true">
+                        {statusLabel}
                       </p>
+                      {awaitingRemote && localResults.length ? (
+                        <p className={styles.statusSubtle} aria-live="polite">
+                          Refining...
+                        </p>
+                      ) : null}
+                    </div>
+
+                    {isLoading ? <SearchResultSkeletons /> : null}
+
+                    {!isLoading && visibleProducts.length ? (
+                      <>
+                        <VirtualSearchResults
+                          products={visibleProducts}
+                          highlightQuery={highlightQuery}
+                          activeResultIndex={activeResultIndex}
+                          open={open}
+                          scrollRef={scrollRef}
+                          resultRefs={resultRefs}
+                          onOpen={openResult}
+                        />
+                        {debouncedQuery.length >= 2 ? (
+                          <Link
+                            href={buildProductsCatalogHref({ q: debouncedQuery })}
+                            className={styles.viewAll}
+                            onClick={() => {
+                              rememberRecentSearch(debouncedQuery);
+                              closeOverlay();
+                            }}
+                          >
+                            View all results
+                          </Link>
+                        ) : null}
+                      </>
                     ) : null}
-                  </div>
 
-                  {isLoading ? <SearchResultSkeletons /> : null}
+                    {showEmptyState ? (
+                      <div className={searchError ? styles.errorState : styles.emptyState}>
+                        <p className={styles.emptyTitle}>
+                          {searchError ? "Search unavailable" : "No exact match"}
+                        </p>
+                        <p className={styles.emptyCopy}>
+                          {searchError ??
+                            "Try agriculture, mapping, G-HADRON, controller, battery, or site monitoring."}
+                        </p>
+                        {suggestedCategories.length ? (
+                          <div className={styles.sectionBlock}>
+                            <p className={styles.sectionHeading}>Suggested categories</p>
+                            <div className={styles.linkList}>
+                              {suggestedCategories.map((category) => {
+                                const definition = catalogCategoryDefinitions.find(
+                                  (item) =>
+                                    item.label === category || item.categoryNames.includes(category)
+                                );
+                                if (!definition) {
+                                  return (
+                                    <button
+                                      key={category}
+                                      type="button"
+                                      className={styles.linkRow}
+                                      onClick={() => setQuery(category)}
+                                    >
+                                      {category}
+                                    </button>
+                                  );
+                                }
 
-                  {!isLoading && visibleProducts.length ? (
-                    <>
-                      <VirtualSearchResults
-                        products={visibleProducts}
-                        highlightQuery={highlightQuery}
-                        activeResultIndex={activeResultIndex}
-                        open={open}
-                        scrollRef={scrollRef}
-                        resultRefs={resultRefs}
-                        onOpen={openResult}
-                      />
-                      {debouncedQuery.length >= 2 ? (
+                                return (
+                                  <Link
+                                    key={category}
+                                    href={definition.href}
+                                    className={styles.linkRow}
+                                    onClick={closeOverlay}
+                                  >
+                                    {definition.label}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : null}
                         <Link
                           href={buildProductsCatalogHref({ q: debouncedQuery })}
                           className={styles.viewAll}
@@ -627,105 +727,18 @@ export function SearchOverlay() {
                         >
                           View all results
                         </Link>
-                      ) : null}
-                    </>
-                  ) : null}
-
-                  {showEmptyState ? (
-                    <div className={searchError ? styles.errorState : styles.emptyState}>
-                      <p className={styles.emptyTitle}>
-                        {searchError ? "Search unavailable" : "No exact match"}
-                      </p>
-                      <p className={styles.emptyCopy}>
-                        {searchError ??
-                          "Try agriculture, mapping, G-HADRON, controller, battery, or site monitoring."}
-                      </p>
-                      {suggestedCategories.length ? (
-                        <div className={styles.sectionBlock}>
-                          <p className={styles.sectionHeading}>Suggested categories</p>
-                          <div className={styles.chipRow}>
-                            {suggestedCategories.map((category) => {
-                              const definition = catalogCategoryDefinitions.find(
-                                (item) => item.label === category || item.categoryNames.includes(category)
-                              );
-                              if (!definition) {
-                                return (
-                                  <button
-                                    key={category}
-                                    type="button"
-                                    className={styles.chip}
-                                    onClick={() => setQuery(category)}
-                                  >
-                                    {category}
-                                  </button>
-                                );
-                              }
-
-                              return (
-                                <Link
-                                  key={category}
-                                  href={definition.href}
-                                  className={styles.chip}
-                                  onClick={closeOverlay}
-                                >
-                                  {definition.label}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : null}
-                      <Link
-                        href={buildProductsCatalogHref({ q: debouncedQuery })}
-                        className={styles.viewAll}
-                        onClick={() => {
-                          rememberRecentSearch(debouncedQuery);
-                          closeOverlay();
-                        }}
-                      >
-                        View all results
-                      </Link>
-                    </div>
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  <p className={styles.status} aria-live="polite">
-                    {statusLabel}
-                  </p>
-
-                  {recentSearches.length ? (
-                    <div className={styles.sectionBlock}>
-                      <p className={styles.sectionHeading}>
-                        <Clock3 className="mr-1 inline size-3 align-[-1px]" aria-hidden="true" />
-                        Recent searches
-                      </p>
-                      <div className={styles.chipRow}>
-                        {recentSearches.map((item) => (
-                          <button
-                            key={item}
-                            type="button"
-                            className={styles.chip}
-                            onClick={() => setQuery(item)}
-                          >
-                            {item}
-                          </button>
-                        ))}
                       </div>
-                    </div>
-                  ) : null}
-
+                    ) : null}
+                  </>
+                ) : (
                   <div className={styles.sectionBlock}>
-                    <p className={styles.sectionHeading}>
-                      <Sparkles className="mr-1 inline size-3 align-[-1px]" aria-hidden="true" />
-                      Popular searches
-                    </p>
-                    <div className={styles.chipRow}>
-                      {POPULAR_SEARCH_QUERIES.map((item) => (
+                    <p className={styles.sectionHeading}>Quick Links</p>
+                    <div className={styles.linkList}>
+                      {SEARCH_QUICK_LINKS.map((item) => (
                         <button
                           key={item}
                           type="button"
-                          className={styles.chip}
+                          className={styles.linkRow}
                           onClick={() => setQuery(item)}
                         >
                           {item}
@@ -733,32 +746,14 @@ export function SearchOverlay() {
                       ))}
                     </div>
                   </div>
-
-                  <div className={styles.sectionBlock} aria-labelledby="search-explore-heading">
-                    <h2 id="search-explore-heading" className={styles.sectionHeading}>
-                      Explore more
-                    </h2>
-                    <div className={styles.chipRow}>
-                      {catalogCategoryDefinitions.map((category) => (
-                        <Link
-                          key={category.slug}
-                          href={category.href}
-                          title={`Browse ${category.label}`}
-                          tabIndex={open ? 0 : -1}
-                          onClick={closeOverlay}
-                          className={styles.chip}
-                        >
-                          {category.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
+
+  return overlayNode;
 }

@@ -27,11 +27,13 @@ function resolveSiteOrigin(env: Record<string, string | undefined>): string | nu
   if (fromSite) return fromSite;
   const fromProductionHost = parseOrigin(env.MITHRON_PRODUCTION_HOST);
   if (fromProductionHost) return fromProductionHost;
-  const fromVercelProduction = parseOrigin(env.VERCEL_PROJECT_PRODUCTION_URL);
-  if (fromVercelProduction) return fromVercelProduction;
-  if (env.VERCEL === "1") {
+  // Prefer the known production alias over VERCEL_PROJECT_PRODUCTION_URL
+  // (project *.vercel.app hosts often lack a working /cdn-media rewrite).
+  if (env.VERCEL === "1" || env.VERCEL_ENV) {
     return parseOrigin(CANONICAL_PRODUCTION_HOST);
   }
+  const fromVercelProduction = parseOrigin(env.VERCEL_PROJECT_PRODUCTION_URL);
+  if (fromVercelProduction) return fromVercelProduction;
   return null;
 }
 
@@ -68,21 +70,49 @@ export function rewriteStorageUrlForCdn(
   const trimmed = src?.trim() ?? "";
   if (!trimmed) return trimmed;
 
-  const cdnOrigin = getMediaCdnOrigin(env);
   const storageOrigin = getSupabaseStorageOrigin(env);
-  if (!cdnOrigin || !storageOrigin) return trimmed;
-
+  if (!storageOrigin) return trimmed;
   if (!trimmed.startsWith(storageOrigin)) return trimmed;
   if (!trimmed.includes("/storage/v1/object/public/")) return trimmed;
 
-  // cdnOrigin may include a path prefix (e.g. https://host/cdn-media).
-  try {
-    const cdn = new URL(cdnOrigin.includes("://") ? cdnOrigin : `https://${cdnOrigin}`);
-    const storagePath = trimmed.slice(storageOrigin.length);
-    return `${cdn.origin}${cdn.pathname.replace(/\/$/, "")}${storagePath}`;
-  } catch {
-    return `${cdnOrigin}${trimmed.slice(storageOrigin.length)}`;
+  const storagePath = trimmed.slice(storageOrigin.length);
+  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN);
+  if (custom) {
+    return `${custom}${storagePath}`;
   }
+
+  if (!vercelMediaCdnEnabled(env)) return trimmed;
+
+  // Same-origin relative path so every Vercel host (alias, preview, project URL)
+  // hits its own /cdn-media rewrite — avoids CORP blocks and stale cross-host HTML caches.
+  return `/cdn-media${storagePath}`;
+}
+
+/** Reverse a /cdn-media (or absolute CDN) storage URL back to the Supabase public URL. */
+export function unwrapCdnStorageUrl(
+  src: string,
+  env: Record<string, string | undefined> = process.env
+): string {
+  const trimmed = src?.trim() ?? "";
+  if (!trimmed) return trimmed;
+
+  const storageOrigin = getSupabaseStorageOrigin(env);
+  if (!storageOrigin) return trimmed;
+
+  const relativeMatch = trimmed.match(/^\/cdn-media(\/storage\/v1\/object\/public\/.+)$/i);
+  if (relativeMatch) return `${storageOrigin}${relativeMatch[1]}`;
+
+  const absoluteMatch = trimmed.match(/\/cdn-media(\/storage\/v1\/object\/public\/.+)$/i);
+  if (absoluteMatch && isTrustedCatalogStorageSrc(trimmed, env)) {
+    return `${storageOrigin}${absoluteMatch[1]}`;
+  }
+
+  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN);
+  if (custom && trimmed.startsWith(custom) && trimmed.includes(PUBLIC_STORAGE_PATH)) {
+    return `${storageOrigin}${trimmed.slice(custom.length)}`;
+  }
+
+  return trimmed;
 }
 
 export function isMediaCdnHostname(hostname: string, env: Record<string, string | undefined> = process.env) {
@@ -110,6 +140,11 @@ export function isTrustedCatalogStorageSrc(
   if (!trimmed || !trimmed.includes(PUBLIC_STORAGE_PATH)) return false;
 
   if (/^https?:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(trimmed)) {
+    return true;
+  }
+
+  // Same-origin relative CDN path used by rewriteStorageUrlForCdn in Vercel mode.
+  if (/^\/cdn-media\/storage\/v1\/object\/public\//i.test(trimmed)) {
     return true;
   }
 

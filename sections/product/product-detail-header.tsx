@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home } from "@/components/icons/storefront-icons";
 import type { Product } from "@/config/types";
 import { StoreBackButton } from "@/components/navigation/store-back-button";
 import {
