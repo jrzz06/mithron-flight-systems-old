@@ -81,9 +81,56 @@ describe("product inventory enterprise workflow", () => {
       variantId: null,
       stockStatus: "available",
       quantity: 6,
+      reservedQuantity: 0,
+      reorderThreshold: 0,
       warehouseCode: "IN-WEST-01",
       changeSummary: "Initial inventory on product creation"
     });
+  });
+
+  it("reads inventory_reorder_threshold on create", () => {
+    const parsed = parseProductCreateInventoryFromFormData(formData({
+      inventory_track: "on",
+      inventory_warehouse_code: "IN-WEST-01",
+      inventory_initial_quantity: "8",
+      inventory_reorder_threshold: "3"
+    }), "agri-drone-x1");
+
+    expect(parsed?.reorderThreshold).toBe(3);
+    expect(parsed?.quantity).toBe(8);
+  });
+
+  it("persists reserved and reorder from the products inventory tool form", () => {
+    const input = buildProductInventoryWorkflowFromFormData(formData({
+      product_slug: "agri-drone-x1",
+      warehouse_code: "IN-WEST-01",
+      quantity: "5",
+      reserved_quantity: "2",
+      reorder_threshold: "4",
+      stock_status: "available"
+    }));
+    const records = buildInventoryLinkageRecords(input, {
+      actorId: null,
+      at: "2026-05-24T10:00:00.000Z"
+    });
+
+    expect(input.reservedQuantity).toBe(2);
+    expect(input.reorderThreshold).toBe(4);
+    // sellable = 3 <= reorder 4 → low_stock
+    expect(input.stockStatus).toBe("low_stock");
+    expect(records.inventoryRecord.reserved_quantity).toBe(2);
+    expect(records.inventoryRecord.reorder_threshold).toBe(4);
+    expect(records.warehouseStockRecord.available_quantity).toBe(3);
+    expect(records.lowStock).toBe(true);
+  });
+
+  it("includes restored reserved/reorder migration", () => {
+    const migrationPath = join(process.cwd(), "supabase", "migrations", "20260720000100_restore_inventory_reserved_reorder.sql");
+    expect(existsSync(migrationPath)).toBe(true);
+    const sql = readFileSync(migrationPath, "utf8");
+    expect(sql).toContain("p_reserved_quantity");
+    expect(sql).toContain("p_reorder_threshold");
+    expect(sql).toContain("low_stock");
   });
 
   it("seeds warehouse linkage on create even when initial quantity is zero", () => {

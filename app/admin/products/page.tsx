@@ -127,6 +127,13 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const filteredTotal = Number(snapshot.data.filteredTotal ?? filteredProducts.length);
   const activeProductSlug = selectedProductSlug || String(filteredProducts[0]?.slug ?? snapshot.data.products[0]?.slug ?? "");
   const activeProductSku = activeProductSlug ? deriveProductSku(activeProductSlug) : "";
+  const activeProduct =
+    (editorProduct && String(editorProduct.slug ?? "") === activeProductSlug ? editorProduct : null)
+    ?? filteredProducts.find((product) => String(product.slug ?? "") === activeProductSlug)
+    ?? null;
+  const activeInventory = snapshot.data.inventory.find((row) => String(row.product_slug ?? "") === activeProductSlug) ?? null;
+  const activeVariants = Array.isArray(activeProduct?.variants) ? (activeProduct.variants as Record<string, unknown>[]) : [];
+  const activeOgImageSrc = readMediaSrc(activeProduct?.og_image) ?? "";
   const inventoryBySlug = new Map(snapshot.data.inventory.map((row) => [String(row.product_slug ?? ""), row]));
   const productRows: ProductCatalogGridRow[] = filteredProducts.map((product) => {
     const slug = String(product.slug ?? "");
@@ -142,6 +149,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     return {
       id: slug || String(product.name ?? "product"),
       title: String(product.name ?? product.slug ?? "Product"),
+      tagline: product.tagline ? String(product.tagline) : null,
       category: String(product.category ?? "Uncategorized"),
       status,
       thumbnailSrc: resolveNextImageSrc(primarySrc),
@@ -380,15 +388,24 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
               <input name="product_slug" defaultValue={activeProductSlug} placeholder="source-agri-kisan-drone-small-8-liter" className={platformFieldClass} />
             </label>
             <div data-product-variant-rows className="grid gap-3 md:col-span-2">
-              {[1, 2, 3, 4].map((row) => (
-                <div key={row} className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_1fr]">
-                  <input name="variant_name" placeholder={`Variant ${row} name`} className={platformFieldClass} />
-                  <input name="variant_tone" placeholder="Tone / color" className={platformFieldClass} />
-                  <input name="variant_sku" placeholder="SKU" className={platformFieldClass} />
-                  <input name="variant_image_src" placeholder="Variant image URL" className={platformFieldClass} />
-                </div>
-              ))}
+              {Array.from({ length: Math.max(4, activeVariants.length) }, (_, index) => {
+                const variant = activeVariants[index] ?? {};
+                const imageSrc =
+                  typeof variant.image === "object" && variant.image && !Array.isArray(variant.image)
+                    ? String((variant.image as Record<string, unknown>).src ?? "")
+                    : "";
+                return (
+                  <div key={index} className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_1fr]">
+                    <input type="hidden" name="variant_id" defaultValue={String(variant.id ?? "")} />
+                    <input name="variant_name" defaultValue={String(variant.name ?? "")} placeholder={`Variant ${index + 1} name`} className={platformFieldClass} />
+                    <input name="variant_tone" defaultValue={String(variant.tone ?? "")} placeholder="Tone / color" className={platformFieldClass} />
+                    <input name="variant_sku" defaultValue={String(variant.sku ?? variant.inventory_sku ?? "")} placeholder="SKU" className={platformFieldClass} />
+                    <input name="variant_image_src" defaultValue={imageSrc} placeholder="Variant image URL" className={platformFieldClass} />
+                  </div>
+                );
+              })}
             </div>
+            <input type="hidden" name="variants_editor_present" value="1" />
           </div>
 
           <label className="grid gap-2 text-sm">
@@ -416,23 +433,23 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             </label>
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>SEO title</span>
-              <input name="seo_title" defaultValue="" placeholder="Agri Kisan Drone Small | Mithron Flight Systems" className={platformFieldClass} />
+              <input name="seo_title" defaultValue={String(activeProduct?.seo_title ?? "")} placeholder="Agri Kisan Drone Small | Mithron Flight Systems" className={platformFieldClass} />
             </label>
             <label className="grid gap-2 text-sm md:col-span-2">
               <span className={platformLabelClass}>SEO description</span>
-              <textarea name="seo_description" defaultValue="" rows={3} placeholder="Premium agricultural drone with modular payload delivery." className={platformFieldClass} />
+              <textarea name="seo_description" defaultValue={String(activeProduct?.seo_description ?? "")} rows={3} placeholder="Premium agricultural drone with modular payload delivery." className={platformFieldClass} />
             </label>
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>OG title</span>
-              <input name="og_title" defaultValue="" placeholder="Agri Kisan Drone Small | Mithron" className={platformFieldClass} />
+              <input name="og_title" defaultValue={String(activeProduct?.og_title ?? "")} placeholder="Agri Kisan Drone Small | Mithron" className={platformFieldClass} />
             </label>
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>OG description</span>
-              <input name="og_description" defaultValue="" placeholder="Cinematic product preview for social sharing." className={platformFieldClass} />
+              <input name="og_description" defaultValue={String(activeProduct?.og_description ?? "")} placeholder="Cinematic product preview for social sharing." className={platformFieldClass} />
             </label>
             <label className="grid gap-2 text-sm md:col-span-2">
               <span className={platformLabelClass}>Social image URL</span>
-              <input name="og_image_src" defaultValue="" placeholder="https://.../social-preview.webp" className={platformFieldClass} />
+              <input name="og_image_src" defaultValue={activeOgImageSrc} placeholder="https://.../social-preview.webp" className={platformFieldClass} />
             </label>
           </div>
 
@@ -465,11 +482,11 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2 text-sm">
                 <span className={platformLabelClass}>Product slug</span>
-                <input name="product_slug" defaultValue="" placeholder="source-agri-kisan-drone-small-8-liter" className={platformFieldClass} />
+                <input name="product_slug" defaultValue={activeProductSlug} placeholder="source-agri-kisan-drone-small-8-liter" className={platformFieldClass} />
               </label>
               <label className="grid gap-2 text-sm">
                 <span className={platformLabelClass}>Workflow status</span>
-                <select name="workflow_status" defaultValue="published" className={platformFieldClass}>
+                <select name="workflow_status" defaultValue={String(activeProduct?.workflow_status ?? "published")} className={platformFieldClass}>
                   <option value="draft">draft</option>
                   <option value="published">published</option>
                   <option value="archived">archived</option>
@@ -478,7 +495,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             </div>
 
             <label className="flex items-center gap-3 text-sm">
-              <input name="is_visible" type="checkbox" defaultChecked className="h-4 w-4 rounded border-[var(--platform-border)] text-teal-700" />
+              <input name="is_visible" type="checkbox" defaultChecked={activeProduct?.is_visible !== false} className="h-4 w-4 rounded border-[var(--platform-border)] text-teal-700" />
               <span className={platformLabelClass}>Visible in storefront catalog</span>
             </label>
 
@@ -527,7 +544,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             />
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>Stock status</span>
-              <select name="stock_status" defaultValue="available" className={platformFieldClass}>
+              <select name="stock_status" defaultValue={String(activeInventory?.stock_status ?? (Number(activeInventory?.quantity ?? 0) > 0 ? "available" : "out_of_stock"))} className={platformFieldClass}>
                 <option value="available">available</option>
                 <option value="low_stock">low_stock</option>
                 <option value="out_of_stock">out_of_stock</option>
@@ -535,15 +552,15 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             </label>
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>Quantity</span>
-              <input name="quantity" defaultValue="0" inputMode="numeric" className={platformFieldClass} />
+              <input name="quantity" defaultValue={String(activeInventory?.quantity ?? 0)} inputMode="numeric" className={platformFieldClass} />
             </label>
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>Reserved quantity</span>
-              <input name="reserved_quantity" defaultValue="0" inputMode="numeric" className={platformFieldClass} />
+              <input name="reserved_quantity" defaultValue={String(activeInventory?.reserved_quantity ?? 0)} inputMode="numeric" className={platformFieldClass} />
             </label>
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>Reorder threshold</span>
-              <input name="reorder_threshold" defaultValue="0" inputMode="numeric" className={platformFieldClass} />
+              <input name="reorder_threshold" defaultValue={String(activeInventory?.reorder_threshold ?? 0)} inputMode="numeric" className={platformFieldClass} />
             </label>
           </div>
           <p className="text-xs leading-5 text-[var(--platform-text-muted)]">
@@ -571,7 +588,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>Product slug</span>
-              <input name="product_slug" defaultValue="" placeholder="source-agri-kisan-drone-small-8-liter" className={platformFieldClass} />
+              <input name="product_slug" defaultValue={activeProductSlug} placeholder="source-agri-kisan-drone-small-8-liter" className={platformFieldClass} />
             </label>
             <label className="grid gap-2 text-sm">
               <span className={platformLabelClass}>Media asset ID</span>

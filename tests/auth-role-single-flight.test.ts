@@ -37,5 +37,6 @@ describe("withSingleFlight loader timeout wiring", () => {
     expect(typeof mod.withSingleFlight).toBe("function");
     expect(typeof mod.readThroughCache).toBe("function");
     expect(mod.REDIS_CACHE_KEYS.authRoleContext("u1", 123)).toBe("auth:role:u1:123");
+    expect(mod.HOMEPAGE_SINGLE_FLIGHT_LOADER_TIMEOUT_MS).toBeGreaterThan(12_000);
   });
 });

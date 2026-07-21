@@ -39,11 +39,23 @@ describe("product variants workflow", () => {
   it("wires the product variants form to the server action and admin page without changing storefront loaders", () => {
     const pageSource = readFileSync(join(process.cwd(), "app/admin/products/page.tsx"), "utf8");
     const actionSource = readFileSync(join(process.cwd(), "app/admin/products/actions.ts"), "utf8");
+    const formsSource = readFileSync(join(process.cwd(), "services/product-admin-forms.ts"), "utf8");
 
     expect(pageSource).toContain("saveProductVariantsFormAction");
     expect(pageSource).toContain("data-product-variants-table=\"mithron_products\"");
+    expect(pageSource).toContain("variants_editor_present");
+    expect(pageSource).toContain("activeVariants");
     expect(actionSource).toContain("buildProductVariantsWorkflowFromFormData");
     expect(actionSource).toContain("saveProductVariantsFormAction");
     expect(actionSource).toContain("updateAdminRecord");
+    expect(formsSource).toContain("variants_editor_present");
+    expect(formsSource).toContain("would wipe all variants");
+  });
+
+  it("prefills SEO fields from the selected product on the admin page", () => {
+    const pageSource = readFileSync(join(process.cwd(), "app/admin/products/page.tsx"), "utf8");
+    expect(pageSource).toContain("activeProduct?.seo_title");
+    expect(pageSource).toContain("activeProduct?.seo_description");
+    expect(pageSource).toContain("activeOgImageSrc");
   });
 });

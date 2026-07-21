@@ -206,6 +206,7 @@ export function CmsSectionEditor({
   const builderResetRef = useRef<(() => void) | null>(null);
   const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [isDirty, setIsDirty] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [formRevision, setFormRevision] = useState(0);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "published" | "unsaved">("idle");
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
@@ -269,6 +270,11 @@ export function CmsSectionEditor({
     setFormRevision((current) => current + 1);
   }, []);
 
+  const onImageUploadingChange = useCallback((uploading: boolean) => {
+    setImageUploading(uploading);
+    if (uploading) markDirty();
+  }, [markDirty]);
+
   useLayoutEffect(() => {
     const measureChrome = () => {
       const shell = sectionShellRef.current;
@@ -308,13 +314,27 @@ export function CmsSectionEditor({
   }, [markSuccessfulCmsWrite, router]);
 
   const saveSection = useCallback((options?: { refresh?: boolean }) => {
+    if (imageUploading) {
+      notify.error("Wait for the image upload to finish before saving.", {
+        source: "cms",
+        id: "cms:save:upload-pending"
+      });
+      return;
+    }
     if (inFlightRef.current || isFormPendingRef.current || isPendingRef.current) return;
     shouldReconcileOnSaveRef.current = options?.refresh === true;
     const form = formRef.current?.querySelector("form");
     form?.requestSubmit();
-  }, []);
+  }, [imageUploading]);
 
   const handlePublish = useCallback(() => {
+    if (imageUploading) {
+      notify.error("Wait for the image upload to finish before publishing.", {
+        source: "cms",
+        id: "cms:publish:upload-pending"
+      });
+      return;
+    }
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     setIsFormPending(true);
@@ -329,9 +349,10 @@ export function CmsSectionEditor({
         const isMission = Boolean(missionKeyFromSectionId(sectionId));
         const isShelf = Boolean(shelfKeyFromSectionId(sectionId));
         const isV2Section = !isV1;
-        const shelfNeedsPersist = isShelf && (isDirty || isInferredAssignment);
+        // Always persist the open form before publish so image-only edits are not skipped.
+        const shelfNeedsPersist = isShelf && Boolean(formData);
         const missionNeedsPersist = isMission && Boolean(formData);
-        const v2NeedsPersist = isV2Section && Boolean(formData) && isDirty;
+        const v2NeedsPersist = isV2Section && Boolean(formData);
 
         if (shelfNeedsPersist && formData) {
           const saveResult = await raceWithTimeout(
@@ -384,9 +405,7 @@ export function CmsSectionEditor({
 
         const result = await raceWithTimeout(
           isV1
-            ? sectionId === "testimonials" && formData
-              ? publishHomepageSectionClientAction(sectionId, formData)
-              : publishHomepageV1ClientAction()
+            ? publishHomepageSectionClientAction(sectionId, formData)
             : formData
               ? publishHomepageSectionClientAction(sectionId, formData)
               : publishHomepageV2ClientAction(),
@@ -418,7 +437,7 @@ export function CmsSectionEditor({
         setIsFormPending(false);
       }
     });
-  }, [isDirty, isInferredAssignment, markSuccessfulCmsWrite, router, sectionId]);
+  }, [imageUploading, markSuccessfulCmsWrite, router, sectionId]);
 
   const showFormActions = definition?.editorKind !== "footer-view" && definition?.editorKind !== "hero-carousel";
   const usesV2Publish = definition?.workflow === "draft-publish" || definition?.workflow === "live-with-draft";
@@ -490,7 +509,7 @@ export function CmsSectionEditor({
         const enabledRaw = readLive(`article_${index}_enabled`);
         return {
           title: read(`article_${index}_title`, fallback?.title || ""),
-          imageSrc: read(`article_${index}_image`, fallback?.imageSrc || ""),
+          imageSrc: read(`article_${index}_image_src`, fallback?.imageSrc || ""),
           href: read(`article_${index}_href`, fallback?.href || ""),
           enabled: enabledRaw !== null ? enabledRaw === "true" : fallback?.enabled !== false
         };
@@ -562,6 +581,7 @@ export function CmsSectionEditor({
           onDirty={markDirty}
           onSaved={markSaved}
           onSavingChange={onFormPendingChange}
+          onUploadingChange={onImageUploadingChange}
           inFlightRef={inFlightRef}
           uploadImage={uploadImage}
         />
@@ -579,6 +599,7 @@ export function CmsSectionEditor({
           onDirty={markDirty}
           onSaved={markSaved}
           onSavingChange={onFormPendingChange}
+          onUploadingChange={onImageUploadingChange}
           uploadImage={uploadImage}
         />
       );
@@ -628,6 +649,7 @@ export function CmsSectionEditor({
           onSaved={markSaved}
           onPendingChange={onFormPendingChange}
           onUpload={uploadImage}
+          onUploadingChange={onImageUploadingChange}
         />
       );
     }
@@ -642,6 +664,7 @@ export function CmsSectionEditor({
           onSaved={markSaved}
           onPendingChange={onFormPendingChange}
           onUpload={uploadImage}
+          onUploadingChange={onImageUploadingChange}
         />
       );
     }
@@ -657,6 +680,7 @@ export function CmsSectionEditor({
           onDirty={markDirty}
           onSaved={markSaved}
           onSavingChange={onFormPendingChange}
+          onUploadingChange={onImageUploadingChange}
           uploadImage={uploadImage}
         />
       );
@@ -673,6 +697,7 @@ export function CmsSectionEditor({
           onDirty={markDirty}
           onSaved={markSaved}
           onSavingChange={onFormPendingChange}
+          onUploadingChange={onImageUploadingChange}
           uploadImage={uploadImage}
         />
       );
@@ -734,16 +759,18 @@ export function CmsSectionEditor({
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface)]" data-cms-edit-preview-panes>
             <CmsEditorActionBar
               sectionLabel={getBuilderSectionLabel(sectionId)}
-              isDirty={isDirty}
+              isDirty={isDirty || imageUploading}
               isSaving={isPending || isFormPending}
               saveStatus={saveStatus}
-              publishDisabled={!validation.valid}
+              publishDisabled={!validation.valid || imageUploading}
               publishDisabledReason={
-                !validation.valid
-                  ? validation.errors.length === 1
-                    ? validation.errors[0]?.message
-                    : `Fix ${validation.errors.length} issues before publishing`
-                  : undefined
+                imageUploading
+                  ? "Wait for the image upload to finish"
+                  : !validation.valid
+                    ? validation.errors.length === 1
+                      ? validation.errors[0]?.message
+                      : `Fix ${validation.errors.length} issues before publishing`
+                    : undefined
               }
               previewHref={previewHref}
               showSave={showFormActions}
@@ -801,6 +828,7 @@ function MissionSectionForm({
   onDirty,
   onSaved,
   onSavingChange,
+  onUploadingChange,
   uploadImage
 }: {
   missionKey: string;
@@ -808,6 +836,7 @@ function MissionSectionForm({
   onDirty: () => void;
   onSaved: () => void;
   onSavingChange?: (pending: boolean) => void;
+  onUploadingChange?: (uploading: boolean) => void;
   uploadImage: (file: File) => Promise<{ src: string; alt?: string } | null>;
 }) {
   const [isSaving, startTransition] = useTransition();
@@ -851,7 +880,7 @@ function MissionSectionForm({
         defaultValue={editorHtmlToPlainText(mission.body)}
         hint="Plain text is fine"
       />
-      <MissionTileEditor tiles={mission.tiles} onDirty={onDirty} onUpload={uploadImage} />
+      <MissionTileEditor tiles={mission.tiles} onDirty={onDirty} onUpload={uploadImage} onUploadingChange={onUploadingChange} />
     </form>
   );
 }
@@ -899,7 +928,8 @@ function V2BannerForm({
   onDirty,
   onSaved,
   onPendingChange,
-  onUpload
+  onUpload,
+  onUploadingChange
 }: {
   sectionKey: string;
   banner: {
@@ -918,6 +948,7 @@ function V2BannerForm({
   onSaved?: () => void;
   onPendingChange?: (pending: boolean) => void;
   onUpload?: (file: File) => Promise<{ src: string; alt?: string } | null>;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const [isSaving, startTransition] = useTransition();
   const [alignment, setAlignment] = useState<"left" | "center" | "right">(
@@ -970,6 +1001,7 @@ function V2BannerForm({
         variant="compact"
         onUpload={onUpload}
         onPreviewChange={() => onDirty?.()}
+        onUploadingChange={onUploadingChange}
       />
       <input type="hidden" name="enabled" value={banner.enabled ? "true" : "false"} />
     </form>
@@ -982,7 +1014,8 @@ function FullViewportBannerForm({
   onDirty,
   onSaved,
   onPendingChange,
-  onUpload
+  onUpload,
+  onUploadingChange
 }: {
   sectionKey: string;
   banner: HomepageCmsV2Content["banners"]["fullViewport"][number];
@@ -990,6 +1023,7 @@ function FullViewportBannerForm({
   onSaved?: () => void;
   onPendingChange?: (pending: boolean) => void;
   onUpload?: (file: File) => Promise<{ src: string; alt?: string } | null>;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const [isSaving, startTransition] = useTransition();
   const mobileSpec = CMS_IMAGE_SPECS.fullViewportMobile;
@@ -1038,6 +1072,7 @@ function FullViewportBannerForm({
         variant="compact"
         onUpload={onUpload}
         onPreviewChange={() => onDirty?.()}
+        onUploadingChange={onUploadingChange}
       />
       <CmsImageField
         label="Mobile banner (9:16 — 1080×1920)"
@@ -1049,6 +1084,7 @@ function FullViewportBannerForm({
         variant="compact"
         onUpload={onUpload}
         onPreviewChange={() => onDirty?.()}
+        onUploadingChange={onUploadingChange}
       />
       <input type="hidden" name="enabled" value={banner.enabled ? "true" : "false"} />
     </form>
@@ -1070,6 +1106,7 @@ function ShelfSectionForm({
   onDirty,
   onSaved,
   onSavingChange,
+  onUploadingChange,
   inFlightRef,
   uploadImage
 }: {
@@ -1087,6 +1124,7 @@ function ShelfSectionForm({
   onDirty: () => void;
   onSaved: () => void;
   onSavingChange?: (pending: boolean) => void;
+  onUploadingChange?: (uploading: boolean) => void;
   inFlightRef: MutableRefObject<boolean>;
   uploadImage: (file: File) => Promise<{ src: string; alt?: string } | null>;
 }) {
@@ -1208,6 +1246,8 @@ function ShelfSectionForm({
             spec={CMS_IMAGE_SPECS.shelfBanner}
             variant="compact"
             onUpload={uploadImage}
+            onPreviewChange={() => onDirty()}
+            onUploadingChange={onUploadingChange}
           />
         </div>
       </details>

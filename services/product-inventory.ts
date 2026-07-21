@@ -1,7 +1,7 @@
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { deriveProductSku } from "@/lib/product-sku";
 import { upsertInventoryRecord, updateAdminRecord } from "@/services/admin-actions";
-import { availabilityLabelFromQuantity, stockStatusFromQuantity } from "@/lib/inventory-availability";
+import { availabilityLabelFromQuantity } from "@/lib/inventory-availability";
 import type { ProductInventoryWorkflowInput } from "@/services/enterprise-admin-forms";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
@@ -23,7 +23,15 @@ async function upsertProductInventoryViaAdminRecords(
   env: EnvSource
 ) {
   const sku = deriveProductSku(input.productSlug);
-  const stockStatus = stockStatusFromQuantity(input.quantity);
+  const reservedQuantity = Math.max(0, input.reservedQuantity ?? 0);
+  const reorderThreshold = Math.max(0, input.reorderThreshold ?? 0);
+  const sellable = Math.max(0, input.quantity - reservedQuantity);
+  const stockStatus =
+    sellable <= 0
+      ? "out_of_stock"
+      : reorderThreshold > 0 && sellable <= reorderThreshold
+        ? "low_stock"
+        : "available";
   const now = new Date().toISOString();
 
   await upsertInventoryRecord(
@@ -33,8 +41,8 @@ async function upsertProductInventoryViaAdminRecords(
       variant_id: input.variantId,
       stock_status: stockStatus,
       quantity: input.quantity,
-      reserved_quantity: 0,
-      reorder_threshold: 0,
+      reserved_quantity: reservedQuantity,
+      reorder_threshold: reorderThreshold,
       updated_by: actorId,
       updated_at: now
     },
@@ -47,7 +55,7 @@ async function upsertProductInventoryViaAdminRecords(
     "slug",
     input.productSlug,
     {
-      source_availability: availabilityLabelFromQuantity(input.quantity),
+      source_availability: availabilityLabelFromQuantity(sellable),
       updated_at: now
     },
     actorId,
@@ -71,7 +79,17 @@ export async function upsertProductInventoryRecord(
 ) {
   const config = assertSupabaseAdminConfig(env);
   const sku = deriveProductSku(input.productSlug);
-  const stockStatus = stockStatusFromQuantity(input.quantity);
+  const reservedQuantity = Math.max(0, input.reservedQuantity ?? 0);
+  const reorderThreshold = Math.max(0, input.reorderThreshold ?? 0);
+  const sellable = Math.max(0, input.quantity - reservedQuantity);
+  const stockStatus =
+    sellable <= 0
+      ? "out_of_stock"
+      : reorderThreshold > 0 && sellable <= reorderThreshold
+        ? "low_stock"
+        : input.stockStatus === "low_stock"
+          ? "low_stock"
+          : "available";
 
   const response = await fetchWithTimeout(`${config.url}/rest/v1/rpc/upsert_product_inventory`, {
     method: "POST",
@@ -81,8 +99,8 @@ export async function upsertProductInventoryRecord(
       p_sku: sku,
       p_warehouse_code: input.warehouseCode,
       p_quantity: input.quantity,
-      p_reserved_quantity: 0,
-      p_reorder_threshold: 0,
+      p_reserved_quantity: reservedQuantity,
+      p_reorder_threshold: reorderThreshold,
       p_stock_status: stockStatus,
       p_variant_id: input.variantId,
       p_updated_by: actorId

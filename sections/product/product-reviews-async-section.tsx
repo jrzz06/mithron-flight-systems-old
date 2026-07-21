@@ -12,7 +12,15 @@ export async function ProductReviewsAsyncSection({
   productName,
   sourceCatalogId
 }: ProductReviewsAsyncSectionProps) {
-  const reviewPayload = await getProductPageReviews({ slug, productName, sourceCatalogId });
+  let reviewPayload: Awaited<ReturnType<typeof getProductPageReviews>> | null = null;
+  try {
+    reviewPayload = await getProductPageReviews({ slug, productName, sourceCatalogId });
+  } catch (error) {
+    console.warn("[product-reviews] failed to load reviews", error);
+    return null;
+  }
+
+  if (!reviewPayload) return null;
 
   return (
     <ProductReviewsLazySection

@@ -54,9 +54,9 @@ describe("navbar ink resolver", () => {
 
   it("resolves path tones for home, categories, and utility routes", () => {
     expect(resolvePathNavbarTone("/")).toBe("light");
-    expect(resolvePathNavbarTone("/category/agri-drones")).toBe("dark");
-    expect(resolvePathNavbarTone("/category/video-drones")).toBe("dark");
-    expect(resolvePathNavbarTone("/category/global-products")).toBe("dark");
+    expect(resolvePathNavbarTone("/category/agri-drones")).toBe("light");
+    expect(resolvePathNavbarTone("/category/video-drones")).toBe("light");
+    expect(resolvePathNavbarTone("/category/global-products")).toBe("light");
     expect(resolvePathNavbarTone("/products")).toBe("dark");
     expect(resolvePathNavbarTone("/product/example")).toBe("dark");
   });

@@ -298,6 +298,35 @@ function readInventoryInteger(formData: FormData, key: string, fallback = 0) {
   return parsed;
 }
 
+/** Parse `warehouse::productSlug::sku` or legacy slug-only selection keys. */
+function parseSelectedInventoryRowKey(selected: string, defaultWarehouse: string) {
+  const parts = selected.split("::").map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 3) {
+    return {
+      warehouseCode: parts[0]!,
+      productSlug: parts[1]!,
+      sku: parts[2]!
+    };
+  }
+  if (parts.length === 2) {
+    // productSlug::sku (warehouse omitted)
+    return {
+      warehouseCode: defaultWarehouse,
+      productSlug: parts[0]!,
+      sku: parts[1]!
+    };
+  }
+  if (parts.length === 1) {
+    const productSlug = parts[0]!;
+    return {
+      warehouseCode: defaultWarehouse,
+      productSlug,
+      sku: deriveProductSku(productSlug)
+    };
+  }
+  return { warehouseCode: defaultWarehouse, productSlug: "", sku: "" };
+}
+
 function readInventoryNumber(formData: FormData, key: string, fallback = 0) {
   const raw = readInventoryString(formData, key);
   if (!raw) return fallback;
@@ -311,8 +340,12 @@ function readInventoryNumber(formData: FormData, key: string, fallback = 0) {
 function normalizeLinkageStockStatus(
   status: string,
   quantity: number
-): "available" | "out_of_stock" {
-  if (status === "out_of_stock" || status === "available") return status;
+): "available" | "low_stock" | "out_of_stock" {
+  if (status === "out_of_stock" || status === "available" || status === "low_stock") {
+    if (status === "out_of_stock" && quantity > 0) return "available";
+    if (status !== "out_of_stock" && quantity <= 0) return "out_of_stock";
+    return status;
+  }
   return quantity <= 0 ? "out_of_stock" : "available";
 }
 
@@ -584,7 +617,12 @@ export async function saveInventoryQuickEditFormAction(formData: FormData) {
   const stockStatus = readInventoryStatus(formData);
   const adjustmentMode = readInventoryString(formData, "adjustment_mode")
     || (readInventoryString(formData, "adjustment_type") === "decrease" ? "decrease" : "replace");
-  const adjustmentQuantity = readInventoryInteger(formData, "adjustment_quantity");
+  // Only treat adjustment_quantity as present when the form actually sent it.
+  // Missing field must NOT default to 0 — that zeroed stock on inline/+N/archive saves.
+  const hasAdjustmentQuantity = Boolean(readInventoryString(formData, "adjustment_quantity"));
+  const adjustmentQuantity = hasAdjustmentQuantity
+    ? readInventoryInteger(formData, "adjustment_quantity")
+    : null;
   let quantity = readInventoryInteger(formData, "quantity");
   const category = readInventoryString(formData, "category");
   const price = readInventoryNumber(formData, "price");
@@ -602,7 +640,8 @@ export async function saveInventoryQuickEditFormAction(formData: FormData) {
   } else if (adjustmentMode === "decrease") {
     quantity = quantityBefore - (adjustmentQuantity ?? quantity);
   } else if (adjustmentMode === "replace") {
-    quantity = adjustmentQuantity ?? quantity;
+    // Prefer explicit adjustment_quantity when provided; otherwise use absolute quantity.
+    quantity = hasAdjustmentQuantity ? (adjustmentQuantity as number) : quantity;
   }
 
   if (quantity < 0) {
@@ -630,6 +669,8 @@ export async function saveInventoryQuickEditFormAction(formData: FormData) {
       variantId,
       stockStatus: normalizeLinkageStockStatus(persistedStatus, quantity),
       quantity,
+      reservedQuantity: readInventoryInteger(formData, "reserved_quantity"),
+      reorderThreshold: readInventoryInteger(formData, "reorder_threshold"),
       warehouseCode,
       changeSummary: note ?? `Update inventory for ${productSlug}:${sku}`
     },
@@ -834,8 +875,8 @@ export async function saveInventoryBulkUpdateFormAction(formData: FormData) {
   let updated = 0;
 
   const parsedRows = selectedRows.map((selected) => {
-    const [warehouseCode = scope.warehouseCode, productSlug = "", sku = ""] = selected.split("::");
-    return { selected, warehouseCode, productSlug, sku };
+    const parsed = parseSelectedInventoryRowKey(selected, scope.warehouseCode);
+    return { selected, ...parsed };
   }).filter((row) => row.productSlug && row.sku);
 
   const inventoryByKey = new Map<string, JsonRecord>();
@@ -946,10 +987,7 @@ export async function saveInventoryBulkRestockFormAction(formData: FormData) {
     if (!selectedRows.length) throw new Error("Select at least one inventory row.");
 
     const parsedRows = selectedRows
-      .map((selected) => {
-        const [rowWarehouse = warehouseScope.warehouseCode, productSlug = "", sku = ""] = selected.split("::");
-        return { warehouseCode: rowWarehouse, productSlug, sku };
-      })
+      .map((selected) => parseSelectedInventoryRowKey(selected, warehouseScope.warehouseCode))
       .filter((row) => row.productSlug && row.sku);
 
     const slugs = [...new Set(parsedRows.map((row) => row.productSlug))];

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
-import { getProductManagerSnapshot } from "@/services/admin";
+import { getProductManagerSnapshot, fetchProductEditorDetail } from "@/services/admin";
 import {
   buildProductCategoryMetadataFromFormData,
   buildProductDraftFromFormData,
@@ -55,6 +55,8 @@ import {
   unlinkRemovedProductMedia
 } from "@/lib/product-media-cleanup";
 import { uploadProductImagesForDraft } from "@/services/product-image-upload";
+import { resolveNextImageSrc } from "@/lib/media/next-image-src";
+import type { ProductCatalogGridRow } from "@/app/admin/products/product-catalog-grid";
 
 async function currentActorContext() {
   const context = await getCurrentAuthContext();
@@ -575,6 +577,112 @@ export async function saveProductQuickEditClientAction(
     return {
       ok: true,
       message: warning ?? FEEDBACK_MESSAGES.productUpdated
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: productActionErrorMessage(error)
+    };
+  }
+}
+
+function readEditorGalleryItems(gallery: unknown): Array<{ src: string; alt?: string }> {
+  if (!Array.isArray(gallery)) return [];
+  const items: Array<{ src: string; alt?: string }> = [];
+  const seen = new Set<string>();
+  for (const item of gallery) {
+    const src = readMediaSrc(item);
+    if (!src || seen.has(src)) continue;
+    seen.add(src);
+    const alt = item && typeof item === "object" && !Array.isArray(item)
+      ? String((item as Record<string, unknown>).alt ?? "").trim()
+      : "";
+    items.push({ src, ...(alt ? { alt } : {}) });
+  }
+  return items;
+}
+
+function mapProductEditorDetailToGridRow(
+  row: Record<string, unknown>,
+  base?: ProductCatalogGridRow
+): ProductCatalogGridRow {
+  const slug = String(row.slug ?? base?.id ?? "");
+  const primarySrc = readMediaSrc(row.image) || readMediaSrc(row.hero) || base?.thumbnailSrc || "";
+  const galleryItems = readEditorGalleryItems(row.gallery);
+  const galleryUrls = galleryItems
+    .map((item) => item.src)
+    .filter((src) => src !== primarySrc);
+  const descriptionJson =
+    row.description_json && typeof row.description_json === "object" && !Array.isArray(row.description_json)
+      ? (row.description_json as Record<string, unknown>)
+      : null;
+  const specs =
+    row.specs && typeof row.specs === "object" && !Array.isArray(row.specs)
+      ? Object.fromEntries(
+          Object.entries(row.specs as Record<string, unknown>).map(([key, value]) => [key, String(value ?? "")])
+        )
+      : {};
+
+  return {
+    id: slug || base?.id || "product",
+    title: String(row.name ?? base?.title ?? slug),
+    tagline: row.tagline != null ? String(row.tagline) : base?.tagline ?? null,
+    category: String(row.category ?? base?.category ?? "Uncategorized"),
+    status: String(row.workflow_status ?? base?.status ?? "published"),
+    thumbnailSrc: resolveNextImageSrc(primarySrc) || base?.thumbnailSrc || null,
+    price: String(row.price ?? base?.price ?? "0"),
+    compareAt: row.compare_at != null ? String(row.compare_at) : base?.compareAt ?? null,
+    badge: row.badge_text ? String(row.badge_text) : base?.badge ?? null,
+    badgeEnabled: Boolean(row.badge_text && String(row.badge_text).trim()),
+    badgeText: row.badge_text ? String(row.badge_text) : null,
+    badgeStyle: row.badge_style ? String(row.badge_style) : null,
+    galleryUrls,
+    galleryItems,
+    description: row.description != null ? String(row.description) : "",
+    descriptionJson,
+    specs,
+    onSale: Boolean(row.on_sale),
+    discountType: row.discount_type === "percent"
+      ? ("percent" as const)
+      : row.discount_type === "amount"
+        ? ("amount" as const)
+        : null,
+    discountValue: row.discount_value != null ? String(row.discount_value) : null,
+    costOfGoods: row.cost_of_goods != null ? String(row.cost_of_goods) : null,
+    showPricePerUnit: Boolean(row.show_price_per_unit),
+    chargeTax: row.charge_tax !== false,
+    taxGroup: row.tax_group ? String(row.tax_group) : "products-default",
+    taxRate: row.tax_rate != null ? String(row.tax_rate) : null,
+    taxIncluded: Boolean(row.tax_included),
+    stockQuantity: base?.stockQuantity ?? "0",
+    stockStatus: base?.stockStatus ?? "unlinked",
+    checkoutWarehouseCode: base?.checkoutWarehouseCode,
+    sourceAvailability: String(row.source_availability ?? base?.sourceAvailability ?? ""),
+    isVisible: row.is_visible !== false,
+    updatedAt: row.updated_at ? String(row.updated_at) : base?.updatedAt ?? null
+  };
+}
+
+/**
+ * Load full product editor fields (description, description_json, specs, gallery)
+ * for the quick-edit modal. Catalog list rows intentionally omit these.
+ */
+export async function fetchProductEditorDetailForQuickEditAction(
+  productSlug: string
+): Promise<{ ok: true; product: ProductCatalogGridRow } | { ok: false; message: string }> {
+  try {
+    await requirePermission("products.write");
+    const slug = productSlug.trim();
+    if (!slug) {
+      return { ok: false, message: "Product slug is required." };
+    }
+    const row = await fetchProductEditorDetail(slug);
+    if (!row) {
+      return { ok: false, message: "Product not found." };
+    }
+    return {
+      ok: true,
+      product: mapProductEditorDetailToGridRow(row as Record<string, unknown>)
     };
   } catch (error) {
     return {

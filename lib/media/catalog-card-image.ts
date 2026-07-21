@@ -1,5 +1,6 @@
 import type { MediaAsset, Product, ResponsiveMediaAsset } from "@/config/types";
 import { isCatalogCutoutAsset, resolveCatalogCutoutAsset } from "@/lib/media/catalog-cutout";
+import { isTrustedCatalogStorageSrc } from "@/lib/media/cdn-url";
 
 export type ProductCardImageSource = {
   image: Pick<MediaAsset, "src"> & {
@@ -11,10 +12,6 @@ export type ProductCardImageSource = {
   hero?: Product["hero"];
   gallery?: Product["gallery"];
 };
-
-function isSupabaseStorageSrc(src: string) {
-  return /^https?:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(src.trim());
-}
 
 function isRemoteImageSrc(src: string) {
   return src.startsWith("http://") || src.startsWith("https://");
@@ -33,7 +30,7 @@ export function resolveCatalogCardImage(asset: Pick<MediaAsset, "src" | "alt" | 
   const src = asset.src?.trim() ?? "";
   const alt = asset.alt?.trim() ?? "";
 
-  if (fallback && isSupabaseStorageSrc(fallback)) {
+  if (fallback && isTrustedCatalogStorageSrc(fallback)) {
     return { src: fallback, alt };
   }
 
@@ -48,7 +45,7 @@ function pickDelivery(
     return { useSourceImage: true, responsive: undefined };
   }
 
-  if (isRemoteImageSrc(resolvedSrc) && !isSupabaseStorageSrc(resolvedSrc)) {
+  if (isRemoteImageSrc(resolvedSrc) && !isTrustedCatalogStorageSrc(resolvedSrc)) {
     return { useSourceImage: true, responsive: undefined };
   }
 
@@ -57,7 +54,7 @@ function pickDelivery(
     return { useSourceImage: true, responsive: undefined };
   }
 
-  if (asset.responsive && isSupabaseStorageSrc(resolvedSrc)) {
+  if (asset.responsive && isTrustedCatalogStorageSrc(resolvedSrc)) {
     return { useSourceImage: false, responsive: asset.responsive };
   }
 
@@ -71,7 +68,7 @@ function pushCatalogCandidate(
 ) {
   const resolved = resolveCatalogCardImage(asset);
   if (!resolved.src || seen.has(resolved.src)) return;
-  if (isRemoteImageSrc(resolved.src) && !isSupabaseStorageSrc(resolved.src)) return;
+  if (isRemoteImageSrc(resolved.src) && !isTrustedCatalogStorageSrc(resolved.src)) return;
 
   seen.add(resolved.src);
   candidates.push({
@@ -94,7 +91,7 @@ export function buildCatalogCardImageCandidates(product: ProductCardImageSource)
   pushCatalogCandidate(candidates, seen, product.image);
 
   const fallbackSrc = product.image.responsive?.fallbackSrc?.trim() ?? "";
-  if (fallbackSrc && !seen.has(fallbackSrc) && (!isRemoteImageSrc(fallbackSrc) || isSupabaseStorageSrc(fallbackSrc))) {
+  if (fallbackSrc && !seen.has(fallbackSrc) && (!isRemoteImageSrc(fallbackSrc) || isTrustedCatalogStorageSrc(fallbackSrc))) {
     seen.add(fallbackSrc);
     candidates.push({
       src: fallbackSrc,

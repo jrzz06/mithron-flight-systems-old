@@ -18,10 +18,10 @@ describe("navbar ink registry", () => {
 
   it("defines ink for all seven category showcase paths", () => {
     expect(Object.keys(categoryPathNavbarInk)).toHaveLength(7);
-    expect(categoryPathNavbarInk["/category/agri-drones"]).toBe("dark");
-    expect(categoryPathNavbarInk["/category/video-drones"]).toBe("dark");
-    expect(categoryPathNavbarInk["/category/global-products"]).toBe("dark");
-    expect(Object.values(categoryPathNavbarInk).every((ink) => ink === "dark")).toBe(true);
+    expect(categoryPathNavbarInk["/category/agri-drones"]).toBe("light");
+    expect(categoryPathNavbarInk["/category/video-drones"]).toBe("light");
+    expect(categoryPathNavbarInk["/category/global-products"]).toBe("light");
+    expect(Object.values(categoryPathNavbarInk).every((ink) => ink === "light")).toBe(true);
   });
 
   it("resolves homepage slide ink with light fallback", () => {
@@ -30,17 +30,17 @@ describe("navbar ink registry", () => {
   });
 
   it("resolves category ink by path and cms route key", () => {
-    expect(resolveCategoryNavbarInk("/category/video-drones")).toBe("dark");
-    expect(resolveCategoryNavbarInk("/category/agri-drones")).toBe("dark");
-    expect(resolveCategoryNavbarInkByCmsRouteKey("videoDrones")).toBe("dark");
-    expect(resolveCategoryNavbarInkByCmsRouteKey("agriculture")).toBe("dark");
+    expect(resolveCategoryNavbarInk("/category/video-drones")).toBe("light");
+    expect(resolveCategoryNavbarInk("/category/agri-drones")).toBe("light");
+    expect(resolveCategoryNavbarInkByCmsRouteKey("videoDrones")).toBe("light");
+    expect(resolveCategoryNavbarInkByCmsRouteKey("agriculture")).toBe("light");
     expect(resolveCategoryNavbarInkByCmsRouteKey("unknown")).toBeNull();
   });
 
   it("uses first homepage slide ink for bootstrap on /", () => {
     expect(HOMEPAGE_BOOTSTRAP_SLIDE_ID).toBe("ag10-arrival");
     expect(getBootstrapNavbarInk("/")).toBe(homepageSlideNavbarInk[HOMEPAGE_BOOTSTRAP_SLIDE_ID]);
-    expect(getBootstrapNavbarInk("/category/survey-drones")).toBe("dark");
+    expect(getBootstrapNavbarInk("/category/survey-drones")).toBe("light");
     expect(getBootstrapNavbarInk("/products")).toBe("dark");
   });
 });

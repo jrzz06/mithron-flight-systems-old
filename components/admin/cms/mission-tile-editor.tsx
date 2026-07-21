@@ -28,11 +28,13 @@ function tilesSyncKey(tiles: HomepageMissionTileCms[]) {
 export function MissionTileEditor({
   tiles: initialTiles,
   onDirty,
-  onUpload
+  onUpload,
+  onUploadingChange
 }: {
   tiles: HomepageMissionTileCms[];
   onDirty?: () => void;
   onUpload?: (file: File) => Promise<{ src: string; alt?: string } | null>;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const tiles = initialTiles.length ? initialTiles : [emptyTile()];
 
@@ -77,6 +79,7 @@ export function MissionTileEditor({
             }
             onUpload={onUpload}
             onPreviewChange={() => onDirty?.()}
+            onUploadingChange={onUploadingChange}
           />
         </fieldset>
       ))}

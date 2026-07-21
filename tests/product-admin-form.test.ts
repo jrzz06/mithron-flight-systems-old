@@ -16,6 +16,7 @@ describe("product admin draft form", () => {
     expect(buildProductQuickEditFromFormData(formData({
       product_slug: "source-v9-flight-controller-for-agriculture-drones",
       name: "V9 Flight Controller for Agriculture Drones",
+      tagline: "Precision flight control",
       category: "Accessories",
       price: "33000",
       source_availability: "InStock",
@@ -27,6 +28,7 @@ describe("product admin draft form", () => {
       },
       fields: {
         name: "V9 Flight Controller for Agriculture Drones",
+        tagline: "Precision flight control",
         category: "Accessories",
         price: 33000,
         source_availability: "InStock"
@@ -34,6 +36,16 @@ describe("product admin draft form", () => {
       entityId: "source-v9-flight-controller-for-agriculture-drones",
       changeSummary: "Quick edit selected product"
     });
+  });
+
+  it("unsets charge_tax and show_price_per_unit when companion present fields are set", () => {
+    const result = buildProductQuickEditFromFormData(formData({
+      product_slug: "source-v9-flight-controller-for-agriculture-drones",
+      charge_tax_present: "1",
+      show_price_per_unit_present: "1"
+    }));
+    expect(result.fields.charge_tax).toBe(false);
+    expect(result.fields.show_price_per_unit).toBe(false);
   });
 
   it("does not patch description unless the description editor was rendered", () => {
@@ -103,7 +115,7 @@ describe("product admin draft form", () => {
       },
       fields: {
         name: "Agri Kisan Drone Small",
-        tagline: "Agri Kisan Drone Small catalog product",
+        tagline: "Compact field deployment platform",
         price: 120000,
         compare_at: 149000,
         badge_enabled: true,
@@ -300,12 +312,12 @@ describe("product admin draft form", () => {
     expect(gridSource).toContain("categoryOptions={categoryOptions}");
     expect(gridSource).toContain("deleteCategoryAction={deleteCategoryAction}");
     expect(dialogSource).toContain("ProductCategoryField");
-    expect(dialogSource).toContain("defaultCategory={product.category}");
+    expect(dialogSource).toContain("defaultCategory={editorProduct.category}");
     expect(dialogSource).toContain("saveProductQuickEditClientAction");
+    expect(dialogSource).toContain("fetchProductEditorDetailForQuickEditAction");
     expect(dialogSource).toContain("data-product-quick-edit");
     expect(dialogSource).toContain("description_editor_present");
-    expect(dialogSource).toContain("defaultJson={product.descriptionJson");
-    expect(dialogSource).toContain('key={product.id}');
+    expect(dialogSource).toContain("defaultJson={editorProduct.descriptionJson");
     expect(dialogSource).toContain("id=\"update-product\"");
     expect(dialogSource).toContain("name=\"product_slug\" value={product.id}");
     expect(dialogSource).toContain("type=\"hidden\" name=\"change_summary\"");
@@ -313,6 +325,7 @@ describe("product admin draft form", () => {
     expect(actionSource).toContain("buildProductQuickEditFromFormData");
     expect(actionSource).toContain("saveProductQuickEditFormAction");
     expect(actionSource).toContain("saveProductQuickEditClientAction");
+    expect(actionSource).toContain("fetchProductEditorDetailForQuickEditAction");
     expect(actionSource).toContain("products.quick_edit");
     expect(actionSource).toContain("revalidateCatalogSurfaces(quickInput.identity.slug)");
   });

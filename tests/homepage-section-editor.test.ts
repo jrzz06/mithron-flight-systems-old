@@ -257,6 +257,14 @@ describe("homepage section editor contracts", () => {
     );
     expect(testimonials).toContain("'testimonials'");
     expect(testimonials).toContain("is_visible = true");
+
+    const seedCards = readFileSync(
+      join(process.cwd(), "supabase/migrations/20260720100000_seed_homepage_testimonial_cards.sql"),
+      "utf8"
+    );
+    expect(seedCards).toContain("testimonialCards");
+    expect(seedCards).toContain("customer_order_reviews");
+    expect(seedCards).toContain("'testimonials'");
   });
 
   it("locks related articles editor to 3 slots without fake href defaults", () => {
@@ -279,6 +287,21 @@ describe("homepage section editor contracts", () => {
     );
     expect(editor).toContain("atCardLimit");
     expect(editor).toContain("maxCards");
+  });
+
+  it("accepts true/false for section visibility and preserves shelf optional labels", () => {
+    const forms = readFileSync(join(process.cwd(), "services/cms-admin-forms.ts"), "utf8");
+    const actions = readFileSync(join(process.cwd(), "app/admin/cms/actions.ts"), "utf8");
+    const editor = readFileSync(join(process.cwd(), "features/admin/cms/cms-section-editor.tsx"), "utf8");
+
+    expect(forms).toContain("parseFormBoolean");
+    expect(forms).toContain('normalized === "true"');
+    expect(actions).toContain('if (formData.has("view_all_label"))');
+    expect(actions).toContain('if (formData.has("media_note"))');
+    expect(actions).toContain("publishHomepageV1SectionCore");
+    expect(editor).toContain("article_${index}_image_src");
+    expect(editor).toContain("onUploadingChange");
+    expect(editor).toContain("imageUploading");
   });
 });
 

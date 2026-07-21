@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from rembg import new_session, remove
 
 
-MODEL_NAME = "isnet-general-use"
+MODEL_NAME = "bria-rmbg"
 STAGE_SIZE = 1024
 TARGET_MAX_EDGE = 812
 MIN_MARGIN = 72

@@ -31,6 +31,14 @@ export function ProductCreateDetailFields({
               className="h-10 w-full rounded-[10px] border-0 bg-[var(--platform-surface)] px-3 text-sm text-[var(--platform-text-primary)] outline-none placeholder:text-[var(--platform-text-muted)] focus:bg-[var(--platform-accent-soft)] focus:ring-2 focus:ring-[var(--platform-focus-ring)]"
             />
           </label>
+          <label className="grid gap-1.5 text-sm sm:col-span-2">
+            <ProductFieldLabel>Tagline</ProductFieldLabel>
+            <input
+              name="tagline"
+              placeholder="Short subtitle shown under the product name"
+              className="h-10 w-full rounded-[10px] border-0 bg-[var(--platform-surface)] px-3 text-sm text-[var(--platform-text-primary)] outline-none placeholder:text-[var(--platform-text-muted)] focus:bg-[var(--platform-accent-soft)] focus:ring-2 focus:ring-[var(--platform-focus-ring)]"
+            />
+          </label>
         </div>
         <ProductBadgeFields text="" style="default" />
         <label className="grid gap-1.5 text-sm">

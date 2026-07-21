@@ -2,10 +2,10 @@
 @import "./glass-interactive.css";
 
 @theme {
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: var(--font-outfit), var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-heading: var(--font-outfit), var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-subheading: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  --font-subheading: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --color-background: #fafafa;
   --color-foreground: #111111;
@@ -131,13 +131,32 @@
   --ds-accent: #1f6b46;
   --ds-border: rgba(17, 17, 17, 0.08);
   --ds-border-strong: rgba(17, 17, 17, 0.14);
-  --ds-t-hero: clamp(40px, 5.5vw, 56px);
-  --hero-panel-title-size: clamp(2.05rem, 5.2cqi + 0.35rem, 3.85rem);
-  --hero-panel-subtitle-size: clamp(0.9375rem, 1.05cqi + 0.35rem, 1.125rem);
-  --ds-t-section: clamp(28px, 3.2vw, 36px);
-  --ds-t-card: 20px;
+  --ds-t-hero: clamp(40px, 4.2vw, 56px);
+  /* Insta360-exact MiSans VF storefront type scale */
+  --type-brand-header: clamp(40px, 4.2vw, 56px);
+  --type-brand-header-weight: 700;
+  --type-featured-title: clamp(40px, 3.2vw, 56px);
+  --type-featured-title-weight: 700;
+  --type-tagline: clamp(16px, 1.2vw, 18px);
+  --type-tagline-weight: 400;
+  --type-cta: 15px;
+  --type-cta-weight: 600;
+  --type-product-title: clamp(18px, 1.2vw, 22px);
+  --type-product-title-weight: 600;
+  --type-product-kicker: 13px;
+  --type-product-kicker-weight: 400;
+  --type-featured-eyebrow: 14px;
+  --type-featured-eyebrow-weight: 600;
+  --type-badge: 12px;
+  --type-badge-weight: 600;
+  --type-price-size: clamp(18px, 1.2vw, 22px);
+  --type-price-weight: 700;
+  --hero-panel-title-size: var(--type-brand-header);
+  --hero-panel-subtitle-size: var(--type-tagline);
+  --ds-t-section: clamp(32px, 2.8vw, 40px);
+  --ds-t-card: var(--type-product-title);
   --ds-t-body: 16px;
-  --ds-t-label: 12px;
+  --ds-t-label: var(--type-badge);
   --ds-s1: 8px;
   --ds-s2: 12px;
   --ds-s3: 16px;
@@ -190,8 +209,10 @@
   --ds-footer-bg: #0c0d10;
   --ds-skeleton: #f0f2f5;
 
-  --font-system: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: var(--font-outfit), var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* MiSans VF only — system faces are last-resort metrics fallbacks, never preferred */
+  --font-misans: "MiSans VF";
+  --font-system: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   --font-subheading: var(--font-system);
   --font-body: var(--font-system);
   --type-ui: var(--font-body);
@@ -204,8 +225,8 @@
   --type-body-muted: var(--ds-ink-2);
   --type-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
-  /* Global Level Typography Tokens */
-  --tracking-tighter: -0.04em;
+  /* Global Level Typography Tokens — Insta360 tracking (never crush glyphs) */
+  --tracking-tighter: -0.02em;
   --tracking-tight: -0.02em;
   --tracking-tight-sm: -0.01em;
   --tracking-normal: 0;
@@ -213,33 +234,33 @@
   --tracking-wider: 0.05em;
   --tracking-widest: 0.1em;
 
-  --font-features-display: "kern", "liga", "calt";
-  --font-features-ui: "cv11", "ss01", "kern", "liga", "calt";
+  --font-features-display: "kern", "liga";
+  --font-features-ui: "kern", "liga";
   --font-features-numeric: "tnum", "lnum", "kern";
 
-  --type-hero: 3rem;
-  --type-campaign-headline: clamp(40px, 8vw, 88px);
-  --type-campaign-copy: 22px;
+  --type-hero: clamp(40px, 4.2vw, 56px);
+  --type-campaign-headline: clamp(40px, 4.2vw, 56px);
+  --type-campaign-copy: clamp(16px, 1.2vw, 18px);
   --type-campaign-overline: 12px;
-  --type-page: 2.35rem;
-  --type-section: 1.9rem;
-  --type-card: 1.08rem;
-  --type-body: 1rem;
-  --type-small: 0.875rem;
+  --type-page: clamp(32px, 2.8vw, 40px);
+  --type-section: clamp(32px, 2.8vw, 40px);
+  --type-card: var(--type-product-title);
+  --type-body: 16px;
+  --type-small: 14px;
   --store-topbar-height: 34px;
   --store-nav-bar-height: 3.5rem;
   --store-nav-bar-height-md: 58px;
   --store-nav-offset: var(--store-nav-bar-height);
-  --leading-hero: 0.96;
-  --leading-campaign: 0.88;
-  --leading-display: 1;
+  --leading-hero: 1.05;
+  --leading-campaign: 1.05;
+  --leading-display: 1.05;
   --leading-heading: 1.08;
-  --leading-body: 1.6;
-  --tracking-display: -0.025em;
-  --tracking-section: -0.015em;
-  --tracking-ui: 0.005em;
-  --tracking-label: 0.08em;
-  --tracking-overline: 0.35em;
+  --leading-body: 1.5;
+  --tracking-display: -0.02em;
+  --tracking-section: -0.02em;
+  --tracking-ui: 0;
+  --tracking-label: 0.01em;
+  --tracking-overline: 0.08em;
   --tracking-campaign: -0.02em;
   --bg-primary: var(--ds-bg);
   --bg-secondary: var(--ds-bg-2);
@@ -368,23 +389,23 @@
 @media (min-width: 768px) {
   :root {
     --store-nav-offset: calc(var(--store-topbar-height) + var(--store-nav-bar-height-md));
-    --type-hero: 4.25rem;
-    --type-campaign-headline: clamp(56px, 6vw, 96px);
-    --type-campaign-copy: 22px;
-    --type-page: 3rem;
-    --type-section: 2.35rem;
-    --type-card: 1.15rem;
-    --type-body: 1.025rem;
+    --type-hero: clamp(40px, 4.2vw, 56px);
+    --type-campaign-headline: clamp(40px, 4.2vw, 56px);
+    --type-campaign-copy: clamp(16px, 1.2vw, 18px);
+    --type-page: clamp(32px, 2.8vw, 40px);
+    --type-section: clamp(32px, 2.8vw, 40px);
+    --type-card: var(--type-product-title);
+    --type-body: 16px;
   }
 }
 
 @media (min-width: 1280px) {
   :root {
-    --type-hero: 5.15rem;
-    --type-campaign-headline: clamp(72px, 6vw, 96px);
-    --type-page: 3.55rem;
-    --type-section: 2.75rem;
-    --type-body: 1.0625rem;
+    --type-hero: clamp(40px, 4.2vw, 56px);
+    --type-campaign-headline: clamp(40px, 4.2vw, 56px);
+    --type-page: clamp(32px, 2.8vw, 40px);
+    --type-section: clamp(32px, 2.8vw, 40px);
+    --type-body: 16px;
   }
 }
 
@@ -505,18 +526,37 @@ body {
   margin: 0;
   background: var(--surface-page);
   color: var(--ds-ink);
-  font-family: var(--type-ui);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   font-size: var(--type-body);
+  font-weight: 400;
   line-height: var(--leading-body);
   letter-spacing: 0;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Native OS rasterization — keeps MiSans terminals crisp (no faux smoothing) */
+  text-rendering: auto;
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
   font-kerning: normal;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-  font-optical-sizing: auto;
+  font-synthesis: none;
+  font-feature-settings: "kern" 1, "liga" 1;
+  font-optical-sizing: none;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* Hold paint until MiSans VF is ready — prevents Segoe/Arial glyph flash */
+html.fonts-pending body {
+  opacity: 0;
+}
+
+html.fonts-ready body {
+  opacity: 1;
+  transition: opacity 0.12s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.fonts-ready body {
+    transition: none;
+  }
 }
 
 code,
@@ -526,7 +566,7 @@ samp {
   font-family: var(--type-mono);
 }
 
-/* Mithron type system Ã¢â‚¬â€ Outfit display + Inter UI */
+/* Mithron type system — Insta360-exact MiSans VF metrics */
 h1,
 h2,
 h3,
@@ -534,14 +574,13 @@ h4,
 h5,
 h6,
 .tech-headline {
-  font-family: var(--type-display);
-  font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: var(--tracking-tight);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-display);
   text-wrap: balance;
-  font-feature-settings: var(--font-features-display);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
+  font-synthesis: none;
 }
 
 h1,
@@ -549,11 +588,10 @@ h1,
 .type-hero,
 .type-page,
 .type-section,
-.hero-dji-title,
 .catalog-intro__title {
-  font-weight: 600;
-  letter-spacing: var(--tracking-tighter);
-  line-height: 1.04;
+  font-weight: var(--type-brand-header-weight);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-heading);
 }
 
 .tech-subheading,
@@ -561,8 +599,8 @@ h1,
 .type-campaign-overline,
 .catalog-intro__eyebrow {
   font-family: var(--type-ui);
-  font-weight: 600;
-  font-size: 0.75rem;
+  font-weight: var(--type-badge-weight);
+  font-size: var(--type-badge);
   line-height: 1.25;
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
@@ -579,16 +617,22 @@ dd,
 .type-nav {
   font-family: var(--type-ui);
   font-weight: 400;
-  line-height: 1.6;
-  letter-spacing: var(--tracking-tight-sm);
+  line-height: var(--leading-body);
+  letter-spacing: 0;
   font-feature-settings: var(--font-features-ui);
-  -webkit-font-smoothing: antialiased;
 }
 
 .type-price,
 .premium-product-card__price,
 .home-shelf-price,
-.home-shelf-lead-price,
+.home-shelf-lead-price {
+  font-size: var(--type-price-size);
+  font-weight: var(--type-price-weight);
+  font-feature-settings: var(--font-features-numeric);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
 .tnum {
   font-feature-settings: var(--font-features-numeric);
   font-variant-numeric: tabular-nums;
@@ -602,23 +646,23 @@ dd,
 .type-meta,
 .catalog-hero__eyebrow,
 .premium-product-card__category {
-  font-weight: 600;
+  font-weight: var(--type-badge-weight);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  font-size: 0.72rem;
+  font-size: var(--type-badge);
   color: var(--type-label-color);
 }
 
 .type-card-title {
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: var(--type-product-title-weight);
+  letter-spacing: -0.01em;
   line-height: 1.2;
 }
 
 .type-subtitle {
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 1.5;
+  font-weight: var(--type-tagline-weight);
+  letter-spacing: 0;
+  line-height: var(--leading-body);
   color: var(--type-body-muted);
 }
 
@@ -629,15 +673,15 @@ dd {
 }
 
 .font-black {
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .font-extrabold {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .font-bold {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .font-semibold {
@@ -649,10 +693,12 @@ dd {
 }
 
 .type-hero {
-  font-family: var(--type-display);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   font-size: var(--type-hero);
+  font-weight: 700;
   line-height: var(--leading-hero);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-display);
+  font-synthesis: none;
 }
 
 .type-campaign-overline {
@@ -662,50 +708,58 @@ dd {
 }
 
 .type-campaign-headline {
-  font-family: var(--type-display);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   font-size: var(--type-campaign-headline);
-  font-weight: 600;
+  font-weight: 700;
   line-height: var(--leading-campaign);
-  letter-spacing: -0.025em;
+  letter-spacing: var(--tracking-display);
   text-wrap: balance;
   font-feature-settings: "kern" 1, "liga" 1;
+  font-synthesis: none;
 }
 
 .type-campaign-copy {
   font-family: var(--type-ui);
   font-size: var(--type-campaign-copy);
   font-weight: 400;
-  line-height: 1.42;
+  line-height: var(--leading-body);
   letter-spacing: 0;
   text-wrap: balance;
 }
 
 .type-campaign-cta {
   font-family: var(--type-ui);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--type-cta);
+  font-weight: var(--type-cta-weight);
   line-height: 1;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 .type-page {
-  font-family: var(--type-display);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   font-size: var(--type-page);
-  line-height: 1.08;
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-section);
+  font-synthesis: none;
 }
 
 .type-section {
-  font-family: var(--type-display);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   font-size: var(--type-section);
-  line-height: 1.08;
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-section);
+  font-synthesis: none;
 }
 
 .type-card-title {
-  font-family: var(--type-display);
-  font-size: var(--type-card);
-  font-weight: 600;
-  line-height: 1.22;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-product-title);
+  font-weight: var(--type-product-title-weight);
+  line-height: 1.2;
   letter-spacing: -0.01em;
+  font-synthesis: none;
 }
 
 .type-body {
@@ -718,8 +772,8 @@ dd {
 
 .type-subtitle {
   font-family: var(--type-ui);
-  font-size: clamp(1.0625rem, 1.45vw, 1.38rem);
-  font-weight: 400;
+  font-size: var(--type-tagline);
+  font-weight: var(--type-tagline-weight);
   line-height: 1.5;
   letter-spacing: 0;
 }
@@ -1836,10 +1890,12 @@ html:not([data-nav-ink-hydrated]) .storefront-root .TOP_NAVBAR.adaptive-navbar .
 }
 
 .type-button {
-  font-family: var(--type-ui);
-  font-weight: 500;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-cta);
+  font-weight: var(--type-cta-weight);
   line-height: 1;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+  font-synthesis: none;
 }
 
 .type-price,
@@ -2317,31 +2373,32 @@ canvas {
 }
 
 .hero-dji-title {
-  font-family: var(--type-display);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   font-weight: 700;
   font-size: var(--hero-panel-title-size);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-display);
   width: max-content;
   max-width: 100%;
   text-wrap: nowrap;
   white-space: nowrap;
   overflow: visible;
   overflow-wrap: normal;
-  -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
-  font-feature-settings: "ss01" on, "kern" on;
+  font-feature-settings: "kern" 1, "liga" 1;
+  font-synthesis: none;
   text-transform: none;
 }
 
 .hero-dji-subtitle {
   margin-top: clamp(16px, 1.8cqi, 22px);
   max-width: min(100%, 42ch);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
   font-size: var(--hero-panel-subtitle-size);
-  font-weight: 500;
-  line-height: 1.5;
-  letter-spacing: -0.012em;
-  -webkit-font-smoothing: antialiased;
+  font-weight: var(--type-tagline-weight);
+  line-height: var(--leading-body);
+  letter-spacing: 0;
+  font-synthesis: none;
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -2358,9 +2415,9 @@ canvas {
   min-width: 0;
   padding-block: 0.65rem;
   padding-inline: clamp(20px, 4.2cqi, 28px);
-  font-size: clamp(0.8125rem, 0.85cqi + 0.15rem, 0.875rem);
-  font-weight: 600;
-  letter-spacing: 0.006em;
+  font-size: var(--type-cta);
+  font-weight: var(--type-cta-weight);
+  letter-spacing: 0;
   border-radius: var(--ds-r-pill);
   box-shadow: none;
 }
@@ -2475,7 +2532,7 @@ canvas {
 }
 
 .hero-campaign-headline {
-  font-weight: 650;
+  font-weight: 700;
   line-height: 0.88;
   letter-spacing: -0.06em;
 }
@@ -2531,9 +2588,9 @@ canvas {
     width: max-content;
     max-width: 100%;
     font-size: var(--hero-panel-title-size);
-    font-weight: 700;
-    line-height: 0.98;
-    letter-spacing: -0.045em;
+    font-weight: var(--type-brand-header-weight);
+    line-height: var(--leading-hero);
+    letter-spacing: var(--tracking-display);
   }
 }
 
@@ -2601,10 +2658,10 @@ canvas {
   .hero-dji-title {
     max-width: 100%;
     width: 100%;
-    font-size: clamp(1.65rem, 7.2cqi, 2.55rem);
-    font-weight: 700;
-    line-height: 1.04;
-    letter-spacing: -0.04em;
+    font-size: var(--hero-panel-title-size);
+    font-weight: var(--type-brand-header-weight);
+    line-height: var(--leading-hero);
+    letter-spacing: var(--tracking-display);
     white-space: normal;
     text-wrap: balance;
     overflow-wrap: anywhere;
@@ -2666,10 +2723,10 @@ canvas {
   .hero-dji-subtitle {
     max-width: 100%;
     margin-top: 14px;
-    font-size: clamp(0.9rem, 2.4cqi, 1.05rem);
-    font-weight: 500;
-    line-height: 1.48;
-    letter-spacing: -0.01em;
+    font-size: var(--hero-panel-subtitle-size);
+    font-weight: var(--type-tagline-weight);
+    line-height: var(--leading-body);
+    letter-spacing: 0;
   }
 
   .hero-dji-cta-wrap {
@@ -2687,7 +2744,8 @@ canvas {
     white-space: normal;
     text-wrap: balance;
     overflow-wrap: anywhere;
-    line-height: 1.1;
+    line-height: var(--leading-hero);
+    letter-spacing: var(--tracking-display);
     width: 100%;
     max-width: 100%;
   }
@@ -3008,6 +3066,26 @@ canvas {
     --shelf-view-all-aspect-ratio: 4 / 3;
     --shelf-cards-per-viewport: 1.35;
     --shelf-card-width: clamp(188px, 52vw, 232px);
+    /* Insta360 MiSans VF storefront type scale — mobile (~12–15% down) */
+    --type-brand-header: clamp(34px, 8vw, 44px);
+    --type-featured-title: clamp(34px, 7vw, 44px);
+    --type-tagline: 15px;
+    --type-cta: 14px;
+    --type-product-title: clamp(16px, 4.2vw, 18px);
+    --type-product-kicker: 12px;
+    --type-featured-eyebrow: 13px;
+    --type-badge: 11px;
+    --type-price-size: clamp(16px, 4.2vw, 18px);
+    --type-section: clamp(28px, 6vw, 34px);
+    --type-page: clamp(28px, 6vw, 34px);
+    --type-body: 15px;
+    --ds-t-section: var(--type-section);
+    --ds-t-body: var(--type-body);
+    --hero-panel-title-size: var(--type-brand-header);
+    --hero-panel-subtitle-size: var(--type-tagline);
+    --ds-t-card: var(--type-product-title);
+    --ds-t-label: var(--type-badge);
+    --type-card: var(--type-product-title);
     --shelf-card-min-width: 188px;
     --shelf-card-max-width: 232px;
     --shelf-card-min-height: 0;
@@ -3358,7 +3436,7 @@ canvas {
   }
 
   .catalog-page-shell .premium-product-card__category {
-    font-size: 0.625rem;
+    font-size: var(--type-badge);
     letter-spacing: 0.1em;
   }
 
@@ -3366,7 +3444,8 @@ canvas {
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
-    font-size: 0.8125rem;
+    font-size: var(--type-product-title);
+    font-weight: var(--type-product-title-weight);
     line-height: 1.3;
     min-height: 2.6em;
     -webkit-line-clamp: 2;
@@ -3402,10 +3481,10 @@ canvas {
     flex-shrink: 0;
     width: fit-content;
     align-self: flex-start;
-    font-size: clamp(0.875rem, 4.2vw, 1.0625rem);
+    font-size: var(--type-price-size);
     white-space: nowrap;
     text-align: left;
-    font-weight: 700;
+    font-weight: var(--type-price-weight);
     letter-spacing: -0.025em;
     line-height: 1.1;
     color: var(--ds-ink);
@@ -3424,7 +3503,8 @@ canvas {
     flex-shrink: 0;
     width: fit-content;
     align-self: flex-end;
-    font-size: 0.8125rem;
+    font-size: var(--type-price-size);
+    font-weight: var(--type-price-weight);
     white-space: nowrap;
     text-align: right;
   }
@@ -3440,7 +3520,8 @@ canvas {
     min-height: var(--mobile-touch-min, 44px);
     min-width: 0;
     padding-inline: 1rem;
-    font-size: 0.75rem;
+    font-size: var(--type-cta);
+    font-weight: var(--type-cta-weight);
   }
 
   .catalog-page-shell .premium-product-card__cta-text,
@@ -3751,8 +3832,8 @@ canvas {
 .catalog-page-shell .premium-product-card__category {
   margin: 0;
   color: var(--ds-accent);
-  font-size: var(--ds-t-label);
-  font-weight: 600;
+  font-size: var(--type-badge);
+  font-weight: var(--type-badge-weight);
   letter-spacing: 0.1em;
   line-height: 1.2;
   text-transform: uppercase;
@@ -3764,8 +3845,8 @@ canvas {
   min-height: var(--product-card-title-min-height);
   overflow: hidden;
   color: var(--ds-ink);
-  font-size: var(--ds-t-card);
-  font-weight: 600;
+  font-size: var(--type-product-title);
+  font-weight: var(--type-product-title-weight);
   letter-spacing: -0.025em;
   line-height: 1.15;
   text-transform: none;
@@ -3797,8 +3878,8 @@ canvas {
   align-self: flex-end;
   min-width: 0;
   color: var(--ds-ink);
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: var(--type-price-size);
+  font-weight: var(--type-price-weight);
   line-height: 1.2;
   text-align: right;
   white-space: nowrap;
@@ -3823,8 +3904,8 @@ canvas {
   width: fit-content;
   align-self: flex-start;
   text-align: left;
-  font-size: clamp(1.125rem, 1.2cqi, 1.3125rem);
-  font-weight: 700;
+  font-size: var(--type-price-size);
+  font-weight: var(--type-price-weight);
   letter-spacing: -0.025em;
   line-height: 1.1;
   color: var(--ds-ink);
@@ -3845,8 +3926,8 @@ canvas {
   background: #d8f3e6;
   color: var(--ds-ink);
   padding: 0 var(--ds-s3);
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--type-cta);
+  font-weight: var(--type-cta-weight);
   letter-spacing: 0;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
@@ -4355,7 +4436,8 @@ canvas {
   .catalog-page-shell .premium-product-card__category {
     display: block;
     margin-bottom: 2px;
-    font-size: 0.5625rem;
+    font-size: var(--type-badge);
+    font-weight: var(--type-badge-weight);
   }
 
   .catalog-page-shell .premium-product-card__title {
@@ -4365,9 +4447,9 @@ canvas {
     -webkit-line-clamp: 2;
     line-clamp: 2;
     min-height: 0;
-    font-size: 12px;
+    font-size: var(--type-product-title);
     line-height: 1.25;
-    font-weight: 700;
+    font-weight: var(--type-product-title-weight);
   }
 
   .catalog-page-shell .premium-product-card__description {
@@ -4433,12 +4515,12 @@ canvas {
   }
 
   .catalog-page-shell .premium-product-card__price {
-    font-size: 12px;
+    font-size: var(--type-price-size);
     flex-shrink: 0;
     width: fit-content;
     align-self: flex-end;
     text-align: right;
-    font-weight: 500;
+    font-weight: var(--type-price-weight);
     white-space: nowrap;
   }
 
@@ -4453,8 +4535,8 @@ canvas {
   .catalog-page-shell .premium-product-card-shell[data-cta-layout="buy-row"] .premium-product-card__price {
     align-self: flex-start;
     text-align: left;
-    font-size: clamp(0.875rem, 4.2vw, 1.0625rem);
-    font-weight: 700;
+    font-size: var(--type-price-size);
+    font-weight: var(--type-price-weight);
     letter-spacing: -0.025em;
     line-height: 1.1;
     color: var(--ds-ink);
@@ -4733,8 +4815,8 @@ canvas {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-size: var(--type-badge);
+  font-weight: var(--type-badge-weight);
   letter-spacing: 0.04em;
   line-height: 1.1;
   text-transform: none;
@@ -4747,7 +4829,8 @@ canvas {
 .product-badge {
   min-height: 22px;
   padding: 0.2rem 0.45rem;
-  font-size: 0.625rem;
+  font-size: var(--type-badge);
+  font-weight: var(--type-badge-weight);
 }
 
 .product-badge--default,
@@ -4821,8 +4904,8 @@ canvas {
   margin: 0;
   overflow: hidden;
   color: var(--home-shelf-ink);
-  font-size: clamp(1.02rem, 1vw, 1.14rem);
-  font-weight: 600;
+  font-size: var(--type-product-title);
+  font-weight: var(--type-product-title-weight);
   letter-spacing: 0;
   line-height: 1.14;
   -webkit-box-orient: vertical;
@@ -4853,8 +4936,8 @@ canvas {
 .home-shelf-price {
   margin: 0;
   color: var(--home-shelf-ink);
-  font-size: clamp(0.98rem, 1vw, 1.08rem);
-  font-weight: 600;
+  font-size: var(--type-price-size);
+  font-weight: var(--type-price-weight);
   letter-spacing: 0;
   white-space: nowrap;
 }
@@ -4940,7 +5023,7 @@ canvas {
   color: #334155;
   font-family: var(--type-ui);
   font-size: 0.92rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0;
   white-space: nowrap;
 }
@@ -5194,8 +5277,8 @@ canvas {
   margin: 0;
   color: #0f172a;
   font-family: var(--type-display);
-  font-size: clamp(1.75rem, 2.6vw, 2.65rem);
-  font-weight: 600;
+  font-size: var(--type-brand-header);
+  font-weight: var(--type-brand-header-weight);
   letter-spacing: 0;
   line-height: 0.98;
 }
@@ -5206,7 +5289,8 @@ canvas {
   overflow: hidden;
   color: rgba(71, 85, 105, 0.92);
   font-family: var(--type-ui);
-  font-size: clamp(0.94rem, 1vw, 1.04rem);
+  font-size: var(--type-tagline);
+  font-weight: var(--type-tagline-weight);
   letter-spacing: 0;
   line-height: 1.46;
   -webkit-box-orient: vertical;
@@ -5232,8 +5316,8 @@ canvas {
 .home-shelf-lead-price {
   margin: 0;
   color: #0f172a;
-  font-size: clamp(1.08rem, 1.2vw, 1.22rem);
-  font-weight: 600;
+  font-size: var(--type-price-size);
+  font-weight: var(--type-price-weight);
   white-space: nowrap;
 }
 

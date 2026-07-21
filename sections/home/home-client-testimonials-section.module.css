@@ -82,12 +82,13 @@
 .title {
   margin: 0;
   color: var(--testimonial-heading);
-  font-family: var(--type-display, inherit);
-  font-size: clamp(1.95rem, 2.8vw, 2.65rem);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-section);
   font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.04em;
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-section);
   text-wrap: balance;
+  font-synthesis: none;
 }
 
 .titleAccent {
@@ -98,11 +99,13 @@
   margin: 14px 0 0;
   max-width: 42ch;
   color: var(--testimonial-meta);
-  font-size: 1rem;
-  line-height: 1.55;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  font-weight: 400;
+  letter-spacing: 0;
   text-wrap: pretty;
+  font-synthesis: none;
 }
 
 .carouselRegion {

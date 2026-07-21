@@ -42,6 +42,7 @@ import { canonicalizeSpecRecord, formatAvailability, isSpecLikeBlob, parseInline
 import { customerFacingAvailability } from "@/services/inventory-csv";
 import { availabilityLabelFromQuantity, getInventoryQuantitiesBySlug } from "@/services/inventory";
 import type { OrderCatalogProduct } from "@/services/orders";
+import { isTrustedCatalogStorageSrc } from "@/lib/media/cdn-url";
 import { resolveStorefrontSrc } from "@/lib/media/resolve-storefront-src";
 import { buildProductResponsiveAsset } from "@/lib/media/product-responsive";
 import { resolveStorefrontBadgeText, resolveStorefrontProductBadge } from "@/lib/product-badge";
@@ -481,10 +482,6 @@ function normalizeProductImageSrc(src: string) {
   return resolveStorefrontSrc(src);
 }
 
-function isSupabaseStorageSrc(src: string) {
-  return /^https?:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(src);
-}
-
 function isExternalHttpsSrc(src: string) {
   return /^https:\/\//i.test(src.trim());
 }
@@ -826,7 +823,7 @@ function resolveProductImage(
   linkedMedia?: MediaAsset
 ) {
   const rowImage = selectPrimaryProductImage(row, name);
-  const supabaseRowImage = rowImage && isSupabaseStorageSrc(rowImage.src) ? rowImage : null;
+  const supabaseRowImage = rowImage && isTrustedCatalogStorageSrc(rowImage.src) ? rowImage : null;
 
   if (linkedMedia) {
     if (!linkedMedia.src.trim() && supabaseRowImage) return supabaseRowImage;

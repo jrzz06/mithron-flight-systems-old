@@ -57,4 +57,20 @@ describe("cache-redis fail-soft", () => {
     expect(value).toEqual({ products: [] });
     expect(loads).toBe(1);
   });
+
+  it("withSingleFlight respects loaderTimeoutMs override", async () => {
+    const { withSingleFlight } = await import("@/lib/cache-redis");
+    const { ActionTimeoutError } = await import("@/lib/fetch-with-timeout");
+    await expect(
+      withSingleFlight(
+        "cms:homepage:timeout-test",
+        60,
+        async () => {
+          await new Promise((resolve) => setTimeout(resolve, 80));
+          return { products: [] };
+        },
+        { loaderTimeoutMs: 20 }
+      )
+    ).rejects.toBeInstanceOf(ActionTimeoutError);
+  });
 });

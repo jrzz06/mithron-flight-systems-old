@@ -64,6 +64,7 @@ type ProductQuickEditFormInput = {
   };
   fields: {
     name?: string;
+    tagline?: string;
     category?: string;
     price?: number;
     compare_at?: number | null;
@@ -542,11 +543,11 @@ function readProductCommerceFields(formData: FormData): ProductCommerceFields {
     fields.cost_of_goods = costOfGoods;
   }
 
-  if (formData.has("show_price_per_unit")) {
+  if (formData.has("show_price_per_unit_present") || formData.has("show_price_per_unit")) {
     fields.show_price_per_unit = readOptionalBoolean(formData, "show_price_per_unit");
   }
 
-  if (formData.has("charge_tax")) {
+  if (formData.has("charge_tax_present") || formData.has("charge_tax")) {
     fields.charge_tax = readOptionalBoolean(formData, "charge_tax");
     if (fields.charge_tax) {
       const taxGroup = readOptionalString(formData, "tax_group");
@@ -597,6 +598,7 @@ export function buildProductQuickEditFromFormData(formData: FormData): ProductQu
   const slug = assertSlugSafe(readRequiredString(formData, "product_slug", "Product quick edit"), "Product quick edit");
   const fields: ProductQuickEditFormInput["fields"] = {};
   const name = readOptionalString(formData, "name");
+  const tagline = readOptionalString(formData, "tagline");
   const category = readOptionalString(formData, "category");
   const sourceAvailability = readOptionalString(formData, "source_availability");
   const visibility = readOptionalString(formData, "visibility");
@@ -604,6 +606,7 @@ export function buildProductQuickEditFromFormData(formData: FormData): ProductQu
   const commerceFields = readProductCommerceFields(formData);
 
   if (name) fields.name = name;
+  if (tagline !== undefined) fields.tagline = tagline;
   if (category) fields.category = category;
   Object.assign(fields, commerceFields);
   if (sourceAvailability) fields.source_availability = sourceAvailability;
@@ -674,7 +677,7 @@ export function buildProductCategoryMetadataFromFormData(formData: FormData): Pr
 export function buildProductDraftFromFormData(formData: FormData): ProductDraftFormInput {
   const name = readRequiredString(formData, "name", "Product");
   const slug = assertSlugSafe(readOptionalString(formData, "slug") ?? slugFromProductName(name), "Product");
-  const tagline = `${name} catalog product`;
+  const tagline = readOptionalString(formData, "tagline") ?? `${name} catalog product`;
   const category = readProductCategory(formData);
   const image = readMediaObject(formData, "image", "Product", name, { priority: true });
   const hero = readOptionalMediaObject(formData, "hero", "Product", name, { priority: true }) ?? image;
@@ -796,7 +799,14 @@ export function buildProductMediaLinkFromFormData(formData: FormData): ProductMe
 export function buildProductVariantsWorkflowFromFormData(formData: FormData): ProductVariantsWorkflowInput {
   const slug = readRequiredString(formData, "product_slug", "Product variants");
   const structuredVariants = readStructuredVariantRows(formData);
-  const variants = structuredVariants.length ? structuredVariants : readVariantArray(formData, "variants", "Product variants");
+  const jsonVariants = readVariantArray(formData, "variants", "Product variants");
+  const variants = structuredVariants.length ? structuredVariants : jsonVariants;
+  const editorPresent = readOptionalString(formData, "variants_editor_present") === "1";
+  const allowClear = readOptionalBoolean(formData, "clear_variants");
+  // Refuse accidental wipe when the structured editor submitted only blank rows.
+  if (editorPresent && variants.length === 0 && !allowClear) {
+    throw new Error("Product variants save would wipe all variants. Add at least one variant or check Clear variants.");
+  }
   const changeSummary = readOptionalString(formData, "change_summary");
 
   return {

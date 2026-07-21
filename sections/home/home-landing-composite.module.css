@@ -234,7 +234,7 @@
   color: var(--home-muted);
   font-family: var(--type-technical);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
 }
@@ -1951,7 +1951,7 @@
   color: #ffffff;
   font-family: var(--type-mission-heading);
   font-size: clamp(1rem, 1.35vw, 1.32rem);
-  font-weight: 650;
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
@@ -2518,7 +2518,7 @@
   color: rgba(255, 255, 255, 0.52);
   font-family: var(--type-technical);
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
 }

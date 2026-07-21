@@ -41,6 +41,14 @@ function readRequiredString(formData: FormData, key: string, label: string) {
   return value.trim();
 }
 
+/** Accepts checkbox "on", toggle "true"/"false", and 1/0. */
+export function parseFormBoolean(value: FormDataEntryValue | null): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value !== "string") return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "true" || normalized === "1" || normalized === "on" || normalized === "yes";
+}
+
 function readRichTextHtml(formData: FormData, htmlKey: string, label: string, required = false) {
   try {
     return readRichTextHtmlField(formData, htmlKey, { required, label });
@@ -211,7 +219,7 @@ export function buildSectionVisibilityDraftFromFormData(formData: FormData): Sec
       ends_at: readOptionalTimestamp(formData, "ends_at", "Section visibility") ?? null
     },
     entityId: `${sectionKey}:${routePath}`,
-    isVisible: formData.get("is_visible") === "on",
+    isVisible: parseFormBoolean(formData.get("is_visible")),
     changeSummary: changeSummary ?? `Draft section visibility ${sectionKey} at ${routePath}`
   };
 }

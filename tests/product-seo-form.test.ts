@@ -116,6 +116,9 @@ describe("product seo workflow", () => {
 
     expect(pageSource).toContain("saveProductSeoFormAction");
     expect(pageSource).toContain("data-product-seo-table=\"mithron_products\"");
+    expect(pageSource).toContain("activeProduct?.seo_title");
+    expect(pageSource).toContain("activeProduct?.seo_description");
+    expect(pageSource).toContain("activeOgImageSrc");
     expect(actionSource).toContain("buildProductSeoDraftFromFormData");
     expect(actionSource).toContain("saveProductSeoFormAction");
     expect(pageSourceFront).toContain("buildProductMetadata");

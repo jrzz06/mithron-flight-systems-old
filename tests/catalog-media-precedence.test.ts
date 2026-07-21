@@ -11,7 +11,7 @@ function source(path: string) {
 describe("catalog media precedence", () => {
   it("prefers Supabase media and does not fall back to external https URLs", () => {
     const catalog = source("services/catalog.ts");
-    expect(catalog).toContain("isSupabaseStorageSrc");
+    expect(catalog).toContain("isTrustedCatalogStorageSrc");
     expect(catalog).not.toContain("externalRowImage");
     expect(catalog).not.toContain("wixstatic");
     expect(catalog).toContain("inline JSON image fallback");

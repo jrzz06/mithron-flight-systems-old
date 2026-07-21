@@ -34,6 +34,7 @@ export function TestimonialsSectionEditor({
   onDirty,
   onSaved,
   onSavingChange,
+  onUploadingChange,
   uploadImage
 }: {
   header: HomepageCmsContent["testimonials"];
@@ -44,6 +45,7 @@ export function TestimonialsSectionEditor({
   onDirty: () => void;
   onSaved: () => void;
   onSavingChange?: (pending: boolean) => void;
+  onUploadingChange?: (uploading: boolean) => void;
   uploadImage: (file: File) => Promise<{ src: string; alt?: string } | null>;
 }) {
   const [cards, setCards] = useState<CmsTestimonialCard[]>(() =>
@@ -277,6 +279,7 @@ export function TestimonialsSectionEditor({
                 spec={CMS_IMAGE_SPECS.testimonialAvatar}
                 onUpload={uploadImage}
                 onPreviewChange={(src) => updateCard(index, { avatarSrc: src })}
+                onUploadingChange={onUploadingChange}
               />
             </fieldset>
           );

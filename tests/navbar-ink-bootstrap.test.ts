@@ -9,7 +9,7 @@ import { NAVBAR_INK_STYLE_VARS } from "@/lib/navbar-ink-vars";
 describe("navbar ink bootstrap", () => {
   it("resolves bootstrap tone from pathname", () => {
     expect(resolveBootstrapNavbarTone("/")).toBe("light");
-    expect(resolveBootstrapNavbarTone("/category/agri-drones")).toBe("dark");
+    expect(resolveBootstrapNavbarTone("/category/agri-drones")).toBe("light");
     expect(resolveBootstrapNavbarTone("/agriculture")).toBe("light");
     expect(resolveBootstrapNavbarTone("/products")).toBe("dark");
   });

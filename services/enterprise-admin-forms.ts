@@ -4,7 +4,7 @@ import type { ManualOrderPaymentMethod, ManualOrderWorkflowInput } from "@/servi
 import { deriveProductSku } from "@/lib/product-sku";
 
 type JsonRecord = Record<string, unknown>;
-type StockStatus = "available" | "out_of_stock";
+type StockStatus = "available" | "low_stock" | "out_of_stock";
 
 export type ProductInventoryWorkflowInput = {
   productSlug: string;
@@ -12,6 +12,8 @@ export type ProductInventoryWorkflowInput = {
   variantId: string | null;
   stockStatus: StockStatus;
   quantity: number;
+  reservedQuantity?: number;
+  reorderThreshold?: number;
   warehouseCode: string;
   changeSummary: string;
 };
@@ -302,7 +304,22 @@ export function buildProductInventoryWorkflowFromFormData(formData: FormData): P
   const sku = deriveProductSku(productSlug);
   const warehouseCode = readRequiredString(formData, "warehouse_code", "Inventory");
   const quantity = readOptionalInteger(formData, "quantity", "Inventory quantity") ?? 0;
-  const stockStatus: StockStatus = quantity > 0 ? "available" : "out_of_stock";
+  const reservedQuantity = readOptionalInteger(formData, "reserved_quantity", "Reserved quantity") ?? 0;
+  const reorderThreshold = readOptionalInteger(formData, "reorder_threshold", "Reorder threshold") ?? 0;
+  const sellable = Math.max(0, quantity - reservedQuantity);
+  let stockStatus: StockStatus =
+    sellable <= 0
+      ? "out_of_stock"
+      : reorderThreshold > 0 && sellable <= reorderThreshold
+        ? "low_stock"
+        : "available";
+  const requestedStatus = readOptionalString(formData, "stock_status");
+  // Explicit out_of_stock only when sellable is already zero; otherwise keep derived status.
+  if (requestedStatus === "out_of_stock" && sellable <= 0) {
+    stockStatus = "out_of_stock";
+  } else if (requestedStatus === "low_stock" && sellable > 0) {
+    stockStatus = "low_stock";
+  }
   const variantId = readOptionalString(formData, "variant_id") ?? null;
   const changeSummary = readOptionalString(formData, "change_summary") ?? `Update inventory for ${productSlug}:${sku}`;
 
@@ -312,6 +329,8 @@ export function buildProductInventoryWorkflowFromFormData(formData: FormData): P
     variantId,
     stockStatus,
     quantity,
+    reservedQuantity,
+    reorderThreshold,
     warehouseCode,
     changeSummary
   };
@@ -340,7 +359,12 @@ export function buildSimpleInventoryUpdateFromFormData(formData: FormData): Simp
 }
 
 function deriveInventoryStockStatus(input: ProductInventoryWorkflowInput): StockStatus {
-  return input.quantity > 0 ? "available" : "out_of_stock";
+  const reserved = Math.max(0, input.reservedQuantity ?? 0);
+  const reorder = Math.max(0, input.reorderThreshold ?? 0);
+  const sellable = Math.max(0, input.quantity - reserved);
+  if (sellable <= 0) return "out_of_stock";
+  if (reorder > 0 && sellable <= reorder) return "low_stock";
+  return "available";
 }
 
 export function reconcileAdminInventoryQuantities(input: { quantity: number }) {
@@ -352,6 +376,9 @@ export function buildInventoryLinkageRecords(
   options: { actorId: string | null; at: string }
 ): ProductInventoryLinkageRecords {
   const stockStatus = deriveInventoryStockStatus(input);
+  const reservedQuantity = Math.max(0, input.reservedQuantity ?? 0);
+  const reorderThreshold = Math.max(0, input.reorderThreshold ?? 0);
+  const sellable = Math.max(0, input.quantity - reservedQuantity);
 
   return {
     inventoryRecord: {
@@ -360,8 +387,8 @@ export function buildInventoryLinkageRecords(
       variant_id: input.variantId,
       stock_status: stockStatus,
       quantity: input.quantity,
-      reserved_quantity: 0,
-      reorder_threshold: 0,
+      reserved_quantity: reservedQuantity,
+      reorder_threshold: reorderThreshold,
       updated_by: options.actorId,
       updated_at: options.at
     },
@@ -370,13 +397,13 @@ export function buildInventoryLinkageRecords(
       product_slug: input.productSlug,
       sku: input.sku,
       variant_id: input.variantId,
-      available_quantity: input.quantity,
+      available_quantity: sellable,
       committed_quantity: 0,
       last_counted_at: options.at,
       updated_by: options.actorId,
       updated_at: options.at
     },
-    lowStock: stockStatus === "out_of_stock"
+    lowStock: stockStatus === "out_of_stock" || stockStatus === "low_stock"
   };
 }
 

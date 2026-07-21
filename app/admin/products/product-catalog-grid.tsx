@@ -31,6 +31,7 @@ const timedSaveProductRemoveFormAction = wrapServerAction(saveProductRemoveFormA
 export type ProductCatalogGridRow = {
   id: string;
   title: string;
+  tagline?: string | null;
   category: string;
   status: string;
   thumbnailSrc?: string | null;

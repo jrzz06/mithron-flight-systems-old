@@ -94,3 +94,34 @@ export function isMediaCdnHostname(hostname: string, env: Record<string, string 
     return false;
   }
 }
+
+const PUBLIC_STORAGE_PATH = "/storage/v1/object/public/";
+
+/**
+ * True when `src` points at Supabase public storage — either the direct
+ * `*.supabase.co` URL or a CDN-rewritten equivalent (`/cdn-media/…` or custom CDN origin).
+ * Used by catalog image gates so CDN delivery does not falsely reject valid product media.
+ */
+export function isTrustedCatalogStorageSrc(
+  src: string,
+  env: Record<string, string | undefined> = process.env
+): boolean {
+  const trimmed = src?.trim() ?? "";
+  if (!trimmed || !trimmed.includes(PUBLIC_STORAGE_PATH)) return false;
+
+  if (/^https?:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(trimmed)) {
+    return true;
+  }
+
+  const cdnOrigin = getMediaCdnOrigin(env);
+  if (cdnOrigin) {
+    const normalizedCdn = cdnOrigin.replace(/\/$/, "");
+    if (trimmed.startsWith(normalizedCdn)) return true;
+  }
+
+  if (/\/cdn-media\/storage\/v1\/object\/public\//i.test(trimmed)) {
+    return true;
+  }
+
+  return false;
+}

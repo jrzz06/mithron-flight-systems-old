@@ -220,4 +220,18 @@ describe("buildCatalogCardImageCandidates", () => {
     expect(candidates.some((candidate) => candidate.src.includes("wixstatic.com"))).toBe(false);
     expect(candidates[1]?.useSourceImage).toBe(true);
   });
+
+  it("accepts CDN-rewritten Supabase storage URLs for card candidates", () => {
+    const cdnSrc = "https://final-mithron-deploy.vercel.app/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/5-liter-agri-drone.webp";
+    const candidates = buildCatalogCardImageCandidates(
+      product({
+        slug: "source-5-liter-agri-drone",
+        image: { src: cdnSrc, alt: "5 Liter Agri Drone", width: 400, height: 430 }
+      })
+    );
+
+    expect(candidates.length).toBeGreaterThan(0);
+    expect(candidates.some((candidate) => candidate.src === cdnSrc)).toBe(true);
+    expect(candidates.some((candidate) => candidate.src.includes("wixstatic.com"))).toBe(false);
+  });
 });

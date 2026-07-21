@@ -60,43 +60,19 @@
 
 
 
-    /* Fixed px typography */
-
-    --ds-t-hero: clamp(calc(40px * var(--storefront-type-scale)), 5.5vw, calc(56px * var(--storefront-type-scale)));
-
-    --hero-panel-title-size: clamp(calc(1.45rem * var(--storefront-type-scale)), 3.2cqi, calc(2.65rem * var(--storefront-type-scale)));
-
-    --ds-t-section: clamp(calc(28px * var(--storefront-type-scale)), 3.2vw, calc(36px * var(--storefront-type-scale)));
-
-    --ds-t-card: calc(20px * var(--storefront-type-scale));
-
-    --ds-t-body: calc(16px * var(--storefront-type-scale));
-
-    --ds-t-label: calc(12px * var(--storefront-type-scale));
-
-
-
-    /* Rem typography (base) */
-
-    --type-hero: calc(4.25rem * var(--storefront-type-scale));
-
-    --type-campaign-headline: clamp(calc(56px * var(--storefront-type-scale)), 6vw, calc(96px * var(--storefront-type-scale)));
-
-    --type-campaign-copy: calc(22px * var(--storefront-type-scale));
-
-    --type-campaign-overline: calc(12px * var(--storefront-type-scale));
-
-    --type-page: calc(3rem * var(--storefront-type-scale));
-
-    --type-section: calc(2.35rem * var(--storefront-type-scale));
-
-    --type-card: calc(1.15rem * var(--storefront-type-scale));
-
-    --type-body: calc(1.025rem * var(--storefront-type-scale));
-
-    --type-small: calc(0.875rem * var(--storefront-type-scale));
-
-
+    /* Typography — alias Insta360 tokens (do not invent a second scale) */
+    --ds-t-hero: var(--type-brand-header);
+    --hero-panel-title-size: var(--type-brand-header);
+    --hero-panel-subtitle-size: var(--type-tagline);
+    --ds-t-section: var(--type-section);
+    --ds-t-card: var(--type-product-title);
+    --ds-t-body: var(--type-body);
+    --ds-t-label: var(--type-badge);
+    --type-hero: var(--type-brand-header);
+    --type-campaign-headline: var(--type-brand-header);
+    --type-campaign-copy: var(--type-tagline);
+    --type-page: var(--type-section);
+    --type-card: var(--type-product-title);
 
     /* Layout containers */
 
@@ -235,21 +211,13 @@
 
 
 @media (min-width: 1280px) {
-
   [data-storefront] {
-
-    --type-hero: calc(5.15rem * var(--storefront-type-scale));
-
-    --type-campaign-headline: clamp(calc(72px * var(--storefront-type-scale)), 6vw, calc(96px * var(--storefront-type-scale)));
-
-    --type-page: calc(3.55rem * var(--storefront-type-scale));
-
-    --type-section: calc(2.75rem * var(--storefront-type-scale));
-
-    --type-body: calc(1.0625rem * var(--storefront-type-scale));
-
+    /* Keep Insta360 token scale — density must not invent larger display sizes */
+    --type-hero: var(--type-brand-header);
+    --type-campaign-headline: var(--type-brand-header);
+    --type-page: var(--type-section);
+    --type-body: 16px;
   }
-
 }
 
 

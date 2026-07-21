@@ -154,7 +154,7 @@
   color: var(--ds-ink);
   font-family: var(--type-ui);
   font-size: 0.82rem;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background 200ms var(--ease-system, cubic-bezier(0.22, 0.61, 0.36, 1)),

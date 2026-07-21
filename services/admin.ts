@@ -190,7 +190,7 @@ const PRODUCT_RELATION_LIMIT = 80;
 const PRODUCT_LIST_SELECT =
   "slug,name,category,price,compare_at,badge,badge_enabled,badge_text,badge_style,on_sale,discount_type,discount_value,cost_of_goods,show_price_per_unit,charge_tax,tax_group,tax_rate,tax_included,image,hero,workflow_status,published_at,archived_at,is_visible,sort_order,updated_at,source_availability,tagline";
 const PRODUCT_EDITOR_SELECT =
-  "slug,name,category,price,compare_at,badge,badge_enabled,badge_text,badge_style,description,on_sale,discount_type,discount_value,cost_of_goods,show_price_per_unit,charge_tax,tax_group,tax_rate,tax_included,image,hero,gallery,variants,specs,workflow_status,published_at,archived_at,is_visible,seo_title,seo_description,og_title,og_description,og_image,source_availability,sort_order,updated_at,tagline";
+  "slug,name,category,price,compare_at,badge,badge_enabled,badge_text,badge_style,description,description_json,specs,on_sale,discount_type,discount_value,cost_of_goods,show_price_per_unit,charge_tax,tax_group,tax_rate,tax_included,image,hero,gallery,variants,workflow_status,published_at,archived_at,is_visible,seo_title,seo_description,og_title,og_description,og_image,source_availability,sort_order,updated_at,tagline";
 const MOVEMENT_AUDIT_LIMIT = 80;
 
 const warehouseSnapshotScopes: Record<WarehouseSnapshotScope, Set<WarehouseSnapshotTable>> = {

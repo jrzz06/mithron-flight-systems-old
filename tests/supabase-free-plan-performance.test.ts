@@ -347,6 +347,8 @@ describe("Supabase free-plan performance contract", () => {
     expect(homepageBundle).toContain("getHomepageBundle");
     expect(homepageBundle).toContain("getHomepageHeroBanners");
     expect(homepageBundle).toContain("getHomepageBelowFoldData");
+    expect(homepageBundle).toContain("HOMEPAGE_SINGLE_FLIGHT_LOADER_TIMEOUT_MS");
+    expect(homepageBundle).toContain("homepage-bundle:");
     expect(homepageContent).toContain("getHomepageHeroBanners");
     expect(homepageContent).toContain("getHomepageBelowFoldData");
     expect(homepageContent).toContain("heroBanners={heroBanners}");

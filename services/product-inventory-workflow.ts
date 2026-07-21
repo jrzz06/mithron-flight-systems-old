@@ -72,6 +72,8 @@ export function parseProductCreateInventoryFromFormData(
     variantId: null,
     stockStatus: stockStatusFromQuantity(initialQuantity),
     quantity: initialQuantity,
+    reservedQuantity: 0,
+    reorderThreshold: readOptionalInteger(formData, "inventory_reorder_threshold") ?? 0,
     warehouseCode,
     changeSummary: "Initial inventory on product creation"
   };
@@ -101,6 +103,8 @@ export function parseApprovalInventoryFromFormData(
     variantId: null,
     stockStatus: stockStatusFromQuantity(initialQuantity),
     quantity: initialQuantity,
+    reservedQuantity: 0,
+    reorderThreshold: readOptionalInteger(formData, "approval_reorder_threshold") ?? 0,
     warehouseCode,
     changeSummary: stockNotes || "Initial inventory on supplier approval"
   };
@@ -117,10 +121,21 @@ export async function saveProductInventory(
 ) {
   const env = options.env ?? process.env;
   const now = new Date().toISOString();
+  const reservedQuantity = Math.max(0, input.reservedQuantity ?? 0);
+  const reorderThreshold = Math.max(0, input.reorderThreshold ?? 0);
+  const sellable = Math.max(0, input.quantity - reservedQuantity);
+  const stockStatus =
+    sellable <= 0
+      ? "out_of_stock"
+      : reorderThreshold > 0 && sellable <= reorderThreshold
+        ? "low_stock"
+        : "available";
   const normalizedInput: ProductInventoryWorkflowInput = {
     ...input,
     sku: deriveProductSku(input.productSlug),
-    stockStatus: stockStatusFromQuantity(input.quantity)
+    reservedQuantity,
+    reorderThreshold,
+    stockStatus
   };
 
   await assertValidWarehouseCode(normalizedInput.warehouseCode, env);

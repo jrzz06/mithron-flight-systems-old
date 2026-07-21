@@ -56,6 +56,7 @@ export function ProductTaxFields({
       <h3 className={sectionTitleClass}>Tax</h3>
 
       <label className="inline-flex items-center gap-2 text-sm">
+        <input type="hidden" name="charge_tax_present" value="1" />
         <input
           type="checkbox"
           name="charge_tax"

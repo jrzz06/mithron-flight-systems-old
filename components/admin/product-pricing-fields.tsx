@@ -173,6 +173,7 @@ export function ProductPricingFields({
       ) : null}
 
       <label className="inline-flex items-center gap-2 text-sm">
+        <input type="hidden" name="show_price_per_unit_present" value="1" />
         <input
           type="checkbox"
           name="show_price_per_unit"

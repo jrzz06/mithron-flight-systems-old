@@ -89,6 +89,7 @@ export function CmsImageField({
   spec,
   onUpload,
   onPreviewChange,
+  onUploadingChange,
   error,
   variant = "default"
 }: {
@@ -100,6 +101,7 @@ export function CmsImageField({
   spec: CmsImageSpec;
   onUpload?: (file: File) => Promise<{ src: string; alt?: string } | null>;
   onPreviewChange?: (src: string) => void;
+  onUploadingChange?: (uploading: boolean) => void;
   error?: string;
   /** Compact: thumbnail only — no device switcher (section preview covers WYSIWYG). */
   variant?: "default" | "compact";
@@ -137,6 +139,10 @@ export function CmsImageField({
     if (previewSrc.startsWith("blob:") || previewSrc.startsWith("data:")) return previewSrc;
     return resolveStorefrontSrc(previewSrc) || previewSrc;
   }, [previewSrc]);
+
+  useEffect(() => {
+    onUploadingChange?.(uploading);
+  }, [uploading, onUploadingChange]);
 
   // Keep preview in sync when server props refresh (e.g. after save + router.refresh).
   // Skip while a local blob preview / upload is in flight so we don't clobber the crop UI.

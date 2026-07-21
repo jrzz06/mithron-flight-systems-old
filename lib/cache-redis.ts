@@ -9,6 +9,16 @@ const SINGLE_FLIGHT_FALLBACK_WAIT_MS = 4_000;
 const SINGLE_FLIGHT_HEARTBEAT_MS = 2_500;
 /** Wall-clock cap for the lock-holder loader (waiters already have budgets). */
 const SINGLE_FLIGHT_LOADER_TIMEOUT_MS = 12_000;
+/**
+ * Composite homepage cold-miss (CMS + catalog media + blog/press) routinely
+ * exceeds the default 12s cap when Redis RTTs are elevated or Supabase is cold.
+ */
+export const HOMEPAGE_SINGLE_FLIGHT_LOADER_TIMEOUT_MS = 25_000;
+
+export type SingleFlightOptions = {
+  /** Override the default lock-holder loader wall-clock cap. */
+  loaderTimeoutMs?: number;
+};
 
 function isProductionRuntime() {
   // Bracket access avoids Vite/Next statically inlining NODE_ENV so tests can stub it.
@@ -468,8 +478,14 @@ export async function hasCooldownKey(key: string): Promise<boolean> {
 export async function withSingleFlight<T>(
   key: string,
   ttlSeconds: number,
-  loader: () => Promise<T>
+  loader: () => Promise<T>,
+  options?: SingleFlightOptions
 ): Promise<T> {
+  const loaderTimeoutMs =
+    Number.isFinite(options?.loaderTimeoutMs) && (options?.loaderTimeoutMs ?? 0) > 0
+      ? Math.floor(options!.loaderTimeoutMs!)
+      : SINGLE_FLIGHT_LOADER_TIMEOUT_MS;
+
   const cached = await getCachedJson<T>(key);
   if (cached != null) return cached;
 
@@ -489,7 +505,7 @@ export async function withSingleFlight<T>(
       }
       const value = await raceWithTimeout(
         loader(),
-        SINGLE_FLIGHT_LOADER_TIMEOUT_MS,
+        loaderTimeoutMs,
         `single-flight:${key}`
       );
       await setCachedJson(key, value, ttlSeconds);
@@ -531,7 +547,7 @@ export async function withSingleFlight<T>(
       }
       const value = await raceWithTimeout(
         loader(),
-        SINGLE_FLIGHT_LOADER_TIMEOUT_MS,
+        loaderTimeoutMs,
         `single-flight-fallback:${key}`
       );
       await setCachedJson(key, value, ttlSeconds);
@@ -558,13 +574,14 @@ export async function withSingleFlight<T>(
 
   // Last resort: load once. Prefer this over hanging forever; stampede risk is
   // already greatly reduced by the two lock stages above.
-  return raceWithTimeout(loader(), SINGLE_FLIGHT_LOADER_TIMEOUT_MS, `single-flight-last:${key}`);
+  return raceWithTimeout(loader(), loaderTimeoutMs, `single-flight-last:${key}`);
 }
 
 export async function readThroughCache<T>(
   key: string,
   ttlSeconds: number,
-  loader: () => Promise<T>
+  loader: () => Promise<T>,
+  options?: SingleFlightOptions
 ): Promise<T> {
-  return withSingleFlight(key, ttlSeconds, loader);
+  return withSingleFlight(key, ttlSeconds, loader, options);
 }

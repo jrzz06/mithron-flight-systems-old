@@ -41,8 +41,8 @@ describe("navbar ink sampling", () => {
 
   it("resolves SSR-safe initial navbar tone for hero-backed routes", () => {
     expect(resolveInitialNavbarTone("/")).toBe("light");
-    expect(resolveInitialNavbarTone("/category/agri-drones")).toBe("dark");
-    expect(resolveInitialNavbarTone("/category/video-drones")).toBe("dark");
+    expect(resolveInitialNavbarTone("/category/agri-drones")).toBe("light");
+    expect(resolveInitialNavbarTone("/category/video-drones")).toBe("light");
     expect(resolveInitialNavbarTone("/agriculture")).toBe("light");
     expect(resolveInitialNavbarTone("/products")).toBe("dark");
     expect(resolveInitialNavbarTone("/product/example")).toBe("dark");

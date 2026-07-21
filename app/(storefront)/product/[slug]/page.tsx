@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import type { Product } from "@/config/types";
-import { getProductDescriptionHtml } from "@/lib/product-detail-content";
+import { getCustomerFacingSpecs, getProductDescriptionHtml } from "@/lib/product-detail-content";
 import { buildProductMediaPlan } from "@/lib/product-detail-experience";
 import { getProductStaticSlugs, loadProductForPage } from "@/services/catalog";
 import { CatalogDataErrorPanel } from "@/components/layout/catalog-integrity-notice";
@@ -76,6 +76,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const structuredData = buildProductStructuredData(product);
   const mediaPlan = buildProductMediaPlan(product);
   const descriptionHtml = getProductDescriptionHtml(product);
+  const hasSpecs = getCustomerFacingSpecs(product).length > 0;
 
   return (
     <article className={`product-detail-page ${showcaseStyles.page}`}>
@@ -102,7 +103,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           />
         )}
       />
-      <ProductRichDescriptionSection html={descriptionHtml} />
+      <ProductRichDescriptionSection html={descriptionHtml} includeSpecsLink={hasSpecs} />
       <ProductSpecsSection product={product} />
       <RecordProductView
         slug={product.slug}

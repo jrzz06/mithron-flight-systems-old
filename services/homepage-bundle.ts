@@ -1,5 +1,6 @@
 import { cache } from "react";
 import {
+  HOMEPAGE_SINGLE_FLIGHT_LOADER_TIMEOUT_MS,
   readThroughCache,
   REDIS_CACHE_KEYS
 } from "@/lib/cache-redis";
@@ -7,6 +8,7 @@ import { emptyHomepageCmsContent, type HomepageCmsContent } from "@/config/homep
 import { defaultHomepageCmsV2Content, type HomepageCmsV2Content } from "@/config/homepage-cms-v2";
 import type { HeroSlide, Product } from "@/config/types";
 import type { CustomerProductReview } from "@/services/customer-product-reviews";
+import { ActionTimeoutError, raceWithTimeout } from "@/lib/fetch-with-timeout";
 import { listPublishedBlogPosts, type BlogPost } from "@/services/blog-posts";
 import { listPublishedPressCoverage, type PressCoverageItem } from "@/services/press-coverage";
 import { getHomepageProducts, getPublishedProductsBySlugs } from "@/services/catalog";
@@ -33,6 +35,13 @@ export type HomepageBundle = {
 
 export type HomepageBelowFoldData = Omit<HomepageBundle, "heroBanners">;
 
+/**
+ * Cap each parallel dependency so one hung Supabase/Redis nested single-flight
+ * cannot stall `Promise.allSettled` past the outer homepage budget.
+ */
+const HOMEPAGE_CHILD_TIMEOUT_MS = 8_000;
+const HOMEPAGE_TESTIMONIAL_PRODUCTS_TIMEOUT_MS = 5_000;
+
 function settledValue<T>(result: PromiseSettledResult<T>, fallback: T, label: string): T {
   if (result.status === "fulfilled") return result.value;
   const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
@@ -49,16 +58,48 @@ function mergeProductsBySlug(primary: Product[], extra: Product[]) {
   return [...bySlug.values()];
 }
 
+function emptyHomepageBundle(): HomepageBundle {
+  return {
+    heroBanners: [],
+    cms: fallbackSnapshot,
+    products: [],
+    homepageCms: emptyHomepageCmsContent,
+    homepageCmsV2: defaultHomepageCmsV2Content,
+    relatedArticles: [],
+    pressCoverage: [],
+    customerReviews: []
+  };
+}
+
+function withChildBudget<T>(promise: Promise<T>, label: string, timeoutMs = HOMEPAGE_CHILD_TIMEOUT_MS) {
+  return raceWithTimeout(promise, timeoutMs, `homepage-bundle:${label}`);
+}
+
 /**
  * Homepage cold-miss regeneration. Coalescing / stampede protection lives in
  * `readThroughCache` → `withSingleFlight` (lock + heartbeat + fallback elect).
  * Do not nest a second lock/fallback here — that previously multiplied loaders.
  */
 export const getHomepageBundle = cache(async (cmsDraftPreview = false): Promise<HomepageBundle> => {
-  if (cmsDraftPreview) {
-    return loadHomepageBundleUncached(true);
+  try {
+    if (cmsDraftPreview) {
+      return await loadHomepageBundleUncached(true);
+    }
+    return await readThroughCache(
+      REDIS_CACHE_KEYS.cmsHomepage,
+      60,
+      () => loadHomepageBundleUncached(false),
+      { loaderTimeoutMs: HOMEPAGE_SINGLE_FLIGHT_LOADER_TIMEOUT_MS }
+    );
+  } catch (error) {
+    // Prefer a degraded homepage over a hard SSR failure when Redis/Supabase
+    // cold paths exceed the single-flight wall clock.
+    if (error instanceof ActionTimeoutError) {
+      console.warn(`[homepage-bundle] ${error.message}`);
+      return emptyHomepageBundle();
+    }
+    throw error;
   }
-  return readThroughCache(REDIS_CACHE_KEYS.cmsHomepage, 60, () => loadHomepageBundleUncached(false));
 });
 
 /** Hero-only loader so Suspense can resolve independently of the below-fold bundle. */
@@ -82,12 +123,18 @@ async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<Home
     relatedArticlesResult,
     pressCoverageResult
   ] = await Promise.allSettled([
-    getPublicCmsSnapshotForHomepageBelowFold(),
-    getHomepageProducts(),
-    cmsDraftPreview ? getHomepageCmsDraftPreviewContent() : getHomepageCmsContent(),
-    cmsDraftPreview ? getHomepageCmsV2DraftPreviewContent() : getHomepageCmsV2Content(),
-    listPublishedBlogPosts({ limit: 40 }),
-    listPublishedPressCoverage({ limit: 40 })
+    withChildBudget(getPublicCmsSnapshotForHomepageBelowFold(), "CMS snapshot"),
+    withChildBudget(getHomepageProducts(), "homepage products"),
+    withChildBudget(
+      cmsDraftPreview ? getHomepageCmsDraftPreviewContent() : getHomepageCmsContent(),
+      "homepage CMS"
+    ),
+    withChildBudget(
+      cmsDraftPreview ? getHomepageCmsV2DraftPreviewContent() : getHomepageCmsV2Content(),
+      "homepage CMS v2"
+    ),
+    withChildBudget(listPublishedBlogPosts({ limit: 40 }), "blog posts"),
+    withChildBudget(listPublishedPressCoverage({ limit: 40 }), "press coverage")
   ]);
 
   const cms = settledValue(cmsResult, fallbackSnapshot, "CMS snapshot");
@@ -107,7 +154,11 @@ async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<Home
   const shelfSlugSet = new Set(shelfProducts.map((product) => product.slug));
   const missingTestimonialSlugs = testimonialSlugs.filter((slug) => !shelfSlugSet.has(slug));
   const fetchedTestimonialProducts = missingTestimonialSlugs.length
-    ? await getPublishedProductsBySlugs(missingTestimonialSlugs).catch((error) => {
+    ? await withChildBudget(
+        getPublishedProductsBySlugs(missingTestimonialSlugs),
+        "testimonial products",
+        HOMEPAGE_TESTIMONIAL_PRODUCTS_TIMEOUT_MS
+      ).catch((error) => {
         console.warn(
           `[homepage-bundle] testimonial products failed: ${error instanceof Error ? error.message : String(error)}`
         );

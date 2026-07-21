@@ -7,7 +7,7 @@ export function ProductSpecsSection({ product }: { product: Product }) {
   if (!specs.length) return null;
 
   return (
-    <section className={styles.specsSection} aria-label="Key specifications">
+    <section id="product-specs" className={styles.specsSection} aria-label="Key specifications">
       <div className={styles.specsInner}>
         <h2 className={styles.specsHeading}>Key specifications</h2>
         <div className={styles.specGroup}>

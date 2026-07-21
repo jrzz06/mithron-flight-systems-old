@@ -49,11 +49,12 @@
   min-width: 0;
   margin: 0;
   color: var(--home-ink);
-  font-family: var(--type-display);
-  font-size: clamp(1.75rem, 2.3vw, 2.35rem);
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-section);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.06;
+  letter-spacing: var(--tracking-section);
+  line-height: var(--leading-heading);
+  font-synthesis: none;
 }
 
 .shelfBoard {
@@ -179,12 +180,13 @@
 
 .shelfHeroEyebrow {
   color: var(--shelf-hero-muted);
-  font-family: var(--type-ui);
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-featured-eyebrow);
+  font-weight: var(--type-featured-eyebrow-weight);
+  letter-spacing: 0.01em;
   line-height: 1.25;
   text-transform: none;
+  font-synthesis: none;
 }
 
 .shelfHeroHeading {
@@ -192,14 +194,15 @@
   margin: 0;
   max-width: none;
   color: var(--shelf-hero-ink, #111113);
-  font-family: var(--type-display);
-  font-size: clamp(1.9rem, 2.8vw, 3rem);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.02;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-featured-title);
+  font-weight: var(--type-featured-title-weight);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-hero);
   white-space: nowrap;
   text-wrap: nowrap;
   overflow-wrap: normal;
+  font-synthesis: none;
   transition: color 320ms var(--ease-cinematic);
 }
 
@@ -215,11 +218,12 @@
 .shelfHeroCopy strong {
   display: block;
   max-width: 18ch;
-  font-family: var(--type-display);
-  font-size: clamp(1.5rem, 2.05vw, 2.2rem);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.06;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-featured-title);
+  font-weight: var(--type-featured-title-weight);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-hero);
+  font-synthesis: none;
   transition: color 320ms var(--ease-cinematic);
 }
 
@@ -229,10 +233,12 @@
   max-width: 32ch;
   margin: 0;
   color: var(--shelf-hero-muted);
-  font-family: var(--type-ui);
-  font-size: clamp(0.92rem, 1.05vw, 1.02rem);
-  font-weight: 420;
-  line-height: 1.5;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-tagline);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: var(--leading-body);
+  font-synthesis: none;
   transition: color 320ms var(--ease-cinematic);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -251,9 +257,11 @@
   background: var(--shelf-hero-cta-bg);
   box-shadow: var(--shelf-hero-cta-shadow);
   color: var(--shelf-hero-cta-ink);
-  font-family: var(--type-ui);
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-cta);
+  font-weight: var(--type-cta-weight);
+  letter-spacing: 0;
+  font-synthesis: none;
   padding: 0 24px;
   transition:
     background-color 260ms var(--ease-cinematic),
@@ -447,10 +455,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--home-muted);
-  font-family: var(--type-ui);
-  font-size: clamp(0.82rem, 0.9vw, 0.96rem);
-  font-weight: 400;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-product-kicker);
+  font-weight: var(--type-product-kicker-weight);
+  letter-spacing: 0;
   line-height: 1.35;
+  font-synthesis: none;
   transition: color 260ms var(--ease-cinematic);
 }
 
@@ -465,10 +475,12 @@
   margin: 0;
   overflow: hidden;
   color: var(--home-ink);
-  font-family: var(--type-display);
-  font-size: clamp(1.05rem, 1.16vw, 1.28rem);
-  font-weight: 600;
-  line-height: 1.12;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-product-title);
+  font-weight: var(--type-product-title-weight);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  font-synthesis: none;
   transition: color 260ms var(--ease-cinematic);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -504,10 +516,11 @@
 
 .productFooter :global(.type-price) {
   min-width: 0;
-  font-size: clamp(1.0625rem, 1.1cqi, 1.1875rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--type-price-size);
+  font-weight: var(--type-price-weight);
+  letter-spacing: -0.01em;
   line-height: 1.1;
+  font-synthesis: none;
 }
 
 .productCard:hover .productFooter,
@@ -525,10 +538,12 @@
   border-radius: 999px;
   background: #d4f5e0;
   color: #0f172a;
-  font-family: var(--type-ui);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-family: "MiSans VF", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--type-cta);
+  font-weight: var(--type-cta-weight);
+  letter-spacing: 0;
   line-height: 1;
+  font-synthesis: none;
   padding: 0 var(--ds-s2);
   white-space: nowrap;
   -webkit-backdrop-filter: none;
@@ -729,12 +744,14 @@
   }
 
   .shelfHeroEyebrow {
-    font-size: clamp(0.68rem, 2.8vw, 0.74rem);
+    font-size: var(--type-featured-eyebrow);
   }
 
   .shelfHeroHeading {
-    font-size: clamp(1.2rem, 5vw, 1.55rem);
-    line-height: 1.08;
+    font-size: var(--type-featured-title);
+    font-weight: var(--type-featured-title-weight);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-hero);
     white-space: nowrap;
     text-wrap: nowrap;
     overflow-wrap: normal;
@@ -744,8 +761,9 @@
 
   .shelfHeroBody {
     max-width: 34ch;
-    font-size: clamp(0.72rem, 3.2vw, 0.82rem);
-    line-height: 1.4;
+    font-size: var(--type-tagline);
+    font-weight: 400;
+    line-height: var(--leading-body);
   }
 
   .productShelfSection[data-shelf-tone="world"] .shelfHeroContextImage {
@@ -800,13 +818,13 @@
     white-space: normal;
     text-overflow: unset;
     min-height: 0;
-    font-size: 0.72rem;
+    font-size: var(--type-product-kicker);
     line-height: 1.35;
   }
 
   .productName {
-    min-height: calc(3 * 1.12em);
-    font-size: 0.9rem;
+    min-height: calc(3 * 1.2em);
+    font-size: var(--type-product-title);
     -webkit-line-clamp: 3;
     line-clamp: 3;
   }
@@ -840,7 +858,7 @@
     min-width: 0;
     max-width: none;
     padding: 0 12px;
-    font-size: 0.72rem;
+    font-size: var(--type-cta);
     white-space: nowrap;
     text-align: center;
     overflow: hidden;
@@ -870,18 +888,21 @@
     overflow-wrap: normal;
     width: max-content;
     max-width: 100%;
-    font-size: clamp(1.2rem, 5vw, 1.55rem);
-    line-height: 1.08;
+    font-size: var(--type-featured-title);
+    font-weight: var(--type-featured-title-weight);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-hero);
   }
 
   .shelfHeroBody {
     max-width: 32ch;
-    font-size: clamp(0.72rem, 3.2vw, 0.82rem);
-    line-height: 1.4;
+    font-size: var(--type-tagline);
+    font-weight: 400;
+    line-height: var(--leading-body);
   }
 
   .shelfHeroEyebrow {
-    font-size: clamp(0.68rem, 2.8vw, 0.74rem);
+    font-size: var(--type-featured-eyebrow);
   }
 
   .shelfHeroCta {
@@ -890,7 +911,7 @@
     box-sizing: border-box;
     margin-top: 6px;
     padding: 0 16px;
-    font-size: 0.78rem;
+    font-size: var(--type-cta);
   }
 }
 

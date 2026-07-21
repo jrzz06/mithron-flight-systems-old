@@ -7,8 +7,8 @@
   --finish-accent-soft: rgb(31 107 70 / 10%);
   --finish-danger: #9b2c2c;
   --finish-radius: 16px;
-  --finish-font: var(--font-outfit), "Segoe UI", system-ui, sans-serif;
-  --finish-sans: var(--font-inter), "Segoe UI", system-ui, sans-serif;
+  --finish-font: var(--font-misans), "Segoe UI", system-ui, sans-serif;
+  --finish-sans: var(--font-misans), "Segoe UI", system-ui, sans-serif;
 
   width: min(100%, 28rem);
   margin-inline: auto;

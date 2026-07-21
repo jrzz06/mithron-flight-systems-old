@@ -37,6 +37,7 @@ export function RelatedArticlesSectionEditor({
   onDirty,
   onSaved,
   onSavingChange,
+  onUploadingChange,
   uploadImage
 }: {
   enabled: boolean;
@@ -47,6 +48,7 @@ export function RelatedArticlesSectionEditor({
   onDirty: () => void;
   onSaved: () => void;
   onSavingChange?: (pending: boolean) => void;
+  onUploadingChange?: (uploading: boolean) => void;
   uploadImage: (file: File) => Promise<{ src: string; alt?: string } | null>;
 }) {
   const [items, setItems] = useState<CmsRelatedArticle[]>(() => padRelatedArticleSlots(initialItems));
@@ -239,6 +241,7 @@ export function RelatedArticlesSectionEditor({
               variant="compact"
               onUpload={uploadImage}
               onPreviewChange={(src) => updateItem(index, { imageSrc: src })}
+              onUploadingChange={onUploadingChange}
             />
           </fieldset>
         ))}

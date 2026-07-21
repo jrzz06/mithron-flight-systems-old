@@ -32,18 +32,18 @@ export const homepageSlideNavbarInk = {
 
 /**
  * Category showcase — keyed by /category/* path.
- * Prefer "dark" (readable on white chrome) unless a route consistently ships a
- * flush dark cinematic showcase behind the navbar. Missing/broken showcase
- * media must not leave light ink on a white bar.
+ * Use "light" (white labels) for flush dark cinematic showcases behind the
+ * navbar. Runtime falls back to dark ink when no showcase surface is mounted
+ * so white storefront chrome stays readable.
  */
 export const categoryPathNavbarInk = {
-  "/category/agri-drones": "dark",
-  "/category/video-drones": "dark",
-  "/category/creative-drones": "dark",
-  "/category/survey-drones": "dark",
-  "/category/surveillance-drones": "dark",
-  "/category/accessories": "dark",
-  "/category/global-products": "dark"
+  "/category/agri-drones": "light",
+  "/category/video-drones": "light",
+  "/category/creative-drones": "light",
+  "/category/survey-drones": "light",
+  "/category/surveillance-drones": "light",
+  "/category/accessories": "light",
+  "/category/global-products": "light"
 } as const satisfies Record<string, NavbarInkTone>;
 
 export function resolveHomepageSlideNavbarInk(slideId: string | null | undefined): NavbarInkTone {
@@ -80,7 +80,7 @@ export function getBootstrapNavbarInk(pathname: string | null): NavbarInkTone {
   const categoryInk = categoryPathNavbarInk[normalized as keyof typeof categoryPathNavbarInk];
   if (categoryInk) return categoryInk;
 
-  if (normalized.startsWith("/category/")) return "dark";
+  if (normalized.startsWith("/category/")) return "light";
   if (FLUSH_HERO_LIGHT_NAV_ROUTE_SET.has(normalized)) return "light";
   return "dark";
 }

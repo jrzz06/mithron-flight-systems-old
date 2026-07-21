@@ -358,6 +358,61 @@ async function publishHomepageV1Core() {
   return { previous: previousHomepage, published, nextPayload };
 }
 
+/** Publish only one V1 section slice from draft → live (mirrors V2 section publish). */
+async function publishHomepageV1SectionCore(sectionKey: string) {
+  const actorId = await currentActorId();
+  const current = await loadAdminSettingsPayload();
+  const homepageStored = isPlainRecord(current.homepage) ? current.homepage : {};
+  const live = extractHomepageV1LiveFields(mergeHomepageCmsContent(homepageStored));
+  const draft = isPlainRecord(homepageStored.draftV1)
+    ? extractHomepageV1LiveFields(mergeHomepageCmsContent({ ...homepageStored, ...homepageStored.draftV1 }))
+    : live;
+  // Copy the section from draft onto the current live V1 fields.
+  const published = applyHomepageV1SectionFromPublished(live, draft, sectionKey);
+  const previousHomepage = { ...homepageStored };
+  const nextHomepage = {
+    ...homepageStored,
+    ...published,
+    // Keep draftV1 in sync for the published section; leave other draft slices intact.
+    draftV1: applyHomepageV1SectionFromPublished(
+      isPlainRecord(homepageStored.draftV1)
+        ? extractHomepageV1LiveFields(mergeHomepageCmsContent({ ...homepageStored, ...homepageStored.draftV1 }))
+        : live,
+      published,
+      sectionKey
+    ),
+    v2: homepageStored.v2,
+    draftV2: homepageStored.draftV2
+  };
+  const nextPayload = {
+    ...current,
+    homepage: nextHomepage,
+    updated_by: actorId,
+    updated_at: new Date().toISOString()
+  };
+
+  const supabase = adminSettingsClient();
+  const { error } = await supabase.from("admin_settings").upsert(
+    { id: "global", payload: nextPayload, updated_by: actorId, updated_at: nextPayload.updated_at },
+    { onConflict: "id" }
+  );
+  if (error) throw new Error(`Failed to publish homepage section: ${error.message}`);
+
+  if (sectionKey.startsWith("shelf-")) {
+    const shelfKey =
+      sectionKey === "shelf-drone-care"
+        ? "droneCare"
+        : sectionKey === "shelf-global-products"
+          ? "globalProducts"
+          : "droneWorld";
+    await cleanupReplacedCmsMedia({
+      oldUrls: [live.shelves[shelfKey].heroImageSrc],
+      nextCmsState: nextPayload
+    });
+  }
+  return { previous: previousHomepage, published, nextPayload };
+}
+
 export async function saveHomepageShelfFormAction(formData: FormData) {
   const { shelfKey, patch, section } = buildHomepageShelfPatchFromFormData(formData);
   await saveHomepageSettingsContent(
@@ -440,9 +495,6 @@ function buildHomepageShelfPatchFromFormData(formData: FormData) {
     eyebrow: readText(formData, "eyebrow"),
     title: readText(formData, "title"),
     href: readText(formData, "href"),
-    viewAllLabel: readText(formData, "view_all_label"),
-    heroEyebrow: readText(formData, "hero_eyebrow"),
-    heroSubtitle: readText(formData, "hero_subtitle"),
     heroBody: readRichTextHtmlField(formData, "hero_body"),
     featureCta: readText(formData, "feature_cta"),
     heroCtaHref: readText(formData, "hero_cta_href"),
@@ -454,6 +506,10 @@ function buildHomepageShelfPatchFromFormData(formData: FormData) {
       .filter(Boolean),
     productCount: Math.max(1, Math.min(12, Number(readText(formData, "product_count", "5")) || 5))
   };
+  // Only overwrite optional labels when the form actually submitted them (avoid wiping).
+  if (formData.has("view_all_label")) patch.viewAllLabel = readText(formData, "view_all_label");
+  if (formData.has("hero_eyebrow")) patch.heroEyebrow = readText(formData, "hero_eyebrow");
+  if (formData.has("hero_subtitle")) patch.heroSubtitle = readText(formData, "hero_subtitle");
   return { shelfKey, patch, section };
 }
 
@@ -484,9 +540,11 @@ export async function saveHomepageMissionFormAction(formData: FormData) {
     body: readRichTextHtmlField(formData, "body"),
     href: readText(formData, "href"),
     cta: readText(formData, "cta"),
-    mediaNote: readText(formData, "media_note"),
     tiles
   };
+  if (formData.has("media_note")) {
+    patch.mediaNote = readText(formData, "media_note");
+  }
   await saveHomepageSettingsContent(
     section,
     (current) => ({
@@ -532,9 +590,11 @@ export async function saveHomepageMissionClientAction(
       body: readRichTextHtmlField(formData, "body"),
       href: readText(formData, "href"),
       cta: readText(formData, "cta"),
-      mediaNote: readText(formData, "media_note"),
       tiles
     };
+    if (formData.has("media_note")) {
+      patch.mediaNote = readText(formData, "media_note");
+    }
     await persistHomepageV1Draft(section, (current) => ({
       ...current,
       missions: {
@@ -1317,11 +1377,11 @@ export async function publishHomepageSectionClientAction(
           ...current,
           testimonials: { ...current.testimonials, ...headerPatch }
         }));
-        await publishHomepageV1Core();
+        await publishHomepageV1SectionCore(sectionKey);
         const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);
         await publishHomepageV2SectionCore(sectionKey, patch);
       } else {
-        await publishHomepageV1Core();
+        await publishHomepageV1SectionCore(sectionKey);
       }
     } else if (formData) {
       const patch = buildHomepageV2SectionPatchFromFormData(formData, sectionKey);

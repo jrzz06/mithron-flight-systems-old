@@ -72,7 +72,7 @@ function rowSearchText(row: SimpleInventoryRow) {
 }
 
 function rowKey(row: SimpleInventoryRow) {
-  return row.productSlug;
+  return `${row.warehouseCode}::${row.productSlug}::${row.sku}`;
 }
 
 function HiddenInventoryFields({

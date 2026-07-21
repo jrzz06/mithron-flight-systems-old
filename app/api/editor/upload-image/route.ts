@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { PermissionDeniedError, roleHasPermission } from "@/lib/auth/permissions";
+import { ProfileDisabledError } from "@/lib/auth/profile-disabled";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
-import { requirePermission } from "@/services/auth";
+import { getCurrentAuthContext } from "@/services/auth";
 import { uploadEditorInlineImage } from "@/services/editor-image-upload";
 
 export const runtime = "nodejs";
@@ -8,7 +10,18 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await requirePermission("cms.write");
+    const context = await getCurrentAuthContext();
+    if (context.disabled) {
+      throw new ProfileDisabledError();
+    }
+    // CMS editors need cms.write; suppliers uploading product description images use media.write.
+    if (!roleHasPermission(context.role, "cms.write") && !roleHasPermission(context.role, "media.write")) {
+      throw new PermissionDeniedError("Image upload requires cms.write or media.write.");
+    }
+    const userId = context.userId;
+    if (!userId) {
+      throw new PermissionDeniedError("Authentication required.");
+    }
     const limit = await checkDistributedRateLimit(`editor-upload:${userId}`, 20, 60_000);
     if (!limit.allowed) {
       return NextResponse.json({ error: "Too many requests." }, { status: 429 });
