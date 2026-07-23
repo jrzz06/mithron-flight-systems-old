@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
 import type { NavbarInkTone } from "@/lib/navbar-ink-sampling";
 
-export const NAVBAR_INK_STYLE_VARS = {
+type NavbarInkStyle = CSSProperties & Record<`--${string}`, string>;
+
+export const NAVBAR_INK_STYLE_VARS: Record<NavbarInkTone, NavbarInkStyle> = {
   light: {
     "--adaptive-navbar-ink": "rgba(252, 253, 255, 0.98)",
     "--adaptive-navbar-hover": "rgba(255, 255, 255, 1)",
@@ -30,4 +32,4 @@ export const NAVBAR_INK_STYLE_VARS = {
     "--adaptive-navbar-menu-border": "rgba(17, 17, 19, 0.10)",
     "--adaptive-navbar-menu-control": "rgba(17, 17, 19, 0.055)"
   }
-} satisfies Record<NavbarInkTone, CSSProperties & Record<`--${string}`, string>>;
+};
