@@ -147,10 +147,35 @@ Warranty:
     const html = normalizeProductDescriptionHtml(AGRI_KISAN_BLOB);
     expect(html).toContain("<p>8-Liter Agri Kisan Drone is a compact and efficient unmanned aerial system");
     expect(html).toMatch(/<strong>Package Contents:<\/strong>/i);
-    expect(html).toContain("Agri Small Drone");
-    expect(html).toMatch(/Battery Set/i);
-    expect(html).toContain("Drone Battery Charger");
+    expect(html).toContain("<li>Agri Small Drone – 1 Unit</li>");
+    expect(html).toMatch(/<li>16000Mah Battery Set – 1 Set<\/li>/i);
+    expect(html).toContain("<li>Drone Battery Charger – 1 Unit</li>");
+    expect(html).toContain("<li>Transmitter – 1 Unit</li>");
+    expect(html).toContain("<li>Toolkit with 10 Parts – 1 Set</li>");
+    expect(html).toContain("<li>Drone Storage Box – 1 Unit</li>");
+    expect(html).toContain("<li>Box Wheels – 1 Set</li>");
+    expect(html).toContain("<li>UIN Number Plate</li>");
+    expect(html).toContain("<li>Warranty Card</li>");
     expect(html).not.toContain("Unit16000Mah");
+    expect(html).not.toMatch(/<p>16000<\/p>/);
+    expect(html).not.toMatch(/<strong>Notes:<\/strong>/i);
+    expect(html).not.toMatch(/<strong>Warranty:<\/strong>\s*Card/i);
+    expect((html?.match(/<strong>Package Contents:<\/strong>/gi) ?? []).length).toBe(1);
+  });
+
+  it("does not invent Notes sections from package quantity bullets", () => {
+    const html = normalizeProductDescriptionHtml(`
+Package Contents:
+-
+- Agri Small Drone – 1 Unit
+- 16000Mah Battery Set – 1 Set
+`);
+    expect(html).toMatch(/<strong>Package Contents:<\/strong>/i);
+    expect(html).toContain("<li>Agri Small Drone – 1 Unit</li>");
+    expect(html).toMatch(/16000Mah Battery Set/i);
+    expect(html).not.toMatch(/<strong>Notes:<\/strong>/i);
+    expect(html).not.toMatch(/<p>-<\/p>/);
+    expect(html).not.toMatch(/<p>16000<\/p>/);
   });
 
   it("structures dash-separated specification blobs", () => {

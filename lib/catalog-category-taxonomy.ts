@@ -96,8 +96,26 @@ export const catalogCategoryDefinitions: CatalogCategoryDefinition[] = [
   }
 ];
 
+/** Known CMS / import aliases → canonical storefront labels. */
+const CATEGORY_ALIASES: Record<string, string> = {
+  "agri drones": "Agri Drones",
+  "video drones": "Video Drones",
+  "creative drones": "Creative Drones",
+  "survey drones": "Survey Drones",
+  "surveillance drones": "Surveillance Drones",
+  accessories: "Accessories",
+  "all drones and spares": "Accessories",
+  "drone care": "Accessories",
+  "global products": "Global Products",
+  "global product": "Global Products"
+};
+
 const categoryBySlug = new Map(catalogCategoryDefinitions.map((definition) => [definition.slug, definition]));
-const categoryByLabel = new Map(catalogCategoryDefinitions.map((definition) => [definition.label, definition]));
+const categoryByLabel = new Map(
+  catalogCategoryDefinitions.map((definition) => [definition.label.toLowerCase(), definition])
+);
+
+export const CANONICAL_PRODUCT_CATEGORY_LABELS = catalogCategoryDefinitions.map((definition) => definition.label);
 
 export function isCatalogCategorySlug(value: string): value is CatalogCategorySlug {
   return categoryBySlug.has(value as CatalogCategorySlug);
@@ -109,6 +127,31 @@ export function getCatalogCategoryDefinition(slug: CatalogCategorySlug) {
   return definition;
 }
 
+/** Case-insensitive lookup by product category label. */
 export function getCatalogCategoryByLabel(label: string) {
-  return categoryByLabel.get(label);
+  const trimmed = label.trim();
+  if (!trimmed) return undefined;
+  return categoryByLabel.get(trimmed.toLowerCase());
+}
+
+/**
+ * Map any product/CMS category string to the canonical Title Case label.
+ * Unknown categories are returned trimmed (no forced invent).
+ */
+export function resolveCanonicalProductCategory(category: string): string {
+  const trimmed = category.trim();
+  if (!trimmed) return trimmed;
+
+  const key = trimmed.toLowerCase();
+  const alias = CATEGORY_ALIASES[key];
+  if (alias) return alias;
+
+  const definition = categoryByLabel.get(key);
+  if (definition) return definition.label;
+
+  return trimmed;
+}
+
+export function categoriesMatchIgnoreCase(a: string, b: string) {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
 }

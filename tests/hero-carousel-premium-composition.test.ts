@@ -23,7 +23,7 @@ describe("hero carousel premium composition", () => {
     expect(hero).toContain("resolveHeroCarouselSlides");
     expect(hero).toContain("useReducedMotionPreference");
     expect(hero).toContain('data-hero-system="mithron-native-fullscreen-carousel"');
-    expect(hero).toContain('sizes="100vw"');
+    expect(hero).toContain("sizes={heroImageSizes}");
     expect(hero).toContain("MithronPageHeroImage");
     expect(hero).not.toContain("will-change-transform");
     expect(hero).not.toContain("usePremiumPointerField");
@@ -32,10 +32,12 @@ describe("hero carousel premium composition", () => {
     expect(hero).not.toContain("heroSlideCopyById");
     expect(hero).not.toContain("HERO_EXTERNAL_CTA");
     expect(hero).toContain('data-testid="hero-pagination"');
+    expect(hero).toContain('from "@/components/ui/heading"');
+    expect(hero).toContain('variant="hero"');
 
     expect(globals).toContain(".hero-dji-title");
     expect(globals).toContain('[data-hero-content-ink="split"]');
-    expect(globals).toContain("max-width: min(100%, 40rem)");
+    expect(globals).toContain("max-width: min(100%, var(--hero-content-width, 600px))");
     expect(globals).toContain("position: absolute");
     expect(globals).toContain("inset: 0");
     expect(globals).toContain("padding-top: clamp(1.5rem, 3cqb, 2.5rem)");
@@ -85,12 +87,24 @@ describe("hero carousel premium composition", () => {
     expect(hero).not.toContain("previousIndex");
     expect(hero).not.toContain("stagger: 0.085");
 
-    expect(globals).toContain("--font-instrument-sans-family");
+    expect(globals).toContain("--font-google-sans-flex");
+    expect(globals).toContain("--font-google-sans");
+    expect(globals).not.toContain("--font-inter");
+    expect(globals).not.toContain("SF Pro Display");
     expect(existsSync(join(process.cwd(), "lib/fonts/storefront.ts"))).toBe(true);
     expect(existsSync(join(process.cwd(), "lib/fonts/misans.ts"))).toBe(false);
     const fonts = source("lib/fonts/storefront.ts");
-    expect(fonts).toContain("Instrument_Sans");
-    expect(fonts).toContain("GeistSans");
+    expect(fonts).toContain("googleSansFlex");
+    expect(fonts).toContain("googleSans");
+    expect(fonts).toContain("--font-google-sans-flex");
+    expect(fonts).toContain("--font-google-sans");
+    expect(fonts).not.toContain("Inter");
+    expect(fonts).not.toContain("SF Pro Display");
+    expect(fonts).not.toContain("Plus_Jakarta_Sans");
+    expect(fonts).not.toContain("--font-plus-jakarta");
+    expect(fonts).not.toContain("Outfit");
+    expect(fonts).not.toContain("Instrument_Sans");
+    expect(fonts).not.toContain("GeistSans");
     expect(globals).toContain(".hero-banner-product-image :is(img, video)");
     expect(globals).not.toContain("@keyframes heroSlideCrossfade");
     expect(globals).toContain("object-fit: cover");
@@ -106,7 +120,8 @@ describe("hero carousel premium composition", () => {
     expect(existsSync(join(process.cwd(), "app/storefront-showcase.css"))).toBe(false);
     expect(existsSync(join(process.cwd(), "app/ecosystem-showcase.css"))).toBe(false);
 
-    expect(hero).toContain("hero-premium-field relative isolate h-[80svh] min-h-[480px] md:min-h-[580px] w-full overflow-hidden");
+    expect(hero).toContain("hero-premium-field relative isolate");
+    expect(hero).toContain("md:h-[80svh] md:min-h-[580px]");
     expect(hero).toContain("hero-dji-layout");
     expect(hero).toContain("hero-dji-title");
     expect(hero).toContain("hero-dji-subtitle");
@@ -121,18 +136,24 @@ describe("hero carousel premium composition", () => {
     expect(globals).toContain("object-fit: cover");
     expect(globals).toContain("justify-content: center");
     expect(globals).toContain("grid-template-columns: 1fr");
-    expect(globals).toContain("font-weight: 700");
-    expect(globals).toContain("white-space: nowrap");
+    expect(globals).toContain("--font-google-sans-flex");
+    expect(globals).not.toContain("--font-plus-jakarta");
+    expect(globals).toContain("font-weight: var(--hero-heading-weight, 600)");
+    expect(globals).toContain("font-weight: var(--hero-desc-weight, 550)");
+    expect(globals).toContain("text-wrap: nowrap");
 
     expect(layout).toContain("storefront");
     expect(layout).toContain("@/lib/fonts/storefront");
+    expect(layout).toContain("googleSansFlex.variable");
+    expect(layout).toContain("googleSans.variable");
+    expect(layout).not.toContain("plusJakartaSans.variable");
+    expect(layout).not.toContain("outfit.variable");
     expect(layout).not.toContain("misans-vf");
     expect(layout).not.toContain("Manrope");
     expect(layout).not.toContain("Montserrat");
-    expect(layout).not.toContain("Inter");
-    expect(layout).not.toContain("Outfit");
+    expect(layout).not.toContain("fonts-pending");
 
-    expect(nav).toContain("adaptive-navbar left-0 top-0 z-[var(--z-nav)] w-full");
-    expect(nav).toContain("style={style}");
+    expect(nav).toContain("TOP_NAVBAR adaptive-navbar relative left-0 top-0 z-[var(--z-nav)] w-full");
+    expect(nav).toContain("adaptive-navbar__bar");
   });
 });

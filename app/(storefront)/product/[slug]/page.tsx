@@ -9,7 +9,6 @@ import { CatalogDataErrorPanel } from "@/components/layout/catalog-integrity-not
 import { ProductContactDefaults } from "@/sections/product/product-contact-defaults";
 import type { ProductConfiguratorModel } from "@/sections/product/product-configurator";
 import { ProductDetailHeader } from "@/sections/product/product-detail-header";
-import { ProductContinueExploringSection } from "@/sections/product/product-continue-exploring-section";
 import { RecordProductView } from "@/components/product/record-product-view";
 import { ProductRecentlyViewedSection } from "@/sections/product/product-recently-viewed-section";
 import { ProductRelatedAsyncSection } from "@/sections/product/product-related-async-section";
@@ -87,6 +86,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <SoftErrorBoundary label="Product gallery">
             <ProductImmersiveGallery
               mediaPlan={mediaPlan}
+              productSlug={product.slug}
               showBadge={Boolean(product.badge?.trim())}
               badgeLabel={product.badge?.trim() || undefined}
             />
@@ -125,7 +125,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <ProductRelatedAsyncSection slug={product.slug} />
       </Suspense>
       <ProductRecentlyViewedSection currentSlug={product.slug} />
-      <ProductContinueExploringSection />
     </article>
   );
 }

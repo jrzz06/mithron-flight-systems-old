@@ -181,7 +181,7 @@ function InlineStockEditor({
           aria-label={`Stock quantity for ${row.productName}`}
           className="h-8 w-20 rounded-lg border border-slate-800 bg-[#0b1017] px-2 text-sm font-semibold text-slate-100 outline-none focus:border-emerald-400/70"
         />
-        <OperationalSubmitButton pendingLabel="Saving" className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.04] px-2 text-[11px] font-semibold text-slate-200 hover:border-slate-700">
+        <OperationalSubmitButton pendingLabel="Saving" className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.04] px-2 type-meta font-semibold text-slate-200 hover:border-slate-700">
           Save
         </OperationalSubmitButton>
       </form>
@@ -199,7 +199,7 @@ function InlineStockEditor({
         <HiddenInventoryFields row={row} quantity={row.quantity + 1} />
         <button
           data-inventory-increment="1"
-          className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.03] px-2 text-[11px] font-semibold text-slate-300 hover:border-emerald-400/40 hover:text-emerald-100"
+          className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.03] px-2 type-meta font-semibold text-slate-300 hover:border-emerald-400/40 hover:text-emerald-100"
         >
           +1
         </button>
@@ -218,7 +218,7 @@ function InlineStockEditor({
         <HiddenInventoryFields row={row} quantity={row.quantity + 5} />
         <button
           data-inventory-increment="5"
-          className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.03] px-2 text-[11px] font-semibold text-slate-300 hover:border-emerald-400/40 hover:text-emerald-100"
+          className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.03] px-2 type-meta font-semibold text-slate-300 hover:border-emerald-400/40 hover:text-emerald-100"
         >
           +5
         </button>
@@ -237,7 +237,7 @@ function InlineStockEditor({
         <HiddenInventoryFields row={row} quantity={row.quantity + 10} />
         <button
           data-inventory-increment="10"
-          className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.03] px-2 text-[11px] font-semibold text-slate-300 hover:border-emerald-400/40 hover:text-emerald-100"
+          className="inline-flex h-8 items-center rounded-lg border border-slate-800 bg-white/[0.03] px-2 type-meta font-semibold text-slate-300 hover:border-emerald-400/40 hover:text-emerald-100"
         >
           +10
         </button>
@@ -291,7 +291,7 @@ const InventoryRow = memo(function InventoryRow({
         </Link>
         <p className="mt-0.5 truncate text-xs text-slate-500">{row.productSlug}</p>
         {row.isArchived ? (
-          <span className="mt-1 inline-flex rounded-md bg-rose-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-200 ring-1 ring-rose-400/20">
+          <span className="mt-1 inline-flex rounded-md bg-rose-500/10 px-2 py-0.5 type-badge font-semibold uppercase tracking-wide text-rose-200 ring-1 ring-rose-400/20">
             Archived
           </span>
         ) : null}
@@ -507,7 +507,7 @@ export function InventoryManager({
     <section data-inventory-system className="mithron-elevated-card grid gap-3 rounded-xl border border-slate-800 bg-[#0f141b] p-3 text-slate-100 md:p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Stock control</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.14em] text-slate-500">Stock control</p>
           <h2 className="mt-1 text-xl font-semibold text-slate-100">
             {title}{" "}
             <span className="text-slate-500">
@@ -575,7 +575,7 @@ export function InventoryManager({
               </OperationalSubmitButton>
             </form>
           ) : null}
-          <span className="ml-auto px-2 text-[11px] text-slate-500">
+          <span className="ml-auto px-2 type-meta text-slate-500">
             One click adds stock across catalog rows.
           </span>
         </div>
@@ -752,9 +752,9 @@ export function InventoryManager({
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-slate-100">{row.productName}</p>
-                <p className="mt-1 truncate font-mono text-[11px] text-slate-500">{row.sku}</p>
-                <p className="mt-1 text-[11px] text-slate-600">{formatUpdated(row.lastUpdated)}</p>
-                {row.isArchived ? <p className="mt-1 text-[10px] font-semibold uppercase text-rose-300">Archived</p> : null}
+                <p className="mt-1 truncate font-mono type-meta text-slate-500">{row.sku}</p>
+                <p className="mt-1 type-meta text-slate-600">{formatUpdated(row.lastUpdated)}</p>
+                {row.isArchived ? <p className="mt-1 type-badge font-semibold uppercase text-rose-300">Archived</p> : null}
               </div>
               {!readOnly ? (
               <input
@@ -845,7 +845,7 @@ export function InventoryManager({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Adjust stock</p>
+                <p className="type-meta font-semibold uppercase tracking-[0.14em] text-slate-500">Adjust stock</p>
                 <h3 className="mt-1 text-lg font-semibold text-slate-100">{adjustingRow.productName}</h3>
                 <p className="mt-1 text-xs text-slate-500">{adjustingRow.sku} · {adjustingRow.warehouseCode || "No warehouse"}</p>
               </div>
@@ -950,7 +950,7 @@ export function InventoryManager({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Bulk stock</p>
+                <p className="type-meta font-semibold uppercase tracking-[0.14em] text-slate-500">Bulk stock</p>
                 <h3 className="mt-1 text-lg font-semibold text-slate-100">{selected.size} selected</h3>
               </div>
               <button type="button" onClick={() => setBulkDrawerOpen(false)} aria-label="Close bulk stock update" className="grid h-8 w-8 place-items-center rounded-lg border border-slate-700 text-slate-300 hover:bg-[#151c26]">

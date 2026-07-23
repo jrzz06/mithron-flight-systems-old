@@ -125,7 +125,7 @@ export function ProductDetailEditDialog({
 
         <div className="flex items-start justify-between gap-4 px-5 py-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">Product info</p>
+            <p className="type-meta font-semibold uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">Product info</p>
             <h2 className="mt-1 text-lg font-medium text-[var(--platform-text-primary)]">Edit product</h2>
           </div>
           <button
@@ -156,7 +156,7 @@ export function ProductDetailEditDialog({
         ) : (
           <div className="grid gap-5 overflow-y-auto px-5 py-5">
             <section data-product-basic-info className="grid gap-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">Basic info</p>
+              <p className="type-meta font-semibold uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">Basic info</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-1.5 text-sm sm:col-span-2">
                   <ProductFieldLabel>Name</ProductFieldLabel>

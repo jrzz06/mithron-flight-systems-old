@@ -102,7 +102,11 @@ export async function generateGeminiText(input: {
 
 export async function generateGeminiImage(input: {
   prompt: string;
+  /** Optional source image for edit / restore (base64, no data: prefix). */
+  imageBase64?: string;
+  imageMimeType?: string;
   env?: Record<string, string | undefined>;
+  timeoutMs?: number;
 }) {
   const env = input.env ?? process.env;
   const apiKey = getGeminiApiKey(env);
@@ -114,10 +118,20 @@ export async function generateGeminiImage(input: {
   await acquireGeminiTextSlot({
     model,
     prompt: input.prompt,
-    estimatedTokens: estimateGeminiTokens(input.prompt),
+    estimatedTokens: estimateGeminiTokens(input.prompt) + (input.imageBase64 ? 2000 : 0),
     env,
     maxWaitMs: Number(env.GEMINI_IMAGE_RATE_LIMIT_MAX_WAIT_MS ?? "60000")
   });
+
+  const parts: Array<Record<string, unknown>> = [{ text: input.prompt }];
+  if (input.imageBase64?.trim()) {
+    parts.push({
+      inlineData: {
+        mimeType: input.imageMimeType?.trim() || "image/png",
+        data: input.imageBase64.trim()
+      }
+    });
+  }
 
   const response = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
@@ -125,11 +139,11 @@ export async function generateGeminiImage(input: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: input.prompt }] }],
+        contents: [{ role: "user", parts }],
         generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
       })
     },
-    60_000
+    input.timeoutMs ?? 120_000
   );
 
   const payload = (await response.json()) as GeminiGenerateContentResponse;

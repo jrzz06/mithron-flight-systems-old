@@ -208,33 +208,24 @@ function uniqueMediaBySrc(items: MediaAsset[]) {
 }
 
 function mediaReliabilityScore(src: string) {
-  if (src.includes("/catalog-cutouts/")) return 4;
+  // Cutouts are never preferred on storefront — Wix/original Supabase uploads win.
+  if (src.includes("/catalog-cutouts/")) return 0;
+  if (src.includes("/wix-content/")) return 5;
   if (src.includes("/storage/v1/object/public/")) return 3;
   if (src.startsWith("/")) return 2;
   return 1;
 }
 
-function preferCatalogCutoutDisplayAsset(asset: MediaAsset, primary?: MediaAsset): MediaAsset {
-  const ownFallback = asset.responsive?.fallbackSrc?.trim() ?? "";
-  if (ownFallback.includes("/catalog-cutouts/") && ownFallback.includes(".supabase.co/storage/")) {
-    return {
-      ...asset,
-      src: ownFallback,
-      alt: asset.responsive?.fallbackAlt?.trim() || asset.alt
-    };
-  }
+function preferNonCutoutDisplayAsset(asset: MediaAsset): MediaAsset | null {
+  if (asset.src.includes("/catalog-cutouts/")) return null;
 
-  const primaryFallback = primary?.responsive?.fallbackSrc?.trim() ?? "";
-  const primarySrc = primary?.src?.trim() ?? "";
-  if (
-    primaryFallback.includes("/catalog-cutouts/")
-    && primarySrc
-    && asset.src.trim() === primarySrc
-  ) {
+  const ownFallback = asset.responsive?.fallbackSrc?.trim() ?? "";
+  if (ownFallback.includes("/catalog-cutouts/")) {
     return {
       ...asset,
-      src: primaryFallback,
-      alt: primary?.responsive?.fallbackAlt?.trim() || asset.alt
+      responsive: asset.responsive
+        ? { ...asset.responsive, fallbackSrc: asset.src, fallbackAlt: asset.alt }
+        : undefined
     };
   }
 
@@ -255,9 +246,9 @@ function assignMediaRole(index: number, total: number): MediaPlanRole {
 
 export function buildProductMediaPlan(product: Product): ProductMediaPlanItem[] {
   const pool = sortMediaAssets(
-    uniqueMediaBySrc([product.hero, product.image, ...product.gallery]).map((asset) =>
-      preferCatalogCutoutDisplayAsset(asset, product.image)
-    )
+    uniqueMediaBySrc([product.hero, product.image, ...product.gallery])
+      .map((asset) => preferNonCutoutDisplayAsset(asset))
+      .filter((asset): asset is MediaAsset => Boolean(asset))
   );
   return pool.map((asset, index) => ({
     ...asset,

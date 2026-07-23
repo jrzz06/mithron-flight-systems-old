@@ -268,7 +268,7 @@ export function SiteFooter({ content = emptyFooterContent }: { content?: FooterC
                 Mithron India Smart Services Private Limited
               </h4>
               <div className="text-sm leading-relaxed text-white/80 font-normal text-left">
-                <p className="text-[11px] font-semibold tracking-wider text-white/60 uppercase">Head Office</p>
+                <p className="type-meta font-semibold tracking-wider text-white/60 uppercase">Head Office</p>
                 <address className="not-italic mt-2 space-y-0.5">
                   <div>#35/1 GST Road, Essa Pallavaram</div>
                   <div>(Near Chromepet Saravana Store)</div>
@@ -315,7 +315,7 @@ export function SiteFooter({ content = emptyFooterContent }: { content?: FooterC
               </h4>
               <div className="text-sm leading-relaxed text-white/80 font-normal flex flex-col gap-4 text-left">
                 <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-semibold tracking-wider text-white/60 uppercase">Phone</p>
+                  <p className="type-meta font-semibold tracking-wider text-white/60 uppercase">Phone</p>
                   <div className="flex flex-col gap-1.5">
                     <a
                       href={`tel:${footerOfficialLinks.contactPhones[0]}`}
@@ -339,7 +339,7 @@ export function SiteFooter({ content = emptyFooterContent }: { content?: FooterC
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-semibold tracking-wider text-white/60 uppercase">Email</p>
+                  <p className="type-meta font-semibold tracking-wider text-white/60 uppercase">Email</p>
                   <a
                     href={`mailto:${footerOfficialLinks.contactEmail}`}
                     className="hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded break-words"

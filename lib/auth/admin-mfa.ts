@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { normalizeCmsRole } from "@/lib/auth/permissions";
+import { unwrapAuthNextPath } from "@/lib/auth/redirects";
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -18,6 +19,7 @@ export function adminUserNeedsMfaEnrollment(user: User, env: EnvSource = process
 
 export function getAdminMfaRedirectPath(nextPath: string) {
   const params = new URLSearchParams({ mfa_required: "1" });
-  if (nextPath) params.set("next", nextPath);
+  const safeNext = unwrapAuthNextPath(nextPath, "");
+  if (safeNext) params.set("next", safeNext);
   return `/account/security?${params.toString()}`;
 }

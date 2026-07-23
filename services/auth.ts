@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { authorizeRoute, defaultPathForRole, isStrictAdminRole } from "@/lib/auth/access-control";
+import { buildAccessDeniedRedirectPath, buildLoginRedirectPath } from "@/lib/auth/redirects";
 import { readSessionHandoff } from "@/lib/auth/session-handoff";
 import { assertRolePermission, assertAnyRolePermission, PermissionDeniedError, normalizeCmsRole, type EnterprisePermission } from "@/lib/auth/permissions";
 import { ProfileDisabledError } from "@/lib/auth/profile-disabled";
@@ -339,8 +340,10 @@ export async function assertRouteAccessOrRedirect(pathname: string) {
     }).catch((error) => console.error("[mithron-security] Failed to log route denial.", error));
 
     const destination = authorization.httpStatus === 401
-      ? `/login?next=${encodeURIComponent(pathname)}`
-      : `${defaultPathForRole(context.role)}?${authorization.eventType === "security.admin_shell_denied" ? "admin_status" : "access_status"}=forbidden&next=${encodeURIComponent(pathname)}`;
+      ? buildLoginRedirectPath(pathname)
+      : buildAccessDeniedRedirectPath(defaultPathForRole(context.role), pathname, {
+          statusKey: authorization.eventType === "security.admin_shell_denied" ? "admin_status" : "access_status"
+        });
     redirect(destination);
   }
 

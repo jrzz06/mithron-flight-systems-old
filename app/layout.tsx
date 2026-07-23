@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { fontBody, fontDisplay } from "@/lib/fonts/storefront";
+import { googleSans, googleSansFlex } from "@/lib/fonts/storefront";
 import "./globals.css";
 import { NavbarInkBootstrapScript } from "@/components/navigation/navbar-ink-bootstrap-script";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ObservabilityProvider } from "@/components/providers/observability-provider";
 import { GlobalBusyFixedIndicator, GlobalBusyProvider } from "@/components/ui/global-busy";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { buildSiteStructuredData } from "@/lib/structured-data";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -47,22 +48,20 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fontDisplay.variable} ${fontBody.variable} fonts-pending`}
+      data-scroll-behavior="smooth"
+      className={`${googleSansFlex.variable} ${googleSans.variable}`}
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=document.documentElement;function ready(){d.classList.remove("fonts-pending");d.classList.add("fonts-ready");}if(!document.fonts||!document.fonts.ready){ready();return;}document.fonts.ready.then(ready).catch(ready);setTimeout(ready,2500);}catch(e){document.documentElement.classList.add("fonts-ready");}})();`
-          }}
-        />
         <NavbarInkBootstrapScript />
       </head>
       <body suppressHydrationWarning>
         <JsonLd data={siteStructuredData} />
         <ObservabilityProvider>
           <GlobalBusyProvider>
-            {children}
-            <GlobalBusyFixedIndicator />
+            <TooltipProvider>
+              {children}
+              <GlobalBusyFixedIndicator />
+            </TooltipProvider>
           </GlobalBusyProvider>
         </ObservabilityProvider>
       </body>

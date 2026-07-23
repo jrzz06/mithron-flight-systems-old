@@ -7,7 +7,7 @@
   --editorial-card-radius: 18px;
   position: relative;
   overflow: hidden;
-  padding: clamp(48px, 6vh, 80px) 0;
+  padding: clamp(56px, 7vh, 96px) 0;
   background:
     radial-gradient(ellipse 85% 70% at 8% 12%, rgba(0, 77, 122, 0.55) 0%, transparent 58%),
     radial-gradient(ellipse 70% 60% at 92% 88%, rgba(168, 235, 18, 0.42) 0%, transparent 55%),
@@ -73,7 +73,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: clamp(16px, 3vw, 28px);
-  margin-bottom: clamp(20px, 2.5vh, 28px);
+  margin-bottom: clamp(24px, 3vh, 36px);
 }
 
 .headerCopy {
@@ -188,13 +188,13 @@
 
 @media (max-width: 767px) {
   .section {
-    padding: var(--mobile-section-gap, 1.25rem) 0;
+    padding: clamp(2rem, 5vw, 2.5rem) 0;
   }
 
   .header {
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: var(--mobile-section-gap, 1.25rem);
+    margin-bottom: clamp(1.5rem, 4vw, 2rem);
   }
 
   .title {
@@ -207,7 +207,7 @@
   }
 
   .gallery {
-    gap: 10px;
+    gap: 14px;
   }
 
   .galleryItem {

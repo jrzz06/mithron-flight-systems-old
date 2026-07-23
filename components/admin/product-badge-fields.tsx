@@ -35,7 +35,7 @@ export function ProductBadgeFields({
   return (
     <section data-product-badge-fields className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">
+        <p className="type-meta font-semibold uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">
           Product ribbon
         </p>
         <button

@@ -1,5 +1,5 @@
 import type { MediaAsset, Product, ResponsiveMediaAsset } from "@/config/types";
-import { isCatalogCutoutAsset, resolveCatalogCutoutAsset } from "@/lib/media/catalog-cutout";
+import { isCatalogCutoutAsset } from "@/lib/media/catalog-cutout";
 import { isTrustedCatalogStorageSrc } from "@/lib/media/cdn-url";
 
 export type ProductCardImageSource = {
@@ -17,6 +17,11 @@ function isRemoteImageSrc(src: string) {
   return src.startsWith("http://") || src.startsWith("https://");
 }
 
+/** Legacy cutouts banned; ai-cutout allowed for cards/primary. */
+function isBannedCutoutSrc(src: string) {
+  return isCatalogCutoutAsset({ src });
+}
+
 export type CatalogCardImageCandidate = {
   src: string;
   alt: string;
@@ -24,14 +29,30 @@ export type CatalogCardImageCandidate = {
   useSourceImage: boolean;
 };
 
+function hasUsableResponsiveVariants(responsive?: ResponsiveMediaAsset) {
+  return Boolean(responsive?.variants?.webp?.length || responsive?.variants?.avif?.length);
+}
+
 /** Prefer the canonical Supabase object URL for catalog cards instead of generated variants that may 404. */
 export function resolveCatalogCardImage(asset: Pick<MediaAsset, "src" | "alt" | "responsive"> | ProductCardImageSource["image"]) {
   const fallback = asset.responsive?.fallbackSrc?.trim() ?? "";
   const src = asset.src?.trim() ?? "";
   const alt = asset.alt?.trim() ?? "";
 
-  if (fallback && isTrustedCatalogStorageSrc(fallback)) {
-    return { src: fallback, alt };
+  // Never swap a real/Wix/ai-cutout primary for a legacy cutout fallback.
+  if (src && !isBannedCutoutSrc(src) && fallback && isBannedCutoutSrc(fallback)) {
+    return { src, alt };
+  }
+
+  if (src && isBannedCutoutSrc(src)) {
+    if (fallback && !isBannedCutoutSrc(fallback) && isTrustedCatalogStorageSrc(fallback)) {
+      return { src: fallback, alt: asset.responsive?.fallbackAlt?.trim() || alt };
+    }
+    return { src: "", alt };
+  }
+
+  if (fallback && !isBannedCutoutSrc(fallback) && isTrustedCatalogStorageSrc(fallback)) {
+    return { src: fallback, alt: asset.responsive?.fallbackAlt?.trim() || alt };
   }
 
   return { src, alt };
@@ -41,7 +62,8 @@ function pickDelivery(
   asset: ProductCardImageSource["image"] | Pick<MediaAsset, "src" | "responsive">,
   resolvedSrc: string
 ): Pick<CatalogCardImageCandidate, "responsive" | "useSourceImage"> {
-  if (isCatalogCutoutAsset({ src: resolvedSrc })) {
+  // Legacy catalog-cutouts stay banned from responsive delivery.
+  if (isBannedCutoutSrc(resolvedSrc)) {
     return { useSourceImage: true, responsive: undefined };
   }
 
@@ -49,12 +71,12 @@ function pickDelivery(
     return { useSourceImage: true, responsive: undefined };
   }
 
-  const canonical = asset.responsive?.fallbackSrc?.trim() ?? "";
-  if (canonical && resolvedSrc === canonical) {
-    return { useSourceImage: true, responsive: undefined };
-  }
-
-  if (asset.responsive && isTrustedCatalogStorageSrc(resolvedSrc)) {
+  // When real variants exist (incl. ai-cutout after backfill), use srcset.
+  if (
+    asset.responsive
+    && hasUsableResponsiveVariants(asset.responsive)
+    && isTrustedCatalogStorageSrc(resolvedSrc)
+  ) {
     return { useSourceImage: false, responsive: asset.responsive };
   }
 
@@ -68,6 +90,7 @@ function pushCatalogCandidate(
 ) {
   const resolved = resolveCatalogCardImage(asset);
   if (!resolved.src || seen.has(resolved.src)) return;
+  if (isBannedCutoutSrc(resolved.src)) return;
   if (isRemoteImageSrc(resolved.src) && !isTrustedCatalogStorageSrc(resolved.src)) return;
 
   seen.add(resolved.src);
@@ -78,20 +101,22 @@ function pushCatalogCandidate(
   });
 }
 
-/** Ordered image candidates for product cards: cutout first, then primary image, then hero/gallery fallbacks. */
+/** Ordered image candidates: primary (incl. ai-cutout), then non-legacy hero/gallery. */
 export function buildCatalogCardImageCandidates(product: ProductCardImageSource): CatalogCardImageCandidate[] {
   const candidates: CatalogCardImageCandidate[] = [];
   const seen = new Set<string>();
 
-  const cutout = resolveCatalogCutoutAsset(product);
-  if (cutout) {
-    pushCatalogCandidate(candidates, seen, cutout);
+  if (!isBannedCutoutSrc(product.image.src ?? "")) {
+    pushCatalogCandidate(candidates, seen, product.image);
   }
 
-  pushCatalogCandidate(candidates, seen, product.image);
-
   const fallbackSrc = product.image.responsive?.fallbackSrc?.trim() ?? "";
-  if (fallbackSrc && !seen.has(fallbackSrc) && (!isRemoteImageSrc(fallbackSrc) || isTrustedCatalogStorageSrc(fallbackSrc))) {
+  if (
+    fallbackSrc
+    && !seen.has(fallbackSrc)
+    && !isBannedCutoutSrc(fallbackSrc)
+    && (!isRemoteImageSrc(fallbackSrc) || isTrustedCatalogStorageSrc(fallbackSrc))
+  ) {
     seen.add(fallbackSrc);
     candidates.push({
       src: fallbackSrc,
@@ -100,12 +125,15 @@ export function buildCatalogCardImageCandidates(product: ProductCardImageSource)
     });
   }
 
-  if (product.hero?.src?.trim()) {
+  // Prefer ai-cutout primary; skip marketing hero on cards when primary exists.
+  if (!candidates.length && product.hero?.src?.trim() && !isBannedCutoutSrc(product.hero.src)) {
     pushCatalogCandidate(candidates, seen, product.hero);
   }
 
   for (const item of product.gallery ?? []) {
-    pushCatalogCandidate(candidates, seen, item);
+    if (item?.src?.trim() && !isBannedCutoutSrc(item.src) && !item.src.includes("/ai-hero/")) {
+      pushCatalogCandidate(candidates, seen, item);
+    }
   }
 
   return candidates;

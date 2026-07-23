@@ -77,20 +77,20 @@ export default async function AdminPage() {
             href={card.href}
             className="rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-4 py-3 transition hover:bg-[var(--platform-surface-raised)]"
           >
-            <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{card.label}</p>
+            <p className="type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{card.label}</p>
             <p className={`mt-1 text-3xl font-semibold tabular-nums ${card.tone}`}>{card.value}</p>
           </Link>
         ))}
       </section>
 
       <section className="grid gap-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Action queue</h2>
+        <h2 className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Action queue</h2>
 
         <div className="grid gap-4 xl:grid-cols-2">
           <QueuePanel title="Pending orders" href="/admin/orders?queue=review" emptyLabel="No orders need review.">
             {reviewOrders.length ? (
               <table className="min-w-full text-sm">
-                <thead className="border-b border-[var(--platform-border)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+                <thead className="border-b border-[var(--platform-border)] text-left type-meta uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Order</th>
                     <th className="px-3 py-2 font-medium">Customer</th>
@@ -130,7 +130,7 @@ export default async function AdminPage() {
           <QueuePanel title="Inventory alerts" href="/admin/inventory" emptyLabel="Stock levels are healthy.">
             {inventoryAlerts.length ? (
               <table className="min-w-full text-sm">
-                <thead className="border-b border-[var(--platform-border)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+                <thead className="border-b border-[var(--platform-border)] text-left type-meta uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Product</th>
                     <th className="px-3 py-2 font-medium">SKU</th>
@@ -155,7 +155,7 @@ export default async function AdminPage() {
           <QueuePanel title="Supplier approvals" href="/admin/suppliers/products" emptyLabel="No submissions awaiting approval.">
             {pendingSubmissions.length ? (
               <table className="min-w-full text-sm">
-                <thead className="border-b border-[var(--platform-border)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+                <thead className="border-b border-[var(--platform-border)] text-left type-meta uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Product</th>
                     <th className="px-3 py-2 font-medium">Supplier</th>

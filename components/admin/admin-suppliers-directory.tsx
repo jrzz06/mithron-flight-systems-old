@@ -68,7 +68,7 @@ export function AdminSuppliersDirectory({ suppliers }: { suppliers: AdminSupplie
   return (
     <div className="overflow-x-auto rounded-[8px] border border-[var(--platform-border)]">
       <table className="min-w-full text-sm">
-        <thead className="sticky top-0 z-10 border-b border-[var(--platform-border)] bg-[var(--platform-surface-muted)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+        <thead className="sticky top-0 z-10 border-b border-[var(--platform-border)] bg-[var(--platform-surface-muted)] text-left type-meta uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
           <tr>
             <th className="px-3 py-2 font-medium">Company</th>
             <th className="px-3 py-2 font-medium">Contact</th>

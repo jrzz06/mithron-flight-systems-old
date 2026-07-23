@@ -97,7 +97,7 @@ export function PlatformTopbar({
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{scopeLabel ?? page.kicker}</p>
+          <p className="type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{scopeLabel ?? page.kicker}</p>
           <h1 className="mt-0.5 truncate text-base font-medium tracking-normal text-[var(--platform-text-primary)] md:text-[17px]">
             {page.title}
           </h1>

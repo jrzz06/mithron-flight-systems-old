@@ -4,6 +4,7 @@ import { maybeNormalizeProductDescription } from "@/lib/product-description-norm
 import { normalizeProductDescriptionForSave } from "@/lib/product-description-ai-normalize";
 import { prepareEditorHtmlForSave } from "@/lib/editor/prepare-html";
 import { assertAllowedProductMediaUrl } from "@/lib/media/is-blocked-external-media-url";
+import { resolveCanonicalProductCategory } from "@/lib/catalog-category-taxonomy";
 import { resolveProductPricing, type ProductDiscountType } from "@/lib/product-pricing";
 import { getProductTaxGroup, isProductTaxGroupId } from "@/lib/product-tax-groups";
 
@@ -589,9 +590,9 @@ function readProductCategory(formData: FormData) {
     if (!newCategory) {
       throw new Error("Product new_category is required when adding a new category.");
     }
-    return newCategory;
+    return resolveCanonicalProductCategory(newCategory);
   }
-  return readRequiredString(formData, "category", "Product");
+  return resolveCanonicalProductCategory(readRequiredString(formData, "category", "Product"));
 }
 
 export function buildProductQuickEditFromFormData(formData: FormData): ProductQuickEditFormInput {
@@ -607,7 +608,7 @@ export function buildProductQuickEditFromFormData(formData: FormData): ProductQu
 
   if (name) fields.name = name;
   if (tagline !== undefined) fields.tagline = tagline;
-  if (category) fields.category = category;
+  if (category) fields.category = resolveCanonicalProductCategory(category);
   Object.assign(fields, commerceFields);
   if (sourceAvailability) fields.source_availability = sourceAvailability;
   // Only touch `specs` when the structured "Key specs" editor was actually
@@ -639,7 +640,7 @@ export function buildProductQuickEditFromFormData(formData: FormData): ProductQu
 }
 
 export function buildProductCategoryMetadataFromFormData(formData: FormData): ProductCategoryMetadataFormInput {
-  const title = readRequiredString(formData, "category_title", "Category");
+  const title = resolveCanonicalProductCategory(readRequiredString(formData, "category_title", "Category"));
   const routeKey = assertCategoryRouteKey(readOptionalString(formData, "route_key") ?? slugFromCategoryTitle(title));
   const sortOrder = readOptionalNumber(formData, "sort_order", "Category sort order");
   const changeSummary = readOptionalString(formData, "change_summary");

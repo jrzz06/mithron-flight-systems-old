@@ -30,9 +30,16 @@ export function measureMarqueeLoopDistance(track: HTMLElement, itemCount: number
 }
 
 function restartMarqueeAnimation(track: HTMLElement) {
-  track.style.animation = "none";
-  void track.offsetHeight;
-  track.style.removeProperty("animation");
+  // Restart via reflow-free class toggle when possible; fall back to animationName swap.
+  const current = track.style.animationName;
+  track.style.animationName = "none";
+  // Double-rAF resumes on the next frames without synchronous layout thrash (offsetHeight).
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (current) track.style.animationName = current;
+      else track.style.removeProperty("animation-name");
+    });
+  });
 }
 
 function applyMarqueeDuration(track: HTMLElement, loopDistance: number, speedPxPerSec: number) {

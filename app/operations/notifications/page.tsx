@@ -96,7 +96,7 @@ export default async function OperationsNotificationsPage({ searchParams }: { se
         />
 
         <section data-operations-notification-route data-operations-notification-center className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Notification state</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Notification state</p>
           <div className="grid gap-2 md:grid-cols-3">
             <div data-notification-unread-state className="rounded-xl border border-white/10 bg-black/18 p-3">
               <StatusBadge status="unread" />
@@ -114,12 +114,12 @@ export default async function OperationsNotificationsPage({ searchParams }: { se
         </section>
 
         <section data-notification-event-categories className="grid gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Event categories</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Event categories</p>
           <DataList rows={categoryRows} />
         </section>
 
         <section data-notification-related-links className="grid gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Notification feed</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Notification feed</p>
           <div className="grid gap-2">
             {snapshot.data.notifications.slice(0, 10).map((notification) => (
               <Link

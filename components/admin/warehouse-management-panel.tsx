@@ -58,7 +58,7 @@ export function WarehouseDirectory({ warehouses }: WarehouseDirectoryProps) {
     <section data-warehouse-directory className="grid gap-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Warehouse sites</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.12em] text-slate-500">Warehouse sites</p>
           <h2 className="mt-1 text-base font-semibold text-slate-100">{liveWarehouses.length} active site{liveWarehouses.length === 1 ? "" : "s"}</h2>
         </div>
       </div>

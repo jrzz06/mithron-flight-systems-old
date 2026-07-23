@@ -75,7 +75,7 @@ function FulfillmentStepper({ status }: { status: string }) {
               }`}
             >
               <span
-                className={`grid size-5 place-items-center rounded-full text-[10px] ${
+                className={`grid size-5 place-items-center rounded-full type-badge ${
                   isCurrent || isComplete
                     ? "bg-[var(--platform-accent)] text-white"
                     : "bg-[var(--platform-border)] text-[var(--platform-text-muted)]"
@@ -178,15 +178,15 @@ export function WarehouseFulfillmentDetail({
           <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Customer</h3>
           <dl className="mt-3 grid gap-3 text-sm">
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Name</dt>
+              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Name</dt>
               <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerName}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Phone</dt>
+              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Phone</dt>
               <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerPhone}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Email</dt>
+              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Email</dt>
               <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerEmail}</dd>
             </div>
           </dl>
@@ -195,31 +195,31 @@ export function WarehouseFulfillmentDetail({
           <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Shipping</h3>
           <dl className="mt-3 grid gap-3 text-sm">
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Method</dt>
+              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Method</dt>
               <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{shippingMethod(order)}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Assigned</dt>
+              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Assigned</dt>
               <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{assignedPicker(order)}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Created</dt>
+              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Created</dt>
               <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{formatOrderDate(order.created_at)}</dd>
             </div>
             {tracking?.carrier ? (
               <div>
-                <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Carrier</dt>
+                <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Carrier</dt>
                 <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{tracking.carrier}</dd>
               </div>
             ) : null}
             {tracking?.trackingNumber ? (
               <div>
-                <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Tracking</dt>
+                <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Tracking</dt>
                 <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{tracking.trackingNumber}</dd>
               </div>
             ) : null}
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Ship to</dt>
+              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Ship to</dt>
               {address && address !== "—" ? (
                 <dd className="mt-1 min-w-0 whitespace-pre-line break-words text-[var(--platform-text-secondary)]">{address}</dd>
               ) : (
@@ -234,7 +234,7 @@ export function WarehouseFulfillmentDetail({
         <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Products</h3>
         <div className="min-w-0 overflow-x-auto rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-            <thead className="border-b border-[var(--platform-border)] text-[11px] uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+            <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
               <tr>
                 <th className="px-3 py-3">Image</th>
                 <th className="px-3 py-3">Product</th>

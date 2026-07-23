@@ -49,7 +49,7 @@ export function StatusPill({ status }: { status: string }) {
   return (
     <span
       aria-label={`Status: ${label}`}
-      className={`inline-flex w-fit items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium ${tone.surface} ${tone.text}`}
+      className={`inline-flex w-fit items-center gap-1.5 rounded-md px-1.5 py-0.5 type-meta font-medium ${tone.surface} ${tone.text}`}
     >
       <span className={`size-1.5 shrink-0 rounded-full ${tone.dot}`} aria-hidden="true" />
       {label}

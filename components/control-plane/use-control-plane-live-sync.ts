@@ -7,6 +7,8 @@ import type { EnterpriseRealtimeScope } from "@/services/enterprise-realtime";
 
 /** Coalesce router.refresh storms — same eventual UI, fewer concurrent RSC trees. */
 const ROUTER_REFRESH_COALESCE_MS = 8_000;
+/** Storefront CMS/catalog edits — prefer longer coalesce to avoid full-page SSR storms. */
+const STOREFRONT_ROUTER_REFRESH_COALESCE_MS = 30_000;
 
 /**
  * Shared live-sync hook.
@@ -21,6 +23,8 @@ export function useControlPlaneLiveSync(
 ) {
   const router = useRouter();
   const isAdminNoRefresh = scope === "admin";
+  const coalesceMs =
+    scope === "storefront" ? STOREFRONT_ROUTER_REFRESH_COALESCE_MS : ROUTER_REFRESH_COALESCE_MS;
   const lastRefreshAtRef = useRef(0);
   const pendingRefreshRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -30,7 +34,7 @@ export function useControlPlaneLiveSync(
     const scheduleRefresh = () => {
       const now = Date.now();
       const elapsed = now - lastRefreshAtRef.current;
-      if (elapsed >= ROUTER_REFRESH_COALESCE_MS) {
+      if (elapsed >= coalesceMs) {
         lastRefreshAtRef.current = now;
         router.refresh();
         return;
@@ -40,7 +44,7 @@ export function useControlPlaneLiveSync(
         pendingRefreshRef.current = null;
         lastRefreshAtRef.current = Date.now();
         router.refresh();
-      }, ROUTER_REFRESH_COALESCE_MS - elapsed);
+      }, coalesceMs - elapsed);
     };
 
     return subscribeControlPlaneLiveSync(scope, shouldRefresh, {
@@ -48,7 +52,7 @@ export function useControlPlaneLiveSync(
       routerRefresh: isAdminNoRefresh ? undefined : scheduleRefresh,
       preferReconcile: isAdminNoRefresh
     });
-  }, [enabled, isAdminNoRefresh, onAfterRefresh, router, scope, shouldRefresh]);
+  }, [coalesceMs, enabled, isAdminNoRefresh, onAfterRefresh, router, scope, shouldRefresh]);
 
   useEffect(() => {
     return () => {

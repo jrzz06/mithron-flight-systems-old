@@ -43,7 +43,7 @@ export async function AdminDashboardEnquiryQueue() {
     <QueuePanel title="Customer leads" href="/admin/leads" emptyLabel="No open leads.">
       {queueEnquiries.length ? (
         <table className="min-w-full text-sm">
-          <thead className="border-b border-[var(--platform-border)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+          <thead className="border-b border-[var(--platform-border)] text-left type-meta uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
             <tr>
               <th className="px-3 py-2 font-medium">Customer</th>
               <th className="px-3 py-2 font-medium">Subject</th>

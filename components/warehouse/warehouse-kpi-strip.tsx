@@ -10,7 +10,7 @@ export function WarehouseKpiStrip({ tiles }: { tiles: KpiTile[] }) {
       {tiles.map((tile) => {
         const content = (
           <>
-            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">{tile.label}</p>
+            <p className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">{tile.label}</p>
             <p className="mt-1 font-[var(--type-display)] text-2xl font-semibold text-[var(--platform-text-primary)]">{tile.value}</p>
           </>
         );

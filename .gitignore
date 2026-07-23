@@ -9,10 +9,23 @@
 # local pipeline state (never commit)
 tools/.enhance-*
 tools/.migrate-*
+tools/.product-ai-gen/
+tools/.wix-ai-pipeline/
+tools/.product-image-inventory.json
+tools/_probe-*
+tools/_start-*.ps1
+tools/tmp-*.mjs
+tools/leads-workflow-e2e-report.json
 public/**/*.enhanced.json
 public/**/*.bak
 tools/load-test-results.json
 tools/load-test-results*.json
+
+# local MCP / QA dumps
+.playwright-mcp/
+*-verify.png
+related-cards-flat.png
+specs-bg-verify.png
 
 # dependencies
 node_modules/
@@ -53,6 +66,8 @@ data/*.snapshot.json
 data/full-inventory-scan.json
 data/product-parity-report.json
 data/wix-vs-storefront-gap.json
+data/wix-content-migration/**
+!data/wix-content-migration/.gitkeep
 docs/dead-code-audit/automated-findings.json
 
 # misc

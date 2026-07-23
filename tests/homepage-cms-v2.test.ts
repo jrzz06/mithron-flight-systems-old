@@ -307,7 +307,9 @@ describe("mini carousel cms fallback", () => {
         }
       ]
     });
-    expect(items).toHaveLength(0);
+    // All CMS pins missed — fall back to catalog picks so the strip is never empty.
+    expect(items.length).toBeGreaterThan(0);
+    expect(items[0]?.href).toContain("/product/test-drone");
   });
 
   it("prefers live product fields over stored slide overrides", () => {

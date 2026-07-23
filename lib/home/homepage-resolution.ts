@@ -118,7 +118,7 @@ export const homeChapters: HomeChapter[] = [
     media: localMedia.droneWorld,
     productFilter: droneWorldProductFilter,
     proofState: "VERIFIED",
-    proof: ["Catalog products", "Product detail routes", "Published images"]
+    proof: ["Published products", "Product detail routes", "Published images"]
   },
   {
     id: "drone-care",
@@ -131,7 +131,7 @@ export const homeChapters: HomeChapter[] = [
     media: localMedia.droneCare,
     productFilter: droneCareProductFilter,
     proofState: "VERIFIED",
-    proof: ["Accessory catalog", "Care paths", "Product links"]
+    proof: ["Accessories", "Care paths", "Product links"]
   },
   {
     id: "global-products",
@@ -319,7 +319,7 @@ function shelfChapterToCms(chapter: HomeChapter, heroSrc: string, heroAlt: strin
     heroEyebrow: chapter.eyebrow,
     heroSubtitle: "",
     heroBody: chapter.body,
-    featureCta: chapter.cta === "View All" ? "Shop products" : chapter.cta,
+    featureCta: chapter.cta === "View All" ? "Shop products" : chapter.cta.replace(/\bcatalog\b/gi, "collection"),
     heroCtaHref: getHomepageShelfCatalogHref(shelfId),
     heroImageSrc: heroSrc,
     heroImageAlt: heroAlt,

@@ -19,6 +19,8 @@ export type ProductShelfConfig = {
   title: string;
   href: string;
   viewAllLabel: string;
+  guideEyebrow: string;
+  guideHeadline: string;
   productFilter: (product: Product) => boolean;
   featurePriority: string[];
   featureExclude: string[];
@@ -58,7 +60,9 @@ const baseShelfConfigs: Record<HomepageShelfId, Omit<ProductShelfConfig, "produc
   "drone-world": {
     id: "drone-world",
     href: getHomepageShelfCatalogHref("drone-world"),
-    viewAllLabel: "View All",
+    viewAllLabel: "All Drones",
+    guideEyebrow: "Buying guides",
+    guideHeadline: "Which Drone Is Right for Me?",
     productFilter: droneWorldProductFilter,
     featurePriority: ["drone", "uav", "kisan", "sprayer", "seed spreader"],
     featureExclude: ["controller", "flight controller", "propeller", "battery", "cable", "connector", "sensor", "motor", "frame", "hpc"],
@@ -69,7 +73,9 @@ const baseShelfConfigs: Record<HomepageShelfId, Omit<ProductShelfConfig, "produc
   "drone-care": {
     id: "drone-care",
     href: getHomepageShelfCatalogHref("drone-care"),
-    viewAllLabel: "View All",
+    viewAllLabel: "All Accessories",
+    guideEyebrow: "Buying guides",
+    guideHeadline: "Which Accessory Do You Need?",
     productFilter: droneCareProductFilter,
     featurePriority: ["battery", "propeller", "controller", "gimbal", "filter", "care", "spare"],
     featureExclude: [],
@@ -80,7 +86,9 @@ const baseShelfConfigs: Record<HomepageShelfId, Omit<ProductShelfConfig, "produc
   "global-products": {
     id: "global-products",
     href: getHomepageShelfCatalogHref("global-products"),
-    viewAllLabel: "View All",
+    viewAllLabel: "All Global Products",
+    guideEyebrow: "Buying guides",
+    guideHeadline: "Which Global Product Fits Your Mission?",
     productFilter: globalProductFilter,
     featurePriority: ["drone", "survey", "surveillance", "mapping", "industrial", "system"],
     featureExclude: ["cable", "connector", "propeller", "battery", "motor", "frame"],
@@ -115,13 +123,6 @@ export function pickFeatureProduct(products: Product[], config: ProductShelfConf
 }
 
 export function pickShelfProducts(products: Product[], config: ProductShelfConfig, count = config.productCount || 5) {
-  if (config.productSlugs.length) {
-    const assigned = config.productSlugs
-      .map((slug) => products.find((product) => product.slug === slug))
-      .filter((product): product is Product => Boolean(product));
-    if (assigned.length) return assigned.slice(0, count);
-  }
-
   const selected = products.filter(config.productFilter);
   const pool = selected.length
     ? selected
@@ -130,6 +131,32 @@ export function pickShelfProducts(products: Product[], config: ProductShelfConfi
       : config.tone === "global"
         ? []
         : filterDroneWorldProducts(products);
+
+  if (config.productSlugs.length) {
+    const assigned = config.productSlugs
+      .map((slug) => products.find((product) => product.slug === slug))
+      .filter((product): product is Product => Boolean(product));
+
+    if (assigned.length >= count) {
+      return assigned.slice(0, count);
+    }
+
+    if (assigned.length > 0) {
+      // Partial CMS pins: keep assigned order, then backfill from category pool
+      // so shelves do not render with missing cards on the storefront.
+      const assignedSlugs = new Set(assigned.map((product) => product.slug));
+      const feature = pickFeatureProduct(
+        pool.filter((product) => !assignedSlugs.has(product.slug)),
+        config
+      );
+      const remaining = pool.filter(
+        (product) => !assignedSlugs.has(product.slug) && product.slug !== feature?.slug
+      );
+      const backfill = feature ? [feature, ...remaining] : remaining;
+      return [...assigned, ...backfill].slice(0, count);
+    }
+  }
+
   const feature = pickFeatureProduct(pool, config);
   if (!feature) return [];
   const remaining = pool.filter((product) => product.slug !== feature.slug);
@@ -142,6 +169,16 @@ export function buildShelfProductConfig(shelfId: HomepageShelfId, cmsShelf: Home
     shelfId === "drone-world" ? "Drone World"
     : shelfId === "drone-care" ? "Drone Care"
     : "Global Products";
+
+  const scrubCatalogWord = (value: string) =>
+    value
+      .replace(/\bview\s+catalog\b/gi, "Explore")
+      .replace(/\bpublished\s+catalog\b/gi, "store")
+      .replace(/\baccessory\s+catalog\b/gi, "accessories")
+      .replace(/\bcatalog\b/gi, "collection")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+
   return {
     ...base,
     href: cmsShelf.href?.trim() || base.href,
@@ -149,9 +186,9 @@ export function buildShelfProductConfig(shelfId: HomepageShelfId, cmsShelf: Home
     title: cmsShelf.title?.trim() || chapterTitle,
     viewAllLabel: cmsShelf.viewAllLabel,
     heroEyebrow: cmsShelf.heroEyebrow,
-    heroSubtitle: cmsShelf.heroSubtitle,
-    heroBody: cmsShelf.heroBody,
-    featureCta: cmsShelf.featureCta,
+    heroSubtitle: scrubCatalogWord(cmsShelf.heroSubtitle ?? ""),
+    heroBody: scrubCatalogWord(cmsShelf.heroBody ?? ""),
+    featureCta: scrubCatalogWord(cmsShelf.featureCta ?? ""),
     heroCtaHref: cmsShelf.heroCtaHref?.trim() || base.heroCtaHref,
     productSlugs: cmsShelf.productSlugs,
     productCount: cmsShelf.productCount || 5

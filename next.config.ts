@@ -143,6 +143,8 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 96, 160, 256, 384]
   },
   experimental: {
+    // React View Transitions for product card → PDP shared-element morphs.
+    viewTransition: true,
     optimizePackageImports: [
       "lucide-react",
       "sonner",

@@ -63,7 +63,7 @@ export function HomepageBuilderNav({
       className="flex h-full min-h-0 flex-col gap-1 overflow-y-auto rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface)] p-2"
       aria-label="Homepage sections"
     >
-      <p className="hidden px-2 py-1 text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)] min-[1600px]:block">
+      <p className="hidden px-2 py-1 type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)] min-[1600px]:block">
         Outline
       </p>
       {homepageSectionRegistry.map((section) => {
@@ -77,7 +77,7 @@ export function HomepageBuilderNav({
           if (!missions.length) return null;
           return (
             <div key="mission-worlds" className="grid gap-0.5">
-              <p className="hidden px-2 pt-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)] min-[1600px]:block">
+              <p className="hidden px-2 pt-2 type-badge font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)] min-[1600px]:block">
                 Mission Worlds
               </p>
               {missions.map((mission) => (

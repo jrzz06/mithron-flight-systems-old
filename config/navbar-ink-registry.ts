@@ -2,6 +2,9 @@ import { catalogCategoryDefinitions } from "@/lib/catalog-category-taxonomy";
 
 export type NavbarInkTone = "light" | "dark";
 
+/** Flush = transparent overlay over heroes; solid = white storefront chrome. */
+export type NavbarChromeMode = "flush" | "solid";
+
 export const FLUSH_HERO_LIGHT_NAV_ROUTES = [
   "/agriculture",
   "/video-drones",
@@ -72,9 +75,8 @@ export function isFlushHeroStreamingRoute(pathname: string | null): boolean {
 /** SSR-safe bootstrap tone from pathname only. */
 export function getBootstrapNavbarInk(pathname: string | null): NavbarInkTone {
   const normalized = normalizeStorefrontPath(pathname);
-  if (normalized === "/") {
-    return resolveHomepageSlideNavbarInk(HOMEPAGE_BOOTSTRAP_SLIDE_ID);
-  }
+  // Home uses solid white chrome — dark ink so labels stay readable.
+  if (normalized === "/") return "dark";
   if (normalized === "/login") return "light";
 
   const categoryInk = categoryPathNavbarInk[normalized as keyof typeof categoryPathNavbarInk];
@@ -83,4 +85,14 @@ export function getBootstrapNavbarInk(pathname: string | null): NavbarInkTone {
   if (normalized.startsWith("/category/")) return "light";
   if (FLUSH_HERO_LIGHT_NAV_ROUTE_SET.has(normalized)) return "light";
   return "dark";
+}
+
+/**
+ * Route-derived navbar chrome (independent of leftover DOM from prior pages).
+ * Home is always solid white. Other light-bootstrap routes use flush overlay.
+ */
+export function resolveNavbarChromeMode(pathname: string | null): NavbarChromeMode {
+  const normalized = normalizeStorefrontPath(pathname);
+  if (normalized === "/") return "solid";
+  return getBootstrapNavbarInk(pathname) === "light" ? "flush" : "solid";
 }

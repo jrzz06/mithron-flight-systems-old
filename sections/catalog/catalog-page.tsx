@@ -11,6 +11,7 @@ import { resolveNavbarInkFromShowcase } from "@/lib/navbar-ink-sampling";
 import { catalogCinematicBannerFrame } from "@/config/catalog-routes";
 import type { CatalogProductGroup } from "@/lib/catalog-product-listing";
 import { slimCatalogListingProducts } from "@/lib/catalog-product-listing";
+import { cn } from "@/lib/utils";
 import styles from "./catalog-page.module.css";
 
 function CatalogListingSkeleton() {
@@ -102,7 +103,7 @@ export function CatalogPage({
         : null;
 
   return (
-    <div className={isShowroom ? styles.shell : "catalog-page-shell surface-page"}>
+    <div className={cn(isShowroom ? styles.shell : "surface-page", "catalog-page-shell")}>
       {showcaseImage ? (
         <section
           className="catalog-hero-section catalog-hero-section--showcase"
@@ -179,7 +180,7 @@ export function CatalogPage({
         </section>
       ) : shouldRenderTextHero ? (
         <section
-          className="catalog-hero-section catalog-hero-section--text page-gutter pb-8 pt-10 md:pb-10 md:pt-12"
+          className="catalog-hero-section catalog-hero-section--text page-gutter pb-5 pt-10 md:pb-6 md:pt-12"
           data-navbar-ink="dark"
           data-navbar-ink-surface=""
           aria-label={catalogTitle}
@@ -204,6 +205,7 @@ export function CatalogPage({
             mode={listingMode}
             presentation={presentation}
             title={catalogTitle}
+            suppressListingTitle={Boolean(shouldRenderFallbackHero || shouldRenderTextHero)}
             initialGroup={listingMode === "global" ? initialGroup : "all"}
             initialQuery={initialQuery}
             showBack={showBack}

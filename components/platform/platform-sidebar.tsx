@@ -33,9 +33,9 @@ export function PlatformSidebar({
         >
           Mithron
         </Link>
-        <p className="mt-1 text-[11px] text-[var(--platform-text-muted)]">{scopeLabels[scope]}</p>
+        <p className="mt-1 type-meta text-[var(--platform-text-muted)]">{scopeLabels[scope]}</p>
         {scopeBadge ? (
-          <span className="mt-2 inline-flex rounded-md bg-[var(--platform-surface-muted)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+          <span className="mt-2 inline-flex rounded-md bg-[var(--platform-surface-muted)] px-2 py-0.5 type-badge font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
             {scopeBadge}
           </span>
         ) : null}

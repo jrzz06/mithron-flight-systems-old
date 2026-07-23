@@ -22,7 +22,7 @@ export default function AdminError({ error, reset }: AdminErrorProps) {
   return (
     <main data-admin-error-boundary data-control-plane data-control-plane-theme="dark" className="min-h-screen bg-[var(--platform-bg)] px-6 py-10 text-[var(--platform-text-primary)]">
       <section className="mx-auto flex min-h-[70vh] max-w-3xl flex-col justify-center">
-        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Admin recovery</p>
+        <p className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Admin recovery</p>
         <h1 className="mt-4 text-2xl font-medium tracking-tight md:text-3xl">This view could not be rendered.</h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--platform-text-muted)]">
           The admin shell stayed isolated. Retry this view or return to the dashboard while the failed widget is investigated.

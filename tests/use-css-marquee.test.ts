@@ -34,6 +34,10 @@ describe("useCssMarquee", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.stubGlobal(
+      "requestAnimationFrame",
+      (cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16) as unknown as number
+    );
+    vi.stubGlobal(
       "ResizeObserver",
       class {
         observe() {}

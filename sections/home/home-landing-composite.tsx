@@ -616,7 +616,6 @@ function MissionWorldBentoSection({
   sectionClassName,
   testId,
   headline,
-  eyebrowAccessory,
   introFooter
 }: {
   chapter: HomeChapter;
@@ -625,7 +624,6 @@ function MissionWorldBentoSection({
   sectionClassName: string;
   testId: string;
   headline: string;
-  eyebrowAccessory?: ReactNode;
   introFooter?: ReactNode;
 }) {
   const renderMissionCard = (
@@ -689,10 +687,6 @@ function MissionWorldBentoSection({
           <div className={styles.missionWorldBento}>
             <div className={styles.missionWorldLeftRail}>
               <div className={styles.missionWorldTextHeader}>
-                <div className={styles.agriEyebrowRow}>
-                  <span className={styles.agriEyebrow}>{config.eyebrow}</span>
-                  {eyebrowAccessory}
-                </div>
                 <h2 className={styles.agriHeadline}>{headline}</h2>
                 <div className={styles.agriIntroBody}>
                   <EditorRenderedContent html={config.body} className={styles.agriIntroPlainText} />
@@ -731,15 +725,6 @@ export function AgriCommunityWorldSection({
       sectionClassName=""
       testId="agri-community-world-section"
       headline={formatMissionHeadline(config.title)}
-      eyebrowAccessory={
-        <svg className={styles.agriLeafIcon} viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-          <path d="M17 8C8 10 4 19 4 19S13 15 20 6C20 6 18.5 5.5 17 8Z" />
-          <path
-            d="M18.8284 3.17157C17.6569 2 15 2 13 4C11 6 6 13 4 15V20H9C11 18 18 13 20 11C22 9 22 6.34315 20.8284 5.17157L18.8284 3.17157Z"
-            fill="currentColor"
-          />
-        </svg>
-      }
     />
   );
 }

@@ -308,6 +308,12 @@ export function SearchOverlay() {
       const trimmed = value.trim();
       if (!trimmed) return;
       rememberRecentSearch(trimmed);
+      setQuery("");
+      setDebouncedQuery("");
+      setRemoteResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      setActiveResultIndex(-1);
       closeOverlay();
       window.setTimeout(() => {
         router.push(buildProductsCatalogHref({ q: trimmed }));
@@ -319,6 +325,12 @@ export function SearchOverlay() {
   const openResult = useCallback(
     (product: CatalogSearchResult) => {
       rememberRecentSearch(product.name);
+      setQuery("");
+      setDebouncedQuery("");
+      setRemoteResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      setActiveResultIndex(-1);
       closeOverlay();
       // Defer navigation so overlay unmount / inert cleanup finish before route commit.
       window.setTimeout(() => {
@@ -332,7 +344,7 @@ export function SearchOverlay() {
     if (!open) return;
     const focusInput = () => inputRef.current?.focus({ preventScroll: true });
     const raf = window.requestAnimationFrame(focusInput);
-    const timer = window.setTimeout(focusInput, 340);
+    const timer = window.setTimeout(focusInput, 220);
     return () => {
       window.cancelAnimationFrame(raf);
       window.clearTimeout(timer);
@@ -363,7 +375,7 @@ export function SearchOverlay() {
     window.addEventListener("scroll", syncHeaderBottom, { passive: true });
 
     // Re-measure after the clip-path open transition settles.
-    const settleTimer = window.setTimeout(syncHeaderBottom, 360);
+    const settleTimer = window.setTimeout(syncHeaderBottom, 240);
 
     return () => {
       window.clearTimeout(settleTimer);
@@ -395,19 +407,6 @@ export function SearchOverlay() {
         main.removeAttribute("aria-hidden");
       }
     };
-  }, [open]);
-
-  useEffect(() => {
-    if (open) return;
-
-    queueMicrotask(() => {
-      setQuery("");
-      setDebouncedQuery("");
-      setRemoteResults([]);
-      setSearchError(null);
-      setIsSearching(false);
-      setActiveResultIndex(-1);
-    });
   }, [open]);
 
   useEffect(() => {
@@ -731,19 +730,36 @@ export function SearchOverlay() {
                     ) : null}
                   </>
                 ) : (
-                  <div className={styles.sectionBlock}>
-                    <p className={styles.sectionHeading}>Quick Links</p>
-                    <div className={styles.linkList}>
-                      {SEARCH_QUICK_LINKS.map((item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          className={styles.linkRow}
-                          onClick={() => setQuery(item)}
-                        >
-                          {item}
-                        </button>
-                      ))}
+                  <div className={styles.idlePanel}>
+                    <div className={styles.sectionBlock}>
+                      <p className={styles.sectionHeading}>Categories</p>
+                      <div className={styles.linkList}>
+                        {catalogCategoryDefinitions.map((definition) => (
+                          <Link
+                            key={definition.href}
+                            href={definition.href}
+                            className={styles.linkRow}
+                            onClick={closeOverlay}
+                          >
+                            {definition.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                    <div className={styles.sectionBlock}>
+                      <p className={styles.sectionHeading}>Quick Links</p>
+                      <div className={styles.linkList}>
+                        {SEARCH_QUICK_LINKS.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            className={styles.linkRow}
+                            onClick={() => setQuery(item)}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

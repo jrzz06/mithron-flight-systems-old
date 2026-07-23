@@ -20,7 +20,6 @@ import {
 } from "@/lib/catalog-product-listing";
 import { buildCatalogShelfLayout } from "@/lib/catalog-shelf-layout";
 import { clipProductPreviewText } from "@/lib/product-preview-text";
-import { resolveCatalogCutoutAsset } from "@/lib/media/catalog-cutout";
 import { resolveCatalogEditorialPresentation } from "@/lib/media/catalog-editorial-presentation";
 import { CatalogContinuedGrid } from "@/sections/catalog/catalog-continued-grid";
 import { CatalogBrowseLeadGrid } from "@/sections/catalog/catalog-browse-lead-grid";
@@ -33,6 +32,8 @@ type CatalogFilteredListingProps = {
   presentation: "standard" | "showroom";
   title: string;
   eyebrow?: string;
+  /** When true, hide the static catalog title (page hero already has the h1). */
+  suppressListingTitle?: boolean;
   initialGroup?: CatalogProductGroup;
   initialQuery?: string;
   showBack?: boolean;
@@ -57,6 +58,7 @@ export function CatalogFilteredListing({
   presentation,
   title,
   eyebrow = "Catalog",
+  suppressListingTitle = false,
   initialGroup,
   initialQuery,
   showBack = false,
@@ -146,7 +148,6 @@ export function CatalogFilteredListing({
     [occupiedSlugs, remainingProducts]
   );
 
-  const featuredHasCutout = featuredProduct ? resolveCatalogCutoutAsset(featuredProduct) !== null : false;
   const editorialPresentation = useMemo(
     () => (featuredProduct ? resolveCatalogEditorialPresentation(featuredProduct.slug) : null),
     [featuredProduct]
@@ -155,10 +156,10 @@ export function CatalogFilteredListing({
   const listingKey = `${debouncedQuery}-${sort}-${mode === "global" ? group : "category"}`;
   const hasActiveFilters =
     debouncedQuery.length > 0 || sort !== "featured" || (mode === "global" && group !== "all");
+  // Editorial band uses the featured product's primary/Wix image (cutouts are no longer required).
   const showEditorialBand =
     !hasActiveFilters
     && featuredProduct !== null
-    && featuredHasCutout
     && safeRemainingProducts.length > 0;
   const browseLeadProducts = showEditorialBand
     ? leadProducts
@@ -226,6 +227,8 @@ export function CatalogFilteredListing({
         presentation={presentation}
         title={displayTitle}
         eyebrow={displayEyebrow}
+        suppressListingTitle={suppressListingTitle}
+        hasSearchQuery={hasSearchQuery}
         query={query}
         sort={sort}
         group={group}

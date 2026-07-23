@@ -127,7 +127,7 @@ export async function addCartLine(
       return { items: nextItems };
     });
     if (options.openMiniCart) {
-      useCartStore.setState({ isCartOpen: true, hasOpenedCart: true, cartDrawerMode: "confirmation" });
+      useCartStore.getState().openCartDrawer("confirmation");
     }
     try {
       await runCartLineMutation(item, async () => {
@@ -141,7 +141,7 @@ export async function addCartLine(
   } else {
     state.addToCart(item, options);
     if (options.openMiniCart) {
-      useCartStore.setState({ isCartOpen: true, hasOpenedCart: true, cartDrawerMode: "confirmation" });
+      useCartStore.getState().openCartDrawer("confirmation");
     }
   }
 

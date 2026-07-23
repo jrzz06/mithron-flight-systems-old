@@ -57,7 +57,7 @@ export function AdminOrderRowQuickActions({
             <button
               type="button"
               onClick={() => setMode("cancel")}
-              className={`border border-rose-700/50 px-2 py-1 text-[11px] font-medium text-rose-200 hover:bg-rose-950/30 ${orderRadiusControl}`}
+              className={`border border-rose-700/50 px-2 py-1 type-meta font-medium text-rose-200 hover:bg-rose-950/30 ${orderRadiusControl}`}
             >
               Cancel
             </button>
@@ -66,7 +66,7 @@ export function AdminOrderRowQuickActions({
             <button
               type="button"
               onClick={() => setMode("delete")}
-              className={`border border-rose-800/50 px-2 py-1 text-[11px] font-medium text-rose-100 hover:bg-rose-950/40 ${orderRadiusControl}`}
+              className={`border border-rose-800/50 px-2 py-1 type-meta font-medium text-rose-100 hover:bg-rose-950/40 ${orderRadiusControl}`}
             >
               Delete
             </button>
@@ -89,14 +89,14 @@ export function AdminOrderRowQuickActions({
           <OperationalSubmitButton
             pendingLabel="Cancelling..."
             confirmMessage={`Cancel order ${orderLabel}?`}
-            className={`border border-rose-700 bg-rose-900/40 px-2 py-1 text-[11px] font-semibold text-rose-100 ${orderRadiusControl}`}
+            className={`border border-rose-700 bg-rose-900/40 px-2 py-1 type-meta font-semibold text-rose-100 ${orderRadiusControl}`}
           >
             Confirm cancel
           </OperationalSubmitButton>
           <button
             type="button"
             onClick={() => setMode("none")}
-            className={`px-2 py-1 text-[11px] text-[var(--platform-text-muted)] hover:underline ${orderRadiusControl}`}
+            className={`px-2 py-1 type-meta text-[var(--platform-text-muted)] hover:underline ${orderRadiusControl}`}
           >
             Close
           </button>
@@ -117,14 +117,14 @@ export function AdminOrderRowQuickActions({
             requireTypedText={orderLabel}
             typedTextLabel={`Type ${orderLabel} to permanently delete`}
             confirmLabel="Delete permanently"
-            className={`border border-rose-800 bg-rose-950/40 px-2 py-1 text-[11px] font-semibold text-rose-100 ${orderRadiusControl}`}
+            className={`border border-rose-800 bg-rose-950/40 px-2 py-1 type-meta font-semibold text-rose-100 ${orderRadiusControl}`}
           >
             Confirm delete
           </OperationalSubmitButton>
           <button
             type="button"
             onClick={() => setMode("none")}
-            className={`px-2 py-1 text-[11px] text-[var(--platform-text-muted)] hover:underline ${orderRadiusControl}`}
+            className={`px-2 py-1 type-meta text-[var(--platform-text-muted)] hover:underline ${orderRadiusControl}`}
           >
             Close
           </button>

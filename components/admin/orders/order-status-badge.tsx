@@ -75,7 +75,7 @@ export function OrderStatusBadge({ status, label: labelOverride, compact = false
       aria-label={`Status: ${label}`}
       title={label}
       className={`inline-flex h-6 max-w-full items-center gap-1.5 whitespace-nowrap border px-2.5 text-xs font-medium ${orderRadiusControl} ${tone.surface} ${tone.text} ${
-        compact ? "text-[10px]" : ""
+        compact ? "type-badge" : ""
       } ${className}`}
     >
       <Icon className={compact ? "h-3 w-3 shrink-0" : "h-3.5 w-3.5 shrink-0"} aria-hidden />

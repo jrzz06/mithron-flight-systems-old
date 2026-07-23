@@ -16,7 +16,34 @@ describe("hydration stability", () => {
     expect(routeTransition).not.toContain("motion.div");
     expect(routeTransition).toContain("useState(false)");
     expect(routeTransition).toContain("setAnimateEntry(true)");
+    expect(routeTransition).toContain("ViewTransition");
+    expect(routeTransition).toContain("product-page-enter");
     expect(globals).toContain("@keyframes mithronRouteEntry");
+    expect(globals).toContain("product-media-morph");
+    expect(globals).toContain("--ease-product-nav");
+    expect(globals).toContain("html[data-product-nav=\"pending\"]");
+  });
+
+  it("wires product card → PDP shared-element navigation without framer-motion", () => {
+    const productLink = source("components/navigation/product-link.tsx");
+    const sharedMedia = source("components/navigation/product-shared-media.tsx");
+    const hoverCard = source("components/cards/product-hover-card.tsx");
+    const gallery = source("sections/product/showcase/product-immersive-gallery.tsx");
+    const nextConfig = source("next.config.ts");
+
+    expect(productLink).toContain("transitionTypes");
+    expect(productLink).toContain("PRODUCT_OPEN_TRANSITION");
+    expect(productLink).toContain("scroll={false}");
+    expect(productLink).toContain("prepareProductDestinationScroll");
+    expect(sharedMedia).toContain("ViewTransition");
+    expect(sharedMedia).toContain("productMediaTransitionName");
+    expect(hoverCard).toContain("ProductLink");
+    expect(hoverCard).toContain("ProductSharedMedia");
+    expect(gallery).toContain("productSlug");
+    expect(gallery).toContain("ProductSharedMedia");
+    expect(nextConfig).toContain("viewTransition: true");
+    expect(productLink).not.toContain("framer-motion");
+    expect(sharedMedia).not.toContain("framer-motion");
   });
 
   it("defers persisted cart badge until after client hydration", () => {

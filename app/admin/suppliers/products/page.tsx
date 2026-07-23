@@ -114,7 +114,7 @@ export default async function AdminSupplierProductsPage({
     <div className="grid gap-5">
       <AdminSuppliersLiveSync enabled={policy.realtimeUpdatesEnabled} />
       <div className="max-w-3xl">
-        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">Supplier approvals</p>
+        <p className="type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">Supplier approvals</p>
         <p className="mt-2 text-sm leading-relaxed text-[var(--platform-text-muted)]">
           Review supplier product submissions before they are published to the storefront.
         </p>

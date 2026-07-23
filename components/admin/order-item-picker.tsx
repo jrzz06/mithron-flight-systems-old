@@ -136,7 +136,7 @@ export function OrderItemPicker({
     <div className="grid gap-3" data-order-item-picker>
       <input type="hidden" name={fieldName} value={orderItemsJson} />
       <div className="grid gap-2">
-        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+        <p className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
           Products for order
         </p>
         {availableProducts.length ? (
@@ -162,7 +162,7 @@ export function OrderItemPicker({
           </select>
         ) : null}
         {availableProducts.length ? (
-          <p className="text-[11px] text-[var(--platform-text-muted)]">Or search the full catalog</p>
+          <p className="type-meta text-[var(--platform-text-muted)]">Or search the full catalog</p>
         ) : null}
         <input
           ref={productSearchRef}

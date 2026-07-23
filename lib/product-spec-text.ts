@@ -24,8 +24,21 @@ const KNOWN_SPEC_LABELS = [
   "Nominal Voltage (V)",
   "Battery",
   "Flight Time",
+  "Model",
+  "Brand",
   "Dimensions",
   "Weight",
+  "Material",
+  "Operating Voltage",
+  "Power Consumption",
+  "Compatibility",
+  "Operating Temperature",
+  "Working Temperature",
+  "Protection Rating",
+  "IP Rating",
+  "Warranty",
+  "Country of Origin",
+  "Certifications",
   "Storage",
   "Camera",
   "Sensor",
@@ -43,12 +56,26 @@ const KNOWN_SPEC_LABELS = [
   "Tank Capacity",
   "Input Voltage",
   "Discharge",
-  "Working Temperature",
   "Shipping Weight",
   "Shipping Dimensions"
 ];
 
 const SPEC_DISPLAY_ORDER = [
+  "Model",
+  "Brand",
+  "Dimensions",
+  "Weight",
+  "Material",
+  "Operating Voltage",
+  "Power Consumption",
+  "Compatibility",
+  "Operating Temperature",
+  "Working Temperature",
+  "Protection Rating",
+  "IP Rating",
+  "Warranty",
+  "Country of Origin",
+  "Certifications",
   "UAV Type",
   "UAV Category",
   "Endurance",
@@ -86,11 +113,8 @@ const SPEC_DISPLAY_ORDER = [
   "Max Transmission Range",
   "Input Voltage",
   "Discharge",
-  "Working Temperature",
   "Shipping Weight",
-  "Shipping Dimensions",
-  "Dimensions",
-  "Weight"
+  "Shipping Dimensions"
 ];
 
 function stripTrailingColon(label: string) {

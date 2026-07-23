@@ -331,7 +331,8 @@ describe("Supabase free-plan performance contract", () => {
     const mapLiveProductRow = catalog.match(/async function mapLiveProductRow[\s\S]*?^}/m)?.[0] ?? "";
 
     expect(mapLiveProductRow).toContain("getPrimaryProductMediaForSlugs([slug])");
-    expect(mapLiveProductRow).toContain("getCatalogCutoutMediaForSlugs([slug])");
+    expect(mapLiveProductRow).toContain("getGalleryProductMediaForSlugs([slug])");
+    expect(mapLiveProductRow).not.toContain("getCatalogCutoutMediaForSlugs([slug])");
     expect(mapLiveProductRow).not.toContain("getPrimaryProductMediaLookup()");
     expect(mapLiveProductRow).not.toContain("getCatalogCutoutMediaLookup()");
   });

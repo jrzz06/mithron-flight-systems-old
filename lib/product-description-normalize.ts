@@ -180,9 +180,13 @@ function repairGluedTokens(text: string) {
   result = result.replace(/(\d)(mAh|Mah)/gi, (match, digits: string, unit: string, offset: number, source: string) => {
     const before = source.slice(Math.max(0, offset - 6), offset);
     if (/Unit\s*$/i.test(before)) return match;
+    // Keep capacity glued to the battery package line (e.g. "16000Mah Battery Set").
+    const after = source.slice(offset + match.length, offset + match.length + 16);
+    if (/^\s*Battery/i.test(after)) return match;
     return `${digits} ${unit}`;
   });
   result = result.replace(/;\s*(\d)/g, "; $1");
+  result = result.replace(/(\d+)\s+(mAh|Mah)\s+(Battery Set)/gi, "$1$2 $3");
   result = result.replace(/(\d+Mah)\s+(Battery Set)/gi, "$1 $2");
   result = result.replace(/SoftwareSoftware:?/gi, "Software:");
   result = result.replace(/TrainingTraining:?/gi, "Training:");
@@ -285,12 +289,17 @@ function splitSectionHeaders(text: string) {
   return result;
 }
 
+function isPackageQuantityItem(text: string) {
+  return /(?:\d+\s*(?:mAh|Mah)\s+)?[A-Za-z].*\s*[–-]\s*\d+\s*(?:Unit|Set|Parts?)\b/i.test(text);
+}
+
 function splitPackageRunOns(text: string) {
   let result = text.replace(
     /DGCA Certification Details\s+Certification Date/i,
     "DGCA Certification Details:\nCertification Date"
   );
-  result = result.replace(/([.!?])\s*(Agri Small Drone)/i, "$1\n\nPackage Contents:\n- $2");
+  // Insert the section header without a bullet — packing bulletizes once below.
+  result = result.replace(/([.!?])\s*(Agri Small Drone)/i, "$1\n\nPackage Contents:\n$2");
   result = result.replace(
     /(Agri Small Drone\s*[–-]\s*1 Unit)\s*(\d+Mah)/i,
     "$1 $2"
@@ -313,12 +322,19 @@ function splitPackageRunOns(text: string) {
       packageMarker,
       "Package Contents:\n"
     );
+    // Optional leading capacity (16000Mah) stays on the battery line; bulletize once.
+    // {0,8} allows single-word items like "Transmitter – 1 Unit".
     const packed = suffix.replace(
-      /((?:[A-Z][a-z]+(?:\s+[A-Za-z0-9]+){1,8}))\s*[–-]\s*(\d+\s*(?:Unit|Set|Parts?))/g,
+      /((?:\d+\s*(?:mAh|Mah)\s+)?(?:[A-Z][a-z]+(?:\s+[A-Za-z0-9]+){0,8}))\s*[–-]\s*(\d+\s*(?:Unit|Set|Parts?))/g,
       "\n- $1 – $2"
     );
     result = `${prefix}${packed}`;
   }
+
+  result = result.replace(
+    /(Box Wheels\s*[–-]\s*1 Set)\s+(UIN Number Plate)\s+(Warranty Card)/i,
+    "$1\n- $2\n- $3"
+  );
 
   return result;
 }
@@ -548,11 +564,26 @@ function parseDashSpecLine(line: string): DescriptionBlock[] | null {
   const dashMatch = line.match(/^(.+?)\s+[-–]\s+(.+)$/);
   if (!dashMatch?.[1] || !dashMatch[2]) return null;
   const label = polishLabel(dashMatch[1]);
-  const value = polishSpacing(dashMatch[2]);
+  let value = polishSpacing(dashMatch[2]);
   if (!looksLikeDashSpecLabel(label) || !value) return null;
   if (!value && LIST_SECTION_HEADERS.test(label)) {
     return [{ type: "section", label, items: [] }];
   }
+
+  // Title-like dash lines often glue a short value onto the intro paragraph
+  // (e.g. "Agri Kisan Drone - Small (Exclusive of GST) 8-Liter Agri Kisan...").
+  if (value.length > 120 && isProseLine(value)) {
+    const proseStart = value.search(/\b\d+-Liter\b|\b(?:The|This|Our)\s+[A-Z]/);
+    if (proseStart > 0 && proseStart <= 64) {
+      const shortValue = polishSpacing(value.slice(0, proseStart));
+      const prose = polishParagraph(value.slice(proseStart));
+      const blocks: DescriptionBlock[] = [];
+      if (shortValue) blocks.push({ type: "spec", label, value: shortValue });
+      if (prose) blocks.push({ type: "paragraph", text: prose });
+      return blocks.length ? blocks : null;
+    }
+  }
+
   return [{ type: "spec", label, value }];
 }
 
@@ -666,6 +697,7 @@ function dedupeBlocks(blocks: DescriptionBlock[]) {
       seenSectionItems.add(key);
       return true;
     });
+    if (!items.length && block.label.toLowerCase() === "notes") continue;
     if (!items.length && !block.label) continue;
     output.push({ ...block, items });
   }
@@ -767,6 +799,12 @@ export function parseProductDescriptionBlocks(raw: string) {
   let pendingSection: string | null = null;
 
   for (const line of lines) {
+    const trimmedLine = line.trim();
+    // Bare "-" / empty bullets must not clear Package Contents context.
+    if (!trimmedLine || /^[-•*]$/.test(trimmedLine) || /^(?:[-•*]|\d+[.)])\s*$/.test(trimmedLine)) {
+      continue;
+    }
+
     const bulletMatch = line.match(/^(?:[-•*]|\d+[.)])\s+(.+)$/);
     if (bulletMatch?.[1]) {
       const item = polishSpacing(bulletMatch[1]);
@@ -779,8 +817,19 @@ export function parseProductDescriptionBlocks(raw: string) {
           } else {
             blocks.push({ type: "section", label: pendingSection, items: [expandedItem] });
           }
-        } else if (previous?.type === "section" && previous.items.length >= 0) {
+        } else if (previous?.type === "section") {
           previous.items.push(expandedItem);
+        } else if (isPackageQuantityItem(expandedItem)) {
+          const packageSection = [...blocks].reverse().find(
+            (block) => block.type === "section" && /package contents|included|in the box|box contents/i.test(block.label)
+          );
+          if (packageSection && packageSection.type === "section") {
+            packageSection.items.push(expandedItem);
+            pendingSection = packageSection.label;
+          } else {
+            blocks.push({ type: "section", label: "Package Contents", items: [expandedItem] });
+            pendingSection = "Package Contents";
+          }
         } else {
           blocks.push({ type: "section", label: "Notes", items: [expandedItem] });
         }
@@ -821,7 +870,7 @@ export function structuredDescriptionBlocksToHtml(blocks: DescriptionBlock[]) {
     if (block.items.length) {
       parts.push(`<p><strong>${escapeHtml(block.label)}:</strong></p>`);
       parts.push(`<ul>${block.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`);
-    } else {
+    } else if (block.label.toLowerCase() !== "notes") {
       parts.push(`<p><strong>${escapeHtml(block.label)}:</strong></p>`);
     }
   }

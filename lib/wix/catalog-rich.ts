@@ -256,7 +256,7 @@ export function extractRichProductContent(
   const ribbon = product.ribbon as { name?: string; text?: string } | undefined;
 
   return {
-    description_html: semantic.overview_html,
+    description_html: descriptionHtml || semantic.overview_html,
     info_sections: infoSections,
     seo,
     categories: readCategories(product, fallbackCategory),

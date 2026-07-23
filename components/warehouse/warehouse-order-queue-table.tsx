@@ -180,7 +180,7 @@ export function WarehouseOrderQueueTable({ rows, cancelAction, dispatchAction }:
       </div>
 
       <table data-order-management-table="orders" className="platform-table hidden w-full min-w-[880px] border-collapse text-left text-sm md:table">
-        <thead className="border-b border-[var(--platform-border)] text-[11px] uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+        <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
           <tr>
             <th className="px-3 py-3 font-semibold">Order</th>
             <th className="px-3 py-3 font-semibold">Customer</th>

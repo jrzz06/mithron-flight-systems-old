@@ -54,7 +54,7 @@ export default async function WarehouseActivityPage() {
       <section data-warehouse-activity-timeline className="grid gap-4">
         <div className="overflow-x-auto rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]">
           <table className="min-w-[960px] w-full border-collapse text-left text-sm">
-            <thead className="border-b border-[var(--platform-border)] text-[11px] uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+            <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Order</th>
                 <th className="px-4 py-3 font-semibold">Customer</th>

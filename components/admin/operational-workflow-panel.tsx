@@ -47,7 +47,7 @@ export function OperationalWorkflowPanel({
       className="grid gap-3 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] p-4"
       data-workflow-actions
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+      <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
         {title}
       </p>
 

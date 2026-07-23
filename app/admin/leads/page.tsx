@@ -44,7 +44,7 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams?: 
     <div className="grid gap-4" data-admin-leads-page>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+          <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
             Fulfillment
           </p>
           <h1 className="text-xl font-semibold text-[var(--platform-text-primary)]">Leads</h1>

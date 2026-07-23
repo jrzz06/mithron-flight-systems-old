@@ -64,7 +64,7 @@ export function CmsResponsivePreviewFrame({
       data-cms-preview-device={device}
     >
       <div className="flex shrink-0 items-center justify-between border-b border-[var(--platform-border)] px-3 py-2">
-        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{label}</p>
+        <p className="type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{label}</p>
         {onDeviceChange ? (
           <div className="flex items-center gap-0.5 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] p-0.5">
             {([

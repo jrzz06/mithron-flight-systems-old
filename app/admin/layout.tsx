@@ -2,6 +2,7 @@ import { ControlPlaneNavMetricsProvider } from "@/components/platform/control-pl
 import { ControlPlaneParallelLayout } from "@/components/platform/control-plane-parallel-layout";
 import { AdminRealtimeShell } from "@/components/admin/realtime/admin-realtime-shell";
 import { canAccessProtectedPath, defaultPathForRole } from "@/lib/auth/access-control";
+import { buildAccessDeniedRedirectPath, buildLoginRedirectPath } from "@/lib/auth/redirects";
 import { getCurrentAuthContext } from "@/services/auth";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { redirect } from "next/navigation";
@@ -20,10 +21,10 @@ export default async function AdminLayout({
   const context = await getCurrentAuthContext();
 
   if (!context.userId) {
-    redirect(`/login?next=${encodeURIComponent("/admin")}`);
+    redirect(buildLoginRedirectPath("/admin"));
   }
   if (!context.role || !canAccessProtectedPath(context.role, "/admin")) {
-    redirect(`${defaultPathForRole(context.role)}?access_status=forbidden&next=${encodeURIComponent("/admin")}`);
+    redirect(buildAccessDeniedRedirectPath(defaultPathForRole(context.role), "/admin"));
   }
 
   const policy = await getAdminSettingsPolicy();

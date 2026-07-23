@@ -2,13 +2,16 @@ import {
   getBootstrapNavbarInk,
   isFlushHeroStreamingRoute,
   normalizeStorefrontPath,
+  resolveNavbarChromeMode,
+  type NavbarChromeMode,
   type NavbarInkTone
 } from "@/config/navbar-ink-registry";
 
-export type { NavbarInkTone } from "@/config/navbar-ink-registry";
+export type { NavbarChromeMode, NavbarInkTone } from "@/config/navbar-ink-registry";
 export {
   FLUSH_HERO_LIGHT_NAV_ROUTES,
-  normalizeStorefrontPath
+  normalizeStorefrontPath,
+  resolveNavbarChromeMode
 } from "@/config/navbar-ink-registry";
 
 export const NAVBAR_INK_SURFACE_SELECTOR =
@@ -61,6 +64,12 @@ export function resolveActiveSurfaceNavbarTone(): NavbarInkTone | null {
 
 /** Runtime tone: overlapping surface ink wins, then path/bootstrap, then scroll-past-hero dark. */
 export function resolveNavbarTone(pathTone: NavbarInkTone, pathname: string | null = null): NavbarInkTone {
+  // Solid white-chrome routes must ignore leftover flush-hero surfaces from the previous page
+  // during client-side transitions (otherwise ink/chrome flash or stick until hard refresh).
+  if (pathTone === "dark" || resolveNavbarChromeMode(pathname) === "solid") {
+    return "dark";
+  }
+
   const surfaceTone = resolveActiveSurfaceNavbarTone();
   if (surfaceTone) return surfaceTone;
 

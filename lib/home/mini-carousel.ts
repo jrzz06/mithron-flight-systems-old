@@ -85,7 +85,7 @@ export function resolveHomeMiniCarouselItems(
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   if (cmsSlides.length) {
-    return cmsSlides.flatMap((slide, index) => {
+    const resolved = cmsSlides.flatMap((slide, index) => {
       const product = slide.productSlug ? products.find((entry) => entry.slug === slide.productSlug) : undefined;
 
       if (slide.productSlug && !product) {
@@ -130,6 +130,10 @@ export function resolveHomeMiniCarouselItems(
         }
       ];
     });
+
+    // If every CMS pin missed the catalog (cold products / unpublished), fall back
+    // to auto picks so the storefront never ships an empty mini carousel strip.
+    if (resolved.length > 0) return resolved;
   }
 
   return pickHomeMiniCarouselItems(products);

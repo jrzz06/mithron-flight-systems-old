@@ -26,13 +26,16 @@ describe("card elevation system", () => {
 
   it("wires catalog and home shelf cards to elevation tokens", () => {
     const globals = source("app/globals.css");
+    const shelfCss = source("sections/home/home-shelf-shared.module.css");
 
-    expect(globals).toMatch(/\.catalog-page-shell \.premium-product-card-shell\s*{[\s\S]*border: 1px solid var\(--ds-border\)/);
     expect(globals).toMatch(
-      /\.catalog-page-shell \.premium-product-card-shell:is\(:hover, :focus-within, :focus-visible\)\s*{[\s\S]*box-shadow: 0 4px 16px rgba\(17, 17, 17, 0\.1\)/
+      /\.catalog-page-shell \.premium-product-card-shell\s*{[\s\S]*box-shadow: var\(--storefront-product-card-shadow\)/
     );
-    expect(globals).toMatch(/\.home-shelf-card-link\s*{[\s\S]*box-shadow: var\(--elevation-card-rest\)/);
-    expect(globals).toMatch(/\.home-shelf-card-link:hover[\s\S]*box-shadow: var\(--elevation-card-hover\)/);
+    expect(globals).toMatch(
+      /\.catalog-page-shell \.premium-product-card-shell:is\(:hover, :focus-within, :focus-visible\)\s*{[\s\S]*box-shadow: var\(--storefront-product-card-shadow-hover\)/
+    );
+    expect(shelfCss).toMatch(/\.productCard\s*{[\s\S]*box-shadow: var\(--storefront-product-card-shadow/);
+    expect(shelfCss).toMatch(/\.productCard:hover[\s\S]*box-shadow: var\(--storefront-product-card-shadow-hover/);
   });
 
   it("removes inline tailwind shadows from product cards and platform primitives", () => {

@@ -148,13 +148,31 @@ export function ProductEnquiryModal({
           onClick={(event) => event.stopPropagation()}
         >
           <div className={styles.header}>
-            <div>
-              <h2 id={titleId} className={styles.title}>Send Enquiry</h2>
-              <p className={styles.subtitle}>{product.name}</p>
-            </div>
+            <h2 id={titleId} className={styles.title}>Send Enquiry</h2>
             <button type="button" className={styles.closeButton} aria-label="Close enquiry form" onClick={onClose}>
               <X className="size-4" aria-hidden="true" />
             </button>
+          </div>
+
+          <div className={styles.productChip} aria-label={`Product: ${product.name}`}>
+            {product.image ? (
+              // eslint-disable-next-line @next/next/no-img-element -- remote/catalog URLs vary by product source
+              <img
+                src={product.image}
+                alt=""
+                width={40}
+                height={40}
+                className={styles.productThumb}
+              />
+            ) : (
+              <span className={styles.productThumbFallback} aria-hidden="true">
+                {product.name.slice(0, 2)}
+              </span>
+            )}
+            <div className={styles.productChipText}>
+              <p className={styles.productName}>{product.name}</p>
+              <p className={styles.productSku}>SKU: {product.sku}</p>
+            </div>
           </div>
 
           <div className={styles.formBody}>

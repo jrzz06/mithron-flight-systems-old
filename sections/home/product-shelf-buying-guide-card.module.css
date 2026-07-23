@@ -1,0 +1,163 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: var(--shelf-dji-card-radius, 0);
+  background: #ffffff;
+  color: #09090b;
+  text-decoration: none;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.card:hover,
+.card:focus-visible {
+  outline: none;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 12px 28px rgba(0, 0, 0, 0.05);
+}
+
+.copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  padding: 16px 16px 8px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #71717a;
+  font-family: var(--font-google-sans-flex), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.headline {
+  margin: 0;
+  max-width: 18ch;
+  color: #09090b;
+  font-family: var(--font-google-sans-flex), system-ui, sans-serif;
+  font-size: clamp(1.05rem, 1.2vw, 1.375rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.imageFrame {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 120px;
+  margin-top: auto;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* Provided iridescent glass backdrop for product cutouts */
+.cleanBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    url("/media/mithron/shelves/buying-guide-backdrop.png") center / cover no-repeat;
+}
+
+.cleanBackdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 68% 52% at 50% 68%, rgba(255, 255, 255, 0.22) 0%, transparent 68%);
+}
+
+.cleanBackdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 28%,
+    transparent 72%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+}
+
+.image {
+  z-index: 1;
+  object-fit: contain;
+  object-position: center center;
+  padding: clamp(12px, 1.6vw, 20px);
+  /* Knock out studio-white plates so the card backdrop reads through */
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 12px 26px rgba(0, 0, 0, 0.42));
+}
+
+/*
+ * Responsive image frames paint dominantColor as a solid placeholder.
+ * That sits above .cleanBackdrop and hides the buying-guide bg — force clear.
+ */
+.imageFrame :global(.mithron-responsive-image-frame) {
+  background-color: transparent !important;
+  background-image: none !important;
+  --mithron-image-placeholder: transparent;
+  --mithron-image-blur: none;
+}
+
+/* Image fills the card; copy fades white → transparent into the photo */
+.cardWithImage {
+  height: 100%;
+  min-height: 0;
+  background:
+    url("/media/mithron/shelves/buying-guide-backdrop.png") center / cover no-repeat,
+    #e8f0f8;
+}
+
+.cardWithImage .imageFrame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  flex: none;
+  min-height: 0;
+  margin-top: 0;
+  background: transparent;
+}
+
+.cardWithImage .copy {
+  z-index: 1;
+  flex: 0 0 auto;
+  padding: 16px 16px 1.5rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(255, 255, 255, 0.9) 45%,
+    rgba(255, 255, 255, 0.42) 75%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.cardWithImage .image {
+  padding: clamp(16px, 2vw, 28px) clamp(12px, 1.6vw, 20px) clamp(12px, 1.6vw, 20px);
+  padding-top: clamp(88px, 28%, 120px);
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(0 5px 12px rgba(0, 0, 0, 0.38))
+    drop-shadow(0 16px 32px rgba(0, 0, 0, 0.48));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

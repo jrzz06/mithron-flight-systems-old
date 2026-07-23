@@ -22,6 +22,11 @@ function isRemoteImageSrc(src: string) {
   return src.startsWith("http://") || src.startsWith("https://");
 }
 
+/** True when className already sets object-fit — avoid stacking object-cover + object-contain. */
+function hasObjectFitUtility(...classNames: Array<string | undefined>) {
+  return classNames.some((value) => Boolean(value && /\bobject-(?:contain|cover|fill|none|scale-down)\b/.test(value)));
+}
+
 export function MithronResponsiveImageImg({
   model,
   alt,
@@ -106,8 +111,10 @@ export function MithronResponsiveImageImg({
       decoding={priority ? "sync" : "async"}
       sizes={usesPlainDelivery ? undefined : model.resolvedSizes}
       className={cn(
-        useDirectDelivery ? "mithron-responsive-image object-cover" : "mithron-responsive-image",
-        fill && "absolute inset-0 h-full w-full object-cover",
+        "mithron-responsive-image",
+        fill && "absolute inset-0 h-full w-full",
+        /* Default cover only when caller did not pass object-* (cards pass object-contain). */
+        !hasObjectFitUtility(className, imageClassName) && "object-cover",
         isRevealed && "is-revealed",
         className,
         imageClassName

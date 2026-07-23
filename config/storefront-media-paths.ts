@@ -18,6 +18,9 @@ export const storefrontMediaPaths = {
     droneCare: "/media/mithron/showcase/drone_care_hero.png",
     globalProducts: "/media/mithron/showcase/global_products_hero.png"
   },
+  shelves: {
+    buyingGuideBackdrop: "/media/mithron/shelves/buying-guide-backdrop.png"
+  },
   press: {
     companyNetwork: "/media/mithron/press/mithron-company-network.webp",
     precisionPilotEcosystem: "/media/mithron/press/precision-pilot-ecosystem.webp",

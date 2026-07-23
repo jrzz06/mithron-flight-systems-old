@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { recordClientAuthEvent } from "@/lib/auth/audit-client";
 import { mapAuthErrorForClient } from "@/lib/auth/client-errors";
 import { GUEST_AUTH_HOME } from "@/lib/auth/guest-auth";
-import { getSafeAuthRedirectPath, resolveClientAuthRedirectPath } from "@/lib/auth/redirects";
+import { resolveClientAuthRedirectPath, unwrapAuthNextPath } from "@/lib/auth/redirects";
 import { resolveClientAuthOrigin } from "@/lib/site-url";
 import {
   PASSWORD_RULES_HINT,
@@ -48,7 +48,8 @@ const OTP_LENGTH = 8;
 
 function buildOAuthCallbackUrl(nextPath: string) {
   const callback = new URL("/auth/callback", resolveClientAuthOrigin());
-  callback.searchParams.set("next", getSafeAuthRedirectPath(nextPath, GUEST_AUTH_HOME));
+  // Unwrap once — never forward a nested `next` into the OAuth callback URL.
+  callback.searchParams.set("next", unwrapAuthNextPath(nextPath, GUEST_AUTH_HOME));
   return callback.toString();
 }
 

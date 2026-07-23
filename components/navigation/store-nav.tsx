@@ -9,16 +9,36 @@ import { ChevronDown, Globe2, Menu, Search, UserRound } from "lucide-react";
 import { useAdaptiveNavbarTone } from "@/hooks/use-adaptive-navbar-tone";
 import { useNavAnchor } from "@/hooks/use-nav-anchor";
 import { normalizeStorefrontPath, resolveInitialNavbarTone } from "@/lib/navbar-ink-sampling";
+import { resolveNavbarChromeMode } from "@/lib/navbar-ink-resolver";
+import { NAVBAR_INK_STYLE_VARS } from "@/lib/navbar-ink-vars";
 import { MithronBrandMark } from "@/components/brand/mithron-brand-mark";
 import type { NavigationNode } from "@/config/types";
 import type { EnterpriseMenuConfig, MegaMenuConfig } from "@/lib/nav-menu-types";
 import { catalogCategoryDefinitions, ACCESSORIES_CATALOG_HREF } from "@/lib/catalog-categories";
 import { isStorefrontGuestOnly } from "@/lib/storefront/guest-demo";
+import { NAV_PANEL_CLOSE_MS, NAV_PANEL_OPEN_MS } from "@/store/nav-panel";
 import { useUiStore } from "@/store/ui";
 
-const MENU_CLOSE_DELAY_MS = 200;
-const MENU_EXIT_MS = 260;
+/** Match nav-panel hover-intent contract (60ms open / 200ms close). */
+const MENU_OPEN_DELAY_MS = NAV_PANEL_OPEN_MS;
+const MENU_CLOSE_DELAY_MS = NAV_PANEL_CLOSE_MS;
+/** Cold-open only; category swaps while open are immediate. */
+const MENU_EXIT_MS = 240;
 const NAV_DESKTOP_PREFETCH_MIN_WIDTH = 1280;
+
+function canUseHoverIntent() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+function setMegaMenuOpenAttr(open: boolean) {
+  if (typeof document === "undefined") return;
+  if (open) {
+    document.documentElement.setAttribute("data-mega-menu-open", "");
+  } else {
+    document.documentElement.removeAttribute("data-mega-menu-open");
+  }
+}
 
 const EnterpriseMegaMenuPanel = dynamic(
   () =>
@@ -83,6 +103,8 @@ export const StoreNav = forwardRef(function StoreNav(
   const normalizedPathname = useMemo(() => normalizeStorefrontPath(pathname), [pathname]);
   const initialNavbarTone = useMemo(() => resolveInitialNavbarTone(normalizedPathname), [normalizedPathname]);
   const { tone } = useAdaptiveNavbarTone(initialNavbarTone);
+  const navChrome = useMemo(() => resolveNavbarChromeMode(normalizedPathname), [normalizedPathname]);
+  const navInkStyle = NAVBAR_INK_STYLE_VARS[tone];
   const megaMenus = useMemo(
     () => enterpriseMenuConfigs.filter((menu): menu is MegaMenuConfig => menu.type === "mega"),
     [enterpriseMenuConfigs]
@@ -103,8 +125,14 @@ export const StoreNav = forwardRef(function StoreNav(
   const [renderedMenuKey, setRenderedMenuKey] = useState<string | null>(null);
   const [featuredByMenu, setFeaturedByMenu] = useState<Record<string, string>>({});
   const [mobileDrawerMounted, setMobileDrawerMounted] = useState(false);
+  const activeMenuKeyRef = useRef<string | null>(null);
+  const renderedMenuKeyRef = useRef<string | null>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const openTimerRef = useRef<number | null>(null);
   const prefetchDebounceRef = useRef<Map<string, number>>(new Map());
+
+  activeMenuKeyRef.current = activeMenuKey;
+  renderedMenuKeyRef.current = renderedMenuKey;
   const activeNavIndex = useMemo(() => {
     return displayedNavigationItems.findIndex((item) => {
       const menu = enterpriseMenuByLabel.get(item.label);
@@ -150,46 +178,80 @@ export const StoreNav = forwardRef(function StoreNav(
     }
   }, []);
 
-  const openEnterpriseMenu = useCallback((menuKey: string) => {
-    clearCloseTimer();
-    // Search → mega handoff: close search when hovering a category label
-    if (useUiStore.getState().overlay === "search") {
-      setOverlay(null);
+  const clearOpenTimer = useCallback(() => {
+    if (openTimerRef.current) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
     }
+  }, []);
+
+  const clearAllMenuTimers = useCallback(() => {
+    clearCloseTimer();
+    clearOpenTimer();
+  }, [clearCloseTimer, clearOpenTimer]);
+
+  const commitEnterpriseMenu = useCallback((menuKey: string) => {
+    clearAllMenuTimers();
     setRenderedMenuKey(menuKey);
     setActiveMenuKey(menuKey);
-  }, [clearCloseTimer, setOverlay]);
+  }, [clearAllMenuTimers]);
+
+  /**
+   * Desktop hover intent: 60ms open delay when closed; immediate category swap when already open.
+   * Never opens while search is open. Fine-pointer / mouse only.
+   */
+  const scheduleEnterpriseMenuOpen = useCallback((menuKey: string) => {
+    if (useUiStore.getState().overlay === "search") return;
+
+    clearCloseTimer();
+
+    const alreadyOpen = Boolean(activeMenuKeyRef.current || renderedMenuKeyRef.current);
+    if (alreadyOpen) {
+      clearOpenTimer();
+      setRenderedMenuKey(menuKey);
+      setActiveMenuKey(menuKey);
+      return;
+    }
+
+    clearOpenTimer();
+    openTimerRef.current = window.setTimeout(() => {
+      openTimerRef.current = null;
+      if (useUiStore.getState().overlay === "search") return;
+      setRenderedMenuKey(menuKey);
+      setActiveMenuKey(menuKey);
+    }, MENU_OPEN_DELAY_MS);
+  }, [clearCloseTimer, clearOpenTimer]);
 
   const scheduleEnterpriseMenuClose = useCallback(() => {
-    clearCloseTimer();
+    clearAllMenuTimers();
     closeTimerRef.current = window.setTimeout(() => {
       setActiveMenuKey(null);
     }, MENU_CLOSE_DELAY_MS);
-  }, [clearCloseTimer]);
+  }, [clearAllMenuTimers]);
 
   const closeEnterpriseMenu = useCallback(() => {
-    clearCloseTimer();
+    clearAllMenuTimers();
     setActiveMenuKey(null);
-  }, [clearCloseTimer]);
+  }, [clearAllMenuTimers]);
 
-  /** Hover/focus opens search; does not close on leave. */
-  const openSearch = useCallback(() => {
-    if (useUiStore.getState().overlay === "search") return;
-    preloadSearchOverlay();
-    closeEnterpriseMenu();
-    setOverlay("search");
-  }, [closeEnterpriseMenu, preloadSearchOverlay, setOverlay]);
+  /** Force-unmount mega immediately so search open never races an exit animation. */
+  const forceCloseEnterpriseMenu = useCallback(() => {
+    clearAllMenuTimers();
+    setActiveMenuKey(null);
+    setRenderedMenuKey(null);
+    setMegaMenuOpenAttr(false);
+  }, [clearAllMenuTimers]);
 
-  /** Click toggles: open ↔ close. */
+  /** Click toggles search. Hover opens mega menus on fine pointers only. */
   const toggleSearch = useCallback(() => {
     if (useUiStore.getState().overlay === "search") {
       setOverlay(null);
       return;
     }
     preloadSearchOverlay();
-    closeEnterpriseMenu();
+    forceCloseEnterpriseMenu();
     setOverlay("search");
-  }, [closeEnterpriseMenu, preloadSearchOverlay, setOverlay]);
+  }, [forceCloseEnterpriseMenu, preloadSearchOverlay, setOverlay]);
 
   const setFeaturedCard = useCallback((menuKey: string, featureKey: string | undefined) => {
     if (!featureKey) return;
@@ -251,15 +313,59 @@ export const StoreNav = forwardRef(function StoreNav(
   }, [displayedNavigationItems, normalizedPathname, prefetchRoute]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia(`(min-width: ${NAV_DESKTOP_PREFETCH_MIN_WIDTH}px)`).matches) return;
+
+    const preloadMegaPanel = () => {
+      void import("@/components/navigation/enterprise-mega-menu-panel").catch((error: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Mega menu panel preload failed", error);
+        }
+      });
+    };
+
+    let idleId: number | undefined;
+    let timerId: number | undefined;
+    const scheduleIdle = window.requestIdleCallback;
+    if (typeof scheduleIdle === "function") {
+      idleId = scheduleIdle.call(window, preloadMegaPanel, { timeout: 2500 });
+    } else {
+      timerId = window.setTimeout(preloadMegaPanel, 1200);
+    }
+
+    return () => {
+      if (typeof idleId === "number") {
+        const cancelIdle = window.cancelIdleCallback;
+        if (typeof cancelIdle === "function") {
+          cancelIdle.call(window, idleId);
+        }
+      }
+      if (typeof timerId === "number") {
+        window.clearTimeout(timerId);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const debounceTimers = prefetchDebounceRef.current;
     return () => {
-      clearCloseTimer();
+      clearAllMenuTimers();
+      setMegaMenuOpenAttr(false);
       for (const timerId of debounceTimers.values()) {
         window.clearTimeout(timerId);
       }
       debounceTimers.clear();
     };
-  }, [clearCloseTimer]);
+  }, [clearAllMenuTimers]);
+
+  useEffect(() => {
+    setMegaMenuOpenAttr(Boolean(activeMenuKey || renderedMenuKey));
+    return () => {
+      if (!activeMenuKey && !renderedMenuKey) {
+        setMegaMenuOpenAttr(false);
+      }
+    };
+  }, [activeMenuKey, renderedMenuKey]);
 
   useEffect(() => {
     if (activeMenuKey || !renderedMenuKey) return;
@@ -306,7 +412,9 @@ export const StoreNav = forwardRef(function StoreNav(
       className="TOP_NAVBAR adaptive-navbar relative left-0 top-0 z-[var(--z-nav)] w-full"
       data-nav-state="adaptive"
       data-nav-ink={tone}
+      data-nav-chrome={navChrome}
       data-nav-variant={variant}
+      style={navInkStyle}
       onMouseEnter={clearCloseTimer}
       onMouseLeave={scheduleEnterpriseMenuClose}
       onBlur={(event) => {
@@ -366,7 +474,8 @@ export const StoreNav = forwardRef(function StoreNav(
                   activeNavIndex={activeNavIndex}
                   enterpriseMenuByLabel={enterpriseMenuByLabel}
                   activeMenuKey={activeMenuKey}
-                  onOpenEnterpriseMenu={openEnterpriseMenu}
+                  searchOpen={searchOpen}
+                  onScheduleEnterpriseMenu={scheduleEnterpriseMenuOpen}
                 />
               ))}
             </nav>
@@ -383,10 +492,6 @@ export const StoreNav = forwardRef(function StoreNav(
                   onFocus={preloadSearchOverlay}
                   onClick={toggleSearch}
                   onPointerDown={preloadSearchOverlay}
-                  onPointerEnter={(event) => {
-                    // Hover-open on mouse only — touch uses click toggle (avoids open-then-close).
-                    if (event.pointerType === "mouse") openSearch();
-                  }}
                 >
                   <Search className="size-[18px]" />
                 </button>
@@ -420,12 +525,9 @@ export const StoreNav = forwardRef(function StoreNav(
           open={panelOpen}
           featuredKey={featuredByMenu[activeCategoryKey]}
           onCategoryIntent={(categoryKey) => {
-            clearCloseTimer();
-            if (useUiStore.getState().overlay === "search") {
-              setOverlay(null);
-            }
-            setRenderedMenuKey(categoryKey);
-            setActiveMenuKey(categoryKey);
+            // In-panel category hover: commit immediately (panel already open).
+            if (useUiStore.getState().overlay === "search") return;
+            commitEnterpriseMenu(categoryKey);
           }}
           onFeatureIntent={(featureKey) => setFeaturedCard(activeCategoryKey, featureKey)}
           onRouteIntent={debouncedPrefetchRoute}
@@ -452,14 +554,16 @@ function NavLinkItem({
   activeNavIndex,
   enterpriseMenuByLabel,
   activeMenuKey,
-  onOpenEnterpriseMenu
+  searchOpen,
+  onScheduleEnterpriseMenu
 }: {
   item: NavigationNode;
   index: number;
   activeNavIndex: number;
   enterpriseMenuByLabel: Map<string, EnterpriseMenuConfig>;
   activeMenuKey: string | null;
-  onOpenEnterpriseMenu: (menuKey: string) => void;
+  searchOpen: boolean;
+  onScheduleEnterpriseMenu: (menuKey: string) => void;
 }) {
   const isActive = activeNavIndex === index;
   const menu = enterpriseMenuByLabel.get(item.label);
@@ -469,7 +573,11 @@ function NavLinkItem({
   return (
     <div
       className="adaptive-navbar__link-wrap shrink-0"
-      onPointerEnter={() => menu && onOpenEnterpriseMenu(menu.key)}
+      onPointerEnter={(event) => {
+        if (!menu || searchOpen) return;
+        if (event.pointerType !== "mouse" || !canUseHoverIntent()) return;
+        onScheduleEnterpriseMenu(menu.key);
+      }}
     >
       <Link
         href={item.href}
@@ -477,8 +585,10 @@ function NavLinkItem({
         aria-haspopup={menu ? "true" : undefined}
         aria-expanded={menu ? isMenuActive : undefined}
         aria-controls={menuId}
-        onPointerEnter={() => {
-          if (menu) onOpenEnterpriseMenu(menu.key);
+        onPointerEnter={(event) => {
+          if (!menu || searchOpen) return;
+          if (event.pointerType !== "mouse" || !canUseHoverIntent()) return;
+          onScheduleEnterpriseMenu(menu.key);
         }}
         className={`adaptive-navbar__link type-nav nav-interactive group relative inline-flex h-10 items-center whitespace-nowrap text-current ${isActive ? "is-active" : ""}`}
       >

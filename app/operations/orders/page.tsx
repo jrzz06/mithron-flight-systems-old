@@ -108,7 +108,7 @@ export default async function OperationsOrdersPage({ searchParams }: { searchPar
         </div>
 
         <section className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Fulfillment lifecycle</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Fulfillment lifecycle</p>
           <div className="grid gap-2 md:grid-cols-4">
             {lifecycleCounts.map((entry) => (
               <div key={entry.state} className="rounded-xl border border-white/10 bg-black/18 p-3">
@@ -140,11 +140,11 @@ export default async function OperationsOrdersPage({ searchParams }: { searchPar
 
         <div className="grid gap-8 lg:grid-cols-2">
           <section className="grid gap-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Orders</p>
+            <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Orders</p>
             <DataList rows={orderRows.length ? orderRows : [{ label: "orders", value: "0", detail: "No persisted order rows yet." }]} />
           </section>
           <section className="grid gap-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Order items</p>
+            <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Order items</p>
             <DataList rows={itemRows.length ? itemRows : [{ label: "order_items", value: "0", detail: "No persisted order item rows yet." }]} />
           </section>
         </div>

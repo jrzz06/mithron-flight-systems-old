@@ -11,6 +11,10 @@ export function HomeMiniCarousel({
 }: {
   items: HomeMiniCarouselItem[];
 }) {
+  if (items.length === 0) {
+    return null;
+  }
+
   return (
     <div
       id="home-mini-carousel"

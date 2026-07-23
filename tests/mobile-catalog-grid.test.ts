@@ -22,7 +22,7 @@ describe("mobile catalog grid layout", () => {
     expect(source("app/storefront-catalog.css")).toContain("margin-top: clamp(1.5rem, 3vw, 2.5rem)");
   });
 
-  it("keeps 2-column catalog grids and stacked catalog footers", () => {
+  it("keeps 2-column catalog grids and horizontal catalog footers", () => {
     const globalsCss = source("app/globals.css");
     const showroomCss = source("sections/catalog/catalog-page.module.css");
     const cardCss = source("components/cards/product-hover-card.module.css");
@@ -31,19 +31,19 @@ describe("mobile catalog grid layout", () => {
       /@media \(max-width: 767px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(globalsCss).toMatch(
-      /\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__footer[\s\S]*flex-direction:\s*column/
+      /\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__footer[\s\S]*flex-direction:\s*row/
     );
     const catalogFooterBlock = cardCss.match(
       /\.shell\[data-card-variant="catalog"\] \.footer\s*\{[\s\S]*?\}/
     )?.[0];
     expect(catalogFooterBlock).toBeTruthy();
-    expect(catalogFooterBlock).toContain("flex-direction: column");
-    expect(catalogFooterBlock).not.toContain("flex-direction: row");
+    expect(catalogFooterBlock).toContain("flex-direction: row");
+    expect(catalogFooterBlock).not.toContain("flex-direction: column");
     expect(showroomCss).toMatch(
       /@media \(max-width: 767px\)[\s\S]*\.productGrid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(showroomCss).toMatch(
-      /@media \(max-width: 767px\)[\s\S]*\.footer[\s\S]*flex-direction:\s*column/
+      /@media \(max-width: 767px\)[\s\S]*\.footer[\s\S]*flex-direction:\s*row/
     );
     expect(showroomCss).toMatch(
       /@media \(max-width: 767px\)[\s\S]*\.price[\s\S]*white-space:\s*nowrap/
@@ -77,7 +77,7 @@ describe("mobile catalog grid layout", () => {
     const glassCss = source("app/glass-interactive.css");
     expect(listing).toMatch(/catalog-editorial-band/);
     expect(listing).not.toMatch(/aurora-blob/);
-    expect(listing).not.toMatch(/featuredProduct\.image/);
+    expect(listing).toMatch(/featuredProduct\.image/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band[\s\S]*0\.62fr/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band[\s\S]*#0f172a/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band[\s\S]*#1e293b/);
@@ -88,15 +88,18 @@ describe("mobile catalog grid layout", () => {
     expect(globalsCss).toMatch(/\.catalog-editorial-band__aurora::after[\s\S]*72% 44%/);
     expect(listing).toMatch(/--editorial-image-scale/);
     expect(listing).not.toMatch(/catalog-editorial-band__glass/);
-    expect(globalsCss).toMatch(/\.catalog-page-shell \.catalog-editorial-band__media \.mithron-responsive-image-frame[\s\S]*mask-image:\s*radial-gradient/);
-    expect(globalsCss).toMatch(/\.catalog-editorial-band__media::after[\s\S]*50% 48%/);
+    expect(globalsCss).toMatch(/\.catalog-page-shell \.catalog-editorial-band__media \.mithron-responsive-image-frame[\s\S]*--mithron-image-placeholder:\s*transparent/);
+    expect(globalsCss).toMatch(/\.catalog-page-shell \.catalog-editorial-band__media \.mithron-responsive-image-frame[\s\S]*mask-image:\s*none/);
+    expect(globalsCss).toMatch(/\.catalog-editorial-band__media::before,\s*\n\s*\.catalog-editorial-band__media::after[\s\S]*display:\s*none/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band__media\s*\{[\s\S]*?aspect-ratio:\s*16\s*\/\s*10/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band__media\s*\{[\s\S]*?background:\s*transparent/);
-    expect(globalsCss).toMatch(/\.catalog-editorial-band__media::before[\s\S]*blur\(16px\)/);
+    expect(globalsCss).toMatch(/\.catalog-page-shell \.catalog-editorial-band__image-placeholder[\s\S]*background:\s*transparent/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band__image[\s\S]*scale\(var\(--editorial-image-scale/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band__cta-buy[\s\S]*align-self:\s*flex-start/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band__cta-buy[\s\S]*width:\s*fit-content/);
-    const editorialImageBlock = globalsCss.match(/\.catalog-page-shell \.catalog-editorial-band__image\s*\{[\s\S]*?\}/);
+    const editorialImageBlock = globalsCss.match(
+      /\.catalog-page-shell \.catalog-editorial-band__media \.mithron-responsive-image,\s*\n\.catalog-page-shell \.catalog-editorial-band__image\s*\{[\s\S]*?\}/
+    );
     expect(editorialImageBlock).toBeTruthy();
     const editorialImageCss = editorialImageBlock![0];
     expect(editorialImageCss).not.toMatch(/drop-shadow\(0\s+0\s+/);
@@ -104,7 +107,7 @@ describe("mobile catalog grid layout", () => {
     expect(editorialImageCss).toMatch(/drop-shadow\([\s\S]*rgba\(0,\s*0,\s*0/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band__title[\s\S]*max-width:\s*32ch/);
     expect(globalsCss).toMatch(/\.catalog-editorial-band__title[\s\S]*color:\s*#ffffff/);
-    expect(globalsCss).toMatch(/\.catalog-editorial-band__cta-buy[\s\S]*background:\s*#d8f3e6/);
+    expect(globalsCss).toMatch(/\.catalog-editorial-band__cta-buy[\s\S]*background:\s*var\(--product-card-buy-bg/);
     expect(glassCss).not.toMatch(/\.catalog-editorial-band__cta/);
   });
 });

@@ -53,7 +53,7 @@ describe("product detail experience", () => {
     expect(srcs).toEqual(["/image-a.png", "/image-b.png", "/image-c.png"]);
   });
 
-  it("prefers catalog cutout display src when responsive fallback is available", () => {
+  it("keeps Wix/original src instead of swapping to a cutout responsive fallback", () => {
     const cutoutSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo-drone.webp";
     const rawSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/products/demo-drone/raw.png";
     const plan = buildProductMediaPlan({
@@ -80,8 +80,8 @@ describe("product detail experience", () => {
       gallery: []
     });
 
-    expect(plan[0]?.src).toBe(cutoutSrc);
-    expect(plan[0]?.alt).toBe("Cutout");
+    expect(plan[0]?.src).toBe(rawSrc);
+    expect(plan[0]?.src).not.toContain("catalog-cutouts");
   });
 
   it("keeps overview copy out of narrative chapters", () => {

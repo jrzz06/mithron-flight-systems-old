@@ -82,7 +82,7 @@ export function AdminOrdersFilterBar({ filters, warehouses, onChange }: AdminOrd
           aria-controls="admin-order-filters-panel"
         >
           Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
-          <span className={`text-[10px] opacity-70 transition ${filtersOpen ? "rotate-180" : ""}`}>▾</span>
+          <span className={`type-badge opacity-70 transition ${filtersOpen ? "rotate-180" : ""}`}>▾</span>
         </button>
         <div className="w-full shrink-0 md:w-48">
           <Select

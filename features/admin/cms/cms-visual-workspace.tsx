@@ -286,7 +286,7 @@ function VisibilityToggle({ section }: { section: CmsWorkspaceSection }) {
     <label data-cms-section-visibility-toggle className="flex items-start justify-between gap-3 rounded-lg border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2">
       <span>
         <span className="block text-xs font-semibold text-[var(--platform-text-primary)]">Visible on site</span>
-        <span className="mt-0.5 block text-[11px] leading-4 text-[var(--platform-text-muted)]">Hide this section without deleting its draft.</span>
+        <span className="mt-0.5 block type-meta leading-4 text-[var(--platform-text-muted)]">Hide this section without deleting its draft.</span>
       </span>
       <input name="is_visible" type="checkbox" defaultChecked={section.isVisible} className="mt-1 h-4 w-4 accent-[var(--platform-accent)]" />
       <input type="hidden" name="is_visible" value="off" />
@@ -318,7 +318,7 @@ function EditorGroup({
     <div data-cms-editor-group={title.toLowerCase().replaceAll(" ", "-")} className="grid gap-3 rounded-xl border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-3">
       <div>
         <p className="text-xs font-semibold text-[var(--platform-text-primary)]">{title}</p>
-        {description ? <p className="mt-1 text-[11px] leading-4 text-[var(--platform-text-muted)]">{description}</p> : null}
+        {description ? <p className="mt-1 type-meta leading-4 text-[var(--platform-text-muted)]">{description}</p> : null}
       </div>
       {children}
     </div>
@@ -405,7 +405,7 @@ function ColorField({
   return (
     <div className="grid gap-1.5">
       <span className="text-xs font-medium text-[var(--platform-text-secondary)]">{label}</span>
-      {hint && <span className="text-[11px] leading-4 text-[var(--platform-text-muted)]">{hint}</span>}
+      {hint && <span className="type-meta leading-4 text-[var(--platform-text-muted)]">{hint}</span>}
       <div className="flex items-center gap-2">
         {/* Native colour swatch for instant visual feedback. */}
         <label
@@ -543,19 +543,19 @@ function SectionCard({
             <GripVertical className="h-3.5 w-3.5 shrink-0 text-[var(--platform-text-muted)]" aria-hidden="true" />
             <span className="truncate text-xs font-semibold text-[var(--platform-text-primary)]">{section.title}</span>
           </span>
-          <span className="mt-1 block truncate text-[11px] text-[var(--platform-text-muted)]">{sectionDisplayTitle(section)}</span>
+          <span className="mt-1 block truncate type-meta text-[var(--platform-text-muted)]">{sectionDisplayTitle(section)}</span>
           <span className="mt-2 flex flex-wrap items-center gap-1.5">
             <StatusBadge status={section.status} />
-            <span className="text-[10px] font-medium text-[var(--platform-text-muted)]">{section.updatedAt}</span>
+            <span className="type-badge font-medium text-[var(--platform-text-muted)]">{section.updatedAt}</span>
           </span>
         </span>
       </button>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <button type="button" data-cms-section-hide-show onClick={onSelect} className="inline-flex h-7 items-center gap-1 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 text-[11px] font-semibold text-[var(--platform-text-secondary)] hover:border-[var(--platform-border)]">
+        <button type="button" data-cms-section-hide-show onClick={onSelect} className="inline-flex h-7 items-center gap-1 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 type-meta font-semibold text-[var(--platform-text-secondary)] hover:border-[var(--platform-border)]">
           {section.isVisible ? <Eye className="h-3 w-3" aria-hidden="true" /> : <EyeOff className="h-3 w-3" aria-hidden="true" />}
           {section.isVisible ? "Visible" : "Hidden"}
         </button>
-        <button type="button" data-cms-section-duplicate aria-disabled="true" className="inline-flex h-7 items-center gap-1 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 text-[11px] font-semibold text-[var(--platform-text-muted)]">
+        <button type="button" data-cms-section-duplicate aria-disabled="true" className="inline-flex h-7 items-center gap-1 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 type-meta font-semibold text-[var(--platform-text-muted)]">
           <Copy className="h-3 w-3" aria-hidden="true" />
           Duplicate
         </button>
@@ -564,7 +564,7 @@ function SectionCard({
           <OperationalSubmitButton
             pendingLabel="Publishing"
             confirmMessage={`Publish ${section.title} to the live website?`}
-            className="platform-btn-primary platform-btn-sm !min-h-7 !px-2 !text-[11px]"
+            className="platform-btn-primary platform-btn-sm !min-h-7 !px-2 type-meta"
           >
             Publish
           </OperationalSubmitButton>
@@ -692,7 +692,7 @@ export function CmsVisualWorkspace({ pages, sections, media, restoreRevision, in
           <Field label="Subtitle" name="subtitle" value={fields.subtitle} onChange={(value) => updateField("subtitle", value)} multiline />
           <div className="grid gap-3 rounded-xl border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-3">
             <p className="text-xs font-semibold text-[var(--platform-text-secondary)]">Text colour</p>
-            <p className="-mt-1 text-[11px] leading-4 text-[var(--platform-text-muted)]">
+            <p className="-mt-1 type-meta leading-4 text-[var(--platform-text-muted)]">
               Overrides the banner&apos;s theme colour. Leave empty to inherit the default light/dark palette.
             </p>
             <ColorField
@@ -889,13 +889,13 @@ export function CmsVisualWorkspace({ pages, sections, media, restoreRevision, in
               className={`rounded-lg px-3 py-2 text-left text-sm font-semibold transition ${page.id === activePage.id ? "bg-[var(--platform-accent-soft)] text-[var(--platform-text-primary)]" : "text-[var(--platform-text-secondary)] hover:bg-[var(--platform-surface-muted)] hover:text-[var(--platform-text-primary)]"}`}
             >
               <span className="block">{page.label}</span>
-              <span className={`mt-0.5 block truncate text-[10px] font-medium ${page.id === activePage.id ? "text-[var(--platform-text-secondary)]" : "text-[var(--platform-text-muted)]"}`}>{page.routePath}</span>
+              <span className={`mt-0.5 block truncate type-badge font-medium ${page.id === activePage.id ? "text-[var(--platform-text-secondary)]" : "text-[var(--platform-text-muted)]"}`}>{page.routePath}</span>
             </button>
           ))}
         </nav>
 
         <div data-cms-section-tree className="mt-4 border-t border-[var(--platform-border)] pt-3">
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--platform-text-muted)]">Sections</p>
+          <p className="px-3 type-meta font-semibold uppercase tracking-[0.14em] text-[var(--platform-text-muted)]">Sections</p>
           <div className="mt-2 grid max-h-[46vh] gap-2 overflow-y-auto pr-1">
             {filteredSections.length ? filteredSections.map((section) => (
               <SectionCard
@@ -912,7 +912,7 @@ export function CmsVisualWorkspace({ pages, sections, media, restoreRevision, in
         </div>
 
         <div data-cms-recently-edited className="mt-4 border-t border-[var(--platform-border)] pt-3">
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--platform-text-muted)]">Recently edited</p>
+          <p className="px-3 type-meta font-semibold uppercase tracking-[0.14em] text-[var(--platform-text-muted)]">Recently edited</p>
           <div className="mt-2 grid gap-1">
             {recentSections.length ? recentSections.map((id) => (
               <button key={id} type="button" onClick={() => activateSection(id)} className="truncate rounded-lg px-3 py-1.5 text-left text-xs text-[var(--platform-text-secondary)] hover:bg-[var(--platform-surface-muted)]">
@@ -1012,7 +1012,7 @@ export function CmsVisualWorkspace({ pages, sections, media, restoreRevision, in
           <>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--platform-text-muted)]">{activePage.label}</p>
+                <p className="type-meta font-semibold uppercase tracking-[0.14em] text-[var(--platform-text-muted)]">{activePage.label}</p>
                 <h2 className="mt-1 text-lg font-semibold text-[var(--platform-text-primary)]">{activeSection.title}</h2>
                 <p className="mt-1 text-sm leading-6 text-[var(--platform-text-muted)]">{activeSection.description}</p>
                 <p className="mt-1 text-xs text-[var(--platform-text-muted)]">{activePage.description}</p>
@@ -1134,7 +1134,7 @@ function MediaPicker({
           <p data-cms-media-usage>
             <span className="font-semibold text-[var(--platform-text-secondary)]">Used in:</span> {selectedMedia?.usage || section.title}
           </p>
-          <button type="button" data-cms-crop-image aria-disabled="true" className="inline-flex h-8 w-fit items-center gap-1.5 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 text-[11px] font-semibold text-[var(--platform-text-secondary)]">
+          <button type="button" data-cms-crop-image aria-disabled="true" className="inline-flex h-8 w-fit items-center gap-1.5 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 type-meta font-semibold text-[var(--platform-text-secondary)]">
             <Crop className="h-3.5 w-3.5" aria-hidden="true" />
             Crop image
           </button>

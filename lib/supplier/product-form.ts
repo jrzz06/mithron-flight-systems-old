@@ -1,3 +1,5 @@
+import { resolveCanonicalProductCategory } from "@/lib/catalog-category-taxonomy";
+
 export function slugifyProductValue(value: string) {
   return value
     .normalize("NFKD")
@@ -27,7 +29,8 @@ export function parseProductPrice(value: FormDataEntryValue | null) {
 
 export function parseSupplierProductForm(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
-  const category = String(formData.get("category") ?? "Agri Drones").trim() || "Agri Drones";
+  const rawCategory = String(formData.get("category") ?? "Agri Drones").trim() || "Agri Drones";
+  const category = resolveCanonicalProductCategory(rawCategory);
   const slugInput = String(formData.get("slug") ?? "").trim();
   const price = parseProductPrice(formData.get("price"));
 

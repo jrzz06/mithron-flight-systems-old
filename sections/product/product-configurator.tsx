@@ -220,7 +220,17 @@ export function ProductConfigurator({
     <>
       <aside className={cn("product-configurator", styles.buyBox, styles.buyBoxPremium)}>
         <div className={styles.buyBoxInner}>
-          <h1 className={styles.productTitlePremium} style={{ color: "#000000", WebkitTextFillColor: "#000000" }}>
+          <div className={styles.buyBoxMetaRow}>
+            {product.category ? (
+              <p className={styles.buyBoxCategory}>{product.category}</p>
+            ) : null}
+            <p className={styles.stockStatus}>
+              <span className={styles.stockDot} aria-hidden="true" />
+              {stockLabel}
+            </p>
+          </div>
+
+          <h1 className={styles.productTitlePremium}>
             {product.name}
           </h1>
 
@@ -235,7 +245,7 @@ export function ProductConfigurator({
           {buyBoxTagline ? <p className={styles.productSubtitle}>{buyBoxTagline}</p> : null}
 
           <div className={styles.priceBlock}>
-            <p className={styles.priceHero} style={{ color: "#000000", WebkitTextFillColor: "#000000" }}>
+            <p className={styles.priceHero}>
               {formatINR(displayPrice)}
             </p>
             {showGstNote ? <p className={styles.priceGstNote}>+ GST</p> : null}
@@ -243,11 +253,6 @@ export function ProductConfigurator({
               <p className={styles.priceComparePremium}>{formatINR(product.compareAt!)}</p>
             ) : null}
           </div>
-
-          <p className={styles.stockStatus}>
-            <span className={styles.stockDot} aria-hidden="true" />
-            {stockLabel}
-          </p>
 
           {showVariantPicker ? (
             <section className={styles.compactOptions} aria-labelledby="variant-heading">

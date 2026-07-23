@@ -33,7 +33,7 @@ export function CmsPageSelect({
 
   return (
     <label className="grid min-w-[200px] flex-1 gap-1.5">
-      <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">Area</span>
+      <span className="type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">Area</span>
       <Select
         value={value}
         onChange={(event) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, type RefObject } from "react";
+import { usePathname } from "next/navigation";
 import { StoreNav } from "@/components/navigation/store-nav";
 import { useNavAnchorRef } from "@/components/navigation/nav-anchor-context";
 import type { EnterpriseMenuConfig } from "@/lib/nav-menu-types";
@@ -13,6 +14,7 @@ export function StoreNavWithAnchor({
   navigationItems: NavigationNode[];
   enterpriseMenuConfigs: EnterpriseMenuConfig[];
 }) {
+  const pathname = usePathname();
   const navRef = useNavAnchorRef() as RefObject<HTMLDivElement | null>;
 
   const preloadSearchOverlay = useCallback(() => {
@@ -25,6 +27,7 @@ export function StoreNavWithAnchor({
 
   return (
     <StoreNav
+      key={pathname}
       ref={navRef}
       navigationItems={navigationItems}
       enterpriseMenuConfigs={enterpriseMenuConfigs}

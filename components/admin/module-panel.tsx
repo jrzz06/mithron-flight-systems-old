@@ -247,7 +247,7 @@ export function OperationalRecordGrid({
             <div className="grid min-w-[180px] grid-cols-2 gap-2">
               {row.metrics.map((metric) => (
                 <div key={`${row.id}-${metric.label}`} className="rounded-lg border border-[var(--platform-border)] bg-[var(--platform-surface)] px-3 py-1.5">
-                  <p className="text-[11px] font-medium text-[var(--platform-text-muted)]">{metric.label}</p>
+                  <p className="type-meta font-medium text-[var(--platform-text-muted)]">{metric.label}</p>
                   <p className="mt-1 text-sm font-semibold text-[var(--platform-text-primary)]">{metric.value}</p>
                 </div>
               ))}

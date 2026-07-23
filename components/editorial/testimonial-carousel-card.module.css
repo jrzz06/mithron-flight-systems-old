@@ -88,9 +88,9 @@
 }
 
 .footer {
-  margin-top: clamp(20px, 2.4vw, 28px);
-  padding-top: 18px;
-  border-top: 1px solid rgba(31, 107, 70, 0.1);
+  margin-top: clamp(18px, 2.2vw, 24px);
+  padding-top: 0;
+  border-top: none;
 }
 
 .productLink {

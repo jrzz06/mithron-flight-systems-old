@@ -1,0 +1,41 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 1,
+      "url": [
+        "http://127.0.0.1:3000/",
+        "http://127.0.0.1:3000/products",
+        "http://127.0.0.1:3000/category/agri-drones"
+      ],
+      "settings": {
+        "preset": "desktop",
+        "throttlingMethod": "devtools",
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 390,
+          "height": 844,
+          "deviceScaleFactor": 2,
+          "disabled": false
+        }
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.9 }],
+        "categories:accessibility": ["warn", { "minScore": 0.95 }],
+        "categories:best-practices": ["warn", { "minScore": 0.95 }],
+        "categories:seo": ["warn", { "minScore": 0.95 }],
+        "first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
+        "interaction-to-next-paint": ["warn", { "maxNumericValue": 200 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 300 }],
+        "server-response-time": ["warn", { "maxNumericValue": 800 }]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

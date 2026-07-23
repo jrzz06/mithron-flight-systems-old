@@ -67,7 +67,7 @@ export function AdminOrdersToolbar({
               }`}
             >
               {entry.label}
-              <span className={`rounded px-1.5 py-0.5 text-[10px] ${active ? "bg-violet-500/20" : "bg-[var(--platform-surface)]"}`}>
+              <span className={`rounded px-1.5 py-0.5 type-badge ${active ? "bg-violet-500/20" : "bg-[var(--platform-surface)]"}`}>
                 {entry.count}
               </span>
             </Link>

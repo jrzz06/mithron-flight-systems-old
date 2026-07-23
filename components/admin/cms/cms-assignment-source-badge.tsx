@@ -27,7 +27,7 @@ export function CmsAssignmentSourceBadge({
     <span
       title={TITLES[source]}
       className={cn(
-        "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        "rounded-full px-2 py-0.5 type-badge font-semibold uppercase tracking-wide",
         source === "inferred" && "bg-amber-100 text-amber-900",
         source === "missing" && "bg-red-100 text-red-800",
         className

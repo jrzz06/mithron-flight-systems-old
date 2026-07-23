@@ -67,21 +67,42 @@ function sortReviews(reviews: ProductPageReview[], sort: ReviewSort) {
   }
 }
 
-function RatingDistribution({ summary }: { summary: ProductReviewSummary }) {
+function RatingDistribution({
+  summary,
+  activeRating,
+  onSelectRating
+}: {
+  summary: ProductReviewSummary;
+  activeRating: number | null;
+  onSelectRating: (rating: number | null) => void;
+}) {
   const maxCount = Math.max(...Object.values(summary.distribution), 1);
 
   return (
-    <div className={styles.reviewDistribution}>
+    <div className={styles.reviewDistribution} role="group" aria-label="Filter by rating">
       {([5, 4, 3, 2, 1] as const).map((stars) => {
         const count = summary.distribution[stars];
         const width = `${Math.max(6, Math.round((count / maxCount) * 100))}%`;
+        const isActive = activeRating === stars;
         return (
-          <div key={stars} className={styles.reviewDistributionRow}>
+          <button
+            key={stars}
+            type="button"
+            className={cn(styles.reviewDistributionRow, isActive && styles.reviewDistributionRowActive)}
+            aria-pressed={isActive}
+            aria-label={
+              isActive
+                ? `Clear ${stars}-star filter`
+                : `Show ${stars}-star reviews (${count})`
+            }
+            onClick={() => onSelectRating(isActive ? null : stars)}
+            disabled={count === 0 && !isActive}
+          >
             <span className={styles.reviewDistributionLabel}>{stars}</span>
             <div className={styles.reviewDistributionTrack}>
               <span className={styles.reviewDistributionFill} style={{ width }} />
             </div>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -193,15 +214,17 @@ export function ProductReviewsSection({
 }) {
   const [sort, setSort] = useState<ReviewSort>("recent");
   const [query, setQuery] = useState("");
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const sortedReviews = useMemo(() => sortReviews(reviews, sort), [reviews, sort]);
   const filteredReviews = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return sortedReviews;
     return sortedReviews.filter((review) => {
+      if (ratingFilter != null && review.rating !== ratingFilter) return false;
+      if (!normalized) return true;
       const haystack = `${review.title} ${review.body} ${review.authorName}`.toLowerCase();
       return haystack.includes(normalized);
     });
-  }, [query, sortedReviews]);
+  }, [query, ratingFilter, sortedReviews]);
 
   return (
     <section
@@ -226,8 +249,21 @@ export function ProductReviewsSection({
                   <p className={styles.reviewsScoreMeta}>
                     {summary.totalReviews} review{summary.totalReviews === 1 ? "" : "s"}
                   </p>
+                  {ratingFilter != null ? (
+                    <button
+                      type="button"
+                      className={styles.reviewsClearFilter}
+                      onClick={() => setRatingFilter(null)}
+                    >
+                      Showing {ratingFilter}-star · Clear
+                    </button>
+                  ) : null}
                 </div>
-                <RatingDistribution summary={summary} />
+                <RatingDistribution
+                  summary={summary}
+                  activeRating={ratingFilter}
+                  onSelectRating={setRatingFilter}
+                />
               </div>
 
               <div className={styles.reviewsToolbar}>

@@ -304,7 +304,7 @@ export function AdminRealtimeStatusBadge() {
   return (
     <span
       data-admin-realtime-status={realtime.connectionStatus}
-      className="inline-flex items-center gap-1 rounded-full border border-[var(--platform-border)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]"
+      className="inline-flex items-center gap-1 rounded-full border border-[var(--platform-border)] px-2 py-0.5 type-badge font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]"
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${

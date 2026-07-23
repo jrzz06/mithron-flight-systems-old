@@ -20,6 +20,7 @@ import {
 } from "@/lib/catalog-categories";
 import { dedupeProductsBySlug } from "@/lib/catalog-shelf-layout";
 import { resolveCatalogCardImage } from "@/lib/media/catalog-card-image";
+import { isCatalogCutoutAsset } from "@/lib/media/catalog-cutout";
 import {
   getFeaturedFromCatalogIndex,
   searchCatalogIndex,
@@ -259,13 +260,14 @@ const homepageProductSelect = [
   "sort_order"
 ].join(",");
 
-const HOMEPAGE_PRODUCT_LIMIT = 80;
+const HOMEPAGE_PRODUCT_LIMIT = 36;
 const CATALOG_PAGE_SIZE = 200;
 const CATALOG_MAX_ROWS = 10_000;
 const CATALOG_SEARCH_INDEX_LIMIT = 800;
-const CATALOG_SHOWROOM_LIMIT = 560;
-const CATALOG_CATEGORY_MAX_ROWS = 500;
-const CATALOG_INTEREST_LIMIT = 500;
+/** Initial showroom SSR page — enough for first viewport + filters; avoid 560-row Redis blobs. */
+const CATALOG_SHOWROOM_LIMIT = 96;
+const CATALOG_CATEGORY_MAX_ROWS = 96;
+const CATALOG_INTEREST_LIMIT = 200;
 /** @deprecated Bounded legacy scan — prefer targeted catalog loaders. */
 const CATALOG_LEGACY_LIST_LIMIT = 500;
 const SHELL_PREVIEW_LIMIT = 120;
@@ -595,10 +597,13 @@ function mediaFromMediaAssetRow(row: MediaAssetRow | undefined, fallbackAlt: str
   if (!src) return null;
   const storagePath = typeof normalizedRow.storage_path === "string" ? normalizedRow.storage_path : "";
   const isCatalogCutout = storagePath.includes("catalog-cutouts/v1/") || src.includes("/catalog-cutouts/v1/");
-  const rowWidth = isCatalogCutout && !normalizedRow.width ? 1024 : normalizedRow.width;
-  const rowHeight = isCatalogCutout && !normalizedRow.height ? 1024 : normalizedRow.height;
+  // Never surface cutouts as storefront media — Wix/original uploads only.
+  if (isCatalogCutout) return null;
+  const rowWidth = normalizedRow.width;
+  const rowHeight = normalizedRow.height;
   const dimensions = trustedCatalogDimensions(src, rowWidth, rowHeight);
-  if (!dimensions.width || !dimensions.height) return null;
+  // Migrated Wix originals often lack width/height in media_assets. Still serve the
+  // asset — dropping it caused PDP `missing_source_image` → notFound() for valid products.
   const kind = normalizedRow.mime_type?.startsWith("video/") ? "video" : "image";
   const responsive = buildProductResponsiveAsset(normalizedRow, fallbackAlt, process.env.NEXT_PUBLIC_SUPABASE_URL);
 
@@ -620,7 +625,7 @@ function selectPrimaryProductImage(row: Pick<MithronProductRow, "image" | "hero"
     mediaFromJson(row.hero, alt),
     ...(row.gallery ?? []).map((item) => mediaFromJson(item, alt)),
     ...(row.source_images ?? []).map((item) => mediaFromSourceImage(item, alt))
-  ].filter((item): item is MediaAsset => Boolean(item));
+  ].filter((item): item is MediaAsset => item != null && !isCatalogCutoutAsset(item));
 
   return candidates
     .map((asset, index) => ({ asset, score: mediaQualityScore(asset, index) }))
@@ -824,10 +829,17 @@ function resolveProductImage(
 ) {
   const rowImage = selectPrimaryProductImage(row, name);
   const supabaseRowImage = rowImage && isTrustedCatalogStorageSrc(rowImage.src) ? rowImage : null;
+  const linkedNonCutout =
+    linkedMedia
+    && linkedMedia.src.trim()
+    && isTrustedCatalogStorageSrc(linkedMedia.src)
+    && !isCatalogCutoutAsset(linkedMedia)
+      ? linkedMedia
+      : undefined;
 
-  if (linkedMedia) {
-    if (!linkedMedia.src.trim() && supabaseRowImage) return supabaseRowImage;
-    return linkedMedia;
+  // Prefer linked primary (incl. ai-cutout / wix-content); never legacy catalog-cutouts.
+  if (linkedNonCutout) {
+    return linkedNonCutout;
   }
 
   if (supabaseRowImage) {
@@ -893,14 +905,18 @@ function mapProductRow(row: MithronProductRow, linkedPrimaryImage?: MediaAsset, 
     tagline: row.tagline,
     sourceDescription: row.source_description
   });
-  const sourceImages = row.source_images ?? [];
   const image = resolveHydratedProductImage(row, name, linkedPrimaryImage, row.slug);
 
-  const hero = mediaFromJson(row.hero, name) ?? image;
+  const heroCandidate = mediaFromJson(row.hero, name);
+  const hero = (heroCandidate && !isCatalogCutoutAsset(heroCandidate) ? heroCandidate : null) ?? image;
+  // Display gallery = primary + row.gallery only.
+  // Do not merge source_images here — they mirror Wix/hosted originals and doubled the PDP thumbs (4 → 8).
+  // source_images remain available via selectPrimaryProductImage as a primary fallback.
   const gallery = [
     image,
-    ...(row.gallery ?? []).map((item) => mediaFromJson(item, name)).filter((item): item is MediaAsset => Boolean(item)),
-    ...sourceImages.map((item) => mediaFromSourceImage(item, name)).filter((item): item is MediaAsset => Boolean(item))
+    ...(row.gallery ?? [])
+      .map((item) => mediaFromJson(item, name))
+      .filter((item): item is MediaAsset => item != null && !isCatalogCutoutAsset(item))
   ];
   const dedupedGallery = enrichGalleryWithLinkedResponsive(dedupeMediaAssets(gallery), linkedGalleryMedia);
   const pricing = resolveCatalogPricing(row);
@@ -1795,7 +1811,7 @@ const getPrimaryProductMediaLookup = cache(async (): Promise<Map<string, MediaAs
     for (const link of links.sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0))) {
       if (!link.product_slug || !link.media_asset_id || lookup.has(link.product_slug)) continue;
       const media = mediaFromMediaAssetRow(mediaById.get(link.media_asset_id), link.alt_text ?? link.caption ?? link.product_slug);
-      if (media) lookup.set(link.product_slug, media);
+      if (media && !isCatalogCutoutAsset(media)) lookup.set(link.product_slug, media);
     }
 
     return lookup;
@@ -1826,7 +1842,7 @@ async function getPrimaryProductMediaForSlugs(slugs: string[]): Promise<Map<stri
     for (const link of links.sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0))) {
       if (!link.product_slug || !link.media_asset_id || lookup.has(link.product_slug)) continue;
       const media = mediaFromMediaAssetRow(mediaById.get(link.media_asset_id), link.alt_text ?? link.caption ?? link.product_slug);
-      if (media) lookup.set(link.product_slug, media);
+      if (media && !isCatalogCutoutAsset(media)) lookup.set(link.product_slug, media);
     }
 
     return lookup;
@@ -1963,12 +1979,10 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
 
   type ScopedMediaMaps = {
     primary: Array<[string, MediaAsset]>;
-    cutouts: Array<[string, MediaAsset]>;
     gallery: Array<[string, MediaAsset[]]>;
   };
 
   let primaryMedia: Map<string, MediaAsset>;
-  let catalogCutouts: Map<string, MediaAsset>;
   let galleryMedia: Map<string, MediaAsset[]>;
 
   if (useScopedMedia) {
@@ -1978,15 +1992,10 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
       REDIS_CACHE_KEYS.catalogMediaMap(hash),
       45,
       async (): Promise<ScopedMediaMaps> => {
-        const [primary, cutouts, gallery] = await Promise.all([
+        const [primary, gallery] = await Promise.all([
           getPrimaryProductMediaForSlugs(slugs).catch((error: unknown) => {
             const message = error instanceof Error ? error.message : String(error);
             console.warn(`[catalog] scoped primary media lookup failed; using inline JSON image fallback: ${message}`);
-            return new Map<string, MediaAsset>();
-          }),
-          getCatalogCutoutMediaForSlugs(slugs).catch((error: unknown) => {
-            const message = error instanceof Error ? error.message : String(error);
-            console.warn(`[catalog] scoped catalog cutout media lookup failed; falling back to primary product images: ${message}`);
             return new Map<string, MediaAsset>();
           }),
           getGalleryProductMediaForSlugs(slugs).catch((error: unknown) => {
@@ -1997,24 +2006,17 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
         ]);
         return {
           primary: [...primary.entries()],
-          cutouts: [...cutouts.entries()],
           gallery: [...gallery.entries()]
         };
       }
     );
     primaryMedia = new Map(cached.primary);
-    catalogCutouts = new Map(cached.cutouts);
     galleryMedia = new Map(cached.gallery);
   } else {
-    [primaryMedia, catalogCutouts, galleryMedia] = await Promise.all([
+    [primaryMedia, galleryMedia] = await Promise.all([
       getPrimaryProductMediaLookup().catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
         console.warn(`[catalog] primary product media lookup failed; using inline JSON image fallback: ${message}`);
-        return new Map<string, MediaAsset>();
-      }),
-      getCatalogCutoutMediaLookup().catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : String(error);
-        console.warn(`[catalog] catalog cutout media lookup failed; falling back to primary product images: ${message}`);
         return new Map<string, MediaAsset>();
       }),
       getGalleryProductMediaLookup().catch((error: unknown) => {
@@ -2028,8 +2030,9 @@ async function mapRowsWithCatalogMedia<T extends Pick<MithronProductRow, "slug">
   const mapped: R[] = [];
   for (const row of rows) {
     try {
+      // Storefront uses linked primary/gallery only — never inject catalog cutouts.
       mapped.push(
-        mapper(row, catalogCutouts.get(row.slug) ?? primaryMedia.get(row.slug), galleryMedia.get(row.slug))
+        mapper(row, primaryMedia.get(row.slug), galleryMedia.get(row.slug))
       );
     } catch (error) {
       // Skip broken catalog rows so related/PLP/ISR builds do not fail the whole page.
@@ -2119,26 +2122,28 @@ async function fetchEnterpriseMenuRowsByCategory(): Promise<Map<string, Enterpri
   const byCategory = new Map<string, EnterpriseMenuProductRow[]>();
   if (!categoryNames.length) return byCategory;
 
-  // Single combined query (ordered by category first, then the same sort_order/slug
-  // used per-category before) instead of 7 parallel per-category requests. Rows are
-  // grouped and capped to ENTERPRISE_MENU_PER_CATEGORY_LIMIT per category in JS below,
-  // matching the exact per-category cap each of the 7 prior queries enforced server-side.
-  const query = [
-    `select=${enterpriseMenuSelect}`,
-    publishedCatalogFilter,
-    `category=${postgrestIn(categoryNames)}`,
-    "order=category.asc,sort_order.asc,slug.asc",
-    `limit=${CATALOG_CATEGORY_MAX_ROWS}`
-  ].join("&");
+  // Per-category limited queries (16 each) — avoids fetching up to 500 rows and capping in JS.
+  const settled = await Promise.allSettled(
+    categoryNames.map(async (categoryName) => {
+      const query = [
+        `select=${enterpriseMenuSelect}`,
+        publishedCatalogFilter,
+        `category=eq.${encodeURIComponent(categoryName)}`,
+        "order=sort_order.asc,slug.asc",
+        `limit=${ENTERPRISE_MENU_PER_CATEGORY_LIMIT}`
+      ].join("&");
+      const rows = await fetchCatalogRows<EnterpriseMenuProductRow>(query);
+      return { categoryName, rows };
+    })
+  );
 
-  const rows = await fetchCatalogRows<EnterpriseMenuProductRow>(query);
-  for (const row of rows) {
-    const bucket = byCategory.get(row.category);
-    if (bucket) {
-      if (bucket.length < ENTERPRISE_MENU_PER_CATEGORY_LIMIT) bucket.push(row);
-    } else {
-      byCategory.set(row.category, [row]);
+  for (const result of settled) {
+    if (result.status !== "fulfilled") {
+      const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
+      console.warn(`[catalog] enterprise menu category query failed: ${message}`);
+      continue;
     }
+    byCategory.set(result.value.categoryName, result.value.rows);
   }
   return byCategory;
 }
@@ -2267,13 +2272,8 @@ async function mapLiveProductRow(row: MithronProductRow): Promise<Product> {
     REDIS_CACHE_KEYS.catalogMediaMap(hash),
     45,
     async () => {
-      const [primary, cutouts, gallery] = await Promise.all([
+      const [primary, gallery] = await Promise.all([
         getPrimaryProductMediaForSlugs([slug]),
-        getCatalogCutoutMediaForSlugs([slug]).catch((error: unknown) => {
-          const message = error instanceof Error ? error.message : String(error);
-          console.warn(`[catalog] catalog cutout media lookup failed; falling back to primary product images: ${message}`);
-          return new Map<string, MediaAsset>();
-        }),
         getGalleryProductMediaForSlugs([slug]).catch((error: unknown) => {
           const message = error instanceof Error ? error.message : String(error);
           console.warn(`[catalog] gallery media lookup failed; gallery images will use inline JSON without responsive variants: ${message}`);
@@ -2282,47 +2282,62 @@ async function mapLiveProductRow(row: MithronProductRow): Promise<Product> {
       ]);
       return {
         primary: [...primary.entries()] as Array<[string, MediaAsset]>,
-        cutouts: [...cutouts.entries()] as Array<[string, MediaAsset]>,
         gallery: [...gallery.entries()] as Array<[string, MediaAsset[]]>
       };
     }
   );
   const primaryMedia = new Map(cached.primary);
-  const catalogCutouts = new Map(cached.cutouts);
   const galleryMedia = new Map(cached.gallery);
 
-  return mapProductRow(liveRow, catalogCutouts.get(slug) ?? primaryMedia.get(slug), galleryMedia.get(slug));
+  return mapProductRow(liveRow, primaryMedia.get(slug), galleryMedia.get(slug));
 }
 
 export const loadProductForPage = cache(async (slug: string): Promise<ProductPageLoadResult> => {
-  try {
-    const row = await getProductRowBySlug(slug);
-    if (!row) return { status: "not_found" };
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return { status: "not_found" };
 
-    try {
-      const product = await mapLiveProductRow(row);
-      // Warm product-core cache off the render critical path (do not await a second build).
-      void buildProductCoreEntry(slug)
-        .then((coreEntry) => {
-          if (coreEntry) {
-            void setCachedJson(REDIS_CACHE_KEYS.productCore(slug), coreEntry, 90).catch(() => undefined);
+  try {
+    // One Redis RTT on warm hit — coalesces row + media + mapped product.
+    return await readThroughCache(
+      REDIS_CACHE_KEYS.productPage(normalizedSlug),
+      60,
+      async (): Promise<ProductPageLoadResult> => {
+        const row = await getProductRowBySlug(normalizedSlug);
+        if (!row) return { status: "not_found" };
+
+        try {
+          const product = await mapLiveProductRow(row);
+          // Warm product-core cache off the render critical path (do not await a second build).
+          void buildProductCoreEntry(normalizedSlug)
+            .then((coreEntry) => {
+              if (coreEntry) {
+                void setCachedJson(REDIS_CACHE_KEYS.productCore(normalizedSlug), coreEntry, 90).catch(() => undefined);
+              }
+            })
+            .catch(() => undefined);
+          return {
+            status: "ready",
+            product
+          };
+        } catch (error) {
+          if (isMissingSourceImageError(error)) {
+            const catalogError = createMissingSourceImageError(normalizedSlug);
+            console.warn(`[catalog] ${catalogError.message}`);
+            return { status: "error", error: catalogError };
           }
-        })
-        .catch(() => undefined);
-      return {
-        status: "ready",
-        product
-      };
-    } catch (error) {
-      if (isMissingSourceImageError(error)) {
-        const catalogError = createMissingSourceImageError(slug);
-        console.warn(`[catalog] ${catalogError.message}`);
-        return { status: "error", error: catalogError };
+          throw error;
+        }
+      },
+      {
+        shouldCache: (value) => (value as ProductPageLoadResult).status === "ready",
+        isCacheValid: (value) => {
+          const result = value as ProductPageLoadResult;
+          return result.status === "ready" && Boolean(result.product?.slug);
+        }
       }
-      throw error;
-    }
+    );
   } catch (error) {
-    const catalogError = createCatalogUnavailableError(slug, error);
+    const catalogError = createCatalogUnavailableError(normalizedSlug, error);
     console.warn(`[catalog] ${catalogError.message}`);
     return { status: "error", error: catalogError };
   }

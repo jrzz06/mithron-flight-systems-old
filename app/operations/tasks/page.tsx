@@ -99,7 +99,7 @@ export default async function StaffTasksPage({ searchParams }: { searchParams?: 
         </div>
 
         <section data-task-dashboard data-task-lifecycle-indicators className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Task lifecycle</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Task lifecycle</p>
           <div className="grid gap-2 md:grid-cols-4">
             <div data-pending-tasks className="rounded-xl border border-white/10 bg-black/18 p-3">
               <StatusBadge status="open" />
@@ -125,12 +125,12 @@ export default async function StaffTasksPage({ searchParams }: { searchParams?: 
         </section>
 
         <section data-task-priority-indicators className="grid gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Priority indicators</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Priority indicators</p>
           <DataList rows={priorityRows} />
         </section>
 
         <section data-task-metadata-grid className="grid gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Staff tasks</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Staff tasks</p>
           <DataList rows={taskRows.length ? taskRows : [{ label: "staff_tasks", value: "0", detail: "No staff task rows yet." }]} />
         </section>
 

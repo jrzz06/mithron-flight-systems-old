@@ -165,6 +165,9 @@ export function buildProductResponsiveAsset(
   const width = parseFiniteDimension(row.width) || parseFiniteDimension(metadata.source?.width) || variants.webp.at(-1)?.width || variants.avif.at(-1)?.width || 0;
   const height = parseFiniteDimension(row.height) || parseFiniteDimension(metadata.source?.height) || variants.webp.at(-1)?.height || variants.avif.at(-1)?.height || 0;
 
+  const storagePath = typeof row.storage_path === "string" ? row.storage_path : "";
+  const isAiCutout = storagePath.includes("/ai-cutout/") || publicUrl.includes("/ai-cutout/");
+
   return {
     assetId: row.id ?? `product-${row.storage_path ?? publicUrl}`,
     bucket,
@@ -176,7 +179,8 @@ export function buildProductResponsiveAsset(
     fallbackAlt: row.alt_text ?? row.alt ?? row.caption ?? fallbackAlt,
     width,
     height,
-    dominantColor: "#f8f8f8",
+    // Transparent cutouts must not paint a gray placeholder behind alpha pixels.
+    dominantColor: isAiCutout ? "transparent" : "#f8f8f8",
     variants: {
       ...(variants.avif.length ? { avif: variants.avif } : {}),
       ...(variants.webp.length ? { webp: variants.webp } : {})

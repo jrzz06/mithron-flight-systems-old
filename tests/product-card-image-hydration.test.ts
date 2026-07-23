@@ -4,29 +4,21 @@ import { getProducts } from "@/services/catalog";
 
 hydrateDefaultStorefrontMedia();
 
-const staleVariantPattern = /\/storage\/v1\/object\/public\/mithron-products\/[a-z0-9-]+-\d+w-v\d+\.[a-f0-9]+\.webp$/i;
 const cutoutPattern = /catalog-cutouts\/v1\//i;
+const wixContentPattern = /\/wix-content\//i;
 
 describe("product card image hydration", () => {
-  it("prefers canonical cutout src over stale generated variant urls", async () => {
+  it("never uses catalog cutouts as product card primaries", async () => {
     const products = await getProducts();
-    const offenders = products.filter((product) => {
-      const fallbackSrc = product.image.responsive?.fallbackSrc?.trim() ?? "";
-      if (!fallbackSrc || !cutoutPattern.test(fallbackSrc)) return false;
-      return staleVariantPattern.test(product.image.src);
-    });
+    const cutoutOffenders = products.filter((product) => cutoutPattern.test(product.image.src));
 
-    expect(offenders.map((product) => `${product.slug}:${product.image.src}`)).toEqual([]);
+    expect(cutoutOffenders.map((product) => `${product.slug}:${product.image.src}`)).toEqual([]);
   });
 
-  it("keeps primary image src aligned with supabase fallbackSrc when present", async () => {
+  it("keeps migrated products on wix-content Supabase uploads", async () => {
     const products = await getProducts();
-    const mismatched = products.filter((product) => {
-      const fallbackSrc = product.image.responsive?.fallbackSrc?.trim() ?? "";
-      if (!fallbackSrc || !cutoutPattern.test(fallbackSrc)) return false;
-      return product.image.src !== fallbackSrc;
-    });
+    const wixPrimaries = products.filter((product) => wixContentPattern.test(product.image.src));
 
-    expect(mismatched.map((product) => `${product.slug}:${product.image.src}`)).toEqual([]);
+    expect(wixPrimaries.length).toBeGreaterThan(50);
   });
 });

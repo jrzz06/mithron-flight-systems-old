@@ -1,3 +1,4 @@
+import { ProductShelfContainer } from "@/components/product/product-shelf-container";
 import { EditorRenderedContent } from "@/components/editor/editor-rendered-content";
 import { HomeProductShelfCard } from "@/components/product/home-product-shelf-card";
 import { MithronShelfHeroImage } from "@/components/media/mithron-shelf-hero-image";
@@ -5,7 +6,7 @@ import type { Product } from "@/config/types";
 import type { HomeChapter } from "@/lib/home/homepage-resolution";
 import { pickShelfProducts, type ProductShelfConfig } from "@/lib/home/shelf-product-resolution";
 import { ProductShelfScrollRail } from "@/sections/home/product-shelf-scroll-rail";
-import { ProductShelfViewAllCard } from "@/sections/home/product-shelf-view-all-card";
+import { ProductShelfRightStack } from "@/sections/home/product-shelf-right-stack";
 import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import styles from "@/sections/home/home-shelf-shared.module.css";
 
@@ -25,8 +26,7 @@ export function ProductShelfSection({
 }) {
   const shelfProducts = pickShelfProducts(products, config);
   const cardProducts = shelfProducts.slice(0, 4);
-  const guideUsesOptionA = config.tone === "world" || config.tone === "care";
-  const guideMedia = cardProducts[0]?.image ?? null;
+  const guideImage = cardProducts[0]?.image ?? null;
 
   return (
     <article
@@ -38,44 +38,12 @@ export function ProductShelfSection({
       data-shelf-id={config.testId}
       data-shelf-tone={config.tone}
     >
-      <div className={styles.container} data-home-content-shell="true">
+      <ProductShelfContainer className={styles.container}>
         <div className={styles.productShelfHeader} data-home-composite-reveal>
-          <div>
-            <p className={styles.eyebrow}>{config.eyebrow}</p>
-            <h2 className={styles.shelfTitle}>{config.title}</h2>
-          </div>
+          <h2 className={styles.shelfTitle}>{config.title}</h2>
         </div>
 
         <div className={styles.shelfBoard} data-home-composite-reveal>
-          {cardProducts.length > 0 ? (
-            <SoftErrorBoundary label="Product shelf">
-            <ProductShelfScrollRail
-              className={styles.productShelfGrid}
-              data-testid="home-product-shelf-grid"
-              data-shelf-layout={guideUsesOptionA ? "option-a" : "standard"}
-              aria-label={`${config.title} product collection`}
-            >
-              {cardProducts.map((product, productIndex) => (
-                <HomeProductShelfCard
-                  key={`${config.id}-${product.slug}`}
-                  product={product}
-                  priority={productIndex === 0}
-                />
-              ))}
-
-              <ProductShelfViewAllCard
-                href={config.href}
-                label={config.viewAllLabel}
-                sectionTitle={config.title}
-                tone={config.tone}
-                heroSrc={chapter.media.src}
-                image={guideMedia}
-                imageSlug={cardProducts[0]?.slug}
-              />
-            </ProductShelfScrollRail>
-            </SoftErrorBoundary>
-          ) : null}
-
           <a
             href={config.heroCtaHref}
             className={styles.productShelfHero}
@@ -107,8 +75,39 @@ export function ProductShelfSection({
               ) : null}
             </span>
           </a>
+
+          {cardProducts.length > 0 ? (
+            <SoftErrorBoundary label="Product shelf">
+              <ProductShelfScrollRail
+                className={styles.productShelfGrid}
+                data-testid="home-product-shelf-grid"
+                data-shelf-layout="dji"
+                aria-label={`${config.title} product collection`}
+              >
+                {cardProducts.map((product, productIndex) => (
+                  <HomeProductShelfCard
+                    key={`${config.id}-${product.slug}`}
+                    product={product}
+                    layout="dji"
+                    priority={productIndex === 0}
+                  />
+                ))}
+
+                <ProductShelfRightStack
+                  guideHref={config.href}
+                  viewAllHref={config.href}
+                  guideEyebrow={config.guideEyebrow}
+                  guideHeadline={config.guideHeadline}
+                  viewAllLabel={config.viewAllLabel}
+                  sectionTitle={config.title}
+                  guideImage={guideImage}
+                  priority={cardProducts.length > 0}
+                />
+              </ProductShelfScrollRail>
+            </SoftErrorBoundary>
+          ) : null}
         </div>
-      </div>
+      </ProductShelfContainer>
     </article>
   );
 }

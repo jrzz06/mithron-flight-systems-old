@@ -1,0 +1,33 @@
+.root {
+  --product-shelf-max-width: 1720px;
+  --product-shelf-inline: 16px;
+  box-sizing: border-box;
+  display: flow-root;
+  width: min(100%, var(--product-shelf-max-width));
+  margin-inline: auto;
+  padding-inline: var(--product-shelf-inline);
+}
+
+@media (min-width: 768px) {
+  .root {
+    --product-shelf-inline: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    --product-shelf-inline: 32px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    --product-shelf-inline: 40px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .root {
+    --product-shelf-inline: 48px;
+  }
+}

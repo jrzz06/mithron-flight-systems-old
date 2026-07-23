@@ -17,8 +17,8 @@ test.describe("storefront performance smoke", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     const searchButton = page.getByRole("button", { name: /search/i }).first();
     await searchButton.click();
-    await expect(page.getByRole("dialog", { name: /search catalog/i })).toBeVisible();
-    await expect(page.getByRole("searchbox", { name: /search mithron systems/i })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /search products/i })).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: /search mithron products/i })).toBeVisible();
   });
 
   test("add to cart gives immediate drawer feedback on product page", async ({ page }) => {

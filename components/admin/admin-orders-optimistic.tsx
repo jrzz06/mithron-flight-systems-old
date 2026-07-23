@@ -233,7 +233,7 @@ function AdminOrdersQueueList({
               <div className="grid shrink-0 justify-items-end gap-1.5">
                 <StatusBadge status={text(order.status, "pending")} />
                 {isPending ? (
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--platform-accent)]">Updating…</span>
+                  <span className="type-badge font-medium uppercase tracking-wide text-[var(--platform-accent)]">Updating…</span>
                 ) : null}
                 <span className="text-xs font-medium text-[var(--platform-text-secondary)]">{moneyText(order.total)}</span>
               </div>

@@ -197,7 +197,7 @@ export function NotificationBell({
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {unreadCount > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[var(--platform-accent-soft)] px-1 text-[10px] font-medium text-[var(--platform-text-secondary)] ring-1 ring-[var(--platform-border-strong)]">
+          <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[var(--platform-accent-soft)] px-1 type-badge font-medium text-[var(--platform-text-secondary)] ring-1 ring-[var(--platform-border-strong)]">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         ) : null}
@@ -250,7 +250,7 @@ export function NotificationBell({
                     </span>
                     <span className="line-clamp-2 text-xs text-[var(--platform-text-muted)]">{row.body}</span>
                     {row.created_at ? (
-                      <span className="text-[11px] text-[var(--platform-text-muted)]">{relativeTimeLabel(row.created_at)}</span>
+                      <span className="type-meta text-[var(--platform-text-muted)]">{relativeTimeLabel(row.created_at)}</span>
                     ) : null}
                   </button>
                 );

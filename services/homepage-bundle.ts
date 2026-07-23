@@ -4,7 +4,7 @@ import {
   readThroughCache,
   REDIS_CACHE_KEYS
 } from "@/lib/cache-redis";
-import { emptyHomepageCmsContent, type HomepageCmsContent } from "@/config/homepage-cms";
+import type { HomepageCmsContent } from "@/config/homepage-cms";
 import { defaultHomepageCmsV2Content, type HomepageCmsV2Content } from "@/config/homepage-cms-v2";
 import type { HeroSlide, Product } from "@/config/types";
 import type { CustomerProductReview } from "@/services/customer-product-reviews";
@@ -19,7 +19,7 @@ import {
   getPublicHeroBannersForCmsPreview,
   type PublicCmsSnapshot
 } from "@/services/cms";
-import { getHomepageCmsContent, getHomepageCmsDraftPreviewContent } from "@/services/homepage-cms";
+import { getHomepageCmsContent, getHomepageCmsDraftPreviewContent, mergeHomepageCmsContent } from "@/services/homepage-cms";
 import { getHomepageCmsV2Content, getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
 
 export type HomepageBundle = {
@@ -38,9 +38,13 @@ export type HomepageBelowFoldData = Omit<HomepageBundle, "heroBanners">;
 /**
  * Cap each parallel dependency so one hung Supabase/Redis nested single-flight
  * cannot stall `Promise.allSettled` past the outer homepage budget.
+ * Products + CMS are critical for shelves/banners — give them most of the 25s wall.
  */
 const HOMEPAGE_CHILD_TIMEOUT_MS = 8_000;
-const HOMEPAGE_TESTIMONIAL_PRODUCTS_TIMEOUT_MS = 5_000;
+/** Critical path must finish inside the 25s single-flight wall — keep headroom. */
+const HOMEPAGE_CRITICAL_CHILD_TIMEOUT_MS = 12_000;
+const HOMEPAGE_TESTIMONIAL_PRODUCTS_TIMEOUT_MS = 6_000;
+const HOMEPAGE_PINNED_PRODUCTS_TIMEOUT_MS = 6_000;
 
 function settledValue<T>(result: PromiseSettledResult<T>, fallback: T, label: string): T {
   if (result.status === "fulfilled") return result.value;
@@ -49,13 +53,53 @@ function settledValue<T>(result: PromiseSettledResult<T>, fallback: T, label: st
   return fallback;
 }
 
-function mergeProductsBySlug(primary: Product[], extra: Product[]) {
+function mergeProductsBySlug(primary: Product[], ...extras: Product[][]) {
   const bySlug = new Map<string, Product>();
   for (const product of primary) bySlug.set(product.slug, product);
-  for (const product of extra) {
-    if (!bySlug.has(product.slug)) bySlug.set(product.slug, product);
+  for (const extra of extras) {
+    for (const product of extra) {
+      if (!bySlug.has(product.slug)) bySlug.set(product.slug, product);
+    }
   }
   return [...bySlug.values()];
+}
+
+function collectPinnedShelfSlugs(homepageCms: HomepageCmsContent): string[] {
+  const shelves = homepageCms.shelves;
+  return [
+    ...new Set(
+      [
+        ...(shelves.droneWorld?.productSlugs ?? []),
+        ...(shelves.droneCare?.productSlugs ?? []),
+        ...(shelves.globalProducts?.productSlugs ?? [])
+      ]
+        .map((slug) => slug.trim())
+        .filter(Boolean)
+    )
+  ];
+}
+
+function collectMiniCarouselSlugs(homepageCmsV2: HomepageCmsV2Content): string[] {
+  return [
+    ...new Set(
+      (homepageCmsV2.miniCarousel?.slides ?? [])
+        .filter((slide) => slide.enabled !== false)
+        .map((slide) => slide.productSlug?.trim() ?? "")
+        .filter(Boolean)
+    )
+  ];
+}
+
+function hasUsableInterShelfBanner(homepageCmsV2: HomepageCmsV2Content) {
+  return (homepageCmsV2.banners?.interShelf ?? []).some(
+    (banner) => banner?.enabled !== false && Boolean(banner?.imageSrc?.trim())
+  );
+}
+
+function isHealthyHomepageBundle(bundle: HomepageBundle) {
+  // Incomplete payloads must not poison Redis — next request should retry cold load.
+  if (bundle.products.length === 0) return false;
+  return true;
 }
 
 function emptyHomepageBundle(): HomepageBundle {
@@ -63,7 +107,7 @@ function emptyHomepageBundle(): HomepageBundle {
     heroBanners: [],
     cms: fallbackSnapshot,
     products: [],
-    homepageCms: emptyHomepageCmsContent,
+    homepageCms: mergeHomepageCmsContent({}),
     homepageCmsV2: defaultHomepageCmsV2Content,
     relatedArticles: [],
     pressCoverage: [],
@@ -89,11 +133,16 @@ export const getHomepageBundle = cache(async (cmsDraftPreview = false): Promise<
       REDIS_CACHE_KEYS.cmsHomepage,
       60,
       () => loadHomepageBundleUncached(false),
-      { loaderTimeoutMs: HOMEPAGE_SINGLE_FLIGHT_LOADER_TIMEOUT_MS }
+      {
+        loaderTimeoutMs: HOMEPAGE_SINGLE_FLIGHT_LOADER_TIMEOUT_MS,
+        shouldCache: (value) => isHealthyHomepageBundle(value as HomepageBundle),
+        isCacheValid: (value) => isHealthyHomepageBundle(value as HomepageBundle)
+      }
     );
   } catch (error) {
     // Prefer a degraded homepage over a hard SSR failure when Redis/Supabase
-    // cold paths exceed the single-flight wall clock.
+    // cold paths exceed the single-flight wall clock. Do NOT retry here — a
+    // second uncached load can hang Suspense for another full child budget.
     if (error instanceof ActionTimeoutError) {
       console.warn(`[homepage-bundle] ${error.message}`);
       return emptyHomepageBundle();
@@ -124,25 +173,58 @@ async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<Home
     pressCoverageResult
   ] = await Promise.allSettled([
     withChildBudget(getPublicCmsSnapshotForHomepageBelowFold(), "CMS snapshot"),
-    withChildBudget(getHomepageProducts(), "homepage products"),
+    withChildBudget(getHomepageProducts(), "homepage products", HOMEPAGE_CRITICAL_CHILD_TIMEOUT_MS),
     withChildBudget(
       cmsDraftPreview ? getHomepageCmsDraftPreviewContent() : getHomepageCmsContent(),
-      "homepage CMS"
+      "homepage CMS",
+      HOMEPAGE_CRITICAL_CHILD_TIMEOUT_MS
     ),
     withChildBudget(
       cmsDraftPreview ? getHomepageCmsV2DraftPreviewContent() : getHomepageCmsV2Content(),
-      "homepage CMS v2"
+      "homepage CMS v2",
+      HOMEPAGE_CRITICAL_CHILD_TIMEOUT_MS
     ),
-    withChildBudget(listPublishedBlogPosts({ limit: 40 }), "blog posts"),
-    withChildBudget(listPublishedPressCoverage({ limit: 40 }), "press coverage")
+    withChildBudget(listPublishedBlogPosts({ limit: 12 }), "blog posts"),
+    withChildBudget(listPublishedPressCoverage({ limit: 12 }), "press coverage")
   ]);
 
   const cms = settledValue(cmsResult, fallbackSnapshot, "CMS snapshot");
   const shelfProducts = settledValue(productsResult, [] as Product[], "homepage products");
-  const homepageCms = settledValue(homepageCmsResult, emptyHomepageCmsContent, "homepage CMS");
+  // Prefer merged defaults (same as homepage-cms service) over empty shells so
+  // shelf titles/hrefs remain usable when the CMS child times out.
+  const homepageCms = settledValue(homepageCmsResult, mergeHomepageCmsContent({}), "homepage CMS");
   const homepageCmsV2 = settledValue(homepageCmsV2Result, defaultHomepageCmsV2Content, "homepage CMS v2");
   const relatedArticles = settledValue(relatedArticlesResult, [] as BlogPost[], "blog posts");
   const pressCoverage = settledValue(pressCoverageResult, [] as PressCoverageItem[], "press coverage");
+
+  if (shelfProducts.length === 0) {
+    console.warn("[homepage-bundle] homepage products empty after settle — shelves will backfill from pinned slug fetch when possible");
+  }
+  if (!hasUsableInterShelfBanner(homepageCmsV2)) {
+    console.warn("[homepage-bundle] CMS v2 has no usable inter-shelf banner images");
+  }
+
+  const shelfSlugSet = new Set(shelfProducts.map((product) => product.slug));
+  const pinnedShelfSlugs = collectPinnedShelfSlugs(homepageCms);
+  const miniCarouselSlugs = collectMiniCarouselSlugs(homepageCmsV2);
+  const missingPinnedSlugs = [...new Set([...pinnedShelfSlugs, ...miniCarouselSlugs])].filter(
+    (slug) => !shelfSlugSet.has(slug)
+  );
+  const fetchedPinnedProducts = missingPinnedSlugs.length
+    ? await withChildBudget(
+        getPublishedProductsBySlugs(missingPinnedSlugs),
+        "pinned shelf products",
+        HOMEPAGE_PINNED_PRODUCTS_TIMEOUT_MS
+      ).catch((error) => {
+        console.warn(
+          `[homepage-bundle] pinned shelf products failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+        return [] as Product[];
+      })
+    : [];
+
+  const productsAfterPins = mergeProductsBySlug(shelfProducts, fetchedPinnedProducts);
+  const productSlugSet = new Set(productsAfterPins.map((product) => product.slug));
 
   const testimonialSlugs = [
     ...new Set(
@@ -151,8 +233,7 @@ async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<Home
         .filter((slug): slug is string => Boolean(slug?.trim()))
     )
   ];
-  const shelfSlugSet = new Set(shelfProducts.map((product) => product.slug));
-  const missingTestimonialSlugs = testimonialSlugs.filter((slug) => !shelfSlugSet.has(slug));
+  const missingTestimonialSlugs = testimonialSlugs.filter((slug) => !productSlugSet.has(slug));
   const fetchedTestimonialProducts = missingTestimonialSlugs.length
     ? await withChildBudget(
         getPublishedProductsBySlugs(missingTestimonialSlugs),
@@ -165,7 +246,7 @@ async function loadHomepageBundleUncached(cmsDraftPreview = false): Promise<Home
         return [] as Product[];
       })
     : [];
-  const products = mergeProductsBySlug(shelfProducts, fetchedTestimonialProducts);
+  const products = mergeProductsBySlug(productsAfterPins, fetchedTestimonialProducts);
 
   return {
     // Hero is loaded by getHomepageHeroBanners / Suspense — do not duplicate here.

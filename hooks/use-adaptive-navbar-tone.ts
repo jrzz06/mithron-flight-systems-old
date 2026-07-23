@@ -2,10 +2,11 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { applyNavbarInkToDocument } from "@/lib/navbar-ink-document";
+import { applyNavbarChromeToDocument, applyNavbarInkToDocument } from "@/lib/navbar-ink-document";
 import {
   isFlushHeroDocument,
   NAVBAR_INK_SURFACE_SELECTOR,
+  resolveNavbarChromeMode,
   resolveNavbarTone
 } from "@/lib/navbar-ink-resolver";
 import type { NavbarInkTone } from "@/config/navbar-ink-registry";
@@ -14,7 +15,9 @@ const MIN_CHECK_INTERVAL_MS = 200;
 const MUTATION_THROTTLE_MS = 120;
 
 function isInteractionPaused() {
-  return typeof document !== "undefined" && document.documentElement.hasAttribute("data-overlay-open");
+  if (typeof document === "undefined") return false;
+  const root = document.documentElement;
+  return root.hasAttribute("data-overlay-open") || root.hasAttribute("data-mega-menu-open");
 }
 
 function isInkSurface(element: Element) {
@@ -39,28 +42,33 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
     const docInk = document.documentElement.getAttribute("data-nav-ink");
     const stateChanged = toneRef.current !== nextTone;
     const docChanged = docInk !== nextTone;
+    const chrome = resolveNavbarChromeMode(pathnameRef.current);
+    const docChrome = document.documentElement.getAttribute("data-nav-chrome");
+    const chromeChanged = docChrome !== chrome;
 
-    if (!stateChanged && !docChanged) return;
+    if (!stateChanged && !docChanged && !chromeChanged && !options?.markHydrated) return;
 
     toneRef.current = nextTone;
     setTone(nextTone);
-
-    if (docChanged) {
-      applyNavbarInkToDocument(nextTone, { markHydrated: options?.markHydrated });
-    } else if (options?.markHydrated) {
-      applyNavbarInkToDocument(nextTone, { markHydrated: true });
-    }
+    applyNavbarInkToDocument(nextTone, {
+      markHydrated: options?.markHydrated,
+      pathname: pathnameRef.current
+    });
   };
 
   const syncTone = () => resolveNavbarTone(pathToneRef.current, pathnameRef.current);
 
+  // Route + SSR path tone: sync ink/chrome before paint to avoid black→white FOUC.
   useLayoutEffect(() => {
     pathToneRef.current = initialTone;
+    const chrome = resolveNavbarChromeMode(pathname);
+    applyNavbarChromeToDocument(chrome);
+
     const resolved = syncTone();
     toneRef.current = resolved;
     setTone(resolved);
-    applyNavbarInkToDocument(resolved, { markHydrated: true });
-  }, [initialTone]);
+    applyNavbarInkToDocument(resolved, { markHydrated: true, pathname });
+  }, [pathname, initialTone]);
 
   useLayoutEffect(() => {
     hasMountedRef.current = true;
@@ -68,6 +76,10 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
 
     applyTone(syncTone(), { markHydrated: true });
     lastCheckAtRef.current = performance.now();
+
+    return () => {
+      hasMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -185,7 +197,7 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
 
     rootMutationObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-overlay-open", "data-nav-ink"],
+      attributeFilter: ["data-overlay-open", "data-nav-ink", "data-nav-chrome", "data-mega-menu-open"],
       childList: true,
       subtree: true
     });
@@ -204,13 +216,6 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
       rootMutationObserver.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    if (!hasMountedRef.current || isInteractionPaused()) return;
-    pathToneRef.current = initialTone;
-    applyTone(syncTone());
-    lastCheckAtRef.current = performance.now();
-  }, [pathname, initialTone]);
 
   return { tone };
 }

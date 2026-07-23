@@ -1,11 +1,10 @@
 "use client";
 
-import { HomeProductShelfCard } from "@/components/product/home-product-shelf-card";
+import { ProductHoverCard } from "@/components/cards/product-hover-card";
 import { cn } from "@/lib/utils";
 import type { ProductShellItem } from "@/services/catalog";
-import homeStyles from "@/sections/home/home-shelf-shared.module.css";
-import styles from "./product-discovery.module.css";
 
+/** Same card + grid contract as category catalog listings — no extra panel wrappers. */
 export function DiscoveryProductGrid({
   products,
   className
@@ -16,19 +15,18 @@ export function DiscoveryProductGrid({
   if (!products.length) return null;
 
   return (
-    <div
-      className={cn(homeStyles.productShelfSection, styles.shelfToneWorld, className)}
-      data-shelf-tone="world"
-    >
-      <div className={styles.discoveryProductGrid}>
+    <div className={cn("catalog-page-shell mt-6 min-w-0", className)}>
+      <div className="catalog-product-grid min-w-0">
         {products.map((product, index) => (
-          <div key={product.slug} className={styles.discoveryProductGridItem}>
-            <HomeProductShelfCard
-              product={product}
-              priority={index === 0}
-              imageSizes="(max-width: 639px) 92vw, (max-width: 1023px) 46vw, 22vw"
-            />
-          </div>
+          <ProductHoverCard
+            key={product.slug}
+            product={product}
+            variant="catalog"
+            showCategory
+            cta="catalog"
+            presentation="standard"
+            priority={index < 4}
+          />
         ))}
       </div>
     </div>

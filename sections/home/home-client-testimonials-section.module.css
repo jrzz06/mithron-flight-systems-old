@@ -5,10 +5,10 @@
   --testimonial-meta: rgba(15, 42, 28, 0.64);
   --testimonial-dot-muted: rgba(31, 107, 70, 0.28);
   --testimonial-card-width: calc((100% - (var(--testimonial-gap) * 2)) / 3.15);
-  --testimonial-gap: clamp(18px, 2vw, 28px);
+  --testimonial-gap: clamp(20px, 2.2vw, 32px);
   position: relative;
   overflow: hidden;
-  padding: clamp(64px, 8vh, 96px) 0 clamp(72px, 9vh, 108px);
+  padding: clamp(72px, 9vh, 112px) 0 clamp(80px, 10vh, 120px);
   background:
     radial-gradient(ellipse 80% 60% at 10% 0%, rgba(150, 230, 161, 0.12) 0%, transparent 65%),
     radial-gradient(ellipse 70% 60% at 90% 100%, rgba(31, 107, 70, 0.06) 0%, transparent 65%),
@@ -72,7 +72,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: clamp(16px, 3vw, 28px);
-  margin-bottom: clamp(28px, 3.5vh, 40px);
+  margin-bottom: clamp(32px, 4vh, 48px);
 }
 
 .headerCopy {
@@ -110,6 +110,44 @@
 
 .carouselRegion {
   position: relative;
+  /* Bleed to section edges so fades merge with the page, not an inner panel */
+  width: calc(100% + (2 * var(--section-inline)));
+  margin-inline: calc(-1 * var(--section-inline));
+  --testimonial-fade-solid: #eef4f0;
+  --testimonial-fade-width: clamp(64px, 10vw, 140px);
+}
+
+.carouselRegion::before,
+.carouselRegion::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--testimonial-fade-width);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.carouselRegion::before {
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    var(--testimonial-fade-solid) 0%,
+    rgba(238, 244, 240, 0.92) 28%,
+    rgba(238, 244, 240, 0.45) 58%,
+    rgba(238, 244, 240, 0) 100%
+  );
+}
+
+.carouselRegion::after {
+  right: 0;
+  background: linear-gradient(
+    270deg,
+    var(--testimonial-fade-solid) 0%,
+    rgba(238, 244, 240, 0.92) 28%,
+    rgba(238, 244, 240, 0.45) 58%,
+    rgba(238, 244, 240, 0) 100%
+  );
 }
 
 .carouselViewport {
@@ -117,23 +155,10 @@
   width: 100%;
   min-height: 300px;
   padding-block: 6px 10px;
+  padding-inline: var(--section-inline);
   container-type: inline-size;
   container-name: testimonial-marquee;
   --marquee-card-width: calc((100cqw - (var(--testimonial-gap) * 2)) / 3.15);
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 40px,
-    #000 calc(100% - 40px),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 40px,
-    #000 calc(100% - 40px),
-    transparent 100%
-  );
 }
 
 .marqueeTrack {
@@ -175,11 +200,12 @@
   gap: var(--testimonial-gap);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 0;
+  scroll-padding-inline: var(--section-inline);
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   touch-action: pan-x pan-y;
+  padding-inline: var(--section-inline);
 }
 
 .track::-webkit-scrollbar {
@@ -238,8 +264,20 @@
     --testimonial-card-width: calc((100% - var(--testimonial-gap)) / 1.65);
   }
 
+  .carouselRegion {
+    --testimonial-fade-width: clamp(40px, 12vw, 88px);
+    width: calc(100% + (2 * var(--home-mobile-inline, clamp(18px, 5vw, 28px))));
+    margin-inline: calc(-1 * var(--home-mobile-inline, clamp(18px, 5vw, 28px)));
+  }
+
   .carouselViewport {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
     --marquee-card-width: calc((100cqw - var(--testimonial-gap)) / 1.65);
+  }
+
+  .track {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+    scroll-padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
   }
 
   .inner {
@@ -250,6 +288,10 @@
 @media (max-width: 767px) {
   .section {
     --testimonial-card-width: 100%;
+  }
+
+  .carouselRegion {
+    --testimonial-fade-width: clamp(28px, 10vw, 56px);
   }
 
   .carouselViewport {

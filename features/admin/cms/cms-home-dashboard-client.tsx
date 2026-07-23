@@ -53,7 +53,7 @@ export function CmsHomeDashboardClient({ sections }: { sections: CmsDashboardSec
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={card.thumbnailSrc} alt="" className="absolute inset-0 size-full object-cover" />
               ) : (
-                <div className="grid h-full place-items-center text-[11px] text-[var(--platform-text-muted)]">No image</div>
+                <div className="grid h-full place-items-center type-meta text-[var(--platform-text-muted)]">No image</div>
               )}
             </div>
 
@@ -63,14 +63,14 @@ export function CmsHomeDashboardClient({ sections }: { sections: CmsDashboardSec
                   {getBuilderSectionLabel(card.id)}
                 </h3>
                 {!card.isVisible ? (
-                  <span className="rounded-full border border-[var(--platform-border)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                  <span className="rounded-full border border-[var(--platform-border)] px-2 py-0.5 type-badge font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
                     Hidden
                   </span>
                 ) : null}
               </div>
               <p className="mt-1 text-sm text-[var(--platform-text-secondary)]">{card.description}</p>
               {card.updatedAt ? (
-                <p className="mt-2 text-[11px] text-[var(--platform-text-muted)]">Updated {card.updatedAt}</p>
+                <p className="mt-2 type-meta text-[var(--platform-text-muted)]">Updated {card.updatedAt}</p>
               ) : null}
             </div>
 

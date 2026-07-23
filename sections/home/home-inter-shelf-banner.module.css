@@ -1,5 +1,5 @@
 .section {
-  padding-block: var(--ds-s5);
+  padding-block: var(--ds-s6);
   /* Horizontal alignment via [data-home-content-shell] in globals.css */
 }
 
@@ -29,7 +29,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 1rem;
   padding: clamp(1.5rem, 4vw, 3rem);
   max-width: min(640px, 88%);
   background: linear-gradient(

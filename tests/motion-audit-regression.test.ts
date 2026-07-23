@@ -95,9 +95,13 @@ describe("storefront motion audit regressions", () => {
     expect(button).not.toContain("hover:scale");
     expect(badge).not.toContain("backdrop-blur-[20px]");
     expect(cardCss).toMatch(/\.card:hover\s+\.imageFrame\s*{[^}]*scale\(1\.024\)/s);
-    expect(globals).toMatch(/\.catalog-page-shell\s+\.premium-product-card:is\(:hover, :focus-visible, :focus-within\)\s+\.premium-product-card__image-asset\s*{[^}]*scale\(1\.024\)/s);
+    expect(globals).toMatch(
+      /\.catalog-page-shell\s+\.premium-product-card:is\(:hover, :focus-visible, :focus-within\)\s+\.premium-product-card__image-asset\s*{[^}]*scale\(var\(--product-card-image-hover-scale\)\)/s
+    );
     expect(compositeCss).toContain(".productCard:hover .productImage");
-    expect(compositeCss).toContain("scale(1.024)");
+    expect(compositeCss).toMatch(
+      /\.productCard:hover \.productImage[\s\S]*?scale\(1\.0[24]\)/
+    );
     expect(compositeCss).not.toMatch(/rotateX|rotateY|text-shadow|glow/i);
   });
 

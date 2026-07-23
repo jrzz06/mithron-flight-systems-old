@@ -13,7 +13,7 @@ export function MetricCard({ label, value, detail, trend, emphasis = "default" }
         emphasis === "subtle" ? "bg-transparent" : "bg-transparent"
       }`}
     >
-      <p className="truncate text-[11px] font-medium uppercase tracking-[0.05em] text-[var(--platform-text-muted)]">{label}</p>
+      <p className="truncate type-meta font-medium uppercase tracking-[0.05em] text-[var(--platform-text-muted)]">{label}</p>
       <p className="mt-1.5 text-xl font-medium tracking-tight text-[var(--platform-text-primary)] tabular-nums">{value}</p>
       {detail ? <p className="mt-1 text-xs text-[var(--platform-text-muted)]">{detail}</p> : null}
       {trend ? <p className="mt-1 text-xs font-medium text-[var(--platform-text-secondary)]">{trend}</p> : null}

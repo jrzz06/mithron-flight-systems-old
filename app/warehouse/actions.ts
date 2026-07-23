@@ -19,6 +19,7 @@ import {
 import { readExpectedUpdatedAt, readOptionalExpectedUpdatedAt } from "@/lib/admin/conflict-handling";
 import { AdminRecordConflictError } from "@/services/admin-actions";
 import { assertValidWarehouseCode } from "@/services/warehouses";
+import { resolveCanonicalProductCategory } from "@/lib/catalog-category-taxonomy";
 import {
   getDefaultWarehouseCode,
   getWarehouseConfiguration,
@@ -683,7 +684,7 @@ export async function saveInventoryQuickEditFormAction(formData: FormData) {
       slug: productSlug,
       updated_at: now
     };
-    if (category) productPayload.category = category;
+    if (category) productPayload.category = resolveCanonicalProductCategory(category);
     if (price) productPayload.price = price;
     if (shouldArchiveProduct) {
       productPayload.workflow_status = "archived";
@@ -925,7 +926,7 @@ export async function saveInventoryBulkUpdateFormAction(formData: FormData) {
     );
 
     const productPayload: JsonRecord = { slug: productSlug, updated_at: now };
-    if (nextCategory) productPayload.category = nextCategory;
+    if (nextCategory) productPayload.category = resolveCanonicalProductCategory(nextCategory);
     if (nextStatus === "archived") {
       productPayload.workflow_status = "archived";
       productPayload.is_visible = false;
@@ -1131,7 +1132,9 @@ export async function duplicateInventoryProductFormAction(formData: FormData) {
   const copySku = deriveProductSku(copySlug);
   const quantity = readInventoryInteger(formData, "quantity");
   const price = readInventoryNumber(formData, "price");
-  const category = readInventoryString(formData, "category", "Uncategorized");
+  const category = resolveCanonicalProductCategory(
+    readInventoryString(formData, "category", "Uncategorized")
+  );
   const imageUrl = readInventoryString(formData, "product_image");
   const stockStatus = inventoryStatusForQuantity(quantity);
 

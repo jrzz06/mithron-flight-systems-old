@@ -61,35 +61,33 @@ describe("store navigation mega menu", () => {
 
   it("uses the requested premium light overlay motion and geometry", () => {
     const globals = source("app/globals.css");
+    const storeNav = source("components/navigation/store-nav.tsx");
 
     expect(globals).toContain("--mega-menu-ease: cubic-bezier(0.16, 1, 0.3, 1)");
-    expect(globals).toContain("--mega-menu-panel-width: min(1680px, calc(100vw - 48px))");
-    expect(globals).toContain("--mega-menu-panel-height: 540px");
+    expect(globals).toContain("--mega-menu-panel-width: min(1000px, calc(100vw - 48px))");
+    expect(globals).toContain("--mega-menu-panel-height: 400px");
     expect(globals).toContain("height: var(--mega-menu-panel-height)");
     expect(globals).toContain("max-height: var(--mega-menu-panel-height)");
     expect(globals).toContain("left: 50%");
     expect(globals).toContain("transform: translate3d(-50%, -8px, 0) scale(0.992)");
     expect(globals).toContain("transform: translate3d(-50%, 0, 0) scale(1)");
-    expect(globals).toContain(
-      "grid-template-columns: minmax(220px, 0.24fr) minmax(0, 0.4fr) minmax(320px, 0.36fr)"
-    );
+    expect(globals).toContain("grid-template-columns: 200px minmax(0, 1fr) 232px");
     expect(globals).toContain("enterprise-mega-menu__categories");
     expect(globals).toContain("enterprise-mega-menu__products");
     expect(globals).toContain("enterprise-mega-menu__preview");
     expect(globals).toContain("enterprise-mega-menu__view-all");
     expect(globals).toContain("border-left: 1px solid rgba(17, 17, 17, 0.08)");
-    expect(globals).toContain("min-height: 260px");
-    expect(globals).toContain("min-height: 56px");
-    expect(globals).toContain("font-size: 1.375rem");
     expect(globals).toContain("enterprise-feature-card__meta");
     expect(globals).toContain("opacity 220ms var(--mega-menu-ease)");
     expect(globals).toContain("transform 220ms var(--mega-menu-ease)");
     expect(globals).toContain("border-radius: 18px");
-    expect(globals).toContain("background: #ffffff");
-    expect(globals).toContain("0 20px 56px rgba(17, 17, 17, 0.1)");
-    expect(globals).toContain("@media (max-width: 1023px)");
+    expect(globals).toContain("box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06)");
     expect(globals).toContain(".enterprise-mega-menu-shell");
     expect(globals).toContain("transition-duration: 1ms");
+    expect(storeNav).toContain("MENU_EXIT_MS = 240");
+    expect(storeNav).toContain("forceCloseEnterpriseMenu");
+    expect(storeNav).toContain("data-mega-menu-open");
+    expect(storeNav).toContain("canUseHoverIntent");
   });
 
   it("keeps preview copy clean without dumping product body html", () => {
@@ -114,6 +112,9 @@ describe("store navigation mega menu", () => {
 
     expect(searchOverlay).toContain("catalogCategoryDefinitions");
     expect(searchOverlay).toContain("Suggested categories");
+    expect(searchOverlay).toContain("Categories");
+    expect(searchOverlay).toContain("Quick Links");
+    expect(searchOverlay).toContain("idlePanel");
     expect(searchOverlay).toContain("definition.href");
     expect(searchOverlay).not.toContain("AG10 Sprayer");
     expect(searchOverlay).not.toContain("/interest/");

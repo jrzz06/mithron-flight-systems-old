@@ -195,13 +195,13 @@ export function MiniCarouselSlotEditor({
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                        <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
                           Position {index + 1}
                         </p>
                         <CmsAssignmentSourceBadge source={slot.source} />
                         <span
                           className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                            "rounded-full px-2 py-0.5 type-badge font-semibold uppercase tracking-wide",
                             displayProduct.available ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
                           )}
                         >
@@ -218,7 +218,7 @@ export function MiniCarouselSlotEditor({
                 ) : (
                   <div className="min-w-0 flex-1 space-y-2 py-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                      <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
                         Position {index + 1}
                       </p>
                       <CmsAssignmentSourceBadge source="missing" />

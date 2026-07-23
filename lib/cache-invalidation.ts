@@ -18,7 +18,8 @@ export async function invalidateCatalogRedisCaches(productSlug?: string) {
   if (productSlug) {
     keys.push(
       REDIS_CACHE_KEYS.productCore(productSlug),
-      REDIS_CACHE_KEYS.catalogProductRow(productSlug)
+      REDIS_CACHE_KEYS.catalogProductRow(productSlug),
+      REDIS_CACHE_KEYS.productPage(productSlug)
     );
   }
   await Promise.all([
@@ -33,7 +34,8 @@ export async function invalidateCatalogRedisCaches(productSlug?: string) {
       ? Promise.resolve()
       : Promise.all([
           invalidateRedisKeyPattern("product:core:"),
-          invalidateRedisKeyPattern("catalog:product-row:")
+          invalidateRedisKeyPattern("catalog:product-row:"),
+          invalidateRedisKeyPattern("product:page:")
         ]).then(() => undefined),
     // Reviews + related shells are customer PDP caches; clear with catalog writes.
     productSlug

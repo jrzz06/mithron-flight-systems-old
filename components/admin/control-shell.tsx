@@ -27,7 +27,7 @@ export function ControlShell({
         description={description}
         actions={actions.length ? <ControlShellActionNav actions={actions} /> : undefined}
       >
-        <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{eyebrow}</p>
+        <p className="mb-3 type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{eyebrow}</p>
         {metrics.length ? <AdminMetricGrid metrics={metrics} className="mb-4" /> : null}
         <div data-operator-state-strip className="sr-only" aria-hidden="true" />
       </Card>

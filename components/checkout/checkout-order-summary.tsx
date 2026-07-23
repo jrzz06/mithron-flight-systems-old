@@ -305,7 +305,7 @@ export function CheckoutOrderSummary({
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
           <div className="mx-auto flex max-w-[min(100%,var(--ds-container-checkout))] items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Final amount</p>
+              <p className="type-meta font-semibold uppercase tracking-[0.12em] text-slate-500">Final amount</p>
               <p className="text-lg font-bold tabular-nums text-slate-900">
                 {showPendingPrices ? "…" : formatINR(finalAmount)}
               </p>

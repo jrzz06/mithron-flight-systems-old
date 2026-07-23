@@ -206,9 +206,10 @@ function EnterpriseFeaturedCard({
 
   return (
     <div className={`enterprise-feature-card${isPreview ? " enterprise-feature-card--preview" : ""}`}>
-      <div key={card.key} className="enterprise-feature-card__anim">
+      <div className="enterprise-feature-card__anim">
         <div className="enterprise-feature-card__media" aria-hidden="true">
           <MithronCardImage
+            key={card.key}
             src={card.image}
             alt=""
             fill
@@ -218,7 +219,7 @@ function EnterpriseFeaturedCard({
           />
         </div>
         {isPreview ? (
-          <div className="enterprise-feature-card__info">
+          <div key={card.key} className="enterprise-feature-card__info">
             <h3>{card.name}</h3>
             {card.eyebrow ? <p className="enterprise-feature-card__meta">{card.eyebrow}</p> : null}
             {card.price ? <p className="enterprise-feature-card__price">{card.price}</p> : null}
@@ -236,7 +237,7 @@ function EnterpriseFeaturedCard({
             </Link>
           </div>
         ) : (
-          <div className="enterprise-feature-card__body">
+          <div key={card.key} className="enterprise-feature-card__body">
             <p className="enterprise-mega-menu__eyebrow">{card.eyebrow}</p>
             <h3>{card.name}</h3>
             <EditorRenderedHtml html={card.body} className="enterprise-feature-card__description" />

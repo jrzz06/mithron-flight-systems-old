@@ -156,7 +156,7 @@ export function PlatformNav({ groups, dataAttribute = "data-platform-nav", scope
                   [group.label]: !isCollapsed
                 }));
               }}
-              className={`flex w-full items-center justify-between px-2.5 pb-1.5 text-left text-[10px] font-semibold uppercase tracking-[0.08em] transition-[color,transform] duration-100 ${
+              className={`flex w-full items-center justify-between px-2.5 pb-1.5 text-left type-badge font-semibold uppercase tracking-[0.08em] transition-[color,transform] duration-100 ${
                 group.defaultCollapsed ? "text-[var(--platform-text-muted)] hover:text-[var(--platform-text-secondary)]" : "text-[var(--platform-text-muted)]"
               }`}
               aria-expanded={group.defaultCollapsed ? !isCollapsed : true}

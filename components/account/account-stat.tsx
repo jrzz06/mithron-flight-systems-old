@@ -11,7 +11,7 @@ type AccountStatProps = {
 export function AccountStat({ label, value, href, className }: AccountStatProps) {
   const content = (
     <>
-      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--account-ink-muted)]">
+      <p className="type-badge font-medium uppercase tracking-[0.2em] text-[var(--account-ink-muted)]">
         {label}
       </p>
       <p className="font-display mt-1 text-4xl font-semibold tracking-tight text-[var(--account-ink)]">

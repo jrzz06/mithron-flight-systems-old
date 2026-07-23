@@ -26,7 +26,7 @@ function product(overrides: Partial<Product> & Pick<Product, "slug">): Product {
 }
 
 describe("resolveCatalogCardImage", () => {
-  it("prefers responsive fallbackSrc for catalog cards", () => {
+  it("keeps non-cutout primary src instead of swapping to a cutout fallbackSrc", () => {
     const resolved = resolveCatalogCardImage({
       src: "https://example.supabase.co/storage/v1/object/public/mithron-products/ag10-lite-480w-v1.2427a172.webp",
       alt: "Agri Kisan Drone Small",
@@ -56,7 +56,8 @@ describe("resolveCatalogCardImage", () => {
       }
     });
 
-    expect(resolved.src).toContain("catalog-cutouts/v1/agri-kisan.webp");
+    expect(resolved.src).toContain("ag10-lite-480w");
+    expect(resolved.src).not.toContain("catalog-cutouts");
     expect(resolved.alt).toBe("Agri Kisan Drone Small");
   });
 
@@ -68,7 +69,7 @@ describe("resolveCatalogCardImage", () => {
 });
 
 describe("buildCatalogCardImageCandidates", () => {
-  it("prefers hero cutout before raw primary upload", () => {
+  it("prefers primary/Wix original and ignores cutout hero fallback", () => {
     const cutoutSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/agri-kisan.webp";
     const rawSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/products/source-agri-kisan/raw.jpg";
 
@@ -80,55 +81,25 @@ describe("buildCatalogCardImageCandidates", () => {
       })
     );
 
-    expect(candidates[0]?.src).toBe(cutoutSrc);
-    expect(candidates[0]?.useSourceImage).toBe(true);
-    expect(candidates[0]?.responsive).toBeUndefined();
+    expect(candidates[0]?.src).toBe(rawSrc);
+    expect(candidates.map((item) => item.src)).not.toContain(cutoutSrc);
   });
 
-  it("forces useSourceImage for direct cutout image src", () => {
+  it("returns no candidates when only a cutout image exists", () => {
     const cutoutSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo.webp";
     const candidates = buildCatalogCardImageCandidates(
       product({
         slug: "demo",
-        image: {
-          src: cutoutSrc,
-          alt: "Demo cutout",
-          width: 1024,
-          height: 1024,
-          responsive: {
-            assetId: "demo",
-            bucket: "mithron-products",
-            assetRole: "product",
-            category: "product",
-            generatedPromptId: "demo",
-            status: "generated",
-            fallbackSrc: cutoutSrc,
-            fallbackAlt: "Demo cutout",
-            width: 1024,
-            height: 1024,
-            dominantColor: "#fff",
-            variants: {
-              webp: [
-                {
-                  src: "https://example.supabase.co/storage/v1/object/public/mithron-products/demo-768w-v1.webp",
-                  storagePath: "demo-768w-v1.webp",
-                  width: 768,
-                  height: 768,
-                  format: "webp"
-                }
-              ]
-            }
-          }
-        }
+        image: { src: cutoutSrc, alt: "Demo cutout", width: 1024, height: 1024 },
+        hero: undefined,
+        gallery: []
       })
     );
 
-    expect(candidates[0]?.src).toBe(cutoutSrc);
-    expect(candidates[0]?.useSourceImage).toBe(true);
-    expect(candidates[0]?.responsive).toBeUndefined();
+    expect(candidates).toEqual([]);
   });
 
-  it("uses plain delivery when resolved to canonical cutout fallbackSrc", () => {
+  it("never includes cutout fallbackSrc in candidates", () => {
     const responsive = {
       assetId: "demo",
       bucket: "mithron-products" as const,
@@ -163,12 +134,14 @@ describe("buildCatalogCardImageCandidates", () => {
           width: 480,
           height: 360,
           responsive
-        }
+        },
+        hero: undefined,
+        gallery: []
       })
     );
 
-    expect(candidates[0]?.useSourceImage).toBe(true);
-    expect(candidates[0]?.responsive).toBeUndefined();
+    expect(candidates[0]?.src).toContain("ag10-lite-480w");
+    expect(candidates.map((item) => item.src).some((src) => src.includes("catalog-cutouts"))).toBe(false);
   });
 
   it("dedupes repeated urls across image, hero, and gallery", () => {
@@ -186,7 +159,7 @@ describe("buildCatalogCardImageCandidates", () => {
     expect(candidates[0]?.src).toBe(sharedSrc);
   });
 
-  it("includes gallery and hero fallbacks when they differ from the primary image", () => {
+  it("uses gallery original when primary is a cutout", () => {
     const candidates = buildCatalogCardImageCandidates(
       product({
         slug: "fallbacks",
@@ -214,24 +187,82 @@ describe("buildCatalogCardImageCandidates", () => {
     );
 
     expect(candidates.map((candidate) => candidate.src)).toEqual([
-      "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/broken.webp",
       "https://example.supabase.co/storage/v1/object/public/mithron-products/products/primary.webp"
     ]);
     expect(candidates.some((candidate) => candidate.src.includes("wixstatic.com"))).toBe(false);
-    expect(candidates[1]?.useSourceImage).toBe(true);
+    expect(candidates.some((candidate) => candidate.src.includes("catalog-cutouts"))).toBe(false);
   });
 
-  it("accepts CDN-rewritten Supabase storage URLs for card candidates", () => {
+  it("allows ai-cutout primary for storefront cards", () => {
+    const aiCutout = "https://example.supabase.co/storage/v1/object/public/mithron-products/products/demo/ai-cutout/abc.webp";
+    const candidates = buildCatalogCardImageCandidates(
+      product({
+        slug: "demo",
+        image: { src: aiCutout, alt: "Demo", width: 512, height: 512 },
+        hero: undefined,
+        gallery: []
+      })
+    );
+    expect(candidates[0]?.src).toBe(aiCutout);
+    expect(candidates[0]?.useSourceImage).toBe(true);
+  });
+
+  it("uses responsive variants for ai-cutout when present", () => {
+    const aiCutout = "https://example.supabase.co/storage/v1/object/public/mithron-products/products/demo/ai-cutout/abc.webp";
+    const thumb = "https://example.supabase.co/storage/v1/object/public/mithron-products/products/demo/ai-cutout/abc.thumbnail.webp";
+    const candidates = buildCatalogCardImageCandidates(
+      product({
+        slug: "demo",
+        image: {
+          src: aiCutout,
+          alt: "Demo",
+          width: 1000,
+          height: 1000,
+          responsive: {
+            assetId: "demo-cutout",
+            bucket: "mithron-products",
+            assetRole: "product",
+            category: "product",
+            generatedPromptId: "catalog.product-media",
+            status: "generated",
+            fallbackSrc: aiCutout,
+            fallbackAlt: "Demo",
+            width: 1000,
+            height: 1000,
+            dominantColor: "#f8f8f8",
+            variants: {
+              webp: [
+                {
+                  src: thumb,
+                  storagePath: "products/demo/ai-cutout/abc.thumbnail.webp",
+                  width: 320,
+                  height: 320,
+                  format: "webp"
+                }
+              ]
+            }
+          }
+        },
+        hero: undefined,
+        gallery: []
+      })
+    );
+    expect(candidates[0]?.src).toBe(aiCutout);
+    expect(candidates[0]?.useSourceImage).toBe(false);
+    expect(candidates[0]?.responsive?.variants.webp?.[0]?.src).toBe(thumb);
+  });
+
+  it("ignores CDN-rewritten legacy cutout URLs", () => {
     const cdnSrc = "/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/5-liter-agri-drone.webp";
     const candidates = buildCatalogCardImageCandidates(
       product({
         slug: "source-5-liter-agri-drone",
-        image: { src: cdnSrc, alt: "5 Liter Agri Drone", width: 400, height: 430 }
+        image: { src: cdnSrc, alt: "5 Liter Agri Drone", width: 400, height: 430 },
+        hero: undefined,
+        gallery: []
       })
     );
 
-    expect(candidates.length).toBeGreaterThan(0);
-    expect(candidates.some((candidate) => candidate.src === cdnSrc)).toBe(true);
-    expect(candidates.some((candidate) => candidate.src.includes("wixstatic.com"))).toBe(false);
+    expect(candidates).toEqual([]);
   });
 });

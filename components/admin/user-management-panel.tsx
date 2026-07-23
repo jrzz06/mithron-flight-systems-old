@@ -272,7 +272,7 @@ export function UserManagementPanel({
       <div className="rounded-xl border border-slate-800 bg-[#0f141b] p-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Team access</p>
+            <p className="type-meta font-semibold uppercase tracking-[0.12em] text-slate-500">Team access</p>
             <h2 className="mt-1 text-base font-semibold text-slate-100">Users</h2>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -462,7 +462,7 @@ export function UserManagementPanel({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">User</p>
+                <p className="type-meta font-semibold uppercase tracking-[0.12em] text-slate-500">User</p>
                 <h3 className="mt-1 text-lg font-semibold text-slate-100">{actionTitle}</h3>
                 <p className="mt-1 text-sm text-slate-500">{activeUser.email}</p>
               </div>

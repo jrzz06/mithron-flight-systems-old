@@ -46,7 +46,7 @@ function CmsMediaField({
     <div data-cms-media-field className="grid gap-3 rounded-xl border border-slate-800 bg-[#10151d] p-3 md:col-span-2">
       <div>
         <p className="text-xs font-medium text-slate-400">{label}</p>
-        {hint ? <p className="mt-1 text-[11px] text-slate-500">{hint}</p> : null}
+        {hint ? <p className="mt-1 type-meta text-slate-500">{hint}</p> : null}
       </div>
       <div className="grid gap-2 sm:grid-cols-[96px_minmax(0,1fr)]">
         <div data-cms-media-preview className="relative h-24 overflow-hidden rounded-lg border border-slate-800 bg-[#0b1017]">

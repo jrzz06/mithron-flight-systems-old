@@ -1,0 +1,38 @@
+.card {
+  display: flex;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: var(--shelf-dji-card-radius, 0);
+  background: #ffffff;
+  color: #09090b;
+  text-decoration: none;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.card:hover,
+.card:focus-visible {
+  outline: none;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 12px 28px rgba(0, 0, 0, 0.05);
+}
+
+.label {
+  font-family: var(--font-google-sans-flex), system-ui, sans-serif;
+  font-size: clamp(1rem, 1.1vw, 1.125rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

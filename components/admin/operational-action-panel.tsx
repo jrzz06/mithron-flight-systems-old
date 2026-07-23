@@ -81,7 +81,7 @@ export function OperationalPrimaryAction({
   return (
     <form action={timedAction} data-primary-action className={panelClass}>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+        <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
           {title}
         </p>
         {description ? (

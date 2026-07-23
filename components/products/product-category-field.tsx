@@ -6,6 +6,7 @@ import {
   ensureCategoryInOptions,
   type ProductCategoryOption
 } from "@/lib/product-category-options";
+import { resolveCanonicalProductCategory } from "@/lib/catalog-category-taxonomy";
 
 export type { ProductCategoryOption };
 
@@ -19,10 +20,11 @@ type ProductCategoryFieldProps = {
 function resolveInitialCategory(options: ProductCategoryOption[], defaultCategory?: string) {
   const trimmedDefault = defaultCategory?.trim();
   if (trimmedDefault) {
-    const exactMatch = options.find((category) => category.label === trimmedDefault);
+    const canonical = resolveCanonicalProductCategory(trimmedDefault);
+    const exactMatch = options.find((category) => category.label === canonical);
     if (exactMatch) return exactMatch.label;
     const caseInsensitiveMatch = options.find(
-      (category) => category.label.toLowerCase() === trimmedDefault.toLowerCase()
+      (category) => category.label.toLowerCase() === canonical.toLowerCase()
     );
     if (caseInsensitiveMatch) return caseInsensitiveMatch.label;
   }
@@ -34,7 +36,7 @@ function normalizeCategories(categories: ProductCategoryOption[]) {
   return categories
     .map((category) => ({
       ...category,
-      label: category.label.trim(),
+      label: resolveCanonicalProductCategory(category.label.trim()),
       routeKey: category.routeKey?.trim() || null
     }))
     .filter((category) => category.label)

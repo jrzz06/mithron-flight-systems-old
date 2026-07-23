@@ -1,4 +1,5 @@
 import { Webhook } from "standardwebhooks";
+import { unwrapAuthNextPath } from "@/lib/auth/redirects";
 import { getSiteOrigin } from "@/lib/site-url";
 
 export type SupabaseSendEmailAction =
@@ -104,7 +105,7 @@ export function buildAuthConfirmUrl(input: {
   url.searchParams.set("token_hash", input.tokenHash);
   url.searchParams.set("type", input.emailActionType);
   if (input.redirectTo?.trim()) {
-    url.searchParams.set("next", input.redirectTo.trim());
+    url.searchParams.set("next", unwrapAuthNextPath(input.redirectTo, "/account"));
   }
   return url.toString();
 }

@@ -13,20 +13,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 18% 28%, rgba(148, 163, 184, 0.04) 0 1px, transparent 1px),
-    radial-gradient(circle at 72% 62%, rgba(148, 163, 184, 0.035) 0 1px, transparent 1px),
-    radial-gradient(circle at 45% 80%, rgba(148, 163, 184, 0.03) 0 1px, transparent 1px),
-    var(--product-stage-halo),
-    var(--product-stage-floor),
-    linear-gradient(180deg, #fafafa 0%, #f8fafc 58%, #f1f5f9 100%);
-  background-size:
-    18px 18px,
-    22px 22px,
-    26px 26px,
-    auto,
-    auto,
-    auto;
+  background: #ffffff;
 }
 
 .badge {

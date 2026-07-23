@@ -32,7 +32,8 @@ export default async function CompleteProfilePage({ searchParams }: CompleteProf
 
   const context = await getCurrentAuthContext();
   if (!context.userId) {
-    redirect(buildLoginRedirectPath("/account/complete-profile"));
+    // Preserve the final destination only — never wrap complete-profile as `next`.
+    redirect(buildLoginRedirectPath(nextPath));
   }
 
   const supabase = await createClient();

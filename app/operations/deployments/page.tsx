@@ -101,7 +101,7 @@ export default async function DeploymentRequestsPage({ searchParams }: { searchP
         </div>
 
         <section data-deployment-command-workflow className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Deployment command workflow</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Deployment command workflow</p>
           <div className="grid gap-2 md:grid-cols-5">
             <div data-deployment-status-pending className="rounded-xl border border-white/10 bg-black/18 p-3">
               <StatusBadge status="pending" />
@@ -127,7 +127,7 @@ export default async function DeploymentRequestsPage({ searchParams }: { searchP
         </section>
 
         <section data-request-lifecycle-indicators className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Request lifecycle</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Request lifecycle</p>
           <div className="grid gap-2 md:grid-cols-4">
             {requestCounts.map((entry) => (
               <div key={entry.state} className="rounded-xl border border-white/10 bg-black/18 p-3">
@@ -139,12 +139,12 @@ export default async function DeploymentRequestsPage({ searchParams }: { searchP
         </section>
 
         <section className="grid gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Deployment requests</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Deployment requests</p>
           <DataList rows={requestRows.length ? requestRows : [{ label: "deployment_requests", value: "0", detail: "No deployment request rows yet." }]} />
         </section>
 
         <section data-deployment-audit-visibility className="grid gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Deployment audit visibility</p>
+          <p className="type-meta font-semibold uppercase tracking-[0.16em] text-[#7ce7c9]">Deployment audit visibility</p>
           <DataList rows={requestActivityRows.length ? requestActivityRows : [{ label: "deployment activity", value: "0", detail: "No deployment request activity rows yet." }]} />
         </section>
 

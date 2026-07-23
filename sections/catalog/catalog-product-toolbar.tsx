@@ -16,6 +16,9 @@ export type CatalogProductToolbarProps = {
   presentation?: "standard" | "showroom";
   title: string;
   eyebrow?: string;
+  /** When true, omit the static title block unless search is active. */
+  suppressListingTitle?: boolean;
+  hasSearchQuery?: boolean;
   query: string;
   sort: CatalogSortKey;
   group: CatalogProductGroup;
@@ -32,6 +35,8 @@ export function CatalogProductToolbar({
   presentation = "standard",
   title,
   eyebrow = "Catalog",
+  suppressListingTitle = false,
+  hasSearchQuery = false,
   query,
   sort,
   group,
@@ -43,18 +48,22 @@ export function CatalogProductToolbar({
   onGroupChange
 }: CatalogProductToolbarProps) {
   const resultLabel = `${resultCount} product${resultCount === 1 ? "" : "s"}`;
+  const showListingHeader = !suppressListingTitle || hasSearchQuery;
+  const TitleTag = suppressListingTitle && hasSearchQuery ? "h2" : "h1";
 
   return (
     <>
-      <div
-        className={cn(styles.listingHeader, presentation === "showroom" && styles.listingHeaderShowroom)}
-        data-testid="catalog-intro"
-      >
-        <div className={styles.headerTitleBlock}>
-          <p className={styles.eyebrow}>{eyebrow}</p>
-          <h1 className={styles.title}>{title}</h1>
+      {showListingHeader ? (
+        <div
+          className={cn(styles.listingHeader, presentation === "showroom" && styles.listingHeaderShowroom)}
+          data-testid="catalog-intro"
+        >
+          <div className={styles.headerTitleBlock}>
+            <p className={styles.eyebrow}>{eyebrow}</p>
+            <TitleTag className={styles.title}>{title}</TitleTag>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div
         className={styles.toolbar}

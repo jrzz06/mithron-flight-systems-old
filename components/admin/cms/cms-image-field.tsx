@@ -403,12 +403,12 @@ export function CmsImageField({
               aria-label="No image uploaded"
             >
               <ImageIcon className="size-6" aria-hidden="true" />
-              <span className="text-[10px] font-medium uppercase tracking-wide">No image</span>
+              <span className="type-badge font-medium uppercase tracking-wide">No image</span>
             </div>
           )}
           {previewSrc && loadFailed ? (
             <div className="absolute inset-0 grid place-items-center bg-[var(--platform-surface-muted)]/90 px-3 text-center">
-              <p className="text-[11px] font-medium text-[var(--platform-text-secondary)]">
+              <p className="type-meta font-medium text-[var(--platform-text-secondary)]">
                 Image URL saved — preview failed to load. Replace to update.
               </p>
             </div>

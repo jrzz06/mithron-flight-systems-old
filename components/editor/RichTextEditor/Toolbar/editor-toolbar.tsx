@@ -89,7 +89,7 @@ export function EditorToolbar({
     <div data-editor-toolbar className="sticky top-0 z-20 border-b border-[var(--platform-border)] bg-[var(--platform-surface-raised)]">
       <div className="flex flex-wrap items-center gap-1 px-2 py-2">
         <ToolbarButton label="Paragraph" active={editor.isActive("paragraph")} onClick={() => editor.chain().focus().setParagraph().run()}>
-          <span className="text-[10px] font-semibold">P</span>
+          <span className="type-badge font-semibold">P</span>
         </ToolbarButton>
         <ToolbarButton label="Heading 1" active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
           <Heading1 className="h-3.5 w-3.5" />
@@ -124,7 +124,7 @@ export function EditorToolbar({
         </ToolbarButton>
         {editor.isActive("link") ? (
           <ToolbarButton label="Remove link" onClick={() => editor.chain().focus().unsetLink().run()}>
-            <span className="text-[10px] font-semibold">Unlink</span>
+            <span className="type-badge font-semibold">Unlink</span>
           </ToolbarButton>
         ) : null}
         <ToolbarButton label="Clear formatting" onClick={() => editor.chain().focus().unsetAllMarks().run()}>

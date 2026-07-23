@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
-import { loadProductForPage } from "@/services/catalog";
+import { getProductCoreBySlug } from "@/services/catalog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function readIp(request: Request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
-}
-
-function safeText(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function availabilityFromSpecs(specs: Record<string, string> | undefined) {
-  if (!specs) return null;
-  return safeText(specs["Availability"]) || safeText(specs["Availability (source)"]) || null;
 }
 
 export async function GET(request: Request) {
@@ -27,21 +18,21 @@ export async function GET(request: Request) {
     const limiter = await checkDistributedRateLimit(`product-summary:${readIp(request)}`, 60, 60_000);
     if (!limiter.allowed) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
 
-    const loaded = await loadProductForPage(slug);
-    if (loaded.status !== "ready") {
+    // Slim product:core cache — avoid full PDP pipeline for summary JSON.
+    const core = await getProductCoreBySlug(slug);
+    if (!core) {
       return NextResponse.json({ ok: false, slug, error: "Not found." }, { status: 404 });
     }
 
-    const product = loaded.product;
     return NextResponse.json({
       ok: true,
-      slug: product.slug,
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      image: product.image?.src ?? null,
-      url: product.productUrl || `/product/${product.slug}`,
-      availability: availabilityFromSpecs(product.specs)
+      slug: core.slug,
+      name: core.name,
+      category: core.category,
+      price: core.price,
+      image: core.image?.src ?? null,
+      url: `/product/${core.slug}`,
+      availability: core.availability ?? null
     });
   } catch (error) {
     console.error("[products/summary] failed", error);
@@ -51,4 +42,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

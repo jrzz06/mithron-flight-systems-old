@@ -28,7 +28,7 @@ export function BannerImagePreview({
   return (
     <div data-banner-image-preview className="grid gap-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">Image preview</p>
+        <p className="type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">Image preview</p>
         <div className="flex gap-1">
           {(Object.keys(frames) as BannerPreviewDevice[]).map((key) => (
             <button
@@ -36,7 +36,7 @@ export function BannerImagePreview({
               type="button"
               onClick={() => onDeviceChange?.(key)}
               className={cn(
-                "rounded-[6px] px-2 py-1 text-[10px] font-medium uppercase",
+                "rounded-[6px] px-2 py-1 type-badge font-medium uppercase",
                 device === key ? "bg-[var(--platform-accent-soft)] text-[var(--platform-text-primary)]" : "text-[var(--platform-text-muted)]"
               )}
             >
@@ -45,7 +45,7 @@ export function BannerImagePreview({
           ))}
         </div>
       </div>
-      <p className="text-[11px] text-[var(--platform-text-muted)]">
+      <p className="type-meta text-[var(--platform-text-muted)]">
         Required {spec.requiredWidth}×{spec.requiredHeight} · {spec.aspectRatio} · ≤{spec.maxSizeMb}MB
       </p>
       <div className="flex justify-center overflow-hidden rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-3">

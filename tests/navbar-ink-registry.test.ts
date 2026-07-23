@@ -6,7 +6,8 @@ import {
   homepageSlideNavbarInk,
   resolveCategoryNavbarInk,
   resolveCategoryNavbarInkByCmsRouteKey,
-  resolveHomepageSlideNavbarInk
+  resolveHomepageSlideNavbarInk,
+  resolveNavbarChromeMode
 } from "@/config/navbar-ink-registry";
 
 describe("navbar ink registry", () => {
@@ -37,9 +38,10 @@ describe("navbar ink registry", () => {
     expect(resolveCategoryNavbarInkByCmsRouteKey("unknown")).toBeNull();
   });
 
-  it("uses first homepage slide ink for bootstrap on /", () => {
+  it("uses solid chrome and dark ink for homepage bootstrap", () => {
     expect(HOMEPAGE_BOOTSTRAP_SLIDE_ID).toBe("ag10-arrival");
-    expect(getBootstrapNavbarInk("/")).toBe(homepageSlideNavbarInk[HOMEPAGE_BOOTSTRAP_SLIDE_ID]);
+    expect(getBootstrapNavbarInk("/")).toBe("dark");
+    expect(resolveNavbarChromeMode("/")).toBe("solid");
     expect(getBootstrapNavbarInk("/category/survey-drones")).toBe("light");
     expect(getBootstrapNavbarInk("/products")).toBe("dark");
   });

@@ -474,7 +474,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
           <TimedActionForm id="publish-product" action={saveProductPublishStateFormAction} actionLabel="Update product publish state" data-product-publish-table="mithron_products" className={`grid gap-5 ${platformPanelClass} p-5`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--platform-text-muted)]">Archive / restore / publish</p>
+                <p className="type-meta font-bold uppercase tracking-[0.18em] text-[var(--platform-text-muted)]">Archive / restore / publish</p>
                 <p className="mt-1 text-xs leading-5 text-[var(--platform-text-muted)]">Use archived status as the normal safe delete path.</p>
               </div>
               <StatusBadge status="protected" />

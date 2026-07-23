@@ -378,12 +378,12 @@ test.describe("Mithron cinematic storefront", () => {
       await expect(topNavigation.getByRole("link", { name: "Products" })).toBeVisible();
       await expect(topNavigation.getByRole("link", { name: "Agri Drones" })).toBeVisible();
       await expect(topNavigation.getByRole("link", { name: "Global Products" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Search products, categories, SKU, brands..." })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Search Mithron products" })).toBeVisible();
       await expect(page.getByRole("link", { name: "Login" })).toBeVisible();
     }
 
     await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
-    await page.locator("button[aria-label='Search products, categories, SKU, brands...']").evaluateAll((buttons) => {
+    await page.locator("button[aria-label='Search Mithron products']").evaluateAll((buttons) => {
       const visibleButton = buttons.find((button) => {
         const rect = button.getBoundingClientRect();
         const style = getComputedStyle(button);
@@ -391,8 +391,8 @@ test.describe("Mithron cinematic storefront", () => {
       }) as HTMLButtonElement | undefined;
       visibleButton?.click();
     });
-    await expect(page.getByPlaceholder("Search products, categories, SKU, brands...")).toBeVisible();
-    await page.getByPlaceholder("Search products, categories, SKU, brands...").fill("kisan");
+    await expect(page.getByPlaceholder("Search products...")).toBeVisible();
+    await page.getByPlaceholder("Search products...").fill("kisan");
     await expect(page.getByRole("link", { name: /Agri Kisan/ }).first()).toBeVisible();
     await page.getByRole("button", { name: "Close search" }).click();
 
@@ -402,7 +402,7 @@ test.describe("Mithron cinematic storefront", () => {
   test("search overlay submits to products catalog results page", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
-    await page.locator("button[aria-label='Search products, categories, SKU, brands...']").evaluateAll((buttons) => {
+    await page.locator("button[aria-label='Search Mithron products']").evaluateAll((buttons) => {
       const visibleButton = buttons.find((button) => {
         const rect = button.getBoundingClientRect();
         const style = getComputedStyle(button);
@@ -411,7 +411,7 @@ test.describe("Mithron cinematic storefront", () => {
       visibleButton?.click();
     });
 
-    const searchInput = page.getByPlaceholder("Search products, categories, SKU, brands...");
+    const searchInput = page.getByPlaceholder("Search products...");
     await expect(searchInput).toBeVisible();
     await searchInput.fill("drone");
     await searchInput.press("Enter");
@@ -614,8 +614,8 @@ test.describe("Mithron cinematic storefront", () => {
       await expect(topNavigation.getByRole("link", { name: "Products" })).toBeVisible();
       await expect(topNavigation.getByRole("link", { name: "Global Products" })).toBeVisible();
     }
-    await page.getByRole("button", { name: "Search products, categories, SKU, brands..." }).click();
-    await expect(page.getByPlaceholder("Search products, categories, SKU, brands...")).toBeVisible();
+    await page.getByRole("button", { name: "Search Mithron products" }).click();
+    await expect(page.getByPlaceholder("Search products...")).toBeVisible();
   });
 
   test("product page adds a bundle to the cart drawer", async ({ page, isMobile }) => {

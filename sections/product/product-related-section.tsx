@@ -1,46 +1,8 @@
 import Link from "next/link";
-import { ArrowRight } from "@/components/icons/storefront-icons";
-import { ProductCardImage } from "@/components/media/product-card-image";
-import { clipProductPreviewText } from "@/lib/product-preview-text";
-import { formatINR } from "@/lib/utils";
+import { ProductHoverCard } from "@/components/cards/product-hover-card";
 import type { ProductShellItem } from "@/services/catalog";
 import styles from "./product-detail.module.css";
 import showcaseStyles from "./showcase/product-showcase.module.css";
-
-function ProductRelatedCard({ item }: { item: ProductShellItem }) {
-  const description = clipProductPreviewText(item.tagline, 88);
-
-  return (
-    <article className={styles.relatedCard}>
-      <Link href={`/product/${item.slug}`} className={styles.relatedCardLink}>
-        <div className={styles.relatedCardMedia}>
-          <div className={styles.relatedCardMediaGlow} aria-hidden="true" />
-          <div className={styles.relatedCardImageFrame}>
-            <ProductCardImage
-              product={item}
-              fill
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-              className={styles.relatedCardImage}
-              placeholderClassName={styles.relatedCardImagePlaceholder}
-            />
-          </div>
-        </div>
-
-        <div className={styles.relatedCardBody}>
-          <p className={styles.relatedCardCategory}>{item.category}</p>
-          <h3 className={styles.relatedCardTitle}>{item.name}</h3>
-          <p className={styles.relatedCardDescription}>{description}</p>
-          <div className={styles.relatedCardFooter}>
-            <span className={styles.relatedCardCta} aria-hidden="true">
-              <ArrowRight className="size-4" />
-            </span>
-            <p className={styles.relatedCardPrice}>From {formatINR(item.price)}</p>
-          </div>
-        </div>
-      </Link>
-    </article>
-  );
-}
 
 function RelatedRail({ title, items }: { title: string; items: ProductShellItem[] }) {
   if (!items.length) return null;
@@ -50,7 +12,13 @@ function RelatedRail({ title, items }: { title: string; items: ProductShellItem[
       <h3 className={showcaseStyles.relatedRailTitle}>{title}</h3>
       <div className={styles.relatedProductGrid}>
         {items.map((item) => (
-          <ProductRelatedCard key={item.slug} item={item} />
+          <ProductHoverCard
+            key={item.slug}
+            product={item}
+            variant="catalog"
+            showCategory
+            cta="catalog"
+          />
         ))}
       </div>
     </div>

@@ -15,6 +15,9 @@ describe("catalog media precedence", () => {
     expect(catalog).not.toContain("externalRowImage");
     expect(catalog).not.toContain("wixstatic");
     expect(catalog).toContain("inline JSON image fallback");
+    // Wix migrations often omit width/height — linked media must still resolve.
+    expect(catalog).toContain("Migrated Wix originals often lack width/height");
+    expect(catalog).not.toMatch(/if \(!dimensions\.width \|\| !dimensions\.height\) return null;/);
   });
 
   it("tracks published products missing primary media links", () => {

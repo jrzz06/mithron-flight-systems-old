@@ -1,6 +1,7 @@
 import { ControlPlaneNavMetricsProvider } from "@/components/platform/control-plane-nav-metrics-provider";
 import { ControlPlaneParallelLayout } from "@/components/platform/control-plane-parallel-layout";
 import { canAccessProtectedPath, defaultPathForRole } from "@/lib/auth/access-control";
+import { buildAccessDeniedRedirectPath, buildLoginRedirectPath } from "@/lib/auth/redirects";
 import { getCurrentAuthContext } from "@/services/auth";
 import { redirect } from "next/navigation";
 
@@ -18,10 +19,10 @@ export default async function WarehouseLayout({
   const context = await getCurrentAuthContext();
 
   if (!context.userId) {
-    redirect(`/login?next=${encodeURIComponent("/warehouse/dashboard")}`);
+    redirect(buildLoginRedirectPath("/warehouse/dashboard"));
   }
   if (!context.role || !canAccessProtectedPath(context.role, "/warehouse")) {
-    redirect(`${defaultPathForRole(context.role)}?access_status=forbidden&next=${encodeURIComponent("/warehouse/dashboard")}`);
+    redirect(buildAccessDeniedRedirectPath(defaultPathForRole(context.role), "/warehouse/dashboard"));
   }
 
   return (

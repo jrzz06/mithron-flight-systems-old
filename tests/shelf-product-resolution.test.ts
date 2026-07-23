@@ -86,6 +86,20 @@ describe("shelf product resolution", () => {
     expect(resolved.map((item) => item.slug)).toEqual(["survey-drone", "agri-kisan-drone"]);
   });
 
+  it("backfills remaining shelf slots when CMS pins only partially resolve", () => {
+    const shelf = {
+      ...getDefaultHomepageCmsContent().shelves.droneWorld,
+      productSlugs: ["survey-drone", "missing-slug"]
+    };
+    const config = buildShelfProductConfig("drone-world", shelf);
+    const resolved = pickShelfProducts([battery, droneB, droneA], config, 4);
+
+    expect(resolved.map((item) => item.slug)).toEqual([
+      "survey-drone",
+      "agri-kisan-drone"
+    ]);
+  });
+
   it("does not auto-fill unrelated catalog products when pinned slugs are missing", () => {
     const shelf = {
       ...getDefaultHomepageCmsContent().shelves.droneWorld,

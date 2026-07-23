@@ -3,12 +3,13 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { NavAnchorProvider } from "@/components/navigation/nav-anchor-context";
 import { LogoutNoticeToastBridge } from "@/components/notifications/logout-notice-toast-bridge";
 import { ToastProvider } from "@/components/notifications/toast-provider";
 import { SoftErrorBoundary } from "@/components/soft-error-boundary";
 import { shouldSkipStorefrontChrome } from "@/lib/ui/shell-routes";
+import { resolveNavbarChromeMode } from "@/lib/navbar-ink-resolver";
 import { useCartAuthSync } from "@/hooks/use-cart-auth-sync";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useCartStore } from "@/store/cart";
@@ -48,6 +49,7 @@ export function StorefrontShellStreamingLayout({
   const pathname = usePathname();
   const skipsStorefrontChrome = shouldSkipStorefrontChrome(pathname);
   const isHome = pathname === "/";
+  const navChrome = resolveNavbarChromeMode(pathname);
   const usesStorefrontChrome = !skipsStorefrontChrome;
   const hasOpenedSearch = useUiStore((state) => state.hasOpenedSearch);
   const hasOpenedCart = useCartStore((state) => state.hasOpenedCart);
@@ -73,6 +75,14 @@ export function StorefrontShellStreamingLayout({
       root.removeAttribute("data-overlay-open");
     };
   }, [overlay]);
+
+  useLayoutEffect(() => {
+    if (skipsStorefrontChrome) {
+      document.documentElement.removeAttribute("data-nav-chrome");
+      return;
+    }
+    document.documentElement.setAttribute("data-nav-chrome", navChrome);
+  }, [navChrome, skipsStorefrontChrome]);
 
   useEffect(() => {
     // Panel measures its own bottom into --search-header-bottom (fixed sheet).
@@ -159,7 +169,7 @@ export function StorefrontShellStreamingLayout({
 
   return (
     <NavAnchorProvider navRef={navRef}>
-      <div data-storefront className="storefront-root">
+      <div data-storefront className="storefront-root" data-nav-chrome={navChrome}>
         <div
           ref={headerShellRef}
           className={cn("storefront-header-shell", searchOpen && "is-search-open")}

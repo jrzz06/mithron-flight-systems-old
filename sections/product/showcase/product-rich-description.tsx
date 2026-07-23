@@ -17,7 +17,8 @@ function ProductDescriptionTocNav({
   entries: ProductDescriptionTocEntry[];
   includeSpecs: boolean;
 }) {
-  if (!entries.length && !includeSpecs) return null;
+  // Avoid a sparse one-link "Contents" rail — jump link lives in-page headings instead.
+  if (!entries.length) return null;
 
   return (
     <nav className={styles.descriptionToc} aria-label="Product contents">
@@ -52,15 +53,18 @@ export function ProductRichDescriptionSection({
   if (!html?.trim()) return null;
 
   const { html: anchoredHtml, entries } = prepareProductDescriptionToc(html);
-  const showToc = entries.length > 0 || includeSpecsLink;
+  const showToc = entries.length > 0;
 
   return (
-    <section className={styles.descriptionSection} aria-label="Product description">
+    <section className={styles.descriptionSection} aria-labelledby="product-description-title">
       <div className={showToc ? styles.descriptionLayout : styles.descriptionInner}>
         {showToc ? (
           <ProductDescriptionTocNav entries={entries} includeSpecs={includeSpecsLink} />
         ) : null}
         <div className={styles.descriptionBody}>
+          <h2 id="product-description-title" className={styles.descriptionHeading}>
+            Description
+          </h2>
           <ProductRichDescription html={anchoredHtml} />
         </div>
       </div>

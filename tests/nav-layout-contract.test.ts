@@ -38,14 +38,14 @@ describe("storefront nav layout contract", () => {
   it("keeps navigation in normal document flow on all storefront pages", () => {
     expect(globals).toMatch(/\.TOP_NAVBAR\.adaptive-navbar\s*{[^}]*position:\s*relative/s);
     expect(globals).not.toMatch(
-      /\.storefront-root:has\(\.catalog-hero-section--showcase, \.home-page-canvas\)\s+\.TOP_NAVBAR\.adaptive-navbar:not\(\[data-nav-variant="login"\]\)\s*{\s*position:\s*fixed/s
+      /\.storefront-root\[data-nav-chrome="flush"\]\s+\.TOP_NAVBAR\.adaptive-navbar:not\(\[data-nav-variant="login"\]\)\s*{\s*position:\s*fixed/s
     );
     expect(globals).not.toMatch(
-      /\.storefront-root:not\(:has\(\.catalog-hero-section--showcase, \.home-page-canvas\)\)\s+\.TOP_NAVBAR\.adaptive-navbar:not\(\[data-nav-variant="login"\]\)\s*{\s*position:\s*fixed/s
+      /\.storefront-root\[data-nav-chrome="solid"\]\s+\.TOP_NAVBAR\.adaptive-navbar:not\(\[data-nav-variant="login"\]\)\s*{\s*position:\s*fixed/s
     );
     expect(shell).not.toContain("store-main-offset");
     expect(globals).not.toMatch(
-      /\.storefront-root:has\(\.catalog-hero-section--showcase, \.home-page-canvas\) #g-main\s*{[^}]*padding-top/s
+      /\.storefront-root\[data-nav-chrome="flush"\] #g-main\s*{[^}]*padding-top/s
     );
   });
 
@@ -57,16 +57,16 @@ describe("storefront nav layout contract", () => {
 
   it("overlays a fully transparent secondary nav on flush hero pages", () => {
     expect(globals).toMatch(
-      /\.storefront-root:has\(\.catalog-hero-section--showcase, \.home-page-canvas\)[\s\S]*\.adaptive-navbar__bar\s*{[^}]*position:\s*absolute/s
+      /\.storefront-root\[data-nav-chrome="flush"\][\s\S]*\.adaptive-navbar__bar\s*{[^}]*position:\s*absolute/s
     );
     expect(globals).toMatch(
-      /\.storefront-root:has\(\.catalog-hero-section--showcase, \.home-page-canvas\)[\s\S]*\.adaptive-navbar__bar\s*{[^}]*background:\s*transparent/s
+      /\.storefront-root\[data-nav-chrome="flush"\][\s\S]*\.adaptive-navbar__bar\s*{[^}]*background:\s*transparent/s
     );
     expect(globals).toMatch(
-      /\.storefront-root:has\(\.catalog-hero-section--showcase, \.home-page-canvas\)[\s\S]*\.adaptive-navbar__bar\s*{[^}]*border-bottom:\s*none/s
+      /\.storefront-root\[data-nav-chrome="flush"\][\s\S]*\.adaptive-navbar__bar\s*{[^}]*border-bottom:\s*none/s
     );
     expect(globals).toMatch(
-      /\.storefront-root:has\(\.catalog-hero-section--showcase, \.home-page-canvas\)[\s\S]*\.adaptive-navbar__bar\s*{[^}]*top:\s*100%/s
+      /\.storefront-root\[data-nav-chrome="flush"\][\s\S]*\.adaptive-navbar__bar\s*{[^}]*top:\s*100%/s
     );
   });
 
@@ -77,8 +77,13 @@ describe("storefront nav layout contract", () => {
     expect(hook).toContain("NAVBAR_INK_SURFACE_SELECTOR");
     expect(hook).toContain("rootMutationObserver");
     expect(hook).toContain("childList: true");
+    expect(hook).toContain("[pathname, initialTone]");
+    expect(hook).toContain("resolveNavbarChromeMode");
     expect(globals).toContain('html[data-nav-ink="light"]');
     expect(globals).toContain("data-nav-ink-hydrated");
+    expect(globals).toContain('data-nav-chrome="flush"');
+    expect(globals).toContain('data-nav-chrome="solid"');
+    expect(shell).toContain("data-nav-chrome={navChrome}");
   });
 
   it("includes safe-area inset in mobile nav offset", () => {
@@ -111,5 +116,11 @@ describe("storefront nav layout contract", () => {
     expect(storeNav).not.toContain("NavMoreMenu");
     expect(storeNav).not.toContain("NAV_PRIMARY_COUNT");
     expect(storeNav).toContain("NAV_DESKTOP_PREFETCH_MIN_WIDTH = 1280");
+  });
+
+  it("wires pathname-keyed store nav remount for chrome resets", () => {
+    const storeNavAnchor = source("components/navigation/store-nav-with-anchor.tsx");
+    expect(storeNavAnchor).toContain("usePathname");
+    expect(storeNavAnchor).toContain("key={pathname}");
   });
 });

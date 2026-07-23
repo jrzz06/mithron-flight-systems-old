@@ -120,7 +120,6 @@ export function ProductMediaViewer({ product }: { product: ProductMediaViewerMod
 
         <div className={styles.mediaStageWrap}>
           <div className={styles.mediaStage}>
-            <div className={styles.mediaGroundShadow} aria-hidden="true" />
             <div className={styles.mediaImageFrame}>
               <MithronPageHeroImage
                 src={activeMedia.src}

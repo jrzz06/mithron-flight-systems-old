@@ -7,8 +7,8 @@
   --catalog-secondary: #475569;
   --catalog-muted: #64748b;
   --catalog-accent: var(--brand-accent-bright);
-  --product-stage-floor: radial-gradient(ellipse 76% 48% at 50% 88%, rgba(15, 23, 42, 0.07) 0%, rgba(148, 163, 184, 0.035) 52%, transparent 78%);
-  --product-stage-halo: radial-gradient(ellipse 84% 74% at 50% 50%, rgba(226, 232, 240, 0.44) 0%, rgba(241, 245, 249, 0.16) 46%, transparent 84%);
+  --product-stage-floor: none;
+  --product-stage-halo: none;
   --product-stage-radial: radial-gradient(ellipse 80% 68% at 50% 50%, rgba(23, 77, 51, 0.05) 0%, rgba(148, 163, 184, 0.04) 54%, transparent 82%);
   min-height: 100vh;
   position: relative;
@@ -38,7 +38,7 @@
   margin: 0 auto;
   scroll-margin-top: 112px;
   padding:
-    clamp(calc(28px * var(--storefront-section-space-scale, 1)), 3.5vw, calc(48px * var(--storefront-section-space-scale, 1)))
+    clamp(calc(16px * var(--storefront-section-space-scale, 1)), 2vw, calc(28px * var(--storefront-section-space-scale, 1)))
     var(--catalog-inline)
     clamp(calc(80px * var(--storefront-section-space-scale, 1)), 8vw, calc(128px * var(--storefront-section-space-scale, 1)));
 }
@@ -90,15 +90,6 @@
   vertical-align: middle;
   border-radius: 999px;
   background: var(--catalog-accent);
-}
-
-.shell [data-card-variant="catalog"] a > div::after {
-  display: none;
-}
-
-.shell [data-card-variant="catalog"] a:hover > div::after,
-.shell [data-card-variant="catalog"] a:focus-visible > div::after {
-  display: none;
 }
 
 .editorialBand {
@@ -344,18 +335,19 @@
 
   .footer {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
     min-width: 0;
     padding-top: 4px;
   }
 
   .price {
-    flex: 0 0 auto;
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    flex-shrink: 1;
     width: fit-content;
-    align-self: flex-end;
+    align-self: center;
     white-space: nowrap;
     text-align: right;
   }

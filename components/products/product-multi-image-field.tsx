@@ -94,7 +94,7 @@ export function ProductMultiImageField({
                       loading="lazy"
                     />
                     {item.isPrimary ? (
-                      <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+                      <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 type-badge font-medium uppercase tracking-wide text-white">
                         Primary
                       </span>
                     ) : null}

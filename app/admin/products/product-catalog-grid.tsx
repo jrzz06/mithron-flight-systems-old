@@ -178,8 +178,8 @@ const ProductCard = memo(function ProductCard({
 
       <div className="mt-3 min-h-[72px] flex-1">
         <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
-          <p className="truncate text-[11px] text-[var(--platform-text-muted)]">{product.category}</p>
-          <span className={`inline-flex shrink-0 items-center gap-1 text-[10px] font-medium capitalize leading-4 ${statusClass(product.status)}`}>
+          <p className="truncate type-meta text-[var(--platform-text-muted)]">{product.category}</p>
+          <span className={`inline-flex shrink-0 items-center gap-1 type-badge font-medium capitalize leading-4 ${statusClass(product.status)}`}>
             <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
             {product.status.replaceAll("_", " ")}
           </span>
@@ -447,7 +447,7 @@ export function ProductCatalogGrid({
               }
             />
             {isArchivedView && forceDeleteConfirmed ? <input type="hidden" name="force_delete" value="1" /> : null}
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--platform-danger)]">
+            <p className="type-meta font-medium uppercase tracking-[0.1em] text-[var(--platform-danger)]">
               {isArchivedView ? "Permanent delete" : "Remove product"}
             </p>
             <h2 className="mt-2 text-lg font-medium text-[var(--platform-text-primary)]">{deleteProduct.title}</h2>

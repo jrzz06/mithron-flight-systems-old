@@ -9,16 +9,139 @@ let redisClient: Redis | null | undefined;
  * mutations. 4s leaves headroom for cold HTTPS handshakes (~0.5–1s observed)
  * while still failing fast vs unbounded hangs.
  *
- * Cache reads use a shorter budget so a slow Redis region cannot dominate TTFB —
+ * Cache reads use a short budget so a slow Redis region cannot dominate TTFB —
  * miss → fall through to Supabase immediately (fail-open for app-data caches).
+ *
+ * Region note: co-locate Upstash with the app (e.g. both `ap-south-1`). Cross-region
+ * REST RTTs of 500–1700ms make Redis slower than Supabase — fail-fast below.
  */
 export const REDIS_OP_TIMEOUT_MS = 4_000;
-/** Best-effort catalog/CMS GET — prefer Supabase over waiting on a slow Redis RTT. */
-export const REDIS_CACHE_READ_TIMEOUT_MS = 900;
+/**
+ * Best-effort catalog/CMS GET. Prefer Supabase over waiting on a slow Redis RTT.
+ * 250ms is enough for co-located REST; region-mismatched Upstash fails open fast.
+ */
+export const REDIS_CACHE_READ_TIMEOUT_MS = 250;
 /** Best-effort cache SET — do not block SSR on write amplification. */
-export const REDIS_CACHE_WRITE_TIMEOUT_MS = 1_500;
+export const REDIS_CACHE_WRITE_TIMEOUT_MS = 800;
+/**
+ * Single-flight / cache locks must fail open fast. A 4s lock RTT on mismatched
+ * Upstash previously dominated homepage TTFB (many LOCK+SET+DEL per request).
+ */
+export const REDIS_CACHE_LOCK_TIMEOUT_MS = 300;
 /** Health probe — long enough for warm RTT, short enough to fail the cron. */
 export const REDIS_HEALTH_PING_TIMEOUT_MS = 3_000;
+
+/** After this many consecutive Redis timeouts, skip Redis for a cooldown. */
+const REDIS_CIRCUIT_OPEN_AFTER = 3;
+/** How long to bypass Redis once the circuit opens (L1 + Supabase only). */
+const REDIS_CIRCUIT_COOLDOWN_MS = 30_000;
+
+let redisConsecutiveTimeouts = 0;
+let redisCircuitOpenUntil = 0;
+let redisCircuitLoggedUntil = 0;
+
+/** True while Upstash is degraded — callers should skip Redis and use L1/loader. */
+export function isRedisCircuitOpen() {
+  return Date.now() < redisCircuitOpenUntil;
+}
+
+export function getRedisCircuitOpenRemainingMs() {
+  return Math.max(0, redisCircuitOpenUntil - Date.now());
+}
+
+/** Test helper — reset circuit state between cases. */
+export function resetRedisCircuitForTests() {
+  redisConsecutiveTimeouts = 0;
+  redisCircuitOpenUntil = 0;
+  redisCircuitLoggedUntil = 0;
+}
+
+function noteRedisTimeoutForCircuit() {
+  redisConsecutiveTimeouts += 1;
+  if (redisConsecutiveTimeouts < REDIS_CIRCUIT_OPEN_AFTER) return;
+  redisCircuitOpenUntil = Date.now() + REDIS_CIRCUIT_COOLDOWN_MS;
+  redisConsecutiveTimeouts = 0;
+  if (redisCircuitOpenUntil !== redisCircuitLoggedUntil) {
+    redisCircuitLoggedUntil = redisCircuitOpenUntil;
+    console.warn(
+      `[mithron-cache] Redis circuit open for ${REDIS_CIRCUIT_COOLDOWN_MS}ms — skipping Upstash (L1 + origin only)`
+    );
+  }
+}
+
+function noteRedisSuccessForCircuit() {
+  redisConsecutiveTimeouts = 0;
+}
+
+/** Rolling counters for ops dashboards / logs (process lifetime). */
+export type RedisTimingStats = {
+  hits: number;
+  misses: number;
+  timeouts: number;
+  errors: number;
+  samples: number;
+  totalMs: number;
+  maxMs: number;
+  /** Histogram buckets: &lt;50, &lt;100, &lt;250, &lt;500, ≥500 ms */
+  buckets: [number, number, number, number, number];
+};
+
+const redisTimingStats: RedisTimingStats = {
+  hits: 0,
+  misses: 0,
+  timeouts: 0,
+  errors: 0,
+  samples: 0,
+  totalMs: 0,
+  maxMs: 0,
+  buckets: [0, 0, 0, 0, 0]
+};
+
+let redisRegionLogged = false;
+
+export function getRedisTimingStats(): Readonly<RedisTimingStats> {
+  return { ...redisTimingStats, buckets: [...redisTimingStats.buckets] };
+}
+
+export function recordRedisCacheHit() {
+  redisTimingStats.hits += 1;
+}
+
+export function recordRedisCacheMiss() {
+  redisTimingStats.misses += 1;
+}
+
+function recordRedisSample(elapsedMs: number, timedOut: boolean, errored: boolean) {
+  redisTimingStats.samples += 1;
+  redisTimingStats.totalMs += elapsedMs;
+  if (elapsedMs > redisTimingStats.maxMs) redisTimingStats.maxMs = elapsedMs;
+  if (timedOut) redisTimingStats.timeouts += 1;
+  if (errored) redisTimingStats.errors += 1;
+  if (elapsedMs < 50) redisTimingStats.buckets[0] += 1;
+  else if (elapsedMs < 100) redisTimingStats.buckets[1] += 1;
+  else if (elapsedMs < 250) redisTimingStats.buckets[2] += 1;
+  else if (elapsedMs < 500) redisTimingStats.buckets[3] += 1;
+  else redisTimingStats.buckets[4] += 1;
+}
+
+/** Log Upstash host once so region mismatches are visible in production logs. */
+export function logRedisEndpointRegionOnce() {
+  if (redisRegionLogged) return;
+  redisRegionLogged = true;
+  const credentials = getRedisRestCredentials();
+  if (!credentials) {
+    console.info("[mithron-cache] Redis not configured — catalog/CMS caches fall through to Supabase");
+    return;
+  }
+  try {
+    const host = new URL(credentials.url).hostname;
+    console.info(
+      `[mithron-cache] Redis endpoint host=${host} readTimeout=${REDIS_CACHE_READ_TIMEOUT_MS}ms writeTimeout=${REDIS_CACHE_WRITE_TIMEOUT_MS}ms (co-locate Upstash with the app region)`
+    );
+  } catch {
+    console.info("[mithron-cache] Redis configured (host parse failed)");
+  }
+}
 
 const redisAbortStore = new AsyncLocalStorage<AbortController>();
 
@@ -174,6 +297,7 @@ export function getRedisClient(): Redis | null {
   const credentials = getRedisRestCredentials();
   if (!credentials) {
     redisClient = null;
+    logRedisEndpointRegionOnce();
     return redisClient;
   }
 
@@ -185,6 +309,7 @@ export function getRedisClient(): Redis | null {
     typeof (client as Redis & { autoPipeline?: () => Redis }).autoPipeline === "function"
       ? (client as Redis & { autoPipeline: () => Redis }).autoPipeline()
       : client;
+  logRedisEndpointRegionOnce();
   return redisClient;
 }
 
@@ -215,18 +340,25 @@ export async function withRedisTimeout<T>(
       return await promise;
     });
     const elapsedMs = Date.now() - startedAt;
-    if (elapsedMs >= 500) {
+    recordRedisSample(elapsedMs, false, false);
+    noteRedisSuccessForCircuit();
+    // Warn below the fail-fast read budget so slow-but-successful GETs are visible.
+    if (elapsedMs >= 150) {
       console.warn(`[mithron-cache] Redis ${operation} took ${elapsedMs}ms`);
     }
     return result;
   } catch (error) {
+    const elapsedMs = Date.now() - startedAt;
     if (controller.signal.aborted) {
+      recordRedisSample(elapsedMs, true, false);
+      noteRedisTimeoutForCircuit();
       const reason = controller.signal.reason;
       if (reason instanceof Error) throw reason;
       throw new Error(
         `[mithron-cache] Redis ${operation} timed out after ${timeoutMs}ms`
       );
     }
+    recordRedisSample(elapsedMs, false, true);
     throw error;
   } finally {
     clearTimeout(timer);

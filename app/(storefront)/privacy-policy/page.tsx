@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
+import { Heading } from "@/components/ui/heading";
 
 export const metadata: Metadata = {
   title: "Privacy Policy – Mithron",
@@ -24,7 +25,7 @@ export default function PrivacyPolicyPage() {
       <p className="type-meta mb-4 text-sm uppercase tracking-widest text-[var(--ds-text-tertiary)]">
         Legal
       </p>
-      <h1 className="type-page mb-6 text-4xl font-bold">Privacy Policy</h1>
+      <Heading as="h1" variant="page" className="mb-6">Privacy Policy</Heading>
       <p className="type-body mb-4 text-[var(--ds-text-secondary)]">
         Last updated: July 2025
       </p>

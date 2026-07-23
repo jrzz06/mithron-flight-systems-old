@@ -33,7 +33,7 @@ export function PlatformNavBadge({ count, label }: PlatformNavBadgeProps) {
     <span
       ref={badgeRef}
       aria-label={`${count} ${label}`}
-      className="rounded-full bg-[var(--platform-warning-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--platform-warning)]"
+      className="rounded-full bg-[var(--platform-warning-soft)] px-1.5 py-0.5 type-badge font-semibold text-[var(--platform-warning)]"
     >
       {count}
     </span>

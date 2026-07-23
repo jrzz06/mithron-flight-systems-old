@@ -5,6 +5,7 @@ import styles from "./login.module.css";
 import { mapAuthPageNotice } from "@/lib/auth/client-errors";
 import { resolveLoginPageRedirect } from "@/lib/auth/post-auth-redirect";
 import { getAuthProviderAvailability } from "@/lib/auth/provider-registry";
+import { buildLoginRedirectPath, unwrapAuthNextPath } from "@/lib/auth/redirects";
 import { buildAuthAuditClientToken } from "@/lib/auth-audit-client";
 import { createClient } from "@/lib/server";
 import { LoginFormClient } from "./login-form-client";
@@ -28,6 +29,8 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const initialMode = params.mode === "signup" ? "signup" as const : "signin" as const;
+  // Sanitize once at the page boundary — never pass a nested `next` into the form or redirects.
+  const nextPath = unwrapAuthNextPath(params.next, "");
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
@@ -38,13 +41,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       redirect(resolveLoginPageRedirect({
         user,
         role,
-        nextPath: params.next ?? ""
+        nextPath
       }));
     }
 
     await supabase.auth.signOut();
-    const nextQuery = params.next ? `&next=${encodeURIComponent(params.next)}` : "";
-    redirect(`/login?auth_status=role_required${nextQuery}`);
+    redirect(buildLoginRedirectPath(nextPath || "/account", { auth_status: "role_required" }));
   }
 
   const auditToken = buildAuthAuditClientToken();
@@ -77,7 +79,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ) : null}
 
           <LoginFormClient
-            nextPath={params.next ?? ""}
+            nextPath={nextPath}
             initialMode={initialMode}
             inviteToken={params.invite ?? null}
             auditToken={auditToken}

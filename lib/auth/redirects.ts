@@ -62,15 +62,43 @@ export function getSafeAuthRedirectPath(value: string | null | undefined, fallba
   }
 }
 
+/** Decode a `next` value at most once when the whole string is still percent-encoded. */
+function decodeAuthNextOnce(value: string) {
+  let current = value.trim();
+  if (!current) return "";
+
+  // Whole-string encoding (e.g. "%2Fadmin%3Fnext%3D%2Faccount") — decode once only.
+  if (!current.startsWith("/") && /%[0-9A-Fa-f]{2}/.test(current)) {
+    try {
+      const decoded = decodeURIComponent(current);
+      if (decoded.startsWith("/") && !decoded.startsWith("//")) {
+        current = decoded;
+      }
+    } catch {
+      return "";
+    }
+  }
+
+  return current;
+}
+
 /**
  * Unwrap nested `next` chains and reject auth bounce destinations so redirects
  * cannot grow into `/admin?next=/admin?next=/login?next=...`.
+ *
+ * Sanitizes once: peels auth bounce wrappers, strips a nested `next` off a real
+ * destination, and falls back when depth is exceeded or the chain is circular.
  */
 export function unwrapAuthNextPath(value: string | null | undefined, fallback = "/") {
-  let current = typeof value === "string" ? value.trim() : "";
+  let current = decodeAuthNextOnce(typeof value === "string" ? value : "");
   if (!current) return fallback;
 
+  const seen = new Set<string>();
+
   for (let depth = 0; depth < 8; depth += 1) {
+    if (seen.has(current)) return fallback;
+    seen.add(current);
+
     const safe = getSafeAuthRedirectPath(current, "");
     if (!safe) return fallback;
 
@@ -81,16 +109,23 @@ export function unwrapAuthNextPath(value: string | null | undefined, fallback = 
       return fallback;
     }
 
+    const nested = parsed.searchParams.get("next");
+
+    // Real destination: never keep a nested `next` on it — consume once and stop.
     if (!isAuthBouncePath(parsed.pathname)) {
       const cleaned = buildCleanPath(parsed.pathname, parsed.searchParams);
       return `${cleaned}${parsed.hash}`;
     }
 
-    const nested = parsed.searchParams.get("next");
+    // Auth bounce with no further next → safe default (do not redirect to the bounce itself).
     if (!nested) return fallback;
-    current = nested;
+
+    // Nested next on a bounce path: peel one layer (already decoded by URLSearchParams).
+    current = nested.trim();
+    if (!current) return fallback;
   }
 
+  // Depth exceeded — refuse to keep wrapping.
   return fallback;
 }
 
@@ -138,10 +173,24 @@ export function buildProfileCompletionRedirectPath(nextPath: string) {
   return `/account/complete-profile?${params.toString()}`;
 }
 
+/** RBAC denial: role home + forbidden status + a single sanitized `next`. */
+export function buildAccessDeniedRedirectPath(
+  roleHome: string,
+  attemptedPath: string,
+  options?: { statusKey?: "access_status" | "admin_status"; fallbackNext?: string }
+) {
+  const statusKey = options?.statusKey ?? "access_status";
+  const fallbackNext = options?.fallbackNext ?? roleHome;
+  const safeNext = unwrapAuthNextPath(attemptedPath, fallbackNext);
+  const params = new URLSearchParams({
+    [statusKey]: "forbidden",
+    next: safeNext
+  });
+  return `${roleHome}?${params.toString()}`;
+}
+
 export function resolveClientAuthRedirectPath(path: string | null | undefined, fallback = "/account") {
-  const value = typeof path === "string" ? path.trim() : "";
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
-  return value;
+  return unwrapAuthNextPath(path, fallback);
 }
 
 export function getRoleAwareAuthRedirectPath(value: string | null | undefined, roleValue: CmsRole | string | null | undefined) {

@@ -29,6 +29,7 @@ import {
   isProfileIdentityComplete
 } from "@/lib/auth/profile-identity";
 import {
+  buildAccessDeniedRedirectPath,
   buildLoginRedirectPath,
   buildProfileCompletionRedirectPath,
   resolveIntendedAuthNext
@@ -851,19 +852,18 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
 
   const authorization = authorizeRoute(role, pathname, { userId });
   if (!authorization.allowed) {
-    const forbiddenUrl = request.nextUrl.clone();
-    forbiddenUrl.pathname = authorization.redirectPath;
-    forbiddenUrl.search = "";
-    if (authorization.httpStatus === 403) {
-      forbiddenUrl.searchParams.set(
-        authorization.eventType === "security.admin_shell_denied" ? "admin_status" : "access_status",
-        "forbidden"
-      );
-      forbiddenUrl.searchParams.set(
-        "next",
-        resolveIntendedAuthNext(pathname, request.nextUrl.searchParams, defaultPathForRole(role))
-      );
-    }
+    const intended = resolveIntendedAuthNext(
+      pathname,
+      request.nextUrl.searchParams,
+      defaultPathForRole(role)
+    );
+    const forbiddenPath = authorization.httpStatus === 403
+      ? buildAccessDeniedRedirectPath(authorization.redirectPath, intended, {
+          statusKey: authorization.eventType === "security.admin_shell_denied" ? "admin_status" : "access_status",
+          fallbackNext: defaultPathForRole(role)
+        })
+      : authorization.redirectPath;
+    const forbiddenUrl = new URL(forbiddenPath, request.nextUrl.origin);
     event.waitUntil(recordSecurityEventFromMiddleware(request, {
       correlationId,
       actorUserId: userId,

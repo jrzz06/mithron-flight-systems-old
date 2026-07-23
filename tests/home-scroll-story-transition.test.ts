@@ -66,7 +66,9 @@ describe("home composite scroll transition system", () => {
     const shelfSection = source("sections/home/product-shelf-section.tsx");
     const shelfCard = source("components/product/home-product-shelf-card.tsx");
     expect(shelfCard).toContain("ProductCardImage");
-    expect(shelfCard).toContain('href={`/product/${product.slug}`}');
+    expect(shelfCard).toContain("ProductLink");
+    expect(shelfCard).toContain("ProductSharedMedia");
+    expect(shelfCard).toContain("slug={product.slug}");
     expect(shelfSection).toContain('data-testid="home-product-shelf-hero"');
     expect(shelfSection).toContain('data-testid="home-product-shelf-section"');
     expect(shelfCard).toContain('data-testid="home-product-card"');

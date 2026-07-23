@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildCatalogShelfLayout, dedupeProductsBySlug } from "@/lib/catalog-shelf-layout";
 import type { Product } from "@/config/types";
 
-const CUTOUT_SRC = "https://example.com/mithron-products/catalog-cutouts/v1/demo.webp";
-
-function product(slug: string, name = slug, cutout = false): Product {
-  const src = cutout ? CUTOUT_SRC : "/test.webp";
+function product(slug: string, name = slug): Product {
   return {
     slug,
     productUrl: `/product/${slug}`,
@@ -13,8 +10,8 @@ function product(slug: string, name = slug, cutout = false): Product {
     tagline: "test",
     category: "Accessories",
     price: 100,
-    image: { src, alt: name, width: 100, height: 100 },
-    hero: { src, alt: name, width: 100, height: 100 },
+    image: { src: "/test.webp", alt: name, width: 100, height: 100 },
+    hero: { src: "/test.webp", alt: name, width: 100, height: 100 },
     gallery: [],
     interests: [],
     specs: {},
@@ -35,7 +32,7 @@ describe("catalog shelf layout", () => {
   });
 
   it("keeps featured product out of lead and continued grids", () => {
-    const items = Array.from({ length: 12 }, (_, index) => product(`item-${index}`, `item-${index}`, index === 1));
+    const items = Array.from({ length: 12 }, (_, index) => product(`item-${index}`));
     const layout = buildCatalogShelfLayout(items);
 
     expect(layout.featuredProduct?.slug).toBe("item-1");
@@ -44,29 +41,24 @@ describe("catalog shelf layout", () => {
     expect(layout.leadProducts).toHaveLength(8);
   });
 
-  it("uses another cutout product when the preferred featured slot has no cutout", () => {
-    const items = [
-      product("item-0"),
-      product("item-1"),
-      product("item-2"),
-      product("item-3", "item-3", true)
-    ];
+  it("features the preferred slot even without cutouts", () => {
+    const items = [product("item-0"), product("item-1"), product("item-2"), product("item-3")];
     const layout = buildCatalogShelfLayout(items);
 
-    expect(layout.featuredProduct?.slug).toBe("item-3");
-    expect(layout.leadProducts.some((item) => item.slug === "item-3")).toBe(false);
+    expect(layout.featuredProduct?.slug).toBe("item-1");
+    expect(layout.leadProducts.some((item) => item.slug === "item-1")).toBe(false);
   });
 
-  it("omits featured product when no catalog cutouts are available", () => {
-    const items = [product("item-0"), product("item-1"), product("item-2")];
+  it("features the first product when only one exists", () => {
+    const items = [product("item-0")];
     const layout = buildCatalogShelfLayout(items);
 
-    expect(layout.featuredProduct).toBeNull();
-    expect(layout.leadProducts).toHaveLength(3);
+    expect(layout.featuredProduct?.slug).toBe("item-0");
+    expect(layout.leadProducts).toHaveLength(0);
   });
 
   it("does not repeat slugs across lead and continued sections", () => {
-    const items = Array.from({ length: 40 }, (_, index) => product(`item-${index}`, `item-${index}`, index === 1));
+    const items = Array.from({ length: 40 }, (_, index) => product(`item-${index}`));
     const layout = buildCatalogShelfLayout(items);
     const slugs = [...layout.leadProducts, ...layout.remainingProducts].map((item) => item.slug);
 

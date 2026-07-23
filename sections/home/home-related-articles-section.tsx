@@ -81,7 +81,7 @@ export function HomeRelatedArticlesSection({
       aria-labelledby={title ? "home-related-articles-title" : undefined}
       aria-label={title ? undefined : "Related articles"}
     >
-      <div className={styles.inner}>
+      <div className={styles.inner} data-home-premium-shell="true">
         {title || lead || showBrowseLink ? (
           <div className={styles.header}>
             <div className={styles.headerCopy}>

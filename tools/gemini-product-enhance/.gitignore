@@ -1,0 +1,15 @@
+# Local secrets + persistent browser profile + working dirs
+.env
+gemini_profile/
+staging/
+approved/
+processed/
+downloads/
+work/
+node_modules/
+*.log
+*.jsonl
+*-summary.json
+*-report.json
+*-report.md
+nvidia-smi-demo.csv

@@ -53,7 +53,7 @@ export function HeroBreakpointPreview({
 
   return (
     <div data-hero-breakpoint-preview={device} className="grid gap-2">
-      <p className="text-[11px] font-semibold text-[var(--cms-text-secondary)]">{frame.label}</p>
+      <p className="type-meta font-semibold text-[var(--cms-text-secondary)]">{frame.label}</p>
       <div
         className="relative mx-auto w-full overflow-hidden rounded-xl border border-[var(--cms-border)] bg-[#050505]"
         style={{ maxWidth: frame.width, aspectRatio: frame.aspectRatio }}
@@ -78,14 +78,14 @@ export function HeroBreakpointPreview({
               className="pointer-events-none absolute inset-y-0 left-0 w-[40%] border-r border-dashed border-white/50"
               aria-hidden="true"
             />
-            <p className="pointer-events-none absolute bottom-2 left-2 text-[10px] font-medium text-white/80">
+            <p className="pointer-events-none absolute bottom-2 left-2 type-badge font-medium text-white/80">
               Text-safe zone (left 40%)
             </p>
           </>
         ) : null}
 
         {device === "mobile" && !mobileOverrideSrc ? (
-          <p className="pointer-events-none absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 text-[10px] text-white/85">
+          <p className="pointer-events-none absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 type-badge text-white/85">
             Auto-crop from desktop master
           </p>
         ) : null}

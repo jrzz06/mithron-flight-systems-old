@@ -11,10 +11,13 @@ export const DRONE_WORLD_CATEGORIES = new Set([
   "Agri Drones",
   "Video Drones",
   "Creative Drones",
-  "Surveillance Drones"
+  "Surveillance Drones",
+  "Survey Drones"
 ]);
 
-const DRONE_MISSION_CATEGORIES = DRONE_WORLD_CATEGORIES;
+const DRONE_WORLD_CATEGORY_KEYS = new Set(
+  [...DRONE_WORLD_CATEGORIES].map((category) => category.trim().toLowerCase())
+);
 
 const ACCESSORY_CATEGORY = "Accessories";
 
@@ -158,7 +161,7 @@ export function classifyProductShelf(product: ProductShelfInput): ProductShelfSe
     return "drone-care";
   }
 
-  if (DRONE_MISSION_CATEGORIES.has(product.category)) {
+  if (DRONE_WORLD_CATEGORY_KEYS.has(normalizeProductCategory(product.category))) {
     return "drone-world";
   }
 
@@ -182,7 +185,7 @@ export function isGlobalProductsCategory(product: ProductShelfInput) {
 }
 
 export function isDroneWorldCategory(product: ProductShelfInput) {
-  return DRONE_WORLD_CATEGORIES.has(product.category);
+  return DRONE_WORLD_CATEGORY_KEYS.has(normalizeProductCategory(product.category));
 }
 
 export function isDroneCareShelfProduct(product: ProductShelfInput) {

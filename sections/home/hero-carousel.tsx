@@ -13,6 +13,7 @@ import { resolveHeroSlideSrc } from "@/lib/media/resolve-storefront-src";
 import { useCarouselSwipe } from "@/hooks/use-carousel-swipe";
 import { useReducedMotionPreference } from "@/hooks/use-reduced-motion";
 import { cn } from "@/lib/utils";
+import { Heading } from "@/components/ui/heading";
 
 const HERO_ADVANCE_MS = 5000;
 
@@ -232,7 +233,9 @@ export function HeroCarousel({
         className="grid min-h-[72svh] place-items-center bg-[#050505] px-6 text-center text-white"
       >
         <div className="max-w-xl">
-          <h1 className="font-[var(--type-display)] text-4xl font-semibold tracking-normal md:text-6xl">Homepage banner unavailable</h1>
+          <Heading as="h1" variant="hero">
+            Homepage banner unavailable
+          </Heading>
           <p className="mt-4 text-sm leading-6 text-white/68">
             Published hero content is temporarily unavailable. Product browsing remains online.
           </p>
@@ -489,7 +492,6 @@ function HeroControl({
 }
 
 function HeroCta({ href, label, className }: { href: string; label: string; className: string }) {
-  const darkSurface = className.includes("hero-banner-cta--dark");
   const external = href.startsWith("http");
 
   return (
@@ -498,12 +500,8 @@ function HeroCta({ href, label, className }: { href: string; label: string; clas
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      style={{
-        color: darkSurface ? "#050505" : "#ffffff",
-        backgroundColor: darkSurface ? "#ffffff" : "#0f172a"
-      }}
       className={cn(
-        "hero-banner-cta hero-dji-cta type-button inline-flex items-center justify-center rounded-full outline-none transition-[background,color,border-color,transform] duration-300 ease-[var(--ease-cinematic)] focus-visible:ring-2 focus-visible:ring-offset-2",
+        "hero-banner-cta hero-dji-cta inline-flex items-center justify-center rounded-full outline-none transition-[background,color,border-color,box-shadow,transform] duration-300 ease-[var(--ease-cinematic)] focus-visible:ring-2 focus-visible:ring-offset-2",
         className
       )}
     >

@@ -145,7 +145,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
             </p>
             {incomplete ? (
               <span
-                className={`inline-flex h-6 max-w-full items-center gap-1.5 whitespace-nowrap border border-amber-500/40 bg-amber-500/10 px-2.5 text-[10px] font-medium text-amber-200 ${orderRadiusControl}`}
+                className={`inline-flex h-6 max-w-full items-center gap-1.5 whitespace-nowrap border border-amber-500/40 bg-amber-500/10 px-2.5 type-badge font-medium text-amber-200 ${orderRadiusControl}`}
                 title="Order is missing products or address"
               >
                 Needs setup
@@ -155,7 +155,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
             )}
             {fulfillmentRaw !== "pending" ? (
               <span
-                className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border border-blue-500/30 bg-blue-500/10 px-2 text-[10px] font-medium text-blue-200 ${orderRadiusControl}`}
+                className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border border-blue-500/30 bg-blue-500/10 px-2 type-badge font-medium text-blue-200 ${orderRadiusControl}`}
                 title={`Warehouse fulfillment: ${fulfillmentLabel}`}
               >
                 Warehouse: {fulfillmentLabel}
@@ -181,7 +181,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--platform-border)]/50 pt-2 text-[11px] leading-4 text-[var(--platform-text-muted)]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--platform-border)]/50 pt-2 type-meta leading-4 text-[var(--platform-text-muted)]">
           <span>{warehouse}</span>
           <span aria-hidden>·</span>
           <span>{date}</span>
@@ -189,11 +189,11 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           <span>{time}</span>
           <span aria-hidden>·</span>
           <span className={orderLongText}>{paymentLabel}</span>
-          <span className={`inline-flex h-5 shrink-0 items-center border px-1.5 text-[10px] font-medium ${orderRadiusControl} ${source.className} ${orderLongText}`}>
+          <span className={`inline-flex h-5 shrink-0 items-center border px-1.5 type-badge font-medium ${orderRadiusControl} ${source.className} ${orderLongText}`}>
             {source.label}
           </span>
           {priority ? (
-            <span className={`inline-flex h-5 shrink-0 items-center border px-1.5 text-[10px] font-medium ${orderRadiusControl} ${priority.className} ${orderLongText}`}>
+            <span className={`inline-flex h-5 shrink-0 items-center border px-1.5 type-badge font-medium ${orderRadiusControl} ${priority.className} ${orderLongText}`}>
               {priority.label}
             </span>
           ) : null}

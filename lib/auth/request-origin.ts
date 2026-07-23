@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { getSafeAuthRedirectPath } from "@/lib/auth/redirects";
+import { unwrapAuthNextPath } from "@/lib/auth/redirects";
 import { getSiteOrigin, sanitizeAppOrigin } from "@/lib/site-url";
 
 type HeaderSource = Pick<Headers, "get">;
@@ -26,7 +26,7 @@ export async function resolveServerRequestOrigin() {
 
 export function buildAuthCallbackUrl(origin: string, nextPath: string) {
   const callback = new URL("/auth/callback", origin);
-  callback.searchParams.set("next", getSafeAuthRedirectPath(nextPath, "/"));
+  callback.searchParams.set("next", unwrapAuthNextPath(nextPath, "/"));
   return callback.toString();
 }
 
@@ -36,7 +36,7 @@ export function buildPasswordResetUrl(origin: string) {
 
 export function buildAuthConfirmUrl(origin: string, nextPath: string) {
   const confirm = new URL("/auth/confirm", origin);
-  confirm.searchParams.set("next", getSafeAuthRedirectPath(nextPath, "/account"));
+  confirm.searchParams.set("next", unwrapAuthNextPath(nextPath, "/account"));
   return confirm.toString();
 }
 

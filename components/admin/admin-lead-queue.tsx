@@ -84,7 +84,7 @@ export function AdminLeadQueue({
   return (
     <div className="overflow-x-auto rounded-[8px] border border-[var(--platform-border)]">
       <table className="min-w-full text-sm" data-lead-queue>
-        <thead className="sticky top-0 z-10 border-b border-[var(--platform-border)] bg-[var(--platform-surface-muted)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+        <thead className="sticky top-0 z-10 border-b border-[var(--platform-border)] bg-[var(--platform-surface-muted)] text-left type-meta uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
           <tr>
             <th className="px-3 py-2 font-medium">Customer</th>
             <th className="hidden px-3 py-2 font-medium md:table-cell">Phone</th>
@@ -110,13 +110,13 @@ export function AdminLeadQueue({
                   <td className="px-3 py-2.5">
                     <p className="font-medium text-[var(--platform-text-primary)]">{text(lead.name, "—")}</p>
                     <p className="text-xs text-[var(--platform-text-muted)]">{text(lead.email, "—")}</p>
-                    <p className="mt-0.5 text-[10px] uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{reference}</p>
+                    <p className="mt-0.5 type-badge uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">{reference}</p>
                   </td>
                   <td className="hidden px-3 py-2.5 text-[var(--platform-text-secondary)] md:table-cell">
                     {text(lead.phone, "—")}
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className={`rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.05em] ${leadSourceBadgeClass(lead.source)}`}>
+                    <span className={`rounded-md border px-2 py-0.5 type-badge font-medium uppercase tracking-[0.05em] ${leadSourceBadgeClass(lead.source)}`}>
                       {leadSourceLabel(lead.source)}
                     </span>
                   </td>
@@ -124,7 +124,7 @@ export function AdminLeadQueue({
                     {text(lead.product_name) || text(lead.product_slug) || "—"}
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className="rounded-md border border-[var(--platform-border)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.05em] text-[var(--platform-text-muted)]">
+                    <span className="rounded-md border border-[var(--platform-border)] px-2 py-0.5 type-badge font-medium uppercase tracking-[0.05em] text-[var(--platform-text-muted)]">
                       {converted ? "Converted" : "New"}
                     </span>
                   </td>
@@ -156,7 +156,7 @@ export function AdminLeadQueue({
                     <td colSpan={7} className="px-4 py-4">
                       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
                         <div className="grid gap-2 text-sm">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                          <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
                             Details
                           </p>
                           <p className="text-[var(--platform-text-secondary)] whitespace-pre-wrap">
@@ -180,7 +180,7 @@ export function AdminLeadQueue({
                               <input type="hidden" name="lead_id" value={id} />
                               <input type="hidden" name="list_status" value={listStatus} />
                               <input type="hidden" name="list_q" value={listQuery} />
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                              <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
                                 Push to order
                               </p>
                               <input

@@ -1,0 +1,2685 @@
+{
+  "at": "2026-07-23T14:58:50.501Z",
+  "imageBucket": "D:\\mithuuu\\IMAGE BUCKET",
+  "counts": {
+    "supabaseProducts": 141,
+    "imageBucketFolders": 135,
+    "imageBucketWebps": 195,
+    "matched": 135,
+    "matchedOk": 135,
+    "matchedBad": 0,
+    "missingBucket": 6,
+    "orphanFolder": 0,
+    "nameMismatch": 4,
+    "collisions": 0
+  },
+  "ok_to_upload": true,
+  "matched": [
+    {
+      "slug": "source-10-05-02-0095-eft-10l-tank-10l-standard-for-agricultural-drone-parts-e410p-e610p",
+      "name": "10.05.02.0095 EFT 10L Tank 10L/Standard For Agricultural Drone Parts E410P/E610P",
+      "folder": "10.05.02.0095 EFT 10L Tank 10L-Standard For Agricultural Drone Parts E410P-E610P",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10.05.02.0095 EFT 10L Tank 10L-Standard For Agricultural Drone Parts E410P-E610P",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10.05.02.0095 EFT 10L Tank 10L-Standard For Agricultural Drone Parts E410P-E610P\\01.webp",
+          "bytes": 72872
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10-liter-dual-agri-drone",
+      "name": "10 Liter Dual Agri Drone",
+      "folder": "10 Liter Dual Agri Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri Drone",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri Drone\\01.webp",
+          "bytes": 69776
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri Drone\\02.webp",
+          "bytes": 43482
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri Drone\\03.webp",
+          "bytes": 53256
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri Drone\\04.webp",
+          "bytes": 84810
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10-liter-dual-agri-drone-with-spreader",
+      "name": "10 Liter Dual Agri drone with Spreader",
+      "folder": "10 Liter Dual Agri drone with Spreader",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri drone with Spreader",
+      "webpCount": 3,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri drone with Spreader\\01.webp",
+          "bytes": 100064
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri drone with Spreader\\02.webp",
+          "bytes": 97628
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liter Dual Agri drone with Spreader\\03.webp",
+          "bytes": 52920
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10-liters-agri-drone-3-in-1",
+      "name": "10 Liters Agri Drone 3 in 1",
+      "folder": "10 Liters Agri Drone 3 in 1",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone 3 in 1",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone 3 in 1\\01.webp",
+          "bytes": 59530
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10-liters-agri-drone-3-in-1-ver-2",
+      "name": "10 Liters Agri Drone 3 in 1 Ver 2",
+      "folder": "10 Liters Agri Drone 3 in 1 Ver 2",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone 3 in 1 Ver 2",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone 3 in 1 Ver 2\\01.webp",
+          "bytes": 68400
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10-liters-agri-drone-4-in-1",
+      "name": "10 Liters Agri Drone 4 in 1",
+      "folder": "10 Liters Agri Drone 4 in 1",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone 4 in 1",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone 4 in 1\\01.webp",
+          "bytes": 85280
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10-liters-agri-drone-with-safety-sensors",
+      "name": "10 Liters Agri Drone with safety sensors",
+      "folder": "10 Liters Agri Drone with safety sensors",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone with safety sensors",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone with safety sensors\\01.webp",
+          "bytes": 40722
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters Agri Drone with safety sensors\\02.webp",
+          "bytes": 40696
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10-liters-tc-licensed-agri-drone",
+      "name": "10 Liters TC Licensed Agri Drone",
+      "folder": "10 Liters TC Licensed Agri Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters TC Licensed Agri Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10 Liters TC Licensed Agri Drone\\01.webp",
+          "bytes": 56312
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10l-agri-drone-best-price",
+      "name": "10L Agri Drone Best Price",
+      "folder": "10L Agri Drone Best Price",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Drone Best Price",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Drone Best Price\\01.webp",
+          "bytes": 47666
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10l-agri-drone-with-basic-features",
+      "name": "10L Agri Drone with Basic features",
+      "folder": "10L Agri Drone with Basic features",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Drone with Basic features",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Drone with Basic features\\01.webp",
+          "bytes": 49254
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Drone with Basic features\\02.webp",
+          "bytes": 87846
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10l-agri-spraycopter",
+      "name": "10L Agri Spraycopter",
+      "folder": "10L Agri Spraycopter",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Spraycopter",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Spraycopter\\01.webp",
+          "bytes": 81914
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L Agri Spraycopter\\02.webp",
+          "bytes": 92762
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10l-drone-with-6-nozzle-system-tc-certified",
+      "name": "10L DRONE WITH 6 NOZZLE SYSTEM [TC CERTIFIED]",
+      "folder": "10L DRONE WITH 6 NOZZLE SYSTEM [TC CERTIFIED]",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10L DRONE WITH 6 NOZZLE SYSTEM [TC CERTIFIED]",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L DRONE WITH 6 NOZZLE SYSTEM [TC CERTIFIED]\\01.webp",
+          "bytes": 53268
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L DRONE WITH 6 NOZZLE SYSTEM [TC CERTIFIED]\\02.webp",
+          "bytes": 42822
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10l-drone-with-safety-security",
+      "name": "10L Drone With Safety Security",
+      "folder": "10L Drone With Safety Security",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10L Drone With Safety Security",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L Drone With Safety Security\\01.webp",
+          "bytes": 33808
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10l-hexa-air-frame",
+      "name": "10L Hexa Air Frame",
+      "folder": "10L Hexa Air Frame",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10L Hexa Air Frame",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10L Hexa Air Frame\\01.webp",
+          "bytes": 54064
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-10x-seeker-optical-zoom-cmera-survey-drone",
+      "name": "10X SEEKER OPTICAL ZOOM CMERA Survey Drone",
+      "folder": "10X SEEKER OPTICAL ZOOM CMERA Survey Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\10X SEEKER OPTICAL ZOOM CMERA Survey Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\10X SEEKER OPTICAL ZOOM CMERA Survey Drone\\01.webp",
+          "bytes": 50080
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-12l-festo",
+      "name": "12L Festo",
+      "folder": "12L Festo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\12L Festo",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\12L Festo\\01.webp",
+          "bytes": 78358
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-15-inch-drone-frame",
+      "name": "15-inch Drone Frame",
+      "folder": "15-inch Drone Frame",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\15-inch Drone Frame",
+      "webpCount": 5,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\15-inch Drone Frame\\01.webp",
+          "bytes": 59268
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\15-inch Drone Frame\\02.webp",
+          "bytes": 31860
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\15-inch Drone Frame\\03.webp",
+          "bytes": 31268
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\15-inch Drone Frame\\04.webp",
+          "bytes": 25586
+        },
+        {
+          "file": "05.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\15-inch Drone Frame\\05.webp",
+          "bytes": 33314
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-15-liters-agri-drone",
+      "name": "15 Liters Agri Drone",
+      "folder": "15 Liters Agri Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\15 Liters Agri Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\15 Liters Agri Drone\\01.webp",
+          "bytes": 41222
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-16-liters-agri-drone-base",
+      "name": "16 Liters Agri drone base",
+      "folder": "16 Liters Agri drone base",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\16 Liters Agri drone base",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\16 Liters Agri drone base\\01.webp",
+          "bytes": 38358
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-16-liters-agri-drone-tc-with-pilot-license",
+      "name": "16 Liters Agri Drone TC with Pilot License",
+      "folder": "16 Liters Agri Drone TC with Pilot License",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\16 Liters Agri Drone TC with Pilot License",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\16 Liters Agri Drone TC with Pilot License\\01.webp",
+          "bytes": 36254
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\16 Liters Agri Drone TC with Pilot License\\02.webp",
+          "bytes": 45440
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-16l-agri-drone-ver2",
+      "name": "16L Agri Drone Ver2",
+      "folder": "16L Agri Drone Ver2",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\16L Agri Drone Ver2",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\16L Agri Drone Ver2\\01.webp",
+          "bytes": 135666
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-16l-type-certified-agri-drone",
+      "name": "16L Type Certified Agri drone",
+      "folder": "16L Type Certified Agri drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\16L Type Certified Agri drone",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\16L Type Certified Agri drone\\01.webp",
+          "bytes": 32234
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\16L Type Certified Agri drone\\02.webp",
+          "bytes": 38116
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-18-inch-drone-frame",
+      "name": "18-inch Drone Frame",
+      "folder": "18-inch Drone Frame",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\18-inch Drone Frame",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\18-inch Drone Frame\\01.webp",
+          "bytes": 23216
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\18-inch Drone Frame\\02.webp",
+          "bytes": 39770
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\18-inch Drone Frame\\03.webp",
+          "bytes": 70944
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\18-inch Drone Frame\\04.webp",
+          "bytes": 77104
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-2408-sets-of-propeller-only",
+      "name": "2408 SETS OF PROPELLER ONLY",
+      "folder": "2408 SETS OF PROPELLER ONLY",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\2408 SETS OF PROPELLER ONLY",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\2408 SETS OF PROPELLER ONLY\\01.webp",
+          "bytes": 43884
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-2408-sets-of-propeller-with-adaptor",
+      "name": "2408 SETS OF PROPELLER WITH ADAPTOR",
+      "folder": "2408 SETS OF PROPELLER WITH ADAPTOR",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\2408 SETS OF PROPELLER WITH ADAPTOR",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\2408 SETS OF PROPELLER WITH ADAPTOR\\01.webp",
+          "bytes": 40296
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-24mp-camera-survey-drone",
+      "name": "24MP CAMERA Survey Drone",
+      "folder": "24MP CAMERA Survey Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\24MP CAMERA Survey Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\24MP CAMERA Survey Drone\\01.webp",
+          "bytes": 49088
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-25000mah-6s-non-smart-battery-600-cycles",
+      "name": "25000mah 6S non-Smart Battery (600+ cycles)",
+      "folder": "25000mah 6S non-Smart Battery (600+ cycles)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\25000mah 6S non-Smart Battery (600+ cycles)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\25000mah 6S non-Smart Battery (600+ cycles)\\01.webp",
+          "bytes": 68948
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-25000mah-6s-smart-battery-600-cycles",
+      "name": "25000mah 6S Smart Battery (600+ cycles)",
+      "folder": "25000mah 6S Smart Battery (600+ cycles)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\25000mah 6S Smart Battery (600+ cycles)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\25000mah 6S Smart Battery (600+ cycles)\\01.webp",
+          "bytes": 66664
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-3010-sets-of-propeller-only",
+      "name": "3010 SETS OF PROPELLER ONLY",
+      "folder": "3010 SETS OF PROPELLER ONLY",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\3010 SETS OF PROPELLER ONLY",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\3010 SETS OF PROPELLER ONLY\\01.webp",
+          "bytes": 43420
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-3010-sets-of-propeller-with-adaptor",
+      "name": "3010 SETS OF PROPELLER WITH ADAPTOR",
+      "folder": "3010 SETS OF PROPELLER WITH ADAPTOR",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\3010 SETS OF PROPELLER WITH ADAPTOR",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\3010 SETS OF PROPELLER WITH ADAPTOR\\01.webp",
+          "bytes": 33732
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-3012-sets-of-propeller-only",
+      "name": "3012 SETS OF PROPELLER ONLY",
+      "folder": "3012 SETS OF PROPELLER ONLY",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\3012 SETS OF PROPELLER ONLY",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\3012 SETS OF PROPELLER ONLY\\01.webp",
+          "bytes": 35036
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-4006sl-380-kv",
+      "name": "4006SL 380 KV",
+      "folder": "4006SL 380 KV",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\4006SL 380 KV",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\4006SL 380 KV\\01.webp",
+          "bytes": 88866
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-4k-cinema-drone",
+      "name": "4K CINEMA DRONE",
+      "folder": "4K CINEMA DRONE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\4K CINEMA DRONE",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\4K CINEMA DRONE\\01.webp",
+          "bytes": 13234
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\4K CINEMA DRONE\\02.webp",
+          "bytes": 44080
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-5-liter-agri-drone",
+      "name": "5 Liter Agri Drone",
+      "folder": "5 Liter Agri Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\5 Liter Agri Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\5 Liter Agri Drone\\01.webp",
+          "bytes": 91492
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-6s-24000mah-battery",
+      "name": "6S 24000mAh Battery",
+      "folder": "6S 24000mAh Battery",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\6S 24000mAh Battery",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\6S 24000mAh Battery\\01.webp",
+          "bytes": 27930
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-6s-25200mah-battery",
+      "name": "6S 25200mAh Battery",
+      "folder": "6S 25200mAh Battery",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\6S 25200mAh Battery",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\6S 25200mAh Battery\\01.webp",
+          "bytes": 36614
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-8008sl-110kv-12s-voltage",
+      "name": "8008SL 110KV 12S VOLTAGE",
+      "folder": "8008SL 110KV 12S VOLTAGE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\8008SL 110KV 12S VOLTAGE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\8008SL 110KV 12S VOLTAGE\\01.webp",
+          "bytes": 30294
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-8015sl-100kv-12s-voltage",
+      "name": "8015SL 100KV 12S VOLTAGE",
+      "folder": "8015SL 100KV 12S VOLTAGE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\8015SL 100KV 12S VOLTAGE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\8015SL 100KV 12S VOLTAGE\\01.webp",
+          "bytes": 90558
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-8020-ipu-100kv-12s-voltage",
+      "name": "8020 IPU 100KV 12S VOLTAGE",
+      "folder": "8020 IPU 100KV 12S VOLTAGE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\8020 IPU 100KV 12S VOLTAGE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\8020 IPU 100KV 12S VOLTAGE\\01.webp",
+          "bytes": 86158
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-8020-pro-120kv-12s-voltage",
+      "name": "8020 PRO 120KV 12S VOLTAGE",
+      "folder": "8020 PRO 120KV 12S VOLTAGE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\8020 PRO 120KV 12S VOLTAGE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\8020 PRO 120KV 12S VOLTAGE\\01.webp",
+          "bytes": 93570
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-8025-pro-160kv-12s-voltage",
+      "name": "8025 PRO 160KV 12S VOLTAGE",
+      "folder": "8025 PRO 160KV 12S VOLTAGE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\8025 PRO 160KV 12S VOLTAGE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\8025 PRO 160KV 12S VOLTAGE\\01.webp",
+          "bytes": 59560
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-8kg-seed-spreader-drone-tc-certified",
+      "name": "8KG SEED SPREADER DRONE [TC CERTIFIED]",
+      "folder": "8KG SEED SPREADER DRONE [TC CERTIFIED]",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\8KG SEED SPREADER DRONE [TC CERTIFIED]",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\8KG SEED SPREADER DRONE [TC CERTIFIED]\\01.webp",
+          "bytes": 100950
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\8KG SEED SPREADER DRONE [TC CERTIFIED]\\02.webp",
+          "bytes": 42316
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-a10e-10-liters-agri-dronever2",
+      "name": "A10E 10 Liters Agri DroneVer2",
+      "folder": "A10E 10 Liters Agri DroneVer2",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\A10E 10 Liters Agri DroneVer2",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\A10E 10 Liters Agri DroneVer2\\01.webp",
+          "bytes": 47188
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-a10e-agri-drone-10-liters-base",
+      "name": "A10E Agri Drone 10 Liters Base",
+      "folder": "A10E Agri Drone 10 Liters Base",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\A10E Agri Drone 10 Liters Base",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\A10E Agri Drone 10 Liters Base\\01.webp",
+          "bytes": 47214
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-aero-fc-v2-namoag-navigation-for-modern-agriculture-gps-combo",
+      "name": "Aero FC V2 + NamoAG (Navigation for modern Agriculture) GPS Combo",
+      "folder": "Aero FC V2 + NamoAG (Navigation for modern Agriculture) GPS Combo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Aero FC V2 + NamoAG (Navigation for modern Agriculture) GPS Combo",
+      "webpCount": 3,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Aero FC V2 + NamoAG (Navigation for modern Agriculture) GPS Combo\\01.webp",
+          "bytes": 54664
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Aero FC V2 + NamoAG (Navigation for modern Agriculture) GPS Combo\\02.webp",
+          "bytes": 20144
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Aero FC V2 + NamoAG (Navigation for modern Agriculture) GPS Combo\\03.webp",
+          "bytes": 46578
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-aerofc-v2-flight-controller-compatible-with-open-source-firmware-and-gcs",
+      "name": "AeroFC V2 Flight Controller (Compatible with Open-Source Firmware & GCS)",
+      "folder": "AeroFC V2 Flight Controller (Compatible with Open-Source Firmware & GCS)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\AeroFC V2 Flight Controller (Compatible with Open-Source Firmware & GCS)",
+      "webpCount": 3,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\AeroFC V2 Flight Controller (Compatible with Open-Source Firmware & GCS)\\01.webp",
+          "bytes": 25670
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\AeroFC V2 Flight Controller (Compatible with Open-Source Firmware & GCS)\\02.webp",
+          "bytes": 25410
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\AeroFC V2 Flight Controller (Compatible with Open-Source Firmware & GCS)\\03.webp",
+          "bytes": 40598
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-ag-fc-namoag-gps-with-aerogcs-green-software-combo",
+      "name": "Ag++ (FC), NamoAG GPS with AeroGCS Green Software Combo",
+      "folder": "Ag++ (FC), NamoAG GPS with AeroGCS Green Software Combo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC), NamoAG GPS with AeroGCS Green Software Combo",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC), NamoAG GPS with AeroGCS Green Software Combo\\01.webp",
+          "bytes": 14546
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC), NamoAG GPS with AeroGCS Green Software Combo\\02.webp",
+          "bytes": 50476
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC), NamoAG GPS with AeroGCS Green Software Combo\\03.webp",
+          "bytes": 25510
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC), NamoAG GPS with AeroGCS Green Software Combo\\04.webp",
+          "bytes": 14018
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-ag-fc-with-aerogcs-green-combo",
+      "name": "Ag++ (FC) with AeroGCS Green Combo",
+      "folder": "Ag++ (FC) with AeroGCS Green Combo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC) with AeroGCS Green Combo",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC) with AeroGCS Green Combo\\01.webp",
+          "bytes": 14394
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Ag++ (FC) with AeroGCS Green Combo\\02.webp",
+          "bytes": 82056
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-agri-kisan-drone-medium-10-liter",
+      "name": "Agri Kisan Drone Medium - 10 Liter",
+      "folder": "Agri Kisan Drone Medium - 10 Liter",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Medium - 10 Liter",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Medium - 10 Liter\\01.webp",
+          "bytes": 42648
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Medium - 10 Liter\\02.webp",
+          "bytes": 45838
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Medium - 10 Liter\\03.webp",
+          "bytes": 47004
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Medium - 10 Liter\\04.webp",
+          "bytes": 42360
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-agri-kisan-drone-small-8-liter",
+      "name": "Agri Kisan Drone Small - 8 Liter",
+      "folder": "Agri Kisan Drone Small - 8 Liter",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Small - 8 Liter",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Small - 8 Liter\\01.webp",
+          "bytes": 43072
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Small - 8 Liter\\02.webp",
+          "bytes": 45102
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Small - 8 Liter\\03.webp",
+          "bytes": 51356
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Agri Kisan Drone Small - 8 Liter\\04.webp",
+          "bytes": 43540
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-battery-plate-with-straps",
+      "name": "Battery plate with straps",
+      "folder": "Battery plate with straps",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Battery plate with straps",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Battery plate with straps\\01.webp",
+          "bytes": 84342
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-cfrp-plate",
+      "name": "CFRP PLATE",
+      "folder": "CFRP PLATE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\CFRP PLATE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\CFRP PLATE\\01.webp",
+          "bytes": 30062
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-counter-rotating-8008-pro-100kv-12s",
+      "name": "COUNTER ROTATING 8008 PRO 100KV 12S",
+      "folder": "COUNTER ROTATING 8008 PRO 100KV 12S",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\COUNTER ROTATING 8008 PRO 100KV 12S",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\COUNTER ROTATING 8008 PRO 100KV 12S\\01.webp",
+          "bytes": 69472
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-cs-050-current-sensor",
+      "name": "CS-050: Current Sensor",
+      "folder": "CS-050- Current Sensor",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\CS-050- Current Sensor",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\CS-050- Current Sensor\\01.webp",
+          "bytes": 46006
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-decafly-d5x-3d-printed-arm-white",
+      "name": "Decafly D5X 3D Printed Arm (WHITE)",
+      "folder": "Decafly D5X 3D Printed Arm (WHITE)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X 3D Printed Arm (WHITE)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X 3D Printed Arm (WHITE)\\01.webp",
+          "bytes": 24502
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-decafly-d5x-battery-frame",
+      "name": "Decafly D5X Battery Frame",
+      "folder": "Decafly D5X Battery Frame",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X Battery Frame",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X Battery Frame\\01.webp",
+          "bytes": 79576
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-decafly-d5x-cfrp-arm-black",
+      "name": "Decafly D5X CFRP Arm (BLACK)",
+      "folder": "Decafly D5X CFRP Arm (BLACK)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X CFRP Arm (BLACK)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X CFRP Arm (BLACK)\\01.webp",
+          "bytes": 85018
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-decafly-d5x-cfrp-frame",
+      "name": "Decafly D5X CFRP Frame",
+      "folder": "Decafly D5X CFRP Frame",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X CFRP Frame",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X CFRP Frame\\01.webp",
+          "bytes": 95974
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-decafly-d5x-landing-gear",
+      "name": "Decafly D5X Landing Gear",
+      "folder": "Decafly D5X Landing Gear",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X Landing Gear",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Decafly D5X Landing Gear\\01.webp",
+          "bytes": 40522
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-drone-decafly-d5x",
+      "name": "Drone Decafly D5X",
+      "folder": "Drone Decafly D5X",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Drone Decafly D5X",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Drone Decafly D5X\\01.webp",
+          "bytes": 82280
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-drone-soccer-150-mm",
+      "name": "Drone Soccer (150 mm)",
+      "folder": "Drone Soccer (150 mm)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Drone Soccer (150 mm)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Drone Soccer (150 mm)\\01.webp",
+          "bytes": 141396
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-drone-soccer-200-mm",
+      "name": "Drone Soccer (200 mm)",
+      "folder": "Drone Soccer (200 mm)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Drone Soccer (200 mm)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Drone Soccer (200 mm)\\01.webp",
+          "bytes": 124352
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-dual-purpose-drone",
+      "name": "DUAL PURPOSE DRONE",
+      "folder": "DUAL PURPOSE DRONE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\DUAL PURPOSE DRONE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\DUAL PURPOSE DRONE\\01.webp",
+          "bytes": 49244
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-dual-purpose-drone-sprayer-seed-spreader-tc-certified",
+      "name": "DUAL PURPOSE DRONE {SPRAYER+ SEED SPREADER) [TC CERTIFIED]",
+      "folder": "DUAL PURPOSE DRONE {SPRAYER+ SEED SPREADER) [TC CERTIFIED]",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\DUAL PURPOSE DRONE {SPRAYER+ SEED SPREADER) [TC CERTIFIED]",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\DUAL PURPOSE DRONE {SPRAYER+ SEED SPREADER) [TC CERTIFIED]\\01.webp",
+          "bytes": 47340
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-eft-10l-tank-with-battery-plate",
+      "name": "EFT 10L tank with battery plate",
+      "folder": "EFT 10L tank with battery plate",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\EFT 10L tank with battery plate",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\EFT 10L tank with battery plate\\01.webp",
+          "bytes": 63458
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-flybox-delivery-drone",
+      "name": "Flybox Delivery Drone",
+      "folder": "Flybox Delivery Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Flybox Delivery Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Flybox Delivery Drone\\01.webp",
+          "bytes": 63176
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-gnss-module",
+      "name": "GNSS MODULE",
+      "folder": "GNSS MODULE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\GNSS MODULE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\GNSS MODULE\\01.webp",
+          "bytes": 32294
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-gnss-receiver-rs2-with-tripod-and-tribrach",
+      "name": "GNSS RECEIVER RS2+WITH TRIPOD & TRIBRACH",
+      "folder": "GNSS RECEIVER RS2+WITH TRIPOD & TRIBRACH",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\GNSS RECEIVER RS2+WITH TRIPOD & TRIBRACH",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\GNSS RECEIVER RS2+WITH TRIPOD & TRIBRACH\\01.webp",
+          "bytes": 38740
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-guru-student-drone",
+      "name": "Guru Student Drone",
+      "folder": "Guru Student Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Guru Student Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Guru Student Drone\\01.webp",
+          "bytes": 65752
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-herewin-6s-16000mah-drone-battery",
+      "name": "HEREWIN 6S 16000mah Drone battery",
+      "folder": "HEREWIN 6S 16000mah Drone battery",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\HEREWIN 6S 16000mah Drone battery",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\HEREWIN 6S 16000mah Drone battery\\01.webp",
+          "bytes": 40946
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-herewin-6s-22000mah-battery-with-protector-shield",
+      "name": "HEREWIN 6S 22000mah Battery with Protector shield",
+      "folder": "HEREWIN 6S 22000mah Battery with Protector shield",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\HEREWIN 6S 22000mah Battery with Protector shield",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\HEREWIN 6S 22000mah Battery with Protector shield\\01.webp",
+          "bytes": 50984
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-2480-propellers-cw-or-ccw",
+      "name": "Hobbywing 2480 Propellers CW or CCW",
+      "folder": "Hobbywing 2480 Propellers CW or CCW",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 2480 Propellers CW or CCW",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 2480 Propellers CW or CCW\\01.webp",
+          "bytes": 38412
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-2480-propellers-with-mount-ccw",
+      "name": "Hobbywing 2480 Propellers with Mount – CCW",
+      "folder": "Hobbywing 2480 Propellers with Mount – CCW",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 2480 Propellers with Mount – CCW",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 2480 Propellers with Mount – CCW\\01.webp",
+          "bytes": 42898
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-5l-pump-combo",
+      "name": "Hobbywing 5L pump combo",
+      "folder": "Hobbywing 5L pump combo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 5L pump combo",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 5L pump combo\\01.webp",
+          "bytes": 49278
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-8l-pump",
+      "name": "Hobbywing 8L pump",
+      "folder": "Hobbywing 8L pump",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 8L pump",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 8L pump\\01.webp",
+          "bytes": 77584
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-8l-pump-combo",
+      "name": "Hobbywing 8L pump combo",
+      "folder": "Hobbywing 8L pump combo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 8L pump combo",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing 8L pump combo\\01.webp",
+          "bytes": 50128
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-water-pump-5l-for-agriculture-drones",
+      "name": "Hobbywing Water Pump 5L for Agriculture Drones",
+      "folder": "Hobbywing Water Pump 5L for Agriculture Drones",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing Water Pump 5L for Agriculture Drones",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing Water Pump 5L for Agriculture Drones\\01.webp",
+          "bytes": 61690
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-x6-plus-motor-with-propeller-combo",
+      "name": "Hobbywing X6 Plus motor with propeller combo",
+      "folder": "Hobbywing X6 Plus motor with propeller combo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing X6 Plus motor with propeller combo",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing X6 Plus motor with propeller combo\\01.webp",
+          "bytes": 84302
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-x8-3011-propellers-cw",
+      "name": "Hobbywing X8 3011 Propellers – CW",
+      "folder": "Hobbywing X8 3011 Propellers – CW",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing X8 3011 Propellers – CW",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing X8 3011 Propellers – CW\\01.webp",
+          "bytes": 43806
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-x8-3011-propellers-with-mount-ccw",
+      "name": "Hobbywing X8 3011 Propellers with Mount – CCW",
+      "folder": "Hobbywing X8 3011 Propellers with Mount – CCW",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing X8 3011 Propellers with Mount – CCW",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing X8 3011 Propellers with Mount – CCW\\01.webp",
+          "bytes": 33402
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-xrotor-x6-plus-motor-only-ccw-for-agriculture-drones",
+      "name": "Hobbywing XRotor X6 Plus Motor Only- CCW for Agriculture Drones",
+      "folder": "Hobbywing XRotor X6 Plus Motor Only- CCW for Agriculture Drones",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X6 Plus Motor Only- CCW for Agriculture Drones",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X6 Plus Motor Only- CCW for Agriculture Drones\\01.webp",
+          "bytes": 61444
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-xrotor-x6-plus-motor-only-cw-for-agriculture-drone",
+      "name": "Hobbywing XRotor X6 Plus Motor Only- CW for Agriculture Drone",
+      "folder": "Hobbywing XRotor X6 Plus Motor Only- CW for Agriculture Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X6 Plus Motor Only- CW for Agriculture Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X6 Plus Motor Only- CW for Agriculture Drone\\01.webp",
+          "bytes": 59532
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-xrotor-x6-plus-with-propeller-combo",
+      "name": "Hobbywing XRotor X6 Plus with Propeller Combo",
+      "folder": "Hobbywing XRotor X6 Plus with Propeller Combo",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X6 Plus with Propeller Combo",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X6 Plus with Propeller Combo\\01.webp",
+          "bytes": 79834
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-xrotor-x8-motor-only-ccw-for-agriculture-drones",
+      "name": "Hobbywing XRotor X8 Motor Only- CCW for Agriculture Drones",
+      "folder": "Hobbywing XRotor X8 Motor Only- CCW for Agriculture Drones",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X8 Motor Only- CCW for Agriculture Drones",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X8 Motor Only- CCW for Agriculture Drones\\01.webp",
+          "bytes": 65082
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-xrotor-x8-motor-only-cw",
+      "name": "Hobbywing XRotor X8 Motor Only- CW",
+      "folder": "Hobbywing XRotor X8 Motor Only- CW",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X8 Motor Only- CW",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X8 Motor Only- CW\\01.webp",
+          "bytes": 59764
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hobbywing-xrotor-x8-motor-only-cw-for-agriculture-drones",
+      "name": "Hobbywing XRotor X8 Motor Only- CW for Agriculture Drones",
+      "folder": "Hobbywing XRotor X8 Motor Only- CW for Agriculture Drones",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X8 Motor Only- CW for Agriculture Drones",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Hobbywing XRotor X8 Motor Only- CW for Agriculture Drones\\01.webp",
+          "bytes": 66764
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-horizontal-landing-gear-10l-agri-drone",
+      "name": "Horizontal landing gear (10L agri drone)",
+      "folder": "Horizontal landing gear (10L agri drone)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Horizontal landing gear (10L agri drone)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Horizontal landing gear (10L agri drone)\\01.webp",
+          "bytes": 37842
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-horizontal-landing-gear-16l-agri-drone",
+      "name": "Horizontal landing gear (16L agri drone)",
+      "folder": "Horizontal landing gear (16L agri drone)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Horizontal landing gear (16L agri drone)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Horizontal landing gear (16L agri drone)\\01.webp",
+          "bytes": 39880
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-hpc-3-power-cube",
+      "name": "HPC - 3 Power Cube",
+      "folder": "HPC - 3 Power Cube",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\HPC - 3 Power Cube",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\HPC - 3 Power Cube\\01.webp",
+          "bytes": 49190
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-jetcore-carrier-board",
+      "name": "JETCORE Carrier Board",
+      "folder": "JETCORE Carrier Board",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\JETCORE Carrier Board",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\JETCORE Carrier Board\\01.webp",
+          "bytes": 59874
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\JETCORE Carrier Board\\02.webp",
+          "bytes": 118654
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-jiyi-can-hub-12-module-for-k-flight-controller",
+      "name": "Jiyi Can Hub – 12 Module for K++ Flight Controller",
+      "folder": "Jiyi Can Hub – 12 Module for K++ Flight Controller",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Jiyi Can Hub – 12 Module for K++ Flight Controller",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Jiyi Can Hub – 12 Module for K++ Flight Controller\\01.webp",
+          "bytes": 32892
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-jiyi-k-v2-flight-controller-for-agriculture-drones",
+      "name": "Jiyi K++V2 Flight Controller for Agriculture Drones",
+      "folder": "Jiyi K++V2 Flight Controller for Agriculture Drones",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Jiyi K++V2 Flight Controller for Agriculture Drones",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Jiyi K++V2 Flight Controller for Agriculture Drones\\01.webp",
+          "bytes": 77130
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-jiyi-terrain-following-radar-for-agriculture-drones",
+      "name": "Jiyi Terrain following Radar for Agriculture Drones",
+      "folder": "Jiyi Terrain following Radar for Agriculture Drones",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Jiyi Terrain following Radar for Agriculture Drones",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Jiyi Terrain following Radar for Agriculture Drones\\01.webp",
+          "bytes": 87912
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-li-ion-14s-11c-battery",
+      "name": "LI-ION-14s-11c Battery",
+      "folder": "LI-ION-14s-11c Battery",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\LI-ION-14s-11c Battery",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\LI-ION-14s-11c Battery\\01.webp",
+          "bytes": 94352
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-lipo-6s-10c-with-smart-bms-battery",
+      "name": "LIPO-6s-10C with Smart BMS Battery",
+      "folder": "LIPO-6s-10C with Smart BMS Battery",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\LIPO-6s-10C with Smart BMS Battery",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\LIPO-6s-10C with Smart BMS Battery\\01.webp",
+          "bytes": 64484
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-mini-x-nano-4k-1-set-of-battery",
+      "name": "MINI X NANO 4K (1 set of battery)",
+      "folder": "MINI X NANO 4K (1 set of battery)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K (1 set of battery)",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K (1 set of battery)\\01.webp",
+          "bytes": 67014
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K (1 set of battery)\\02.webp",
+          "bytes": 36918
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K (1 set of battery)\\03.webp",
+          "bytes": 66852
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K (1 set of battery)\\04.webp",
+          "bytes": 46278
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-mini-x-nano-4k-videography-drone",
+      "name": "MINI X NANO 4K VIDEOGRAPHY DRONE",
+      "folder": "MINI X NANO 4K VIDEOGRAPHY DRONE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K VIDEOGRAPHY DRONE",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K VIDEOGRAPHY DRONE\\01.webp",
+          "bytes": 65284
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K VIDEOGRAPHY DRONE\\02.webp",
+          "bytes": 35352
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K VIDEOGRAPHY DRONE\\03.webp",
+          "bytes": 43200
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MINI X NANO 4K VIDEOGRAPHY DRONE\\04.webp",
+          "bytes": 67312
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-mk2-flight-core",
+      "name": "MK2 FLIGHT CORE",
+      "folder": "MK2 FLIGHT CORE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\MK2 FLIGHT CORE",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\MK2 FLIGHT CORE\\01.webp",
+          "bytes": 97664
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-monal-4k",
+      "name": "Monal 4k",
+      "folder": "Monal 4k",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Monal 4k",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Monal 4k\\01.webp",
+          "bytes": 46324
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-monal-4k-thermal",
+      "name": "Monal 4K+Thermal",
+      "folder": "Monal 4K+Thermal",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Monal 4K+Thermal",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Monal 4K+Thermal\\01.webp",
+          "bytes": 34950
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-multispectral-camera-survey-drone",
+      "name": "Multispectral Camera Survey Drone",
+      "folder": "Multispectral Camera Survey Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Multispectral Camera Survey Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Multispectral Camera Survey Drone\\01.webp",
+          "bytes": 49146
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-namoag",
+      "name": "NamoAG",
+      "folder": "NamoAG",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\NamoAG",
+      "webpCount": 2,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\NamoAG\\01.webp",
+          "bytes": 24458
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\NamoAG\\02.webp",
+          "bytes": 14338
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-nuno-no-tc-required",
+      "name": "Nuno [No TC required]",
+      "folder": "Nuno [No TC required]",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Nuno [No TC required]",
+      "webpCount": 3,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Nuno [No TC required]\\01.webp",
+          "bytes": 66084
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Nuno [No TC required]\\02.webp",
+          "bytes": 18158
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Nuno [No TC required]\\03.webp",
+          "bytes": 32216
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-pix4d-field-software",
+      "name": "Pix4D Field Software",
+      "folder": "Pix4D Field Software",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Field Software",
+      "webpCount": 5,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Field Software\\01.webp",
+          "bytes": 17526
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Field Software\\02.webp",
+          "bytes": 95732
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Field Software\\03.webp",
+          "bytes": 86210
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Field Software\\04.webp",
+          "bytes": 57032
+        },
+        {
+          "file": "05.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Field Software\\05.webp",
+          "bytes": 117208
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-pix4d-mapper-software",
+      "name": "Pix4D Mapper Software",
+      "folder": "Pix4D Mapper Software",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Mapper Software",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Mapper Software\\01.webp",
+          "bytes": 63430
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-pix4d-matic-software",
+      "name": "Pix4D Matic Software",
+      "folder": "Pix4D Matic Software",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Matic Software",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Matic Software\\01.webp",
+          "bytes": 37206
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-pix4d-survey-software",
+      "name": "Pix4D Survey Software",
+      "folder": "Pix4D Survey Software",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Survey Software",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pix4D Survey Software\\01.webp",
+          "bytes": 50064
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-pluto-1-2-student-drone",
+      "name": "Pluto 1.2 Student Drone",
+      "folder": "Pluto 1.2 Student Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Pluto 1.2 Student Drone",
+      "webpCount": 3,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pluto 1.2 Student Drone\\01.webp",
+          "bytes": 15176
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pluto 1.2 Student Drone\\02.webp",
+          "bytes": 47502
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pluto 1.2 Student Drone\\03.webp",
+          "bytes": 53456
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-pluto-x-student-drone",
+      "name": "Pluto X Student Drone",
+      "folder": "Pluto X Student Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Pluto X Student Drone",
+      "webpCount": 4,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pluto X Student Drone\\01.webp",
+          "bytes": 56198
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pluto X Student Drone\\02.webp",
+          "bytes": 35016
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pluto X Student Drone\\03.webp",
+          "bytes": 49732
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Pluto X Student Drone\\04.webp",
+          "bytes": 35778
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-power-cube-cables-set",
+      "name": "Power Cube Cables Set",
+      "folder": "Power Cube Cables Set",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Power Cube Cables Set",
+      "webpCount": 6,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Power Cube Cables Set\\01.webp",
+          "bytes": 73046
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Power Cube Cables Set\\02.webp",
+          "bytes": 94868
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Power Cube Cables Set\\03.webp",
+          "bytes": 70320
+        },
+        {
+          "file": "04.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Power Cube Cables Set\\04.webp",
+          "bytes": 48274
+        },
+        {
+          "file": "05.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Power Cube Cables Set\\05.webp",
+          "bytes": 66074
+        },
+        {
+          "file": "06.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Power Cube Cables Set\\06.webp",
+          "bytes": 62726
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-propeller-guard",
+      "name": "Propeller Guard",
+      "folder": "Propeller Guard",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Propeller Guard",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Propeller Guard\\01.webp",
+          "bytes": 81172
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-siyi-a2-mini-ultra-wide-angle-fpv-gimbal-single-axis-camera-sensor",
+      "name": "SIYI A2 mini Ultra Wide Angle FPV Gimbal Single Axis Camera Sensor",
+      "folder": "SIYI A2 mini Ultra Wide Angle FPV Gimbal Single Axis Camera Sensor",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\SIYI A2 mini Ultra Wide Angle FPV Gimbal Single Axis Camera Sensor",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\SIYI A2 mini Ultra Wide Angle FPV Gimbal Single Axis Camera Sensor\\01.webp",
+          "bytes": 74828
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-siyi-a8-mini-4k-8mp-ultra-hd-6x-digital-zoom-gimbal-camera",
+      "name": "SIYI A8 mini 4K 8MP Ultra HD 6X Digital Zoom Gimbal Camera",
+      "folder": "SIYI A8 mini 4K 8MP Ultra HD 6X Digital Zoom Gimbal Camera",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\SIYI A8 mini 4K 8MP Ultra HD 6X Digital Zoom Gimbal Camera",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\SIYI A8 mini 4K 8MP Ultra HD 6X Digital Zoom Gimbal Camera\\01.webp",
+          "bytes": 70672
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-siyi-mk-32-agriculture-transmitter-rc-controller-hdmi",
+      "name": "Siyi MK 32 Agriculture Transmitter RC Controller HDMI",
+      "folder": "Siyi MK 32 Agriculture Transmitter RC Controller HDMI",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Siyi MK 32 Agriculture Transmitter RC Controller HDMI",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Siyi MK 32 Agriculture Transmitter RC Controller HDMI\\01.webp",
+          "bytes": 48458
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-siyi-mk15-agriculture-transmitter-rc-controller",
+      "name": "Siyi MK15 Agriculture Transmitter RC Controller",
+      "folder": "Siyi MK15 Agriculture Transmitter RC Controller",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Siyi MK15 Agriculture Transmitter RC Controller",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Siyi MK15 Agriculture Transmitter RC Controller\\01.webp",
+          "bytes": 48744
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-sky-pro-4k-videography-drone",
+      "name": "SKY PRO 4K VIDEOGRAPHY DRONE",
+      "folder": "SKY PRO 4K VIDEOGRAPHY DRONE",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\SKY PRO 4K VIDEOGRAPHY DRONE",
+      "webpCount": 3,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\SKY PRO 4K VIDEOGRAPHY DRONE\\01.webp",
+          "bytes": 62512
+        },
+        {
+          "file": "02.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\SKY PRO 4K VIDEOGRAPHY DRONE\\02.webp",
+          "bytes": 45866
+        },
+        {
+          "file": "03.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\SKY PRO 4K VIDEOGRAPHY DRONE\\03.webp",
+          "bytes": 78252
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-skydroid-c10-three-axis-gimbal-camera",
+      "name": "Skydroid C10 Three-Axis Gimbal Camera",
+      "folder": "Skydroid C10 Three-Axis Gimbal Camera",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Skydroid C10 Three-Axis Gimbal Camera",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Skydroid C10 Three-Axis Gimbal Camera\\01.webp",
+          "bytes": 46338
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-skydroid-h12-with-inbuilt-screen-and-camera-remote-control",
+      "name": "Skydroid H12 with Inbuilt Screen And Camera Remote Control",
+      "folder": "Skydroid H12 with Inbuilt Screen And Camera Remote Control",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Skydroid H12 with Inbuilt Screen And Camera Remote Control",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Skydroid H12 with Inbuilt Screen And Camera Remote Control\\01.webp",
+          "bytes": 46336
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-skydroid-t12-agriculture-transmitter-rc-controller",
+      "name": "Skydroid T12 Agriculture Transmitter RC Controller",
+      "folder": "Skydroid T12 Agriculture Transmitter RC Controller",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Skydroid T12 Agriculture Transmitter RC Controller",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Skydroid T12 Agriculture Transmitter RC Controller\\01.webp",
+          "bytes": 76176
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-skyrc-pc1080-dual-channel-charger-for-agriculture-drone-batteries",
+      "name": "SKYRC PC1080 Dual Channel Charger for Agriculture Drone Batteries",
+      "folder": "SKYRC PC1080 Dual Channel Charger for Agriculture Drone Batteries",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\SKYRC PC1080 Dual Channel Charger for Agriculture Drone Batteries",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\SKYRC PC1080 Dual Channel Charger for Agriculture Drone Batteries\\01.webp",
+          "bytes": 72362
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-soccer-drone",
+      "name": "Soccer Drone",
+      "folder": "Soccer Drone",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Soccer Drone",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Soccer Drone\\01.webp",
+          "bytes": 85930
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-tank-outlet-cap",
+      "name": "Tank Outlet Cap",
+      "folder": "Tank Outlet Cap",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Tank Outlet Cap",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Tank Outlet Cap\\01.webp",
+          "bytes": 96992
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-tattu-22-2v-25c-6s-22000mah-gtech-lipo-battery",
+      "name": "Tattu 22.2V 25C 6S 22000mAh GTech Lipo Battery",
+      "folder": "Tattu 22.2V 25C 6S 22000mAh GTech Lipo Battery",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Tattu 22.2V 25C 6S 22000mAh GTech Lipo Battery",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Tattu 22.2V 25C 6S 22000mAh GTech Lipo Battery\\01.webp",
+          "bytes": 46208
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-transmitter-and-receiver-h12",
+      "name": "Transmitter & Receiver H12",
+      "folder": "Transmitter & Receiver H12",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver H12",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver H12\\01.webp",
+          "bytes": 61236
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-transmitter-and-receiver-h12-pro",
+      "name": "Transmitter & Receiver H12 PRO",
+      "folder": "Transmitter & Receiver H12 PRO",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver H12 PRO",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver H12 PRO\\01.webp",
+          "bytes": 64572
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-transmitter-and-receiver-h16",
+      "name": "Transmitter & Receiver H16",
+      "folder": "Transmitter & Receiver H16",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver H16",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver H16\\01.webp",
+          "bytes": 89468
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-transmitter-and-receiver-t10",
+      "name": "Transmitter & Receiver T10",
+      "folder": "Transmitter & Receiver T10",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver T10",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & Receiver T10\\01.webp",
+          "bytes": 40826
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-transmitter-and-receiverh16pro",
+      "name": "Transmitter & ReceiverH16PRO",
+      "folder": "Transmitter & ReceiverH16PRO",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & ReceiverH16PRO",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter & ReceiverH16PRO\\01.webp",
+          "bytes": 85138
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-transmitter-t161z-super",
+      "name": "Transmitter T161Z Super",
+      "folder": "Transmitter T161Z Super",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter T161Z Super",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Transmitter T161Z Super\\01.webp",
+          "bytes": 100856
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-v9-flight-controller-for-agriculture-drones",
+      "name": "V9 Flight Controller for Agriculture Drones",
+      "folder": "V9 Flight Controller for Agriculture Drones",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\V9 Flight Controller for Agriculture Drones",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\V9 Flight Controller for Agriculture Drones\\01.webp",
+          "bytes": 58148
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-vertical-landing-gear-10l-agri-drone",
+      "name": "Vertical landing gear (10L agri drone)",
+      "folder": "Vertical landing gear (10L agri drone)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Vertical landing gear (10L agri drone)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Vertical landing gear (10L agri drone)\\01.webp",
+          "bytes": 31642
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-vertical-landing-gear-16l-agri-drone",
+      "name": "Vertical landing gear (16L agri drone)",
+      "folder": "Vertical landing gear (16L agri drone)",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\Vertical landing gear (16L agri drone)",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\Vertical landing gear (16L agri drone)\\01.webp",
+          "bytes": 31606
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-voltrox-12v-1-5a",
+      "name": "VOLTROX 12V 1.5A",
+      "folder": "VOLTROX 12V 1.5A",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\VOLTROX 12V 1.5A",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\VOLTROX 12V 1.5A\\01.webp",
+          "bytes": 120148
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-voltrox-5v-1-5a",
+      "name": "VOLTROX 5V 1.5A",
+      "folder": "VOLTROX 5V 1.5A",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\VOLTROX 5V 1.5A",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\VOLTROX 5V 1.5A\\01.webp",
+          "bytes": 92630
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    },
+    {
+      "slug": "source-xt60-female-connectors",
+      "name": "XT60 Female connectors",
+      "folder": "XT60 Female connectors",
+      "folderPath": "D:\\mithuuu\\IMAGE BUCKET\\XT60 Female connectors",
+      "webpCount": 1,
+      "webps": [
+        {
+          "file": "01.webp",
+          "path": "D:\\mithuuu\\IMAGE BUCKET\\XT60 Female connectors\\01.webp",
+          "bytes": 45100
+        }
+      ],
+      "tinyOrEmpty": [],
+      "match": "exact",
+      "ok": true
+    }
+  ],
+  "matchedBad": [],
+  "missingBucket": [
+    {
+      "slug": "flying-drone",
+      "name": "flying drone",
+      "expectedFolder": "flying drone",
+      "dbImageCount": 2
+    },
+    {
+      "slug": "g-hadron",
+      "name": "G-HADRON",
+      "expectedFolder": "G-HADRON",
+      "dbImageCount": 2
+    },
+    {
+      "slug": "pixy-lr",
+      "name": "Pixy LR",
+      "expectedFolder": "Pixy LR",
+      "dbImageCount": 2
+    },
+    {
+      "slug": "pixy-mr",
+      "name": "Pixy MR",
+      "expectedFolder": "Pixy MR",
+      "dbImageCount": 2
+    },
+    {
+      "slug": "testing-product",
+      "name": "Testing Product",
+      "expectedFolder": "Testing Product",
+      "dbImageCount": 2
+    },
+    {
+      "slug": "zio",
+      "name": "ZIO",
+      "expectedFolder": "ZIO",
+      "dbImageCount": 2
+    }
+  ],
+  "orphanFolder": [],
+  "nameMismatch": [
+    {
+      "slug": "source-hobbywing-2480-propellers-with-mount-ccw",
+      "name": "Hobbywing 2480 Propellers with Mount – CCW",
+      "expected": "Hobbywing 2480 Propellers with Mount - CCW",
+      "actualFolder": "Hobbywing 2480 Propellers with Mount – CCW",
+      "match": "exact"
+    },
+    {
+      "slug": "source-hobbywing-x8-3011-propellers-cw",
+      "name": "Hobbywing X8 3011 Propellers – CW",
+      "expected": "Hobbywing X8 3011 Propellers - CW",
+      "actualFolder": "Hobbywing X8 3011 Propellers – CW",
+      "match": "exact"
+    },
+    {
+      "slug": "source-hobbywing-x8-3011-propellers-with-mount-ccw",
+      "name": "Hobbywing X8 3011 Propellers with Mount – CCW",
+      "expected": "Hobbywing X8 3011 Propellers with Mount - CCW",
+      "actualFolder": "Hobbywing X8 3011 Propellers with Mount – CCW",
+      "match": "exact"
+    },
+    {
+      "slug": "source-jiyi-can-hub-12-module-for-k-flight-controller",
+      "name": "Jiyi Can Hub – 12 Module for K++ Flight Controller",
+      "expected": "Jiyi Can Hub - 12 Module for K++ Flight Controller",
+      "actualFolder": "Jiyi Can Hub – 12 Module for K++ Flight Controller",
+      "match": "exact"
+    }
+  ],
+  "collisions": []
+}

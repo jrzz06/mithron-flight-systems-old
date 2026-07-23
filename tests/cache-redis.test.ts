@@ -4,12 +4,22 @@ vi.mock("@/lib/redis-client", () => ({
   getRedisClient: vi.fn(() => null),
   isRedisConfigured: vi.fn(() => false),
   getRedisRestCredentials: vi.fn(() => null),
-  withRedisTimeout: vi.fn((_label: string, promise: Promise<unknown>) => promise)
+  withRedisTimeout: vi.fn((_label: string, promiseOrFactory: Promise<unknown> | (() => Promise<unknown>)) =>
+    typeof promiseOrFactory === "function" ? promiseOrFactory() : promiseOrFactory
+  ),
+  REDIS_CACHE_READ_TIMEOUT_MS: 250,
+  REDIS_CACHE_WRITE_TIMEOUT_MS: 800,
+  REDIS_CACHE_LOCK_TIMEOUT_MS: 300,
+  isRedisCircuitOpen: vi.fn(() => false),
+  recordRedisCacheHit: vi.fn(),
+  recordRedisCacheMiss: vi.fn()
 }));
 
 describe("cache-redis fail-soft", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetModules();
+    const { clearMemoryCacheForTests } = await import("@/lib/cache-redis");
+    clearMemoryCacheForTests();
   });
 
   it("returns null when redis is not configured", async () => {
@@ -17,6 +27,12 @@ describe("cache-redis fail-soft", () => {
     await expect(getCachedJson("catalog:search-index:v1")).resolves.toBeNull();
     await expect(setCachedJson("catalog:search-index:v1", { ok: true }, 60)).resolves.toBeUndefined();
     await expect(deleteCachedKeys(["catalog:search-index:v1"])).resolves.toBeUndefined();
+  });
+
+  it("serves warm reads from process L1 without Redis", async () => {
+    const { getCachedJson, setCachedJson } = await import("@/lib/cache-redis");
+    await setCachedJson("cms:homepage:v1", { products: [1] }, 60);
+    await expect(getCachedJson("cms:homepage:v1")).resolves.toEqual({ products: [1] });
   });
 
   it("readThroughCache falls back to loader when redis is unavailable", async () => {
@@ -48,9 +64,10 @@ describe("cache-redis fail-soft", () => {
   });
 
   it("withSingleFlight loads once and returns the value when redis is unavailable", async () => {
-    const { withSingleFlight } = await import("@/lib/cache-redis");
+    const { withSingleFlight, clearMemoryCacheForTests } = await import("@/lib/cache-redis");
+    clearMemoryCacheForTests();
     let loads = 0;
-    const value = await withSingleFlight("cms:homepage:v1", 60, async () => {
+    const value = await withSingleFlight("cms:homepage:fresh:v1", 60, async () => {
       loads += 1;
       return { products: [] };
     });

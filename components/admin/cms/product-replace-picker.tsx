@@ -303,7 +303,7 @@ export function ProductReplacePicker({
 
         {recent.length ? (
           <div className="border-b border-[var(--platform-border)] px-5 py-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+            <p className="mb-2 type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
               Recently used
             </p>
             <ul className="grid gap-1">
@@ -399,7 +399,7 @@ function ProductRow({
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-sm font-semibold text-[var(--platform-text-primary)]">{item.name}</p>
             {isCurrent ? (
-              <span className="rounded-full bg-[var(--platform-accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--platform-accent)]">
+              <span className="rounded-full bg-[var(--platform-accent-soft)] px-2 py-0.5 type-badge font-semibold uppercase tracking-wide text-[var(--platform-accent)]">
                 Current
               </span>
             ) : null}
@@ -410,7 +410,7 @@ function ProductRow({
         </div>
         <div className="shrink-0 text-right">
           <p className="text-sm font-semibold text-[var(--platform-text-primary)]">{formatINR(item.price)}</p>
-          <p className={cn("text-[10px] font-semibold uppercase tracking-wide", item.available ? "text-emerald-700" : "text-amber-700")}>
+          <p className={cn("type-badge font-semibold uppercase tracking-wide", item.available ? "text-emerald-700" : "text-amber-700")}>
             {item.available ? "In stock" : "Unavailable"}
           </p>
         </div>

@@ -64,7 +64,7 @@ export function CmsEditorActionBar({
         {statusLabel ? (
           <span
             className={cn(
-              "rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity duration-200",
+              "rounded-full px-2.5 py-0.5 type-meta font-semibold transition-opacity duration-200",
               isSaving || saveStatus === "unsaved" || isDirty
                 ? "bg-amber-100 text-amber-950"
                 : "bg-emerald-100 text-emerald-900"
@@ -116,7 +116,7 @@ export function CmsEditorActionBar({
               {publishLabel}
             </button>
             {publishDisabled && publishDisabledReason ? (
-              <p id="cms-publish-blocked-reason" className="max-w-[16rem] text-right text-[11px] font-medium text-amber-800">
+              <p id="cms-publish-blocked-reason" className="max-w-[16rem] text-right type-meta font-medium text-amber-800">
                 {publishDisabledReason}
               </p>
             ) : null}
@@ -174,7 +174,7 @@ export function CmsLivePreviewPanel({
       )}
     >
       <div className="flex items-center justify-between border-b border-[var(--platform-border)] px-3 py-2">
-        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
+        <p className="type-meta font-medium uppercase tracking-[0.06em] text-[var(--platform-text-muted)]">
           Preview
         </p>
         <div className="flex items-center gap-2">

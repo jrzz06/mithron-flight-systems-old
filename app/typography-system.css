@@ -1,0 +1,350 @@
+/* ==========================================================================
+   WORLD-CLASS ENTERPRISE TYPOGRAPHY SYSTEM
+   Design Standards: Apple, Linear, Vercel, Stripe, DJI, Insta360
+   ========================================================================== */
+
+:root {
+  /* ------------------------------------------------------------------------
+     1. FONT FAMILY STACKS
+     ------------------------------------------------------------------------ */
+  --font-display-stack: var(--font-google-sans), var(--font-google-sans-flex), system-ui, sans-serif;
+  --font-ui-stack: var(--font-google-sans-flex), system-ui, sans-serif;
+
+  /* ------------------------------------------------------------------------
+     2. FONT WEIGHT TOKENS
+     ------------------------------------------------------------------------ */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ------------------------------------------------------------------------
+     3. OPTICAL TRACKING (LETTER-SPACING) TOKENS
+     ------------------------------------------------------------------------ */
+  --tracking-tighter-xl: -0.04em;
+  --tracking-tighter: -0.035em;
+  --tracking-tight: -0.025em;
+  --tracking-snug: -0.015em;
+  --tracking-normal: -0.009em;
+  --tracking-subtle: 0em;
+  --tracking-wide: 0.01em;
+  --tracking-wider: 0.03em;
+  --tracking-caps: 0.08em;
+
+  /* ------------------------------------------------------------------------
+     4. LINE HEIGHT (LEADING) TOKENS
+     ------------------------------------------------------------------------ */
+  --leading-none: 1.0;
+  --leading-tight: 1.08;
+  --leading-snug: 1.15;
+  --leading-heading: 1.20;
+  --leading-subheading: 1.25;
+  --leading-ui: 1.30;
+  --leading-body: 1.50;
+  --leading-body-large: 1.55;
+
+  /* ------------------------------------------------------------------------
+     5. SPATIAL GRID TOKENS (8px Grid System)
+     ------------------------------------------------------------------------ */
+  --space-8-1: 8px;   /* 1x */
+  --space-8-2: 16px;  /* 2x */
+  --space-8-3: 24px;  /* 3x */
+  --space-8-4: 32px;  /* 4x */
+  --space-8-6: 48px;  /* 6x */
+  --space-8-8: 64px;  /* 8x */
+  --space-8-12: 96px; /* 12x */
+
+  /* Component Specific Spacing Rules */
+  --space-image-to-category: 16px;
+  --space-category-to-title: 8px;
+  --space-title-to-desc: 8px;
+  --space-desc-to-price: 16px;
+  --space-price-to-cta: 16px;
+  --space-heading-to-paragraph: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   6. COMPLETE 26-TOKEN TYPOGRAPHY UTILITY CLASSES
+   -------------------------------------------------------------------------- */
+
+/* Token 1: Display XL (Google Sans) */
+.token-display-xl {
+  font-family: var(--font-display-stack);
+  font-size: clamp(2.5rem, 1.7rem + 3.4vw, 4.5rem);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tighter-xl);
+  color: var(--text-primary, #09090b);
+  max-width: 18ch;
+}
+
+/* Token 2: Display Large (Google Sans) */
+.token-display-lg {
+  font-family: var(--font-display-stack);
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--text-primary, #09090b);
+  max-width: 22ch;
+}
+
+/* Token 3: H1 (Google Sans) */
+.token-h1 {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary, #09090b);
+  max-width: 26ch;
+}
+
+/* Token 4: H2 (Google Sans) */
+.token-h2 {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.5rem, 1.15rem + 1.4vw, 2.25rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-heading);
+  letter-spacing: -0.022em;
+  color: var(--text-primary, #09090b);
+  max-width: 32ch;
+}
+
+/* Token 5: H3 (Google Sans) */
+.token-h3 {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.25rem, 1.02rem + 1.0vw, 1.75rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-subheading);
+  letter-spacing: -0.018em;
+  color: var(--text-primary, #09090b);
+  max-width: 40ch;
+}
+
+/* Token 6: H4 (Google Sans) */
+.token-h4 {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.125rem, 1.0rem + 0.5vw, 1.375rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-ui);
+  letter-spacing: -0.015em;
+  color: var(--text-primary, #09090b);
+  max-width: 48ch;
+}
+
+/* Token 7: Section Title (Google Sans) */
+.token-section-title {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.375rem, 1.15rem + 1.1vw, 2rem);
+  font-weight: var(--weight-semibold);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--text-primary, #09090b);
+  max-width: 36ch;
+}
+
+/* Token 8: Product Title (Google Sans) */
+.token-product-title {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.25rem, 1.125rem + 0.5vw, 1.5rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-heading);
+  letter-spacing: -0.018em;
+  color: var(--text-primary, #09090b);
+  max-width: 30ch;
+}
+
+/* Token 9: Card Title (Google Sans) */
+.token-card-title {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-subheading);
+  letter-spacing: -0.014em;
+  color: var(--text-primary, #09090b);
+  max-width: 35ch;
+}
+
+/* Token 10: Card Subtitle (Google Sans Flex) */
+.token-card-subtitle {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.8125rem, 0.8rem + 0.1vw, 0.875rem);
+  font-weight: var(--weight-medium);
+  line-height: 1.40;
+  letter-spacing: -0.006em;
+  color: var(--text-secondary, #52525b);
+  max-width: 42ch;
+}
+
+/* Token 11: Category Label (Google Sans Flex) */
+.token-category-label {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem);
+  font-weight: var(--weight-semibold);
+  line-height: 1.30;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-muted, #71717a);
+}
+
+/* Token 12: Navigation (Google Sans Flex) */
+.token-navigation {
+  font-family: var(--font-ui-stack);
+  font-size: 0.875rem;
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-subheading);
+  letter-spacing: -0.006em;
+  color: var(--text-secondary, #3f3f46);
+}
+
+/* Token 13: Description (Google Sans Flex) */
+.token-description {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.875rem, 0.85rem + 0.15vw, 0.9375rem);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-normal);
+  color: var(--text-tertiary, #52525b);
+  max-width: 65ch;
+}
+
+/* Token 14: Body Large (Google Sans Flex) */
+.token-body-lg {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(1rem, 0.94rem + 0.25vw, 1.125rem);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body-large);
+  letter-spacing: -0.011em;
+  color: var(--text-primary, #27272a);
+  max-width: 68ch;
+}
+
+/* Token 15: Body (Google Sans Flex) */
+.token-body {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.875rem, 0.85rem + 0.15vw, 0.9375rem);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-normal);
+  color: var(--text-primary, #27272a);
+  max-width: 70ch;
+}
+
+/* Token 16: Body Small (Google Sans Flex) */
+.token-body-sm {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.75rem, 0.73rem + 0.1vw, 0.8125rem);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  letter-spacing: -0.003em;
+  color: var(--text-muted, #71717a);
+  max-width: 75ch;
+}
+
+/* Token 17: Caption (Google Sans Flex) */
+.token-caption {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.6875rem, 0.65rem + 0.1vw, 0.75rem);
+  font-weight: var(--weight-regular);
+  line-height: 1.45;
+  letter-spacing: var(--tracking-subtle);
+  color: var(--text-muted, #71717a);
+  max-width: 60ch;
+}
+
+/* Token 18: Price (Google Sans) */
+.token-price {
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.125rem, 1.0rem + 0.5vw, 1.375rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-none);
+  letter-spacing: -0.02em;
+  color: var(--text-primary, #09090b);
+}
+
+/* Token 19: Old Price (Google Sans) */
+.token-old-price {
+  font-family: var(--font-display-stack);
+  font-size: clamp(0.8125rem, 0.8rem + 0.1vw, 0.9375rem);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-none);
+  letter-spacing: -0.01em;
+  text-decoration: line-through;
+  color: var(--text-disabled, #a1a1aa);
+}
+
+/* Token 20: Badge (Google Sans Flex) */
+.token-badge {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem);
+  font-weight: var(--weight-semibold);
+  line-height: 1.20;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Token 21: Button Large (Google Sans Flex) */
+.token-button-lg {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.875rem, 0.85rem + 0.15vw, 0.9375rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-subheading);
+  letter-spacing: -0.005em;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.625rem;
+}
+
+/* Token 22: Button Medium (Google Sans Flex) */
+.token-button-md {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.8125rem, 0.8rem + 0.1vw, 0.875rem);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-subheading);
+  letter-spacing: -0.003em;
+  padding: 0.5625rem 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Token 23: Button Small (Google Sans Flex) */
+.token-button-sm {
+  font-family: var(--font-ui-stack);
+  font-size: 0.75rem;
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-subheading);
+  letter-spacing: var(--tracking-wide);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+}
+
+/* Token 24: Input Text (Google Sans Flex) - Ensures min 16px on mobile for iOS zoom prevention */
+.token-input-text {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(1rem, 0.875rem + 0.2vw, 0.875rem);
+  font-weight: var(--weight-regular);
+  line-height: 1.40;
+  letter-spacing: -0.006em;
+}
+
+/* Token 25: Input Label (Google Sans Flex) */
+.token-input-label {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.75rem, 0.73rem + 0.1vw, 0.8125rem);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-ui);
+  letter-spacing: -0.004em;
+  color: var(--text-secondary, #3f3f46);
+}
+
+/* Token 26: Footer Text (Google Sans Flex) */
+.token-footer-text {
+  font-family: var(--font-ui-stack);
+  font-size: clamp(0.75rem, 0.73rem + 0.1vw, 0.8125rem);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  letter-spacing: -0.002em;
+  color: var(--text-muted, #71717a);
+  max-width: 50ch;
+}

@@ -1,0 +1,30 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-nav-overlay, 900);
+  border: 0;
+  margin: 0;
+  padding: 0;
+  cursor: default;
+  background: rgba(15, 23, 42, 0.28);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--nav-panel-duration, 280ms) var(--nav-panel-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  will-change: opacity;
+}
+
+.backdrop.isOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(15, 23, 42, 0.4);
+    transition: none;
+  }
+}
