@@ -208,6 +208,8 @@ describe("home landing composite contract", () => {
     expect(shelfCss).toContain(".productPriceDji");
     expect(shelfCss).toContain(".productBuyNowDji");
     expect(shelfCss).toContain(".productFooterDji");
+    expect(shelfCss).toMatch(/\.productCardDji\s+\.productFooterDji[\s\S]*?margin-top:\s*auto/);
+    expect(shelfCss).toMatch(/\.productCardDji\s+\.productName[\s\S]*?min-height:\s*calc\(1\.22em\s*\*\s*2\)/);
     expect(shelfCss).toContain("--shelf-dji-product-col");
     expect(shelfCss).toContain("repeat(4, minmax(0, var(--shelf-dji-product-col");
     expect(shelfCss).toContain("var(--shelf-row-gap");
