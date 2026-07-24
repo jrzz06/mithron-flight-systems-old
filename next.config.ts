@@ -78,12 +78,9 @@ function mediaCdnImageHostname() {
       return null;
     }
   }
-  // Vercel edge media CDN serves from the site origin (`/cdn-media/...`).
+  // Same-origin `/cdn-media/...` proxy (local + Vercel) unless explicitly disabled.
   const viaVercel = process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL?.trim().toLowerCase();
-  const autoVercel =
-    viaVercel !== "0" &&
-    viaVercel !== "false" &&
-    (viaVercel === "1" || viaVercel === "true" || Boolean(process.env.VERCEL));
+  const autoVercel = viaVercel !== "0" && viaVercel !== "false" && viaVercel !== "off";
   if (!autoVercel) return null;
   try {
     const site = process.env.NEXT_PUBLIC_SITE_URL?.trim();

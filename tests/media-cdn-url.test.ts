@@ -37,12 +37,19 @@ describe("media CDN rewrite", () => {
     })).toBe("https://final-mithron-deploy.vercel.app/cdn-media");
   });
 
-  it("auto-enables relative /cdn-media on Vercel without an explicit flag", () => {
+  it("auto-enables relative /cdn-media without VERCEL or an explicit flag", () => {
+    const src = "https://abc.supabase.co/storage/v1/object/public/mithron-products/foo.webp";
+    expect(rewriteStorageUrlForCdn(src, {
+      NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co"
+    })).toBe("/cdn-media/storage/v1/object/public/mithron-products/foo.webp");
+  });
+
+  it("keeps direct Supabase URLs when via-vercel is explicitly disabled", () => {
     const src = "https://abc.supabase.co/storage/v1/object/public/mithron-products/foo.webp";
     expect(rewriteStorageUrlForCdn(src, {
       NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co",
-      VERCEL: "1"
-    })).toBe("/cdn-media/storage/v1/object/public/mithron-products/foo.webp");
+      NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL: "0"
+    })).toBe(src);
   });
 
   it("prefers custom CDN over Vercel edge mode", () => {

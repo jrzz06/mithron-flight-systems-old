@@ -3,11 +3,11 @@
  *
  * Priority:
  * 1. NEXT_PUBLIC_MEDIA_CDN_ORIGIN (Cloudflare / custom CDN)
- * 2. Vercel edge proxy at `{site}/cdn-media` when NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL=1
- *    (or auto-enabled on Vercel when no custom CDN is set)
+ * 2. Same-origin `{site}/cdn-media` proxy (default on local + Vercel)
+ *    Disable with NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL=0
  *
  * Custom CDN example: https://media.mithron.com/storage/v1/object/public/...
- * Vercel edge example: https://final-mithron-deploy.vercel.app/cdn-media/storage/v1/object/public/...
+ * Edge example: /cdn-media/storage/v1/object/public/...
  */
 import { CANONICAL_PRODUCTION_HOST } from "@/lib/site-url";
 
@@ -41,8 +41,9 @@ function vercelMediaCdnEnabled(env: Record<string, string | undefined>): boolean
   const flag = env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL?.trim().toLowerCase();
   if (flag === "0" || flag === "false" || flag === "off") return false;
   if (flag === "1" || flag === "true" || flag === "on") return true;
-  // Auto-enable on Vercel when no custom CDN origin is configured.
-  return Boolean(env.VERCEL === "1" || env.VERCEL_ENV);
+  // Default on for local + Vercel so storefront media URLs stay 1:1 (`/cdn-media/...`).
+  // Opt out explicitly with NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL=0.
+  return true;
 }
 
 /**
