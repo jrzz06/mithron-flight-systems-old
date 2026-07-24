@@ -1,4 +1,4 @@
-import { ProductHoverCard } from "@/components/cards/product-hover-card";
+import { HomeProductShelfCard } from "@/components/product/home-product-shelf-card";
 import type { Product } from "@/config/types";
 import type { CSSProperties } from "react";
 import { ProductCardImage } from "@/components/media/product-card-image";
@@ -6,6 +6,8 @@ import { ProductLink } from "@/components/navigation/product-link";
 import { ProductSharedMedia } from "@/components/navigation/product-shared-media";
 import { cn } from "@/lib/utils";
 import styles from "./catalog-page.module.css";
+
+const CATALOG_IMAGE_SIZES = "(min-width:1024px) 25vw, 50vw";
 
 type CatalogBrowseLeadGridProps = {
   products: Product[];
@@ -20,7 +22,7 @@ type CatalogBrowseLeadGridProps = {
 export function CatalogBrowseLeadGrid({
   products,
   isShowroom,
-  cardPresentation,
+  cardPresentation: _cardPresentation,
   featuredProduct,
   showEditorialBand,
   editorialPresentation,
@@ -28,16 +30,18 @@ export function CatalogBrowseLeadGrid({
 }: CatalogBrowseLeadGridProps) {
   return (
     <>
-      <div className={isShowroom ? styles.productGrid : "catalog-product-grid min-w-0"}>
+      <div
+        className={cn("w-full justify-items-stretch", isShowroom ? styles.productGrid : "catalog-product-grid min-w-0")}
+        data-catalog-shelf-cards=""
+      >
         {products.map((product, index) => (
-          <ProductHoverCard
+          <HomeProductShelfCard
             key={product.slug}
             product={product}
-            variant="catalog"
-            showCategory
-            cta="catalog"
-            presentation={cardPresentation}
+            layout="dji"
+            presentation="catalog"
             priority={index < 4}
+            imageSizes={CATALOG_IMAGE_SIZES}
           />
         ))}
       </div>
@@ -49,6 +53,12 @@ export function CatalogBrowseLeadGrid({
           className={cn(isShowroom ? styles.editorialBand : "catalog-editorial-band")}
           data-testid="catalog-editorial-band"
         >
+          {!isShowroom ? (
+            <>
+              <span className="catalog-editorial-band__mesh" aria-hidden="true" />
+              <span className="catalog-editorial-band__texture" aria-hidden="true" />
+            </>
+          ) : null}
           <div className={isShowroom ? styles.editorialCopy : "catalog-editorial-band__copy"}>
             <p className={isShowroom ? styles.editorialEyebrow : "catalog-editorial-band__eyebrow type-meta"}>
               {isShowroom ? "Featured" : "— Featured"}
@@ -75,6 +85,7 @@ export function CatalogBrowseLeadGrid({
             }
             aria-hidden
           >
+            {!isShowroom ? <span className="catalog-editorial-band__glow" aria-hidden="true" /> : null}
             <ProductSharedMedia slug={featuredProduct.slug}>
               <ProductCardImage
                 product={featuredProduct}

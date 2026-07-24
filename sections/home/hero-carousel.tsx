@@ -272,7 +272,7 @@ export function HeroCarousel({
       onTouchEnd={heroSwipe.onTouchEnd}
       onTouchCancel={heroSwipe.onTouchCancel}
       onClickCapture={heroSwipe.onClickCapture}
-      className="hero-premium-field relative isolate h-[min(72svh,520px)] min-h-[min(420px,72svh)] md:h-[80svh] md:min-h-[580px] w-full overflow-hidden bg-[#050505] touch-pan-y"
+      className="hero-premium-field relative isolate h-[min(76svh,720px)] min-h-[max(52svh,360px)] md:h-[80svh] md:min-h-[580px] w-full overflow-hidden bg-[#050505] touch-pan-y"
     >
       {safeSlides.map((item, itemIndex) => {
         const slideInk = getHeroContentInk(item, itemIndex);

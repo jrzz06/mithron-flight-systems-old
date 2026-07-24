@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { attachCatalogProductRatings } from "@/lib/catalog-product-ratings";
 import { CatalogPage } from "@/sections/catalog/catalog-page";
 import { getCatalogShowroomProducts } from "@/services/catalog";
 
@@ -35,6 +36,8 @@ async function ProductsPageContent() {
     const message = error instanceof Error ? error.message : String(error);
     console.warn(`[products] catalog showroom failed; rendering empty catalog: ${message}`);
   }
+
+  products = await attachCatalogProductRatings(products);
 
   return (
     <CatalogPage

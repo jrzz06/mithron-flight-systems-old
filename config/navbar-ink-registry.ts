@@ -35,14 +35,13 @@ export const homepageSlideNavbarInk = {
 
 /**
  * Category showcase — keyed by /category/* path.
- * Use "light" (white labels) for flush dark cinematic showcases behind the
- * navbar. Runtime falls back to dark ink when no showcase surface is mounted
- * so white storefront chrome stays readable.
+ * Use "light" (white labels) for flush dark cinematic showcases;
+ * use "dark" (black labels) for light showcase banners so nav stays readable.
  */
 export const categoryPathNavbarInk = {
   "/category/agri-drones": "light",
   "/category/video-drones": "light",
-  "/category/creative-drones": "light",
+  "/category/creative-drones": "dark",
   "/category/survey-drones": "light",
   "/category/surveillance-drones": "light",
   "/category/accessories": "light",
@@ -75,8 +74,8 @@ export function isFlushHeroStreamingRoute(pathname: string | null): boolean {
 /** SSR-safe bootstrap tone from pathname only. */
 export function getBootstrapNavbarInk(pathname: string | null): NavbarInkTone {
   const normalized = normalizeStorefrontPath(pathname);
-  // Home uses solid white chrome — dark ink so labels stay readable.
-  if (normalized === "/") return "dark";
+  // Home uses flush overlay over the dark hero — light ink until scroll/hover solidifies.
+  if (normalized === "/") return "light";
   if (normalized === "/login") return "light";
 
   const categoryInk = categoryPathNavbarInk[normalized as keyof typeof categoryPathNavbarInk];
@@ -89,10 +88,8 @@ export function getBootstrapNavbarInk(pathname: string | null): NavbarInkTone {
 
 /**
  * Route-derived navbar chrome (independent of leftover DOM from prior pages).
- * Home is always solid white. Other light-bootstrap routes use flush overlay.
+ * Light-bootstrap routes (home, categories, login) use flush overlay; hover → white bar.
  */
 export function resolveNavbarChromeMode(pathname: string | null): NavbarChromeMode {
-  const normalized = normalizeStorefrontPath(pathname);
-  if (normalized === "/") return "solid";
   return getBootstrapNavbarInk(pathname) === "light" ? "flush" : "solid";
 }

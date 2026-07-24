@@ -21,8 +21,8 @@ describe("navbar ink registry", () => {
     expect(Object.keys(categoryPathNavbarInk)).toHaveLength(7);
     expect(categoryPathNavbarInk["/category/agri-drones"]).toBe("light");
     expect(categoryPathNavbarInk["/category/video-drones"]).toBe("light");
+    expect(categoryPathNavbarInk["/category/creative-drones"]).toBe("dark");
     expect(categoryPathNavbarInk["/category/global-products"]).toBe("light");
-    expect(Object.values(categoryPathNavbarInk).every((ink) => ink === "light")).toBe(true);
   });
 
   it("resolves homepage slide ink with light fallback", () => {
@@ -33,15 +33,17 @@ describe("navbar ink registry", () => {
   it("resolves category ink by path and cms route key", () => {
     expect(resolveCategoryNavbarInk("/category/video-drones")).toBe("light");
     expect(resolveCategoryNavbarInk("/category/agri-drones")).toBe("light");
+    expect(resolveCategoryNavbarInk("/category/creative-drones")).toBe("dark");
     expect(resolveCategoryNavbarInkByCmsRouteKey("videoDrones")).toBe("light");
     expect(resolveCategoryNavbarInkByCmsRouteKey("agriculture")).toBe("light");
+    expect(resolveCategoryNavbarInkByCmsRouteKey("creativeDrones")).toBe("dark");
     expect(resolveCategoryNavbarInkByCmsRouteKey("unknown")).toBeNull();
   });
 
-  it("uses solid chrome and dark ink for homepage bootstrap", () => {
+  it("uses flush chrome and light ink for homepage bootstrap", () => {
     expect(HOMEPAGE_BOOTSTRAP_SLIDE_ID).toBe("ag10-arrival");
-    expect(getBootstrapNavbarInk("/")).toBe("dark");
-    expect(resolveNavbarChromeMode("/")).toBe("solid");
+    expect(getBootstrapNavbarInk("/")).toBe("light");
+    expect(resolveNavbarChromeMode("/")).toBe("flush");
     expect(getBootstrapNavbarInk("/category/survey-drones")).toBe("light");
     expect(getBootstrapNavbarInk("/products")).toBe("dark");
   });

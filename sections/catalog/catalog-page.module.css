@@ -1,6 +1,6 @@
 .shell {
   --catalog-bg: #f5f7fa;
-  --catalog-inline: clamp(14px, 2.75vw, 44px);
+  --catalog-inline: 0.75rem;
   --catalog-surface: #f8fafc;
   --catalog-card: #ffffff;
   --catalog-text: #0f172a;
@@ -13,8 +13,8 @@
   min-height: 100vh;
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  overflow: clip;
+  /* visible — overflow clip was eating product-card box-shadows */
+  overflow: visible;
   background: linear-gradient(180deg, #eef0f3 0%, var(--catalog-bg) 100%);
   color: var(--catalog-text);
   font-family: var(--type-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
@@ -34,12 +34,13 @@
 }
 
 .gridSection {
-  width: min(100%, var(--ds-container-catalog, 1480px));
+  width: 100%;
+  max-width: 42rem; /* max-w-2xl — compact 2-col cards */
   margin: 0 auto;
   scroll-margin-top: 112px;
   padding:
     clamp(calc(16px * var(--storefront-section-space-scale, 1)), 2vw, calc(28px * var(--storefront-section-space-scale, 1)))
-    var(--catalog-inline)
+    1.5rem /* px-6 */
     clamp(calc(80px * var(--storefront-section-space-scale, 1)), 8vw, calc(128px * var(--storefront-section-space-scale, 1)));
 }
 
@@ -53,24 +54,32 @@
 .productGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: auto;
-  gap: clamp(0.75rem, 1.6cqi, 1.5rem);
+  /* No grid-auto-rows: 1fr — forces all rows to height of tallest card anywhere
+     in the grid. align-items: stretch handles per-row equalization. */
+  gap: 1.25rem;
   align-items: stretch;
+  justify-content: stretch;
+  justify-items: stretch;
   width: 100%;
   min-width: 0;
+  overflow: visible;
+  padding: 4px 2px 12px;
 }
 
 .productGrid > * {
-  min-width: 0;
-  max-width: 100%;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  flex: none !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
 }
 
 .productGridContinued {
   margin-top: 24px;
 }
 
-.editorialEyebrow,
-.separatorLabel {
+.editorialEyebrow {
   margin: 0;
   color: var(--catalog-muted);
   font-size: 11px;
@@ -225,20 +234,6 @@
     linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
 }
 
-.separator {
-  display: grid;
-  grid-template-columns: auto minmax(64px, 1fr);
-  gap: 24px;
-  align-items: center;
-  margin: 48px 0 24px;
-}
-
-.separatorRule {
-  display: block;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0.02));
-}
-
 .emptyState {
   display: grid;
   gap: 16px;
@@ -268,32 +263,75 @@
   line-height: 1.55;
 }
 
-@media (max-width: 1279px) {
-  .shell {
-    --catalog-inline: clamp(10px, 2vw, 16px);
-  }
-
+@media (max-width: 1023px) {
   .gridSection {
-    padding-inline: var(--catalog-inline);
+    max-width: 42rem; /* max-w-2xl — keep 2-col cards compact */
+    padding-inline: 1.5rem; /* px-6 */
   }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 640px) {
+  .shell {
+    --catalog-inline: 1rem;
+  }
+
+  .gridSection {
+    padding-inline: 2rem; /* sm:px-8 */
+  }
+}
+
+@media (min-width: 768px) {
   .productGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-auto-rows: auto;
-    gap: clamp(0.875rem, 1.4cqi, 1.125rem);
+    /* Strictly 2 columns until lg */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem; /* gap-4 — same as mobile */
+  }
+
+  .gridSection {
+    max-width: 42rem; /* max-w-2xl centered */
+    padding-inline: 2.5rem; /* md:px-10 */
   }
 }
 
 @media (min-width: 1024px) {
+  .shell {
+    --catalog-inline: 1.25rem;
+  }
+
+  .gridSection {
+    /* Slightly narrower than 88rem — same 4-col desktop grid */
+    max-width: 84rem; /* 1344px */
+    padding-inline: 2rem; /* lg:px-8 */
+  }
+
   .productGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-auto-rows: auto;
+    gap: 1.35rem;
   }
 }
 
 @media (max-width: 1023px) {
+  .editorialBand {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    min-height: 0;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
+  }
+
+  .editorialTitle {
+    font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  }
+
+  .editorialMedia {
+    min-height: 0;
+    max-height: 180px;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@media (max-width: 767px) {
   .editorialBand {
     grid-template-columns: 1fr;
   }
@@ -301,25 +339,26 @@
 
 @media (max-width: 767px) {
   .shell {
-    --catalog-inline: clamp(12px, 2.25vw, 16px);
+    --catalog-inline: 1.25rem;
   }
 
   .gridSection {
-    padding-inline: var(--catalog-inline);
+    padding-inline: 1.5rem; /* px-6 — equal side spacing */
   }
 
   .productGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: auto;
-    gap: var(--mobile-grid-gap, 10px);
+    /* No grid-auto-rows: 1fr */
+    gap: 1.25rem;
     align-items: stretch;
     max-width: 100%;
     min-width: 0;
-    overflow-x: clip;
+    overflow: visible;
+    padding: 4px 2px 12px;
   }
 
   .shell {
-    overflow-x: clip;
+    overflow: visible;
   }
 
   .shell .card {
@@ -328,28 +367,30 @@
   }
 
   .media {
-    aspect-ratio: var(--product-card-image-ratio);
+    aspect-ratio: 1 / 1;
     height: auto;
     max-height: none;
   }
 
   .footer {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    margin-top: auto;
     min-width: 0;
-    padding-top: 4px;
+    padding-top: 0.75rem;
   }
 
   .price {
     flex: 0 1 auto;
     flex-shrink: 1;
     width: fit-content;
-    align-self: center;
+    align-self: flex-start;
     white-space: nowrap;
-    text-align: right;
+    text-align: left;
   }
 
   .cta {
@@ -363,7 +404,7 @@
 
 @media (max-width: 640px) {
   .shell {
-    --catalog-inline: clamp(12px, 2vw, 14px);
+    --catalog-inline: 1rem;
   }
 
   .editorialBand {
@@ -371,11 +412,11 @@
   }
 
   .gridSection {
-    padding: 32px var(--catalog-inline) 80px;
+    padding: 32px 1.5rem 80px;
   }
 
   .productGrid {
-    gap: 16px;
+    gap: 1rem; /* gap-4 */
   }
 
   .editorialBand {

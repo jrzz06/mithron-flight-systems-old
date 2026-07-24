@@ -27,6 +27,9 @@ type InventoryActionBridgeProps = {
   importAction: InventoryServerAction;
   bulkAction: InventoryServerAction;
   restockAction: InventoryServerAction;
+  permanentDeleteAction?: InventoryServerAction;
+  forceDeleteAction?: InventoryServerAction;
+  canForceDelete?: boolean;
   exportHref: string;
   title?: string;
   page?: number;
@@ -134,6 +137,9 @@ export function InventoryActionBridge({
   importAction,
   bulkAction,
   restockAction,
+  permanentDeleteAction,
+  forceDeleteAction,
+  canForceDelete = false,
   rows,
   ...props
 }: InventoryActionBridgeProps) {
@@ -173,7 +179,12 @@ export function InventoryActionBridge({
   }, [localRows, realtime, realtime?.collections.inventory]);
 
   const wrapAction = useCallback(
-    (action: InventoryServerAction, successMessage?: string, label = "Inventory action") =>
+    (
+      action: InventoryServerAction,
+      successMessage?: string,
+      label = "Inventory action",
+      options?: { removeOnSuccess?: boolean }
+    ) =>
       async (formData: FormData) => {
         try {
           const result = await raceWithTimeout(action(formData), INVENTORY_CLIENT_TIMEOUT_MS, label);
@@ -189,6 +200,11 @@ export function InventoryActionBridge({
           if (result.ok) {
             markControlPlaneLiveSyncFlush();
             const productSlug = String(formData.get("product_slug") ?? "").trim();
+            if (options?.removeOnSuccess && productSlug) {
+              setLocalRows((current) => current.filter((row) => row.productSlug !== productSlug));
+              void realtime?.reconcileResources(["inventory", "mithron_products"]);
+              return;
+            }
             const quantity = Number(String(formData.get("quantity") ?? "").trim());
             const status = String(formData.get("status") ?? "").trim() as SimpleInventoryStatus;
             if (productSlug) {
@@ -235,6 +251,20 @@ export function InventoryActionBridge({
     () => wrapAction(restockAction, undefined, "Quick restock"),
     [wrapAction, restockAction]
   );
+  const wrappedPermanentDelete = useMemo(
+    () =>
+      permanentDeleteAction
+        ? wrapAction(permanentDeleteAction, undefined, "Permanently delete product", { removeOnSuccess: true })
+        : undefined,
+    [wrapAction, permanentDeleteAction]
+  );
+  const wrappedForceDelete = useMemo(
+    () =>
+      forceDeleteAction
+        ? wrapAction(forceDeleteAction, undefined, "Force delete product", { removeOnSuccess: true })
+        : undefined,
+    [wrapAction, forceDeleteAction]
+  );
 
   return (
     <div className="grid gap-4" data-admin-inventory-live-bridge>
@@ -257,6 +287,9 @@ export function InventoryActionBridge({
         importAction={wrappedImport}
         bulkAction={wrappedBulk}
         restockAction={wrappedRestock}
+        permanentDeleteAction={wrappedPermanentDelete}
+        forceDeleteAction={wrappedForceDelete}
+        canForceDelete={canForceDelete}
       />
     </div>
   );

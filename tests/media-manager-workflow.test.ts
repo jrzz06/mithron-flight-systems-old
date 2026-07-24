@@ -148,13 +148,17 @@ describe("enterprise media manager workflow", () => {
     const page = readFileSync(join(process.cwd(), "app/admin/products/page.tsx"), "utf8");
     const actions = readFileSync(join(process.cwd(), "app/admin/products/actions.ts"), "utf8");
     const multiImageField = readFileSync(join(process.cwd(), "components/products/product-multi-image-field.tsx"), "utf8");
+    const imageFileInput = readFileSync(join(process.cwd(), "components/products/product-image-file-input.tsx"), "utf8");
     const uploadService = readFileSync(join(process.cwd(), "services/product-image-upload.ts"), "utf8");
 
     expect(page).toContain("data-product-create-media-fields");
     expect(page).toContain("ProductMultiImageField");
-    expect(multiImageField).toContain('type="file"');
-    expect(multiImageField).toContain('name="image_files"');
-    expect(multiImageField).toContain("multiple");
+    expect(multiImageField).toContain("ProductImageFileInput");
+    expect(multiImageField).toContain('name="ordered_gallery_urls"');
+    expect(multiImageField).toContain("data-product-image-reorder");
+    expect(imageFileInput).toContain('type="file"');
+    expect(imageFileInput).toContain('name="image_files"');
+    expect(imageFileInput).toContain("multiple");
     expect(actions).toContain("uploadProductImagesForDraft");
     expect(uploadService).toContain("assertAllowedMediaMimeType");
     expect(uploadService).toContain("upsertMediaAssetRecord");

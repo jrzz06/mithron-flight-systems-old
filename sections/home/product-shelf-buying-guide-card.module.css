@@ -3,9 +3,10 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: var(--shelf-dji-card-radius, 0);
+  border-radius: var(--shelf-dji-card-radius, 6px);
   background: #ffffff;
   color: #09090b;
   text-decoration: none;
@@ -49,6 +50,14 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  /* Match Care stack height — don't grow Global from longer headlines */
+  min-height: calc(1.2em * 3);
+  max-height: calc(1.2em * 3);
 }
 
 .imageFrame {

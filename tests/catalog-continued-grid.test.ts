@@ -47,13 +47,13 @@ describe("catalog continued grid", () => {
     expect(getVisibleProducts(items, 100)).toHaveLength(20);
   });
 
-  it("uses 2, 3, or 4 column breakpoints", () => {
+  it("uses 2 or 4 column breakpoints only — never 3", () => {
     expect(resolveColumnCount(320)).toBe(2);
     expect(resolveColumnCount(375)).toBe(2);
     expect(resolveColumnCount(600)).toBe(2);
     expect(resolveColumnCount(767)).toBe(2);
-    expect(resolveColumnCount(800)).toBe(3);
-    expect(resolveColumnCount(1023)).toBe(3);
+    expect(resolveColumnCount(800)).toBe(2);
+    expect(resolveColumnCount(1023)).toBe(2);
     expect(resolveColumnCount(1024)).toBe(4);
     expect(resolveColumnCount(1280)).toBe(4);
     expect(resolveColumnCount(1920)).toBe(4);
@@ -86,7 +86,7 @@ describe("catalog continued grid", () => {
   it("matches lead grid column breakpoints in globals css", () => {
     const globalsCss = source("app/globals.css");
     const catalogCss = source("app/storefront-catalog.css");
-    const catalogGridBlock = globalsCss.match(
+    const catalogGridBlock = catalogCss.match(
       /\.catalog-product-grid \{[\s\S]*?\.catalog-product-grid--continued/
     )?.[0];
 
@@ -94,7 +94,10 @@ describe("catalog continued grid", () => {
       /\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(globalsCss).toMatch(
-      /@media \(min-width: 768px\) and \(max-width: 1023px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/
+      /@media \(min-width: 768px\) and \(max-width: 1023px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
+    );
+    expect(catalogCss).toMatch(
+      /@media \(min-width: 768px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(catalogCss).toMatch(
       /@media \(min-width: 1024px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(4,\s*minmax\(0,\s*1fr\)\)/
@@ -102,6 +105,7 @@ describe("catalog continued grid", () => {
     expect(catalogCss).toMatch(
       /@media \(min-width: 1024px\)[\s\S]*\.catalog-continued-grid__rows[\s\S]*repeat\(4,\s*minmax\(0,\s*1fr\)\)/
     );
+    expect(catalogCss).not.toMatch(/repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
     expect(catalogGridBlock).not.toMatch(/auto-fill/);
   });
 });

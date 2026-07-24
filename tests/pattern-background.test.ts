@@ -61,7 +61,7 @@ describe("product gallery pattern integration", () => {
     expect(page).toContain("showBadge={Boolean(product.badge?.trim())}");
     expect(css).toContain(".stagePattern");
     expect(css).toContain(".stageProductShadow");
-    expect(css).toMatch(/\.stage\s*\{[^}]*border-radius:\s*var\(--pdp-radius-xl\)/);
+    expect(css).toMatch(/\.stage\s*\{[^}]*border-radius:\s*16px/);
     expect(css).not.toMatch(/\.stage\s*\{[^}]*background:\s*var\(--pdp-section\)/);
   });
 });

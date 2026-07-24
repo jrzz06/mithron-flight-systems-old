@@ -31,7 +31,6 @@ type CatalogFilteredListingProps = {
   mode: "category" | "global";
   presentation: "standard" | "showroom";
   title: string;
-  eyebrow?: string;
   /** When true, hide the static catalog title (page hero already has the h1). */
   suppressListingTitle?: boolean;
   initialGroup?: CatalogProductGroup;
@@ -57,7 +56,6 @@ export function CatalogFilteredListing({
   mode,
   presentation,
   title,
-  eyebrow = "Catalog",
   suppressListingTitle = false,
   initialGroup,
   initialQuery,
@@ -206,7 +204,6 @@ export function CatalogFilteredListing({
   };
 
   const displayTitle = debouncedQuery ? `Results for "${debouncedQuery}"` : title;
-  const displayEyebrow = debouncedQuery ? "Search results" : eyebrow;
   const hasSearchQuery = debouncedQuery.length > 0;
   const catalogIsEmpty = products.length === 0;
   const emptyTitle = hasSearchQuery
@@ -226,7 +223,6 @@ export function CatalogFilteredListing({
         mode={mode}
         presentation={presentation}
         title={displayTitle}
-        eyebrow={displayEyebrow}
         suppressListingTitle={suppressListingTitle}
         hasSearchQuery={hasSearchQuery}
         query={query}
@@ -294,18 +290,12 @@ export function CatalogFilteredListing({
           />
 
           {browseRemainingProducts.length > 0 ? (
-            <>
-              <div className={isShowroom ? styles.separator : "catalog-section-separator"}>
-                <p className={isShowroom ? styles.separatorLabel : "type-meta"}>More products</p>
-                <span className={isShowroom ? styles.separatorRule : "catalog-section-separator__rule"} aria-hidden />
-              </div>
-              <CatalogContinuedGrid
-                key={listingKey}
-                products={browseRemainingProducts}
-                className={isShowroom ? styles.productGridContinued : "catalog-product-grid--continued min-w-0"}
-                presentation={cardPresentation}
-              />
-            </>
+            <CatalogContinuedGrid
+              key={listingKey}
+              products={browseRemainingProducts}
+              className={isShowroom ? styles.productGridContinued : "catalog-product-grid--continued min-w-0"}
+              presentation={cardPresentation}
+            />
           ) : null}
         </>
       )}

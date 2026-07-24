@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProductHoverCard } from "@/components/cards/product-hover-card";
+import { DiscoveryProductGrid } from "@/sections/product/discovery-product-grid";
 import type { ProductShellItem } from "@/services/catalog";
 import styles from "./product-detail.module.css";
 import showcaseStyles from "./showcase/product-showcase.module.css";
@@ -10,17 +10,7 @@ function RelatedRail({ title, items }: { title: string; items: ProductShellItem[
   return (
     <div className={showcaseStyles.relatedRail}>
       <h3 className={showcaseStyles.relatedRailTitle}>{title}</h3>
-      <div className={styles.relatedProductGrid}>
-        {items.map((item) => (
-          <ProductHoverCard
-            key={item.slug}
-            product={item}
-            variant="catalog"
-            showCategory
-            cta="catalog"
-          />
-        ))}
-      </div>
+      <DiscoveryProductGrid products={items} className="mt-4" />
     </div>
   );
 }

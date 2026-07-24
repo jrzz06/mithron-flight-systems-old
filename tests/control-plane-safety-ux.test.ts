@@ -26,6 +26,7 @@ describe("control plane safety UX hardening", () => {
     const queueTable = source("components/warehouse/warehouse-order-queue-table.tsx");
     const fulfillment = source("components/warehouse/warehouse-fulfillment-detail.tsx");
     const supplierProducts = source("app/supplier/products/page.tsx");
+    const inventoryManager = source("components/admin/inventory-manager.tsx");
 
     expect(actionsRail).toContain('confirmMessage={`Cancel order ${orderLabel}?`}');
     expect(actionsRail).toContain("requireTypedText={orderLabel}");
@@ -33,6 +34,8 @@ describe("control plane safety UX hardening", () => {
     expect(queueTable).toContain("requireTypedText={order.orderNumber}");
     expect(fulfillment).toContain("requireTypedText={orderRow.orderNumber}");
     expect(supplierProducts).toContain('requireTypedText="DELETE"');
+    expect(inventoryManager).toContain("requireTypedText={deleteRow.productSlug}");
+    expect(inventoryManager).toContain("data-inventory-delete-modal");
   });
 
   it("keeps admin orders live for shipments/inventory and surfaces snapshot limits", () => {

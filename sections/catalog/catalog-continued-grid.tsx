@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ProductHoverCard } from "@/components/cards/product-hover-card";
+import { HomeProductShelfCard } from "@/components/product/home-product-shelf-card";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/config/types";
 import { dedupeProductsBySlug } from "@/lib/catalog-shelf-layout";
@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 export const INITIAL_BATCH = 8;
 export const BATCH_SIZE = 8;
 
+const CATALOG_IMAGE_SIZES = "(min-width:1024px) 25vw, 50vw";
+
 type CatalogContinuedGridProps = {
   products: Product[];
   className?: string;
@@ -17,9 +19,9 @@ type CatalogContinuedGridProps = {
   presentation?: "standard" | "showroom";
 };
 
+/** Strict 2-col below lg, 4-col at lg+ — never 1 or 3. */
 export function resolveColumnCount(width: number) {
-  if (width < 768) return 2;
-  if (width < 1024) return 3;
+  if (width < 1024) return 2;
   return 4;
 }
 
@@ -31,7 +33,7 @@ export function CatalogContinuedGrid({
   products,
   className,
   rowsClassName,
-  presentation = "standard"
+  presentation: _presentation = "standard"
 }: CatalogContinuedGridProps) {
   const items = useMemo(() => dedupeProductsBySlug(products), [products]);
   const itemsSignature = useMemo(() => items.map((item) => item.slug).join("|"), [items]);
@@ -49,17 +51,16 @@ export function CatalogContinuedGrid({
   }
 
   return (
-    <div className={className} data-catalog-continued-grid>
-      <div className={cn("catalog-continued-grid__rows", rowsClassName)}>
+    <div className={className} data-catalog-continued-grid data-catalog-shelf-cards="">
+      <div className={cn("catalog-continued-grid__rows w-full justify-items-stretch", rowsClassName)}>
         {visibleProducts.map((product, index) => (
-          <ProductHoverCard
+          <HomeProductShelfCard
             key={product.slug}
             product={product}
-            variant="catalog"
-            showCategory
-            cta="catalog"
-            presentation={presentation}
+            layout="dji"
+            presentation="catalog"
             priority={index < 4}
+            imageSizes={CATALOG_IMAGE_SIZES}
           />
         ))}
       </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/client";
 import {
   cancelNavPanelSchedule,
   scheduleNavPanelClose,
@@ -26,6 +27,39 @@ export function ProfileNavButton() {
   const mounted = open || exitingPanel === "profile";
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [anchor, setAnchor] = useState({ top: 0, right: 0 });
+  // Default guest until auth resolves so Orders / Sign out never flash for guests.
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    try {
+      const supabase = createClient();
+      void supabase.auth
+        .getSession()
+        .then(({ data }) => {
+          if (!active) return;
+          setSignedIn(Boolean(data.session?.user));
+        })
+        .catch(() => {
+          if (active) setSignedIn(false);
+        });
+
+      const listener = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!active) return;
+        setSignedIn(Boolean(session?.user));
+      });
+      subscription = listener.data.subscription;
+    } catch {
+      if (active) setSignedIn(false);
+    }
+
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
 
   const syncAnchor = useCallback(() => {
     const el = triggerRef.current;
@@ -103,27 +137,45 @@ export function ProfileNavButton() {
         >
           <div className={styles.popoverBridge} aria-hidden="true" />
           <div className={styles.popoverPanel}>
-            <Link
-              href="/account"
-              role="menuitem"
-              className={styles.menuItem}
-              onClick={() => closePanel()}
-            >
-              Account
-            </Link>
-            <Link
-              href="/account/orders"
-              role="menuitem"
-              className={styles.menuItem}
-              onClick={() => closePanel()}
-            >
-              Orders
-            </Link>
-            <form action="/auth/logout" method="post">
-              <button type="submit" role="menuitem" className={styles.menuItem} onClick={() => closePanel()}>
-                Sign out
-              </button>
-            </form>
+            {signedIn ? (
+              <>
+                <Link
+                  href="/account"
+                  role="menuitem"
+                  className={styles.menuItem}
+                  onClick={() => closePanel()}
+                >
+                  Account
+                </Link>
+                <Link
+                  href="/account/orders"
+                  role="menuitem"
+                  className={styles.menuItem}
+                  onClick={() => closePanel()}
+                >
+                  Orders
+                </Link>
+                <form action="/auth/logout" method="post">
+                  <button
+                    type="submit"
+                    role="menuitem"
+                    className={styles.menuItem}
+                    onClick={() => closePanel()}
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link
+                href="/login?next=/account"
+                role="menuitem"
+                className={styles.menuItem}
+                onClick={() => closePanel()}
+              >
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
       ) : null}

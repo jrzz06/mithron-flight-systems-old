@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 const CATALOG_PROBE_PATH = "/category/agri-drones";
 
 async function findVisibleCatalogCard(page: Page): Promise<Locator> {
-  const cards = page.locator('[data-testid^="premium-product-card-"], [data-card-variant="catalog"]');
+  const cards = page.locator('[data-testid="home-product-card"], [data-testid^="premium-product-card-"], [data-card-variant="catalog"]');
   await expect(cards.first()).toBeVisible({ timeout: 30_000 });
   expect(await cards.count()).toBeGreaterThan(0);
 
@@ -28,6 +28,11 @@ export async function openCatalogAndGetFirstProductSlug(page: Page) {
   const testId = await card.getAttribute("data-testid");
   if (testId?.startsWith("premium-product-card-")) {
     return testId.replace("premium-product-card-", "");
+  }
+
+  const selfHref = await card.getAttribute("href");
+  if (selfHref?.includes("/product/")) {
+    return selfHref.split("/product/")[1]!.split("?")[0]!;
   }
 
   const href = await card.locator("a").first().getAttribute("href");
@@ -66,5 +71,5 @@ export async function assertProductsCatalogShell(page: Page) {
   const response = await page.goto("/products", { waitUntil: "domcontentloaded" });
   expect(response?.ok()).toBeTruthy();
   await expect(page.getByTestId("catalog-intro").first()).toBeAttached({ timeout: 25_000 });
-  expect(await page.locator('[data-testid^="premium-product-card-"], [data-card-variant="catalog"]').count()).toBeGreaterThan(0);
+  expect(await page.locator('[data-testid="home-product-card"], [data-testid^="premium-product-card-"], [data-card-variant="catalog"]').count()).toBeGreaterThan(0);
 }

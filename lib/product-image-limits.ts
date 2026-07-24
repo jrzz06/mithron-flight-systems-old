@@ -20,6 +20,6 @@ export function productImageUploadNotice() {
   return [
     `Recommended: ${RECOMMENDED_PRODUCT_IMAGE_WIDTH}×${RECOMMENDED_PRODUCT_IMAGE_HEIGHT} px (1:1) for a clean product preview.`,
     `Prefer files under ${preferredMb} MB for faster loading (max ${maxMb} MB each, up to ${MAX_PRODUCT_IMAGE_COUNT} images).`,
-    "The first selected file becomes the primary image."
+    "Drag or move images to reorder — the first image is primary. The first selected upload becomes primary on save."
   ].join(" ");
 }

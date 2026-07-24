@@ -4,17 +4,39 @@
   --testimonial-heading: #0f2a1c;
   --testimonial-meta: rgba(15, 42, 28, 0.64);
   --testimonial-dot-muted: rgba(31, 107, 70, 0.28);
-  --testimonial-card-width: calc((100% - (var(--testimonial-gap) * 2)) / 3.15);
-  --testimonial-gap: clamp(20px, 2.2vw, 32px);
+  /* Desktop (>1024px): fixed 480px cards with consistent peek */
+  --testimonial-card-width: 480px;
+  --testimonial-gap: 1.5rem; /* gap-6 */
   position: relative;
   overflow: hidden;
-  padding: clamp(72px, 9vh, 112px) 0 clamp(80px, 10vh, 120px);
+  /* py-8 sm:py-12 md:py-16 — scaled so section doesn't overpower banners above */
+  padding: 2rem 0; /* py-8 */
   background:
     radial-gradient(ellipse 80% 60% at 10% 0%, rgba(150, 230, 161, 0.12) 0%, transparent 65%),
     radial-gradient(ellipse 70% 60% at 90% 100%, rgba(31, 107, 70, 0.06) 0%, transparent 65%),
     linear-gradient(165deg, #f6f9f7 0%, #e9f2ec 100%);
   border-top: 1px solid rgba(31, 107, 70, 0.08);
   border-bottom: 1px solid rgba(31, 107, 70, 0.06);
+}
+
+@media (min-width: 640px) {
+  .section {
+    --testimonial-card-width: 420px; /* tablet 640–1024 */
+    --testimonial-gap: 1.5rem; /* gap-6 */
+    padding-block: 3rem; /* sm:py-12 */
+  }
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-block: 4rem; /* md:py-16 */
+  }
+}
+
+@media (min-width: 1024px) {
+  .section {
+    --testimonial-card-width: 480px; /* desktop */
+  }
 }
 
 .section::before {
@@ -71,8 +93,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: clamp(16px, 3vw, 28px);
-  margin-bottom: clamp(32px, 4vh, 48px);
+  gap: clamp(12px, 2.5vw, 24px);
+  margin-bottom: clamp(20px, 3vh, 32px);
 }
 
 .headerCopy {
@@ -96,7 +118,7 @@
 }
 
 .lead {
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   max-width: 42ch;
   color: var(--testimonial-meta);
   font-family: var(--type-ui);
@@ -114,7 +136,7 @@
   width: calc(100% + (2 * var(--section-inline)));
   margin-inline: calc(-1 * var(--section-inline));
   --testimonial-fade-solid: #eef4f0;
-  --testimonial-fade-width: clamp(64px, 10vw, 140px);
+  --testimonial-fade-width: clamp(48px, 8vw, 120px);
 }
 
 .carouselRegion::before,
@@ -153,12 +175,12 @@
 .carouselViewport {
   overflow: hidden;
   width: 100%;
-  min-height: 300px;
-  padding-block: 6px 10px;
+  min-height: 0;
+  padding-block: 4px 8px;
   padding-inline: var(--section-inline);
   container-type: inline-size;
   container-name: testimonial-marquee;
-  --marquee-card-width: calc((100cqw - (var(--testimonial-gap) * 2)) / 3.15);
+  --marquee-card-width: var(--testimonial-card-width);
 }
 
 .marqueeTrack {
@@ -214,6 +236,8 @@
 
 .cardSlot {
   flex: 0 0 var(--testimonial-card-width);
+  width: var(--testimonial-card-width);
+  max-width: var(--testimonial-card-width);
   min-width: 0;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -224,7 +248,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: clamp(20px, 2.5vh, 28px);
+  margin-top: clamp(16px, 2vh, 24px);
 }
 
 .dotButton {
@@ -259,20 +283,22 @@
   transform: scale(1.08);
 }
 
-@media (max-width: 1023px) {
+/* Mobile (<640px): 82vw capped at 320px, tighter gap, left/right peek */
+@media (max-width: 639px) {
   .section {
-    --testimonial-card-width: calc((100% - var(--testimonial-gap)) / 1.65);
+    --testimonial-card-width: min(82vw, 320px);
+    --testimonial-gap: 1rem; /* gap-4 */
   }
 
   .carouselRegion {
-    --testimonial-fade-width: clamp(40px, 12vw, 88px);
+    --testimonial-fade-width: clamp(24px, 8vw, 48px);
     width: calc(100% + (2 * var(--home-mobile-inline, clamp(18px, 5vw, 28px))));
     margin-inline: calc(-1 * var(--home-mobile-inline, clamp(18px, 5vw, 28px)));
   }
 
   .carouselViewport {
     padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
-    --marquee-card-width: calc((100cqw - var(--testimonial-gap)) / 1.65);
+    --marquee-card-width: min(82vw, 320px);
   }
 
   .track {
@@ -283,24 +309,37 @@
   .inner {
     padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
   }
-}
-
-@media (max-width: 767px) {
-  .section {
-    --testimonial-card-width: 100%;
-  }
-
-  .carouselRegion {
-    --testimonial-fade-width: clamp(28px, 10vw, 56px);
-  }
-
-  .carouselViewport {
-    --marquee-card-width: calc((100cqw - var(--testimonial-gap)) / 1.15);
-  }
 
   .header {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+/* Tablet (640px – 1024px): 420px cards, mobile gutters until desktop */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .section {
+    --testimonial-card-width: 420px;
+  }
+
+  .carouselRegion {
+    --testimonial-fade-width: clamp(36px, 10vw, 72px);
+    width: calc(100% + (2 * var(--home-mobile-inline, clamp(18px, 5vw, 28px))));
+    margin-inline: calc(-1 * var(--home-mobile-inline, clamp(18px, 5vw, 28px)));
+  }
+
+  .carouselViewport {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+    --marquee-card-width: 420px;
+  }
+
+  .track {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+    scroll-padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+  }
+
+  .inner {
+    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
   }
 }
 

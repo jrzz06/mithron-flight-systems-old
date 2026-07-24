@@ -114,7 +114,8 @@ export function ProductConfigurator({
   const showVariantPicker = product.variants.length > 1 && !isAvailabilityVariant(product.variants);
   const showBundlePicker = product.bundles.length > 1;
   const displayPrice = product.price;
-  const showGstNote = Boolean(product.chargeTax) && !product.taxIncluded;
+  const showGstNote = product.chargeTax !== false;
+  const gstLabel = product.taxIncluded ? "Incl. GST" : "Excl. GST";
   const showCompareAt = Boolean(product.compareAt && product.compareAt > displayPrice);
   const stockLabel = isAvailabilityVariant(product.variants)
     ? formatAvailability(selectedVariant?.name ?? "In stock")
@@ -248,7 +249,7 @@ export function ProductConfigurator({
             <p className={styles.priceHero}>
               {formatINR(displayPrice)}
             </p>
-            {showGstNote ? <p className={styles.priceGstNote}>+ GST</p> : null}
+            {showGstNote ? <p className={styles.priceGstNote}>{gstLabel}</p> : null}
             {showCompareAt ? (
               <p className={styles.priceComparePremium}>{formatINR(product.compareAt!)}</p>
             ) : null}

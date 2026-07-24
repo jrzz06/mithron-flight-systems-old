@@ -3,9 +3,10 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { CartNavButton } from "@/components/navigation/cart-nav-button";
+import { ProfileNavButton } from "@/components/navigation/profile-nav-button";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
-import { ChevronDown, Globe2, Menu, Search, UserRound } from "lucide-react";
+import { ChevronDown, Globe2, Menu, Search } from "lucide-react";
 import { useAdaptiveNavbarTone } from "@/hooks/use-adaptive-navbar-tone";
 import { useNavAnchor } from "@/hooks/use-nav-anchor";
 import { normalizeStorefrontPath, resolveInitialNavbarTone } from "@/lib/navbar-ink-sampling";
@@ -496,15 +497,7 @@ export const StoreNav = forwardRef(function StoreNav(
                   <Search className="size-[18px]" />
                 </button>
                 <CartNavButton />
-                {!isStorefrontGuestOnly() ? (
-                  <Link
-                    href="/account"
-                    aria-label="Account"
-                    className="adaptive-navbar__icon nav-interactive nav-interactive--subtle inline-flex size-11 items-center justify-center rounded-full text-current"
-                  >
-                    <UserRound className="size-[18px]" />
-                  </Link>
-                ) : null}
+                {!isStorefrontGuestOnly() ? <ProfileNavButton /> : null}
               </>
             ) : null}
             <button

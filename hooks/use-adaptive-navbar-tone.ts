@@ -27,6 +27,7 @@ function isInkSurface(element: Element) {
 export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
   const pathname = usePathname();
   const [tone, setTone] = useState(initialTone);
+  const [toneRoute, setToneRoute] = useState(pathname);
   const toneRef = useRef(initialTone);
   const pathToneRef = useRef(initialTone);
   const pathnameRef = useRef(pathname);
@@ -37,6 +38,15 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
   const hasMountedRef = useRef(false);
 
   pathnameRef.current = pathname;
+  pathToneRef.current = initialTone;
+
+  // Soft-nav race fix: when the route changes, adopt the path bootstrap tone during render
+  // so we never paint one frame of the previous page's dark ink over a flush dark hero.
+  if (pathname !== toneRoute) {
+    setToneRoute(pathname);
+    setTone(initialTone);
+    toneRef.current = initialTone;
+  }
 
   const applyTone = (nextTone: NavbarInkTone, options?: { markHydrated?: boolean }) => {
     const docInk = document.documentElement.getAttribute("data-nav-ink");
@@ -64,6 +74,8 @@ export function useAdaptiveNavbarTone(initialTone: NavbarInkTone = "dark") {
     const chrome = resolveNavbarChromeMode(pathname);
     applyNavbarChromeToDocument(chrome);
 
+    // Prefer bootstrap light ink immediately on flush routes, then refine from surfaces.
+    applyNavbarInkToDocument(initialTone, { pathname });
     const resolved = syncTone();
     toneRef.current = resolved;
     setTone(resolved);

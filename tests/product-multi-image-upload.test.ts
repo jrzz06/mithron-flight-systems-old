@@ -4,7 +4,9 @@ import { join } from "node:path";
 import {
   buildProductGalleryMedia,
   dedupeGalleryBySrc,
+  hasAnyProductImageInput,
   parseGalleryUrls,
+  parseOrderedGalleryUrls,
   parseRemovedGalleryUrls
 } from "@/lib/product-gallery";
 import {
@@ -54,6 +56,16 @@ describe("product multi-image upload helpers", () => {
     ]);
   });
 
+  it("parses ordered_gallery_urls from form data", () => {
+    const formData = new FormData();
+    formData.append("ordered_gallery_urls", "https://cdn.example.com/b.webp");
+    formData.append("ordered_gallery_urls", "https://cdn.example.com/a.webp");
+    expect(parseOrderedGalleryUrls(formData)).toEqual([
+      "https://cdn.example.com/b.webp",
+      "https://cdn.example.com/a.webp"
+    ]);
+  });
+
   it("builds gallery media from uploads and extra urls on create", () => {
     const media = buildProductGalleryMedia({
       primarySrc: "",
@@ -89,6 +101,87 @@ describe("product multi-image upload helpers", () => {
     ]);
   });
 
+  it("reorders existing gallery so the first ordered url becomes primary", () => {
+    const existingGallery = [
+      { src: "https://cdn.example.com/primary.webp", alt: "Primary", kind: "image", priority: true },
+      { src: "https://cdn.example.com/second.webp", alt: "Second", kind: "image" },
+      { src: "https://cdn.example.com/third.webp", alt: "Third", kind: "image" }
+    ];
+    const media = buildProductGalleryMedia({
+      primarySrc: "https://cdn.example.com/primary.webp",
+      primaryAlt: "Agri drone",
+      uploadedUrls: [],
+      extraUrls: [],
+      existingGallery,
+      orderedUrls: [
+        "https://cdn.example.com/second.webp",
+        "https://cdn.example.com/third.webp",
+        "https://cdn.example.com/primary.webp"
+      ]
+    });
+
+    expect(media?.image.src).toBe("https://cdn.example.com/second.webp");
+    expect(media?.gallery.map((item) => item.src)).toEqual([
+      "https://cdn.example.com/second.webp",
+      "https://cdn.example.com/third.webp",
+      "https://cdn.example.com/primary.webp"
+    ]);
+    expect(media?.gallery[0].alt).toBe("Second");
+    expect(media?.gallery[0].priority).toBe(true);
+  });
+
+  it("applies removals while respecting ordered urls", () => {
+    const existingGallery = [
+      { src: "https://cdn.example.com/primary.webp", alt: "Primary", kind: "image", priority: true },
+      { src: "https://cdn.example.com/second.webp", alt: "Second", kind: "image" },
+      { src: "https://cdn.example.com/third.webp", alt: "Third", kind: "image" }
+    ];
+    const media = buildProductGalleryMedia({
+      primarySrc: "https://cdn.example.com/primary.webp",
+      primaryAlt: "Agri drone",
+      uploadedUrls: [],
+      extraUrls: [],
+      existingGallery,
+      orderedUrls: [
+        "https://cdn.example.com/third.webp",
+        "https://cdn.example.com/primary.webp",
+        "https://cdn.example.com/second.webp"
+      ],
+      removedUrls: ["https://cdn.example.com/primary.webp"]
+    });
+
+    expect(media?.image.src).toBe("https://cdn.example.com/third.webp");
+    expect(media?.gallery.map((item) => item.src)).toEqual([
+      "https://cdn.example.com/third.webp",
+      "https://cdn.example.com/second.webp"
+    ]);
+  });
+
+  it("keeps uploads as primary ahead of ordered existing urls", () => {
+    const existingGallery = [
+      { src: "https://cdn.example.com/old.webp", alt: "Old", kind: "image" },
+      { src: "https://cdn.example.com/older.webp", alt: "Older", kind: "image" }
+    ];
+    const media = buildProductGalleryMedia({
+      primarySrc: "https://cdn.example.com/old.webp",
+      primaryAlt: "Agri drone",
+      uploadedUrls: ["https://cdn.example.com/upload.webp"],
+      extraUrls: [],
+      existingGallery,
+      orderedUrls: [
+        "https://cdn.example.com/older.webp",
+        "https://cdn.example.com/old.webp"
+      ]
+    });
+
+    expect(media?.image.src).toBe("https://cdn.example.com/upload.webp");
+    expect(media?.gallery.map((item) => item.src)).toEqual([
+      "https://cdn.example.com/upload.webp",
+      "https://cdn.example.com/older.webp",
+      "https://cdn.example.com/old.webp"
+    ]);
+  });
+
   it("removes selected gallery images and promotes the next image to primary", () => {
     const existingGallery = [
       { src: "https://cdn.example.com/primary.webp", alt: "Primary", kind: "image", priority: true },
@@ -120,6 +213,12 @@ describe("product multi-image upload helpers", () => {
     ]);
   });
 
+  it("treats ordered gallery urls as product image input", () => {
+    const formData = new FormData();
+    formData.append("ordered_gallery_urls", "https://cdn.example.com/a.webp");
+    expect(hasAnyProductImageInput(formData, 0)).toBe(true);
+  });
+
   it("dedupes gallery items by src", () => {
     const deduped = dedupeGalleryBySrc([
       { src: "https://cdn.example.com/a.webp", alt: "A" },
@@ -137,6 +236,7 @@ describe("product multi-image upload helpers", () => {
     expect(PREFERRED_PRODUCT_IMAGE_BYTES).toBe(2 * 1024 * 1024);
     expect(productImageUploadNotice()).toContain("1000×1000");
     expect(productImageUploadNotice()).toContain("2 MB");
+    expect(productImageUploadNotice()).toContain("first image is primary");
   });
 
   it("ships multi-image fields in admin and supplier forms", () => {
@@ -145,6 +245,7 @@ describe("product multi-image upload helpers", () => {
     const adminActions = readFileSync(join(process.cwd(), "app/admin/products/actions.ts"), "utf8");
     const supplierField = readFileSync(join(process.cwd(), "components/supplier/supplier-product-image-field.tsx"), "utf8");
     const supplierActions = readFileSync(join(process.cwd(), "app/supplier/products/actions.ts"), "utf8");
+    const supplierImage = readFileSync(join(process.cwd(), "lib/supplier/product-image.ts"), "utf8");
     const multiField = readFileSync(join(process.cwd(), "components/products/product-multi-image-field.tsx"), "utf8");
     const fileInput = readFileSync(join(process.cwd(), "components/products/product-image-file-input.tsx"), "utf8");
     const richText = readFileSync(join(process.cwd(), "components/editor/RichTextEditor/index.tsx"), "utf8");
@@ -156,12 +257,17 @@ describe("product multi-image upload helpers", () => {
     expect(adminQuickEdit).toContain("saveProductQuickEditClientAction");
     expect(adminQuickEdit).not.toContain('encType="multipart/form-data"');
     expect(adminActions).toContain("admin-product-quick-edit");
+    expect(adminActions).toContain("parseOrderedGalleryUrls");
     expect(multiField).toContain("ProductImageFileInput");
     expect(multiField).toContain("productImageUploadNotice");
     expect(multiField).toContain('name="removed_gallery_urls"');
+    expect(multiField).toContain('name="ordered_gallery_urls"');
+    expect(multiField).toContain("data-product-image-reorder");
+    expect(multiField).toContain("data-product-image-move-left");
     expect(multiField).toContain("galleryItems");
     expect(fileInput).toContain("data-product-image-selection-meta");
     expect(supplierField).toContain("ProductMultiImageField");
+    expect(supplierImage).toContain("parseOrderedGalleryUrls");
     expect(supplierActions).toContain("linkUploadedImagesToProduct");
     expect(supplierActions).toContain("uploadedImages");
     expect(supplierActions).toContain("readSupplierProductDescriptionFields");

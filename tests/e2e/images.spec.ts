@@ -23,7 +23,7 @@ test.describe("Production image testing", () => {
     await page.goto("/products", { waitUntil: "domcontentloaded" });
     await assertCatalogHasVisibleCards(page);
 
-    const images = page.locator('[data-testid^="premium-product-card-"] img, [data-card-variant="catalog"] img');
+    const images = page.locator('[data-testid="home-product-card"] img, [data-testid^="premium-product-card-"] img, [data-card-variant="catalog"] img');
     await images.first().scrollIntoViewIfNeeded();
 
     const sampleSize = Math.min(await images.count(), 6);
@@ -59,7 +59,7 @@ test.describe("Production image testing", () => {
     await page.goto("/products", { waitUntil: "domcontentloaded" });
     await assertCatalogHasVisibleCards(page);
 
-    const images = page.locator('[data-testid^="premium-product-card-"] img, [data-card-variant="catalog"] img');
+    const images = page.locator('[data-testid="home-product-card"] img, [data-testid^="premium-product-card-"] img, [data-card-variant="catalog"] img');
     await images.first().scrollIntoViewIfNeeded();
 
     const loading = await images.first().getAttribute("loading");

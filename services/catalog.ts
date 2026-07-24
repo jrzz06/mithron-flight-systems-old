@@ -123,7 +123,28 @@ type ProductAffinityRow = Pick<MithronProductRow, "slug" | "category" | "interes
 
 type MithronProductShellRow = Pick<
   MithronProductRow,
-  "slug" | "name" | "tagline" | "price" | "badge" | "badge_enabled" | "badge_text" | "badge_style" | "category" | "interests" | "image" | "hero" | "gallery" | "source_catalog_id" | "source_description" | "source_images"
+  | "slug"
+  | "name"
+  | "tagline"
+  | "price"
+  | "compare_at"
+  | "on_sale"
+  | "discount_type"
+  | "discount_value"
+  | "badge"
+  | "badge_enabled"
+  | "badge_text"
+  | "badge_style"
+  | "category"
+  | "interests"
+  | "image"
+  | "hero"
+  | "gallery"
+  | "source_catalog_id"
+  | "source_description"
+  | "source_images"
+  | "charge_tax"
+  | "tax_included"
 >;
 
 type EnterpriseMenuProductRow = Pick<
@@ -168,9 +189,13 @@ export type ProductShellItem = {
   name: string;
   tagline: string;
   price: number;
+  compareAt?: number;
+  rating?: number;
   badge?: string;
   category: string;
   interests: string[];
+  chargeTax?: boolean;
+  taxIncluded?: boolean;
   image: MediaAsset;
   searchText: string;
 };
@@ -273,7 +298,11 @@ const CATALOG_LEGACY_LIST_LIMIT = 500;
 const SHELL_PREVIEW_LIMIT = 120;
 const ENTERPRISE_MENU_PER_CATEGORY_LIMIT = 16;
 const PRODUCT_MEDIA_LIMIT = 2000;
-const CHECKOUT_PRICING_SELECT = "slug,name,price,compare_at,on_sale,discount_type,discount_value,category,charge_tax,tax_group,tax_rate,tax_included";
+const PRODUCT_SHELL_SELECT =
+  "slug,name,tagline,price,compare_at,on_sale,discount_type,discount_value,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description,charge_tax,tax_included";
+const PRODUCT_SHELL_SELECT_WITH_AVAILABILITY = `${PRODUCT_SHELL_SELECT},source_availability`;
+const CHECKOUT_PRICING_SELECT =
+  "slug,name,price,compare_at,on_sale,discount_type,discount_value,category,charge_tax,tax_group,tax_rate,tax_included";
 const CART_PRICING_SELECT =
   "slug,name,price,compare_at,on_sale,discount_type,discount_value,category,charge_tax,tax_group,tax_rate,tax_included,bundles,image,specs";
 /** Slim index fields only — heavy blobs (description/hero/specs) load on PDP, not search. */
@@ -308,6 +337,9 @@ const catalogListSelect = [
   "tagline",
   "price",
   "compare_at",
+  "on_sale",
+  "discount_type",
+  "discount_value",
   "badge",
   "badge_enabled",
   "badge_text",
@@ -319,7 +351,9 @@ const catalogListSelect = [
   "sort_order",
   "source_catalog_id",
   "source_availability",
-  "source_currency"
+  "source_currency",
+  "charge_tax",
+  "tax_included"
 ].join(",");
 
 const productSelect = [
@@ -1027,14 +1061,18 @@ function mapProductShellRow(row: MithronProductShellRow, linkedPrimaryImage?: Me
   const image = resolveHydratedProductImage(normalizedRow, name, linkedPrimaryImage, normalizedRow.slug);
 
   const interestsValue = normalizedRow.interests ?? [];
+  const pricing = resolveCatalogPricing(normalizedRow);
   return {
     slug: normalizedRow.slug,
     name,
     tagline,
-    price: resolveCatalogPricing(normalizedRow).salePrice,
+    price: pricing.salePrice,
+    compareAt: pricing.compareAt ?? undefined,
     badge: resolveStorefrontBadgeText(normalizedRow),
     category: normalizedRow.category,
     interests: interestsValue,
+    chargeTax: normalizedRow.charge_tax ?? undefined,
+    taxIncluded: normalizedRow.tax_included ?? undefined,
     image,
     searchText: [
       name,
@@ -1061,14 +1099,18 @@ function mapProductShellRowOrNull(row: MithronProductShellRow, linkedPrimaryImag
   if (!resolved) return null;
 
   const interestsValue = normalizedRow.interests ?? [];
+  const pricing = resolveCatalogPricing(normalizedRow);
   return {
     slug: normalizedRow.slug,
     name,
     tagline,
-    price: resolveCatalogPricing(normalizedRow).salePrice,
+    price: pricing.salePrice,
+    compareAt: pricing.compareAt ?? undefined,
     badge: resolveStorefrontBadgeText(normalizedRow),
     category: normalizedRow.category,
     interests: interestsValue,
+    chargeTax: normalizedRow.charge_tax ?? undefined,
+    taxIncluded: normalizedRow.tax_included ?? undefined,
     image: normalizeProductCardImage(enrichImageWithLinkedResponsive(resolved, linkedPrimaryImage)),
     searchText: [
       name,
@@ -1171,7 +1213,7 @@ async function searchCatalogProductsFallback(query: string, limit: number): Prom
 export const getProductShellItems = cache(async (limit = SHELL_PREVIEW_LIMIT): Promise<ProductShellItem[]> => {
   const boundedLimit = Math.min(Math.max(Math.trunc(limit), 1), SHELL_PREVIEW_LIMIT);
   const rows = await fetchCatalogRows<MithronProductShellRow>(
-    `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description&${publishedCatalogFilter}&order=sort_order.asc&limit=${boundedLimit}`
+    `select=${PRODUCT_SHELL_SELECT}&${publishedCatalogFilter}&order=sort_order.asc&limit=${boundedLimit}`
   );
   return mapRowsWithCatalogMedia(rows, mapProductShellRow);
 });
@@ -1182,7 +1224,7 @@ export const getFeaturedSearchProducts = cache(async (limit = 4): Promise<Catalo
 
   const boundedLimit = Math.min(Math.max(Math.trunc(limit), 1), 12);
   const rows = await fetchCatalogRows<MithronProductShellRow & { source_availability?: string | null }>(
-    `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description,source_availability&${publishedCatalogFilter}&order=sort_order.asc&limit=${boundedLimit}`
+    `select=${PRODUCT_SHELL_SELECT_WITH_AVAILABILITY}&${publishedCatalogFilter}&order=sort_order.asc&limit=${boundedLimit}`
   );
   const results: CatalogSearchResult[] = [];
   for (const row of rows) {
@@ -1195,7 +1237,7 @@ export const getFeaturedSearchProducts = cache(async (limit = 4): Promise<Catalo
 export const getCartDrawerSuggestions = cache(async (): Promise<CatalogSearchResult[]> => {
   return readThroughCache(REDIS_CACHE_KEYS.catalogCartSuggestions, 60, async () => {
     const rows = await fetchCatalogRows<MithronProductShellRow & { source_availability?: string | null }>(
-      `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description,source_availability&${publishedCatalogFilter}&or=(interests.cs.{agriculture},interests.cs.{components})&order=sort_order.asc&limit=12`
+      `select=${PRODUCT_SHELL_SELECT_WITH_AVAILABILITY}&${publishedCatalogFilter}&or=(interests.cs.{agriculture},interests.cs.{components})&order=sort_order.asc&limit=12`
     );
     const items = await mapRowsWithCatalogMedia(rows, mapProductShellRow);
     return items.slice(0, 3).map((item, index) => toCatalogSearchResult(item, rows[index]?.source_availability));
@@ -1322,13 +1364,13 @@ export async function getRelatedProductShellItems(slug: string, limit = 4): Prom
   const currentRow = await getProductAffinityRowBySlug(slug);
   if (!currentRow) {
     const rows = await fetchCatalogRows<MithronProductShellRow>(
-      `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${limit}`
+      `select=${PRODUCT_SHELL_SELECT}&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${limit}`
     );
     return mapRowsWithCatalogMedia(rows, mapProductShellRow);
   }
 
   const categoryRows = await fetchCatalogRows<MithronProductShellRow>(
-    `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description&${publishedCatalogFilter}&category=eq.${encodeURIComponent(currentRow.category)}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 4, 16)}`
+    `select=${PRODUCT_SHELL_SELECT}&${publishedCatalogFilter}&category=eq.${encodeURIComponent(currentRow.category)}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 4, 16)}`
   );
   const currentInterests = currentRow.interests ?? [];
   const shelfInputs = categoryRows as unknown as ProductShelfInput[];
@@ -1355,7 +1397,7 @@ export async function getRelatedProductShellItems(slug: string, limit = 4): Prom
 
   if (!candidateRows.length) {
     const fallbackRows = await fetchCatalogRows<MithronProductShellRow>(
-      `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${limit}`
+      `select=${PRODUCT_SHELL_SELECT}&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${limit}`
     );
     return mapRowsWithCatalogMedia(fallbackRows, mapProductShellRow);
   }
@@ -1387,7 +1429,7 @@ async function loadYouMayAlsoLikeShellItemsUncached(slug: string, limit: number)
 
   if (!currentRow) {
     const rows = await fetchCatalogRows<MithronProductShellRow>(
-      `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 4, 16)}`
+      `select=${PRODUCT_SHELL_SELECT}&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 4, 16)}`
     );
     const mapped = await mapRowsWithCatalogMedia(rows, mapProductShellRow);
     return mapped.slice(0, limit);
@@ -1395,10 +1437,10 @@ async function loadYouMayAlsoLikeShellItemsUncached(slug: string, limit: number)
 
   const [categoryRows, broadRows] = await Promise.all([
     fetchCatalogRows<MithronProductShellRow>(
-      `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description&${publishedCatalogFilter}&category=eq.${encodeURIComponent(currentRow.category)}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 4, 16)}`
+      `select=${PRODUCT_SHELL_SELECT}&${publishedCatalogFilter}&category=eq.${encodeURIComponent(currentRow.category)}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 4, 16)}`
     ),
     fetchCatalogRows<MithronProductShellRow>(
-      `select=slug,name,tagline,price,badge,badge_enabled,badge_text,badge_style,category,interests,image,hero,gallery,source_images,source_catalog_id,source_description&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 6, 24)}`
+      `select=${PRODUCT_SHELL_SELECT}&${publishedCatalogFilter}&slug=neq.${encodeURIComponent(slug)}&order=sort_order.asc&limit=${Math.max(limit * 6, 24)}`
     )
   ]);
 

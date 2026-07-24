@@ -139,8 +139,12 @@ describe("admin operational UX", () => {
     expect(page).toContain("deleteProductCategoryFormAction");
     expect(page).toContain("ProductMultiImageField");
     const multiImageField = readFileSync(join(process.cwd(), "components/products/product-multi-image-field.tsx"), "utf8");
-    expect(multiImageField).toContain('name="image_files"');
-    expect(multiImageField).toContain("multiple");
+    const imageFileInput = readFileSync(join(process.cwd(), "components/products/product-image-file-input.tsx"), "utf8");
+    expect(multiImageField).toContain("ProductImageFileInput");
+    expect(multiImageField).toContain('name="ordered_gallery_urls"');
+    expect(multiImageField).toContain("data-product-image-reorder");
+    expect(imageFileInput).toContain('name="image_files"');
+    expect(imageFileInput).toContain("multiple");
     expect(page).toContain("data-product-supabase-storage-note");
     expect(page).toContain("mithron-products Storage bucket");
     expect(page).toContain("platformToolClass");
@@ -230,7 +234,8 @@ describe("admin operational UX", () => {
 
     expect(fulfillmentPage).toContain("data-warehouse-fulfillment-route");
     expect(fulfillmentPage).toContain("getWarehouseSnapshot");
-    expect(adminInventoryPage).toContain("InventoryManager");
+    expect(adminInventoryPage).toContain("InventoryActionBridge");
+    expect(adminInventoryPage).toContain("permanentDeleteAdminInventoryAction");
     expect(adminInventoryPage).toContain("getCsvInventoryRows");
     expect(adminInventoryPage).not.toContain("repairMissingProductInventory");
     expect(adminInventoryPage).not.toContain("syncMissingInventoryAction");
@@ -240,6 +245,7 @@ describe("admin operational UX", () => {
     expect(inventoryManager).toContain("data-inventory-row");
     expect(inventoryManager).toContain("data-advanced-warehouse-details");
     expect(inventoryManager).toContain("Adjust stock");
+    expect(inventoryManager).toContain('data-inventory-action="permanent-delete"');
     expect(inventoryManager).toContain("OperationalSubmitButton");
   });
 

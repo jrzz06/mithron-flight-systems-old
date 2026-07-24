@@ -47,13 +47,13 @@ describe("mobile responsive contract (phone <=767px)", () => {
     );
   });
 
-  it("keeps catalog continued grid on 2, 3, or 4 columns", () => {
+  it("keeps catalog continued grid on 2 or 4 columns only", () => {
     const gridSource = source("sections/catalog/catalog-continued-grid.tsx");
     const globalsCss = source("app/globals.css");
 
-    expect(gridSource).toContain("if (width < 768) return 2");
-    expect(gridSource).toContain("if (width < 1024) return 3");
+    expect(gridSource).toContain("if (width < 1024) return 2");
     expect(gridSource).toContain("return 4");
+    expect(gridSource).not.toContain("return 3");
     expect(gridSource).toContain("Load more products");
     expect(gridSource).not.toContain("useWindowVirtualizer");
     expect(globalsCss).toContain(".catalog-continued-grid__rows");
@@ -74,7 +74,7 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(globalsCss).toContain("--catalog-mobile-row-estimate: 280px");
   });
 
-  it("clips catalog overflow and keeps buy-row footers in a single row on phone for catalog cards", () => {
+  it("clips catalog overflow and stacks buy-row footers on phone for catalog cards", () => {
     const globalsCss = source("app/globals.css");
     const phoneBlocks = [...globalsCss.matchAll(/@media \(max-width: 767px\)[\s\S]*?(?=@media|$)/g)].map((match) => match[0]);
     const phoneBlock = phoneBlocks.join("\n");
@@ -82,15 +82,14 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(phoneBlock).toContain("overflow-x: clip");
     expect(phoneBlock).toContain('.catalog-page-shell .premium-product-card-shell[data-cta-layout="buy-row"] .premium-product-card__footer');
     expect(phoneBlock).toMatch(
-      /\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__footer[\s\S]*flex-direction:\s*row/
+      /\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__footer[\s\S]*flex-direction:\s*column/
     );
-    expect(phoneBlock).toContain("padding-inline: var(--catalog-inline) !important");
   });
 
   it("keeps mission support cards as overlay tiles on phone", () => {
     const css = `${source("sections/home/home-landing-composite.module.css")}\n${source("sections/home/home-shelf-shared.module.css")}`;
     const phoneSupportBlock = css.match(
-      /@media \(max-width: 767px\) \{\s*\.missionWorldSupportGrid \{[\s\S]*?\.missionWorldSlotTall > \.agriCard/
+      /@media \(max-width: 767px\) \{\s*\.missionWorldSupportGrid \{[\s\S]*?\.missionWorldSlotTall\s*>\s*\.agriCard/
     );
 
     expect(phoneSupportBlock?.[0]).toContain("grid-template-columns: 1fr");
@@ -98,7 +97,7 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(phoneSupportBlock?.[0]).toContain("aspect-ratio: 2 / 1");
     expect(phoneSupportBlock?.[0]).toContain("grid-auto-rows: auto");
     expect(phoneSupportBlock?.[0]).toMatch(
-      /\.missionWorldSupportGrid > \.agriCard \.agriCardImage[\s\S]*object-fit: cover/
+      /\.missionWorldSupportGrid\s*>\s*\.agriCard\s+\.agriCardImage[\s\S]*object-fit: cover/
     );
     expect(phoneSupportBlock?.[0]).not.toContain("object-fit: contain");
   });
@@ -129,43 +128,51 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(fadeBlock?.[0]).not.toContain("linear-gradient");
   });
 
-  it("keeps catalog buy-row footers in a single row at all breakpoints", () => {
+  it("stacks catalog buy-row footers vertically at all breakpoints", () => {
     const globalsCss = source("app/globals.css");
     const buyRowFooterBlock = globalsCss.match(
       /\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__footer\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(buyRowFooterBlock).toBeTruthy();
-    expect(buyRowFooterBlock).toContain("flex-direction: row");
-    expect(buyRowFooterBlock).not.toContain("flex-direction: column");
+    expect(buyRowFooterBlock).toContain("flex-direction: column");
+    expect(buyRowFooterBlock).not.toContain("flex-direction: row");
   });
 
-  it("keeps showroom catalog footers horizontal at all breakpoints", () => {
+  it("stacks showroom catalog footers vertically at all breakpoints", () => {
     const cardCss = source("components/cards/product-hover-card.module.css");
     const catalogFooterBlock = cardCss.match(
       /\.shell\[data-card-variant="catalog"\] \.footer\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(catalogFooterBlock).toBeTruthy();
-    expect(catalogFooterBlock).toContain("flex-direction: row");
-    expect(catalogFooterBlock).not.toContain("flex-direction: column");
+    expect(catalogFooterBlock).toContain("flex-direction: column");
+    expect(catalogFooterBlock).not.toContain("flex-direction: row");
   });
 
   it("uses catalog product grid for PDP discovery cards", () => {
     const discovery = source("sections/product/discovery-product-grid.tsx");
     const recent = source("sections/product/product-recently-viewed-section.tsx");
+    const catalogCss = source("app/storefront-catalog.css");
     expect(discovery).toContain("catalog-product-grid");
-    expect(discovery).toContain('variant="catalog"');
-    expect(discovery).toContain('cta="catalog"');
-    expect(recent).toContain("catalog-product-grid");
-    expect(recent).toContain('variant="catalog"');
+    expect(discovery).toContain("catalog-page-shell");
+    expect(discovery).toContain("data-catalog-shelf-cards");
+    expect(discovery).toContain("HomeProductShelfCard");
+    expect(discovery).toContain('layout="dji"');
+    expect(catalogCss).toMatch(
+      /\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
+    );
+    expect(catalogCss).toMatch(
+      /@media \(min-width: 1024px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(4,\s*minmax\(0,\s*1fr\)\)/
+    );
+    expect(recent).toContain("DiscoveryProductGrid");
   });
 
-  it("locks catalog grids to 2 columns on phone, 3 on tablet, and 4 on desktop", () => {
+  it("locks catalog grids to 2 columns below lg and 4 columns on desktop — never 3", () => {
     const globalsCss = source("app/globals.css");
     const catalogCss = source("app/storefront-catalog.css");
     const showroomCss = source("sections/catalog/catalog-page.module.css");
-    const catalogGridBlock = globalsCss.match(
+    const catalogGridBlock = catalogCss.match(
       /\.catalog-product-grid \{[\s\S]*?\.catalog-product-grid--continued/
     )?.[0];
 
@@ -173,10 +180,10 @@ describe("mobile responsive contract (phone <=767px)", () => {
       /\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(globalsCss).toMatch(
-      /@media \(min-width: 768px\) and \(max-width: 1023px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/
+      /@media \(min-width: 768px\) and \(max-width: 1023px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(catalogCss).toMatch(
-      /@media \(min-width: 768px\) and \(max-width: 1023px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/
+      /@media \(min-width: 768px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(catalogCss).toMatch(
       /@media \(min-width: 1024px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(4,\s*minmax\(0,\s*1fr\)\)/
@@ -191,11 +198,13 @@ describe("mobile responsive contract (phone <=767px)", () => {
       /\.productGrid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(showroomCss).toMatch(
-      /@media \(min-width: 768px\) and \(max-width: 1023px\)[\s\S]*\.productGrid[\s\S]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/
+      /@media \(min-width: 768px\)[\s\S]*\.productGrid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(showroomCss).toMatch(
       /@media \(min-width: 1024px\)[\s\S]*\.productGrid[\s\S]*repeat\(4,\s*minmax\(0,\s*1fr\)\)/
     );
+    expect(catalogCss).not.toMatch(/repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+    expect(showroomCss).not.toMatch(/repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
     expect(catalogGridBlock).not.toMatch(/auto-fill/);
   });
 
@@ -227,14 +236,15 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(buyNowBlock).not.toContain("width: 100%");
   });
 
-  it("uses auto row sizing on desktop catalog grids", () => {
+  it("uses equal row sizing on catalog grids", () => {
     const globalsCss = source("app/globals.css");
+    const catalogCss = source("app/storefront-catalog.css");
     const showroomCss = source("sections/catalog/catalog-page.module.css");
     const cardCss = source("components/cards/product-hover-card.module.css");
 
-    expect(globalsCss).toMatch(/\.catalog-product-grid[\s\S]*?grid-auto-rows:\s*auto/);
-    expect(globalsCss).toMatch(/\.catalog-continued-grid__rows[\s\S]*?grid-auto-rows:\s*auto/);
-    expect(showroomCss).toMatch(/\.productGrid[\s\S]*?grid-auto-rows:\s*auto/);
+    expect(catalogCss).toMatch(/\.catalog-product-grid[\s\S]*?grid-auto-rows:\s*1fr/);
+    expect(catalogCss).toMatch(/\.catalog-continued-grid__rows[\s\S]*?grid-auto-rows:\s*1fr/);
+    expect(showroomCss).toMatch(/\.productGrid[\s\S]*?grid-auto-rows:\s*1fr/);
     expect(globalsCss).toMatch(
       /\.catalog-page-shell \.premium-product-card__description \{[\s\S]*?flex:\s*0\s+1\s+auto/
     );
@@ -315,9 +325,12 @@ describe("mobile responsive contract (phone <=767px)", () => {
     );
     expect(bannerCss).toContain("padding-block: var(--ds-s5)");
     expect(bannerCss).not.toMatch(/\.section[\s\S]*padding-inline:/);
-    expect(testimonialsCss).toMatch(/@media \(max-width: 1023px\)[\s\S]*padding-inline:\s*var\(--home-mobile-inline/);
-    expect(testimonialsCss).toMatch(/@media \(max-width: 1023px\)[\s\S]*--testimonial-card-width:\s*calc/);
-    expect(testimonialsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--testimonial-card-width:\s*100%/);
+    expect(testimonialsCss).toMatch(/@media \(max-width: 639px\)[\s\S]*padding-inline:\s*var\(--home-mobile-inline/);
+    expect(testimonialsCss).toMatch(/@media \(max-width: 639px\)[\s\S]*--testimonial-card-width:\s*min\(82vw,\s*320px\)/);
+    expect(testimonialsCss).toMatch(
+      /@media \(min-width: 640px\) and \(max-width: 1023px\)[\s\S]*--testimonial-card-width:\s*420px/
+    );
+    expect(testimonialsCss).toMatch(/@media \(min-width: 1024px\)[\s\S]*--testimonial-card-width:\s*480px/);
     expect(testimonialsCss).toMatch(/\.track[\s\S]*scroll-snap-type:\s*x mandatory/);
     expect(articlesCss).toMatch(/@media \(max-width: 1023px\)[\s\S]*\.gallery[\s\S]*padding-inline:\s*var\(--home-premium-inline/);
     expect(articlesCss).toMatch(/@media \(max-width: 1023px\)[\s\S]*\.gallery[\s\S]*display:\s*flex/);
@@ -327,21 +340,16 @@ describe("mobile responsive contract (phone <=767px)", () => {
   });
 
   it("uses catalog card aspect-ratio modifier for fluid media", () => {
-    const component = source("components/cards/product-hover-card.tsx");
-    const globalsCss = source("app/globals.css");
-    const hoverCardCss = source("components/cards/product-hover-card.module.css");
+    const component = source("components/product/home-product-shelf-card.tsx");
+    const catalogCss = source("app/storefront-catalog.css");
+    const shelfCss = source("sections/home/home-shelf-shared.module.css");
 
-    expect(component).toContain("premium-product-card__media--catalog");
-    expect(globalsCss).toMatch(
-      /\.premium-product-card__media--catalog[\s\S]*aspect-ratio:\s*var\(--product-card-image-ratio\)/
-    );
-    expect(globalsCss).toContain("--catalog-mobile-media-aspect-ratio: 4 / 3");
-    expect(globalsCss).toMatch(
-      /@media \(max-width: 640px\)[\s\S]*\.catalog-page-shell \.premium-product-card__media[\s\S]*aspect-ratio:\s*var\(--catalog-mobile-media-aspect-ratio\)/
-    );
-    expect(hoverCardCss).toMatch(
-      /@media \(max-width: 640px\)[\s\S]*\.media[\s\S]*aspect-ratio:\s*var\(--catalog-mobile-media-aspect-ratio\)/
-    );
+    expect(component).toContain('layout === "dji"');
+    expect(component).toContain("aspect-[4/3]");
+    expect(component).toContain('data-shelf-card-layout="dji"');
+    expect(shelfCss).toMatch(/\.productImageWell[\s\S]*aspect-ratio:\s*4\s*\/\s*3/);
+    expect(catalogCss).toMatch(/data-catalog-shelf-cards/);
+    expect(catalogCss).toMatch(/data-shelf-card-layout="dji"/);
   });
 
   it("uses responsive shelf card geometry with auto height for reference card layout", () => {

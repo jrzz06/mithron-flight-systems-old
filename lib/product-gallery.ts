@@ -20,6 +20,13 @@ export function parseRemovedGalleryUrls(formData: FormData) {
     .filter(Boolean);
 }
 
+export function parseOrderedGalleryUrls(formData: FormData) {
+  return formData
+    .getAll("ordered_gallery_urls")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+}
+
 export function readMediaSrc(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "";
   const src = (value as JsonRecord).src;
@@ -47,6 +54,18 @@ export function dedupeGalleryBySrc(items: JsonRecord[]) {
   return result;
 }
 
+function dedupeSrcList(urls: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const url of urls) {
+    const normalized = url.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(normalized);
+  }
+  return result;
+}
+
 function mediaFromSrc(src: string, alt: string, priority = false): JsonRecord {
   return {
     src,
@@ -56,6 +75,24 @@ function mediaFromSrc(src: string, alt: string, priority = false): JsonRecord {
   };
 }
 
+function mediaFromExistingOrSrc(
+  src: string,
+  alt: string,
+  existingBySrc: Map<string, JsonRecord>,
+  priority = false
+): JsonRecord {
+  const existing = existingBySrc.get(src);
+  if (existing) {
+    const next = { ...existing, src };
+    if (priority) next.priority = true;
+    else delete next.priority;
+    if (!next.alt) next.alt = alt;
+    if (!next.kind) next.kind = "image";
+    return next;
+  }
+  return mediaFromSrc(src, alt, priority);
+}
+
 export function buildProductGalleryMedia(input: {
   primarySrc: string;
   primaryAlt: string;
@@ -63,12 +100,53 @@ export function buildProductGalleryMedia(input: {
   extraUrls: string[];
   existingGallery?: JsonRecord[];
   removedUrls?: string[];
+  orderedUrls?: string[];
 }) {
   const removed = new Set((input.removedUrls ?? []).map((url) => url.trim()).filter(Boolean));
   const filteredExisting = dedupeGalleryBySrc(
     (input.existingGallery ?? []).filter((item) => !removed.has(readMediaSrc(item)))
   );
+  const existingBySrc = new Map(
+    filteredExisting
+      .map((item) => [readMediaSrc(item), item] as const)
+      .filter(([src]) => Boolean(src))
+  );
   const hasUploads = input.uploadedUrls.length > 0;
+  const orderedUrls = dedupeSrcList((input.orderedUrls ?? []).filter((url) => !removed.has(url.trim())));
+
+  if (orderedUrls.length > 0) {
+    let orderedSrcs = [...orderedUrls];
+
+    for (const src of input.extraUrls) {
+      const normalized = src.trim();
+      if (!normalized || removed.has(normalized)) continue;
+      if (!orderedSrcs.includes(normalized)) orderedSrcs.push(normalized);
+    }
+
+    if (hasUploads) {
+      const uploadSrcs = dedupeSrcList(input.uploadedUrls.filter((url) => !removed.has(url.trim())));
+      const primarySrc = uploadSrcs[0] ?? "";
+      if (!primarySrc) return null;
+
+      const remaining = orderedSrcs.filter((src) => !uploadSrcs.includes(src));
+      const gallerySrcs = [...uploadSrcs, ...remaining];
+      const primary = mediaFromExistingOrSrc(primarySrc, input.primaryAlt, existingBySrc, true);
+      const gallery = gallerySrcs.map((src, index) =>
+        mediaFromExistingOrSrc(src, input.primaryAlt, existingBySrc, index === 0)
+      );
+      return { image: primary, hero: { ...primary }, gallery };
+    }
+
+    const primarySrc = orderedSrcs[0] ?? "";
+    if (!primarySrc) return null;
+
+    const primary = mediaFromExistingOrSrc(primarySrc, input.primaryAlt, existingBySrc, true);
+    const gallery = orderedSrcs.map((src, index) =>
+      mediaFromExistingOrSrc(src, input.primaryAlt, existingBySrc, index === 0)
+    );
+    return { image: primary, hero: { ...primary }, gallery };
+  }
+
   let primarySrc = input.primarySrc.trim();
 
   if (hasUploads) {
@@ -107,6 +185,7 @@ export function buildProductGalleryMedia(input: {
 export function hasAnyProductImageInput(formData: FormData, uploadedCount: number) {
   if (uploadedCount > 0) return true;
   if (parseRemovedGalleryUrls(formData).length > 0) return true;
+  if (parseOrderedGalleryUrls(formData).length > 0) return true;
   const imageSrc = String(formData.get("image_src") ?? "").trim();
   if (imageSrc) return true;
   if (parseGalleryUrls(formData).length > 0) return true;

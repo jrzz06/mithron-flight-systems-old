@@ -15,7 +15,7 @@ test.describe("Production product testing", () => {
 
   test("catalog card navigates to product detail page", async ({ page }) => {
     const slug = await openCatalogAndGetFirstProductSlug(page);
-    const card = page.locator(`[data-testid="premium-product-card-${slug}"], [data-card-variant='catalog']`).first();
+    const card = page.locator(`[data-testid="home-product-card"][href*="${slug}"], [data-testid="premium-product-card-${slug}"], [data-card-variant='catalog']`).first();
     await card.click();
 
     await expect(page).toHaveURL(new RegExp(`/product/${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
@@ -46,7 +46,7 @@ test.describe("Production product testing", () => {
     const response = await page.goto("/category/agri-drones", { waitUntil: "domcontentloaded" });
     expect(response?.ok()).toBeTruthy();
 
-    const cards = page.locator('[data-testid^="premium-product-card-"], [data-card-variant="catalog"]');
+    const cards = page.locator('[data-testid="home-product-card"], [data-testid^="premium-product-card-"], [data-card-variant="catalog"]');
     await expect(cards.first()).toBeVisible({ timeout: 25_000 });
     expect(await cards.count()).toBeGreaterThan(0);
   });

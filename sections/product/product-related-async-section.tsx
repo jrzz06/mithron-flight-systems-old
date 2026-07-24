@@ -1,4 +1,5 @@
 import { LazyHydrate } from "@/components/ui/lazy-hydrate";
+import { attachCatalogProductRatings } from "@/lib/catalog-product-ratings";
 import { getYouMayAlsoLikeShellItems } from "@/services/catalog";
 import { ProductYouMayAlsoLikeSection } from "@/sections/product/product-you-may-also-like-section";
 
@@ -19,6 +20,8 @@ export async function ProductRelatedAsyncSection({ slug }: { slug: string }) {
   }
 
   if (!products.length) return null;
+
+  products = await attachCatalogProductRatings(products);
 
   return (
     <LazyHydrate fallback={<ProductRelatedFallback />} minHeight={360}>

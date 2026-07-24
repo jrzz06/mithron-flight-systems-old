@@ -26,13 +26,24 @@ function inferCategoryTagline(name: string, category: string) {
   return "Curated hardware for professional field operations.";
 }
 
+function isPlaceholderMarketingCopy(value: string) {
+  const normalized = value.trim();
+  if (!normalized) return true;
+  // Raw CMS shout-caps or leftover paren notes after sanitization.
+  if (/^[A-Z0-9\s().,'%-]{12,}$/.test(normalized) && /quantit|discount|more number/i.test(normalized)) {
+    return true;
+  }
+  if (/^\([^)]{0,80}\)$/.test(normalized)) return true;
+  return false;
+}
+
 export function getProductMarketingTagline(input: ProductMarketingInput) {
   const candidates = [input.tagline, input.sourceDescription]
     .map((value) => sanitizeProductPreviewText(value ?? "").trim())
     .filter(Boolean);
 
   for (const candidate of candidates) {
-    if (isSpecLikeBlob(candidate)) continue;
+    if (isSpecLikeBlob(candidate) || isPlaceholderMarketingCopy(candidate)) continue;
     return clipProductPreviewText(candidate, 120);
   }
 

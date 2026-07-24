@@ -1,6 +1,8 @@
 import {
   buildProductGalleryMedia,
   parseGalleryUrls,
+  parseOrderedGalleryUrls,
+  parseRemovedGalleryUrls,
   readProductGalleryFromRow
 } from "@/lib/product-gallery";
 import {
@@ -44,12 +46,20 @@ export async function resolveSupplierProductImageFields(
   const uploadedImages = await uploadProductImagesForDraft(formData, input.actorId, "supplier-product-create");
   const imageSrc = String(formData.get("image_src") ?? "").trim() || input.existingImageSrc?.trim() || "";
   const extraUrls = parseGalleryUrls(formData);
+  const orderedUrls = parseOrderedGalleryUrls(formData);
+  const removedUrls = parseRemovedGalleryUrls(formData);
   const existingGallery = input.existingProductRow
     ? readProductGalleryFromRow(input.existingProductRow)
     : [];
   const alt = String(formData.get("image_alt") ?? "").trim() || input.name;
 
-  if (!imageSrc && !uploadedImages.length && !extraUrls.length && input.requireImage !== false) {
+  if (
+    !imageSrc
+    && !uploadedImages.length
+    && !extraUrls.length
+    && !orderedUrls.length
+    && input.requireImage !== false
+  ) {
     throw new Error("Add a product image by uploading a file or pasting an image URL.");
   }
 
@@ -58,7 +68,9 @@ export async function resolveSupplierProductImageFields(
     primaryAlt: alt,
     uploadedUrls: uploadedImages.map((upload) => upload.publicUrl),
     extraUrls,
-    existingGallery: uploadedImages.length ? existingGallery : existingGallery
+    existingGallery,
+    removedUrls,
+    orderedUrls
   });
 
   if (!merged) {

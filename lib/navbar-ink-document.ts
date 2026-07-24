@@ -56,7 +56,7 @@ export function getNavbarInkBootstrapInlineScript() {
   const applyLight = serializeNavbarInkVars("light");
   const applyDark = serializeNavbarInkVars("dark");
 
-  return `(function(){function n(p){if(!p)return"/";return p.length>1&&p.endsWith("/")?p.slice(0,-1):p}function r(p){var t=n(p);if(t==="/")return"dark";if(t==="/login")return"light";var c=${categoryInkMap};if(c[t])return c[t];if(t.indexOf("/category/")===0)return"light";var h=${heroRoutes};for(var i=0;i<h.length;i++){if(t===h[i])return"light"}return"dark"}function chrome(p){var t=n(p);if(t==="/")return"solid";return r(p)==="light"?"flush":"solid"}function a(p){var path=n(p);var t=r(path);var e=document.documentElement;e.setAttribute("data-nav-ink",t);e.setAttribute("data-nav-chrome",chrome(path));if(t==="light"){${applyLight}}else{${applyDark}}}a(location.pathname)})();`;
+  return `(function(){function n(p){if(!p)return"/";return p.length>1&&p.endsWith("/")?p.slice(0,-1):p}function r(p){var t=n(p);if(t==="/")return"light";if(t==="/login")return"light";var c=${categoryInkMap};if(c[t])return c[t];if(t.indexOf("/category/")===0)return"light";var h=${heroRoutes};for(var i=0;i<h.length;i++){if(t===h[i])return"light"}return"dark"}function chrome(p){return r(p)==="light"?"flush":"solid"}function a(p){var path=n(p);var t=r(path);var e=document.documentElement;e.setAttribute("data-nav-ink",t);e.setAttribute("data-nav-chrome",chrome(path));if(t==="light"){${applyLight}}else{${applyDark}}}a(location.pathname)})();`;
 }
 
 export function resolveBootstrapNavbarTone(pathname: string | null): NavbarInkTone {

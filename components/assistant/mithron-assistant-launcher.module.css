@@ -100,3 +100,9 @@
     --assistant-fab-size: 58px;
   }
 }
+
+@media (max-width: 767px) {
+  .root {
+    bottom: var(--assistant-fab-offset, 80px);
+  }
+}

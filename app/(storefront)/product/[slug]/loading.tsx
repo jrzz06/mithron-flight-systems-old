@@ -11,7 +11,7 @@ export default function ProductLoading() {
       role="status"
       aria-live="polite"
       aria-label="Loading product"
-      className="product-detail-page surface-page min-h-screen px-6 pb-28 pt-[calc(var(--store-nav-offset,56px)+1.5rem)] md:px-16"
+      className="product-detail-page surface-page min-h-screen px-[var(--mobile-page-inline,16px)] pb-28 pt-[calc(var(--store-nav-offset,56px)+1.5rem)] md:px-16"
     >
       <div className="mx-auto max-w-[1440px]">
         <Skeleton className="h-5 w-40 rounded-md bg-[var(--ds-skeleton)]" />

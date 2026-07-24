@@ -15,7 +15,6 @@ export type CatalogProductToolbarProps = {
   mode: "category" | "global";
   presentation?: "standard" | "showroom";
   title: string;
-  eyebrow?: string;
   /** When true, omit the static title block unless search is active. */
   suppressListingTitle?: boolean;
   hasSearchQuery?: boolean;
@@ -34,7 +33,6 @@ export function CatalogProductToolbar({
   mode,
   presentation = "standard",
   title,
-  eyebrow = "Catalog",
   suppressListingTitle = false,
   hasSearchQuery = false,
   query,
@@ -59,7 +57,6 @@ export function CatalogProductToolbar({
           data-testid="catalog-intro"
         >
           <div className={styles.headerTitleBlock}>
-            <p className={styles.eyebrow}>{eyebrow}</p>
             <TitleTag className={styles.title}>{title}</TitleTag>
           </div>
         </div>

@@ -131,6 +131,8 @@ export type Product = {
   taxGroup?: string;
   taxRate?: number;
   taxIncluded?: boolean;
+  /** Storefront average rating when reviews exist. */
+  rating?: number;
   category: string;
   interests: string[];
   image: MediaAsset;

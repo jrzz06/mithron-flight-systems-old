@@ -1,11 +1,12 @@
 import { SiteFooter } from "@/components/layout/site-footer";
 import { StoreNavWithAnchor } from "@/components/navigation/store-nav-with-anchor";
+import { navigation } from "@/config/navigation";
+import { footerContent } from "@/config/storefront-content";
 import { buildEnterpriseMenuConfigs } from "@/services/catalog-navigation";
 import { getStorefrontShellBundle } from "@/services/storefront-shell-bundle";
-import { footerContent } from "@/config/storefront-content";
 
 const emptyShellCms = {
-  navigation: [],
+  navigation,
   footer: footerContent
 };
 

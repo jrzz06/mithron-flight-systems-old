@@ -14,9 +14,9 @@ export const NAVBAR_INK_STYLE_VARS: Record<NavbarInkTone, NavbarInkStyle> = {
     "--adaptive-navbar-glass-end": "rgba(7, 10, 13, 0.34)",
     "--adaptive-navbar-border": "rgba(255, 255, 255, 0.14)",
     "--adaptive-navbar-shadow": "0 10px 28px rgba(0, 0, 0, 0.18)",
-    "--adaptive-navbar-menu-bg": "rgba(8, 10, 12, 0.72)",
-    "--adaptive-navbar-menu-border": "rgba(255, 255, 255, 0.16)",
-    "--adaptive-navbar-menu-control": "rgba(255, 255, 255, 0.07)"
+    "--adaptive-navbar-menu-bg": "rgba(255, 255, 255, 1)",
+    "--adaptive-navbar-menu-border": "rgba(17, 17, 19, 0.10)",
+    "--adaptive-navbar-menu-control": "rgba(17, 17, 19, 0.045)"
   },
   dark: {
     "--adaptive-navbar-ink": "rgba(10, 12, 16, 0.97)",
@@ -28,8 +28,8 @@ export const NAVBAR_INK_STYLE_VARS: Record<NavbarInkTone, NavbarInkStyle> = {
     "--adaptive-navbar-glass-end": "rgba(255, 255, 255, 0.74)",
     "--adaptive-navbar-border": "rgba(17, 17, 19, 0.1)",
     "--adaptive-navbar-shadow": "0 10px 24px rgba(15, 23, 42, 0.08)",
-    "--adaptive-navbar-menu-bg": "rgba(250, 252, 253, 0.76)",
+    "--adaptive-navbar-menu-bg": "rgba(255, 255, 255, 1)",
     "--adaptive-navbar-menu-border": "rgba(17, 17, 19, 0.10)",
-    "--adaptive-navbar-menu-control": "rgba(17, 17, 19, 0.055)"
+    "--adaptive-navbar-menu-control": "rgba(17, 17, 19, 0.045)"
   }
 };

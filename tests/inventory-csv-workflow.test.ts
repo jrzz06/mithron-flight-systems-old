@@ -174,7 +174,7 @@ describe("inventory CSV workflow", () => {
     expect(manager).toContain("data-inventory-table");
     expect(manager).toContain("data-inventory-csv-import");
     expect(manager).toContain("Supabase inventory records are the source of truth");
-    expect(adminPage).toContain("InventoryManager");
+    expect(adminPage).toContain("InventoryActionBridge");
     expect(adminPage).toContain("getCsvInventoryRows");
     expect(actions).toContain("saveInventoryQuickEditFormAction");
     expect(actions).toContain("importInventoryCsvFormAction");

@@ -2,13 +2,17 @@ import { AdminInventoryLiveSync } from "@/components/admin/admin-inventory-live-
 import { InventoryActionBridge } from "@/components/admin/inventory-action-bridge";
 import {
   bulkAdminInventoryAction,
+  forceDeleteAdminInventoryAction,
   importAdminInventoryAction,
+  permanentDeleteAdminInventoryAction,
   restockAllAdminInventoryAction,
   saveAdminInventoryAction,
   saveInventoryAdjustmentAction
 } from "@/app/admin/inventory/actions";
 import { CSV_INVENTORY_PAGE_SIZE, getCsvInventoryRows, type CatalogFilter } from "@/services/csv-inventory-source";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
+import { getCurrentAuthContext } from "@/services/auth";
+import { roleHasPermission } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -32,13 +36,15 @@ export default async function AdminInventoryPage({ searchParams }: { searchParam
   const currentPage = Math.max(1, Number.parseInt(searchValue(params, "page"), 10) || 1);
   const catalogFilter = readCatalogFilter(searchValue(params, "catalog"));
   const initialProductSlug = searchValue(params, "product") || searchValue(params, "product_slug");
-  const [policy, inventorySource] = await Promise.all([
+  const [policy, inventorySource, authContext] = await Promise.all([
     getAdminSettingsPolicy(),
-    getCsvInventoryRows({ page: currentPage, pageSize: CSV_INVENTORY_PAGE_SIZE, catalogFilter })
+    getCsvInventoryRows({ page: currentPage, pageSize: CSV_INVENTORY_PAGE_SIZE, catalogFilter }),
+    getCurrentAuthContext()
   ]);
   const rows = inventorySource.rows;
   const previousPageHref = currentPage > 1 ? `/admin/inventory?page=${currentPage - 1}&catalog=${catalogFilter}` : undefined;
   const nextPageHref = inventorySource.hasNextPage ? `/admin/inventory?page=${currentPage + 1}&catalog=${catalogFilter}` : undefined;
+  const canForceDelete = roleHasPermission(authContext.role, "products.permanent_delete");
 
   return (
     <div data-admin-inventory-route className="grid gap-4">
@@ -50,6 +56,9 @@ export default async function AdminInventoryPage({ searchParams }: { searchParam
         importAction={importAdminInventoryAction}
         bulkAction={bulkAdminInventoryAction}
         restockAction={restockAllAdminInventoryAction}
+        permanentDeleteAction={permanentDeleteAdminInventoryAction}
+        forceDeleteAction={forceDeleteAdminInventoryAction}
+        canForceDelete={canForceDelete}
         exportHref={`/admin/inventory/export?catalog=${catalogFilter}`}
         title="Inventory"
         page={inventorySource.page}

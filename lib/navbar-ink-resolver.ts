@@ -80,12 +80,16 @@ export function resolveNavbarTone(pathTone: NavbarInkTone, pathname: string | nu
     return "dark";
   }
 
-  // No ink surface mounted: keep light only for flush home/login streaming gaps.
-  // Category and other light-path routes without a hero surface must use dark ink
-  // so white storefront chrome stays readable (avoids white-on-white nav text).
+  // Streaming / hydration gap: keep path light ink for flush routes (home, categories,
+  // login) until an ink surface mounts. Flipping to dark here caused black-on-black nav
+  // when the showcase hero was still streaming in.
   if (surfaces.length === 0 && pathTone === "light") {
-    const path = normalizeStorefrontPath(pathname);
-    if (path === "/" || path === "/login" || isFlushHeroDocument()) {
+    if (
+      isFlushHeroDocument() ||
+      isFlushHeroStreamingRoute(pathname) ||
+      normalizeStorefrontPath(pathname) === "/" ||
+      normalizeStorefrontPath(pathname) === "/login"
+    ) {
       return "light";
     }
     return "dark";

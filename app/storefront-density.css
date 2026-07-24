@@ -80,7 +80,7 @@
 
     --ds-container: calc(1440px * var(--storefront-container-scale));
 
-    --ds-container-catalog: calc(1360px * var(--storefront-container-scale));
+    --ds-container-catalog: calc(80rem * var(--storefront-container-scale));
 
     --ds-container-showcase: calc(1320px * var(--storefront-container-scale));
 
@@ -128,9 +128,7 @@
 
   [data-storefront] .inner-page,
 
-  [data-storefront] .page-gutter,
-
-  [data-storefront] .catalog-grid-section {
+  [data-storefront] .page-gutter {
 
     padding-inline: var(--ds-page-gutter);
 
@@ -164,19 +162,8 @@
 
 
 
-  [data-storefront] .catalog-product-grid {
-
-    gap: clamp(calc(0.75rem * var(--storefront-space-scale)), 1.6cqi, calc(1.25rem * var(--storefront-space-scale)));
-
-  }
-
-
-
-  [data-storefront] .catalog-continued-grid__rows {
-
-    gap: calc(var(--mobile-grid-gap, 10px) * var(--storefront-space-scale));
-
-  }
+  /* Grid gap for storefront — only expand at 4-col (≥1024px).
+     2-col stays at 1rem to avoid oversized card spacing. */
 
 
 

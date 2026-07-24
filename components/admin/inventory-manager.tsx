@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Archive, Download, MoreHorizontal, Pencil, Plus, Search, Upload, X } from "lucide-react";
+import { Archive, Download, MoreHorizontal, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { memo, type ReactNode, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -9,6 +9,9 @@ import { OperationalSubmitButton } from "@/components/admin/operational-submit-b
 import { StatusPill } from "@/components/platform/status-pill";
 import { ConfirmDialog } from "@/components/notifications/confirm-dialog";
 import { getControlPlaneThemeAttrs } from "@/lib/control-plane-theme";
+import { notify } from "@/lib/feedback/notify";
+import { previewInventoryProductDeleteAction } from "@/app/admin/inventory/actions";
+import type { ProductDeletionBlockerResult } from "@/services/admin-actions";
 import type { SimpleInventoryRow, SimpleInventoryStatus } from "@/services/simple-inventory-view";
 import type { InventoryStockMetrics } from "@/services/inventory-metrics";
 import type { CatalogFilter } from "@/services/csv-inventory-source";
@@ -22,6 +25,9 @@ type InventoryManagerProps = {
   importAction?: InventoryAction;
   bulkAction?: InventoryAction;
   restockAction?: InventoryAction;
+  permanentDeleteAction?: InventoryAction;
+  forceDeleteAction?: InventoryAction;
+  canForceDelete?: boolean;
   readOnly?: boolean;
   exportHref: string;
   title?: string;
@@ -35,6 +41,13 @@ type InventoryManagerProps = {
   allowCsvImport?: boolean;
   initialSearchQuery?: string;
 };
+
+function formatBlockerSummary(blockers: ProductDeletionBlockerResult["blockers"]) {
+  return Object.entries(blockers)
+    .filter(([, count]) => count > 0)
+    .map(([key, count]) => `${key.replaceAll("_", " ")}: ${count}`)
+    .join(", ");
+}
 
 const adjustmentReasonOptions = [
   { value: "stock_in", label: "Stock in" },
@@ -251,21 +264,25 @@ const InventoryRow = memo(function InventoryRow({
   selected,
   menuOpen,
   action,
+  showPermanentDelete = false,
   readOnly = false,
   onSelect,
   onAdjustStock,
   onMenuToggle,
-  onLocalUpdate
+  onLocalUpdate,
+  onPermanentDelete
 }: {
   row: SimpleInventoryRow;
   selected: boolean;
   menuOpen: boolean;
   action?: InventoryAction;
+  showPermanentDelete?: boolean;
   readOnly?: boolean;
   onSelect: (id: string, selected: boolean) => void;
   onAdjustStock: (row: SimpleInventoryRow) => void;
   onMenuToggle: (id: string) => void;
   onLocalUpdate: (id: string, fields: Partial<SimpleInventoryRow>) => void;
+  onPermanentDelete?: (row: SimpleInventoryRow) => void;
 }) {
   const archiveFormRef = useRef<HTMLFormElement | null>(null);
   const archiveConfirmedRef = useRef(false);
@@ -337,41 +354,59 @@ const InventoryRow = memo(function InventoryRow({
                   Adjust stock
                 </button>
                 <div className="my-0.5 border-t border-slate-800" aria-hidden="true" />
-                <form
-                  action={action}
-                  ref={archiveFormRef}
-                  onSubmit={(event) => {
-                    if (!archiveConfirmedRef.current) {
-                      event.preventDefault();
-                      setConfirmOpen(true);
-                      return;
-                    }
-                    archiveConfirmedRef.current = false;
-                  }}
-                >
-                  <HiddenInventoryFields row={row} status="archived" />
-                  <button data-inventory-action="archive" className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold text-slate-300 hover:bg-[#151c26] hover:text-slate-100">
-                    <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-                    Archive
+                {!row.isArchived ? (
+                  <>
+                    <form
+                      action={action}
+                      ref={archiveFormRef}
+                      onSubmit={(event) => {
+                        if (!archiveConfirmedRef.current) {
+                          event.preventDefault();
+                          setConfirmOpen(true);
+                          return;
+                        }
+                        archiveConfirmedRef.current = false;
+                      }}
+                    >
+                      <HiddenInventoryFields row={row} status="archived" />
+                      <button data-inventory-action="archive" className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold text-slate-300 hover:bg-[#151c26] hover:text-slate-100">
+                        <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+                        Archive
+                      </button>
+                    </form>
+                    <ConfirmDialog
+                      open={confirmOpen}
+                      title="Archive product?"
+                      description={`Archive ${row.productName}? Stock history and warehouse data will be preserved.`}
+                      confirmLabel="Archive"
+                      variant="danger"
+                      onClose={() => {
+                        archiveConfirmedRef.current = false;
+                        setConfirmOpen(false);
+                      }}
+                      onConfirm={() => {
+                        archiveConfirmedRef.current = true;
+                        setConfirmOpen(false);
+                        onLocalUpdate(row.id, { stockStatus: "archived", isArchived: true });
+                        archiveFormRef.current?.requestSubmit();
+                      }}
+                    />
+                  </>
+                ) : null}
+                {showPermanentDelete && onPermanentDelete ? (
+                  <button
+                    type="button"
+                    data-inventory-action="permanent-delete"
+                    onClick={() => {
+                      onMenuToggle(row.id);
+                      onPermanentDelete(row);
+                    }}
+                    className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold text-rose-300 hover:bg-rose-500/10 hover:text-rose-200"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Permanent delete
                   </button>
-                </form>
-                <ConfirmDialog
-                  open={confirmOpen}
-                  title="Archive product?"
-                  description={`Archive ${row.productName}? Stock history and warehouse data will be preserved.`}
-                  confirmLabel="Archive"
-                  variant="danger"
-                  onClose={() => {
-                    archiveConfirmedRef.current = false;
-                    setConfirmOpen(false);
-                  }}
-                  onConfirm={() => {
-                    archiveConfirmedRef.current = true;
-                    setConfirmOpen(false);
-                    onLocalUpdate(row.id, { stockStatus: "archived", isArchived: true });
-                    archiveFormRef.current?.requestSubmit();
-                  }}
-                />
+                ) : null}
                 <a
                   data-inventory-action="view"
                   href={`/product/${row.productSlug}`}
@@ -398,6 +433,9 @@ export function InventoryManager({
   importAction,
   bulkAction,
   restockAction,
+  permanentDeleteAction,
+  forceDeleteAction,
+  canForceDelete = false,
   readOnly = false,
   exportHref,
   title = "Inventory",
@@ -422,6 +460,9 @@ export function InventoryManager({
   const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false);
   const [restockAmount, setRestockAmount] = useState(10);
   const [overrides, setOverrides] = useState<Record<string, Partial<SimpleInventoryRow>>>({});
+  const [deleteRow, setDeleteRow] = useState<SimpleInventoryRow | null>(null);
+  const [deleteBlockers, setDeleteBlockers] = useState<ProductDeletionBlockerResult | null>(null);
+  const [forceDeleteConfirmed, setForceDeleteConfirmed] = useState(false);
   const mergedRows = useMemo(
     () => rows.map((row) => ({ ...row, ...(overrides[row.id] ?? {}) })),
     [overrides, rows]
@@ -478,6 +519,40 @@ export function InventoryManager({
   const toggleRowMenu = useCallback((id: string) => {
     setOpenMenuId((current) => (current === id ? null : id));
   }, []);
+
+  const openPermanentDelete = useCallback((row: SimpleInventoryRow) => {
+    setOpenMenuId(null);
+    setDeleteRow(row);
+  }, []);
+
+  useEffect(() => {
+    if (!deleteRow) {
+      setDeleteBlockers(null);
+      setForceDeleteConfirmed(false);
+      return;
+    }
+
+    let cancelled = false;
+    previewInventoryProductDeleteAction(deleteRow.productSlug)
+      .then((result) => {
+        if (!cancelled) setDeleteBlockers(result);
+      })
+      .catch(() => {
+        if (!cancelled) setDeleteBlockers(null);
+        notify.error("Failed to load delete details.", { source: "admin-inventory", id: "inventory:delete-preview" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deleteRow]);
+
+  useEffect(() => {
+    if (!deleteRow) return;
+    if (!rows.some((row) => row.productSlug === deleteRow.productSlug)) {
+      setDeleteRow(null);
+    }
+  }, [deleteRow, rows]);
 
   function applyAdjustStock(form: HTMLFormElement) {
     if (!adjustingRow) return;
@@ -719,11 +794,13 @@ export function InventoryManager({
                 selected={selected.has(rowKey(row))}
                 menuOpen={openMenuId === row.id}
                 action={action}
+                showPermanentDelete={Boolean(permanentDeleteAction) && row.isArchived}
                 readOnly={readOnly}
                 onSelect={updateSelected}
                 onAdjustStock={openAdjustStock}
                 onMenuToggle={toggleRowMenu}
                 onLocalUpdate={updateRow}
+                onPermanentDelete={permanentDeleteAction ? openPermanentDelete : undefined}
               />
             )) : (
               <tr>
@@ -976,6 +1053,80 @@ export function InventoryManager({
             </OperationalSubmitButton>
           </form>
         </InventoryDialogPortal>
+      ) : null}
+
+      {deleteRow && permanentDeleteAction ? (
+        <div
+          data-inventory-delete-modal
+          className="fixed inset-0 z-50 grid place-items-center bg-black/55 p-4 backdrop-blur-[2px]"
+        >
+          <form
+            action={
+              forceDeleteConfirmed && forceDeleteAction
+                ? forceDeleteAction
+                : permanentDeleteAction
+            }
+            className="w-full max-w-md rounded-2xl border border-slate-800 bg-[#10151d] p-5 shadow-2xl shadow-black/40"
+          >
+            <input type="hidden" name="product_slug" value={deleteRow.productSlug} />
+            <input type="hidden" name="confirm_slug" value={deleteRow.productSlug} />
+            <input
+              type="hidden"
+              name="change_summary"
+              value={
+                forceDeleteConfirmed
+                  ? `Force delete product ${deleteRow.productSlug} from inventory`
+                  : `Permanently delete product ${deleteRow.productSlug} from inventory`
+              }
+            />
+            {forceDeleteConfirmed ? <input type="hidden" name="force_delete" value="1" /> : null}
+            <p className="type-meta font-semibold uppercase tracking-[0.12em] text-rose-300">Permanent delete</p>
+            <h3 className="mt-2 text-lg font-semibold text-slate-100">{deleteRow.productName}</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              Permanently deletes this archived product and its inventory rows. This cannot be undone.
+            </p>
+            {deleteBlockers?.hasBlockers ? (
+              <p className="mt-3 rounded-lg border border-slate-800 bg-[#0b1017] px-3 py-2 text-xs leading-5 text-slate-300">
+                Operational references block permanent delete: {formatBlockerSummary(deleteBlockers.blockers)}.
+              </p>
+            ) : (
+              <p className="mt-3 rounded-lg border border-slate-800 bg-[#0b1017] px-3 py-2 text-xs leading-5 text-slate-300">
+                No operational references were found. Permanent delete is allowed.
+              </p>
+            )}
+            {canForceDelete && deleteBlockers?.hasBlockers ? (
+              <label className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={forceDeleteConfirmed}
+                  onChange={(event) => setForceDeleteConfirmed(event.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Force delete despite operational references. Order and shipment history still block force delete.
+                </span>
+              </label>
+            ) : null}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteRow(null)}
+                className="h-9 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-300 hover:bg-[#151c26]"
+              >
+                Cancel
+              </button>
+              <OperationalSubmitButton
+                pendingLabel="Deleting..."
+                disabled={Boolean(deleteBlockers?.hasBlockers) && !forceDeleteConfirmed}
+                confirmMessage={`Permanently delete ${deleteRow.productName}? This cannot be undone.`}
+                requireTypedText={deleteRow.productSlug}
+                className="inline-flex h-9 items-center rounded-lg border border-rose-500/35 bg-rose-950/40 px-4 text-xs font-semibold text-rose-100 hover:bg-rose-900/45 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {forceDeleteConfirmed ? "Force delete product" : "Permanently delete"}
+              </OperationalSubmitButton>
+            </div>
+          </form>
+        </div>
       ) : null}
     </section>
   );

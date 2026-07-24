@@ -22,7 +22,7 @@ describe("mobile catalog grid layout", () => {
     expect(source("app/storefront-catalog.css")).toContain("margin-top: clamp(1.5rem, 3vw, 2.5rem)");
   });
 
-  it("keeps 2-column catalog grids and horizontal catalog footers", () => {
+  it("keeps 2-column catalog grids on phone and stacks catalog footers", () => {
     const globalsCss = source("app/globals.css");
     const showroomCss = source("sections/catalog/catalog-page.module.css");
     const cardCss = source("components/cards/product-hover-card.module.css");
@@ -31,19 +31,18 @@ describe("mobile catalog grid layout", () => {
       /@media \(max-width: 767px\)[\s\S]*\.catalog-product-grid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(globalsCss).toMatch(
-      /\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__footer[\s\S]*flex-direction:\s*row/
+      /\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__footer[\s\S]*flex-direction:\s*column/
     );
     const catalogFooterBlock = cardCss.match(
       /\.shell\[data-card-variant="catalog"\] \.footer\s*\{[\s\S]*?\}/
     )?.[0];
     expect(catalogFooterBlock).toBeTruthy();
-    expect(catalogFooterBlock).toContain("flex-direction: row");
-    expect(catalogFooterBlock).not.toContain("flex-direction: column");
+    expect(catalogFooterBlock).toContain("flex-direction: column");
     expect(showroomCss).toMatch(
       /@media \(max-width: 767px\)[\s\S]*\.productGrid[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
     expect(showroomCss).toMatch(
-      /@media \(max-width: 767px\)[\s\S]*\.footer[\s\S]*flex-direction:\s*row/
+      /@media \(max-width: 767px\)[\s\S]*\.footer[\s\S]*flex-direction:\s*column/
     );
     expect(showroomCss).toMatch(
       /@media \(max-width: 767px\)[\s\S]*\.price[\s\S]*white-space:\s*nowrap/
@@ -52,12 +51,42 @@ describe("mobile catalog grid layout", () => {
 
   it("uses consistent mobile catalog padding", () => {
     const globalsCss = source("app/globals.css");
+    const pageSource = source("sections/catalog/catalog-page.tsx");
     expect(globalsCss).toContain("--catalog-inline:");
     expect(globalsCss).toMatch(
-      /@media \(max-width: 1279px\)[\s\S]*\.catalog-page-shell[\s\S]*--catalog-inline:\s*clamp\(10px,\s*2vw,\s*16px\)/
+      /\.catalog-page-shell[\s\S]*--catalog-inline:\s*1rem/
     );
     expect(globalsCss).toMatch(
-      /@media \(max-width: 767px\)[\s\S]*\.catalog-grid-section[\s\S]*padding-inline:\s*var\(--catalog-inline\) !important/
+      /@media \(min-width: 640px\)[\s\S]*\.catalog-page-shell[\s\S]*--catalog-inline:\s*1\.5rem/
+    );
+    expect(globalsCss).toMatch(
+      /@media \(min-width: 1024px\)[\s\S]*\.catalog-page-shell[\s\S]*--catalog-inline:\s*2rem/
+    );
+    expect(pageSource).toContain("max-w-2xl");
+    expect(pageSource).toContain("lg:max-w-[84rem]");
+    expect(pageSource).toContain("px-6 sm:px-8 md:px-10");
+    expect(pageSource).toContain("lg:px-8");
+  });
+
+  it("stretches catalog cards to equal row height with square image wells", () => {
+    const catalogCss = source("app/storefront-catalog.css");
+    const cardSource = source("components/product/home-product-shelf-card.tsx");
+    const globalsCss = source("app/globals.css");
+    const shelfCss = source("sections/home/home-shelf-shared.module.css");
+
+    expect(catalogCss).toMatch(/height:\s*100%\s*!important/);
+    expect(catalogCss).toMatch(/align-self:\s*stretch\s*!important/);
+    expect(catalogCss).toMatch(/width:\s*100%\s*!important/);
+    expect(catalogCss).toMatch(/max-width:\s*100%\s*!important/);
+    expect(catalogCss).toMatch(/justify-content:\s*stretch/);
+    expect(catalogCss).toMatch(/grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+    expect(shelfCss).toMatch(
+      /\.productCardCatalog[\s\S]*?width:\s*100%\s*!important[\s\S]*?max-width:\s*100%\s*!important/
+    );
+    expect(cardSource).toContain("aspect-[4/3]");
+    expect(cardSource).toContain('data-catalog-compare-at=""');
+    expect(globalsCss).toMatch(
+      /@media \(max-width: 767px\)[\s\S]*\.catalog-page-shell \.premium-product-card-shell[\s\S]*height:\s*100%/
     );
   });
 

@@ -6,9 +6,9 @@ export default function ProductsLoading() {
       <div className="mx-auto max-w-[1440px]">
         <Skeleton className="h-12 w-64 rounded-lg bg-[var(--ds-skeleton)]" />
         <Skeleton className="mt-4 h-6 w-96 max-w-full rounded-lg bg-[var(--ds-skeleton)]" />
-        <div className="mt-10 grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-72 rounded-[20px] bg-[var(--ds-skeleton)]" />
+            <Skeleton key={index} className="h-72 rounded-2xl bg-[var(--ds-skeleton)]" />
           ))}
         </div>
       </div>

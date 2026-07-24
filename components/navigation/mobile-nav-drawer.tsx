@@ -60,7 +60,7 @@ export function MobileNavDrawer({
     <>
       <button
         aria-label="Close navigation menu"
-        className={`adaptive-mobile-menu__backdrop fixed inset-0 z-[var(--z-dropdown)] cursor-default bg-black/45 ${open ? "is-open" : ""}`}
+        className={`adaptive-mobile-menu__backdrop fixed inset-0 z-[var(--z-dropdown)] cursor-default bg-slate-900/25 ${open ? "is-open" : ""}`}
         tabIndex={open ? 0 : -1}
         onClick={onClose}
       />

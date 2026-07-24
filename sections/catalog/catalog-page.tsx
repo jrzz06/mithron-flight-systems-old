@@ -18,13 +18,22 @@ function CatalogListingSkeleton() {
   return (
     <div className="min-h-[40vh]" aria-hidden="true" data-catalog-listing-skeleton>
       <div className="mb-6 h-10 max-w-md animate-pulse rounded-md bg-[#eef0f3]" />
-      <div className="catalog-product-grid min-w-0 grid gap-[var(--mobile-grid-gap,10px)] grid-cols-2 md:grid-cols-3">
+      <div className="catalog-product-grid min-w-0" data-catalog-shelf-cards="">
         {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className="animate-pulse overflow-hidden rounded-2xl bg-[#eef0f3]">
-            <div className="aspect-[4/5] w-full bg-[#e4e7eb]" />
-            <div className="space-y-2 p-3">
-              <div className="h-3 w-2/3 rounded bg-[#dde1e6]" />
-              <div className="h-3 w-1/2 rounded bg-[#dde1e6]" />
+          <div
+            key={index}
+            className="flex h-full flex-col overflow-hidden border border-black/[0.04] bg-white"
+            style={{
+              borderRadius: 6,
+              padding: "14px 20px 26px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.03)"
+            }}
+          >
+            <div className="mb-0 aspect-[4/3] w-full rounded-md bg-white" style={{ padding: 14 }} />
+            <div className="mt-2.5 space-y-2">
+              <div className="h-3 w-1/3 rounded bg-[#dde1e6]" />
+              <div className="h-4 w-4/5 rounded bg-[#dde1e6]" />
+              <div className="h-3 w-3/5 rounded bg-[#dde1e6]" />
             </div>
           </div>
         ))}
@@ -196,7 +205,7 @@ export function CatalogPage({
       ) : null}
       <section
         id="catalog-grid"
-        className={isShowroom ? styles.gridSection : "catalog-grid-section mx-auto max-w-[min(100%,var(--ds-container-catalog))] scroll-mt-28 page-gutter"}
+        className={isShowroom ? styles.gridSection : "catalog-grid-section mx-auto w-full max-w-2xl px-6 sm:px-8 md:px-10 lg:max-w-[84rem] lg:px-8 scroll-mt-28"}
         data-navbar-ink="dark"
       >
         <Suspense fallback={<CatalogListingSkeleton />}>

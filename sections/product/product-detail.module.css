@@ -7,8 +7,8 @@
   --pdp-hover: #fcfcfd;
   --pdp-border: #e8eaed;
   --pdp-divider: #eef0f2;
-  --pdp-shadow-rest: 0 4px 24px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
-  --pdp-shadow-hover: 0 8px 32px rgba(15, 23, 42, 0.07), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --pdp-shadow-rest: 0 1px 2px rgba(15, 23, 42, 0.08), 0 10px 28px rgba(15, 23, 42, 0.14), 0 24px 48px rgba(15, 23, 42, 0.1);
+  --pdp-shadow-hover: 0 2px 6px rgba(15, 23, 42, 0.1), 0 16px 36px rgba(15, 23, 42, 0.16), 0 32px 64px rgba(15, 23, 42, 0.12);
   --pdp-radius-lg: 20px;
   --pdp-radius-xl: 24px;
   --pdp-motion: 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -31,6 +31,12 @@
   align-items: flex-start;
   gap: 0.625rem;
   padding: 0.75rem 1.25rem 0.875rem;
+}
+
+@media (max-width: 767px) {
+  .headerInner {
+    padding-inline: var(--mobile-page-inline, 16px);
+  }
 }
 
 @media (min-width: 768px) {
@@ -110,15 +116,53 @@
   }
 }
 
+/* Desktop density (~110% zoom equivalent) — content area only; header/nav unchanged */
 @media (min-width: 1024px) {
+  .heroSection {
+    max-width: calc(var(--ds-container) * 1.1);
+    padding-inline: 1.75rem;
+  }
+
   .heroGrid {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 520px);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 560px);
+  }
+
+  .productTitlePremium {
+    font-size: calc(var(--type-product-title) * 1.08);
+  }
+
+  .priceHero {
+    font-size: clamp(2.125rem, 4.5vw, 2.875rem);
+  }
+
+  .productTitle {
+    font-size: calc(var(--ds-t-section) * 1.08);
+  }
+
+  .priceCurrent {
+    font-size: clamp(1.625rem, 4vw, 2.45rem);
+  }
+
+  .mediaViewerInnerWithThumbs {
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  .storyInner,
+  .supportInner {
+    max-width: calc(var(--ds-container) * 1.1);
+  }
+
+  .highlightsInner,
+  .storyChapterGrid,
+  .relatedInner,
+  .sectionNavInner {
+    max-width: 1320px;
   }
 }
 
 @media (min-width: 1280px) {
   .heroGrid {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 540px);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 590px);
   }
 }
 
@@ -237,7 +281,7 @@
   overflow: hidden;
   border: 1px solid var(--pdp-border);
   border-radius: var(--ds-r-xl);
-  background: #ffffff;
+  background: #f9fafb;
   box-shadow: none;
 }
 
@@ -247,12 +291,26 @@
 }
 
 .mediaGroundShadow {
-  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  z-index: 1;
+  width: min(56%, 340px);
+  height: clamp(28px, 6vw, 44px);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 50%,
+    rgba(15, 23, 42, 0.18) 0%,
+    rgba(15, 23, 42, 0.07) 42%,
+    transparent 72%
+  );
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .mediaImageFrame {
   position: absolute;
-  inset: 0;
+  inset: 12px;
   z-index: 2;
   border: none;
   border-radius: 0;
@@ -262,13 +320,16 @@
 
 @media (min-width: 768px) {
   .mediaImageFrame {
-    inset: 0;
+    inset: 16px;
   }
 }
 
 .mediaImage {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   object-position: center;
+  /* Prefer SVG alpha-hardened shadow on immersive gallery; keep none here to avoid fringe mud */
   filter: none;
 }
 
@@ -2038,25 +2099,30 @@
   }
 
   .relatedProductGrid {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: min(72vw, 280px);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    grid-auto-flow: unset;
+    grid-auto-columns: unset;
     grid-template-columns: unset;
     gap: var(--mobile-card-gap, 10px);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--mobile-page-inline, 12px);
+    scroll-padding-inline: var(--mobile-page-inline, 16px);
     -webkit-overflow-scrolling: touch;
     padding-bottom: 0.25rem;
   }
 
   .relatedCard {
+    flex: 0 0 min(72vw, 280px);
+    width: min(72vw, 280px);
+    max-width: min(72vw, 280px);
     scroll-snap-align: start;
     height: auto;
   }
 
   .relatedSection {
-    padding-inline: var(--mobile-page-inline, 12px);
+    padding-inline: var(--mobile-page-inline, 16px);
   }
 
   .quantityButton {

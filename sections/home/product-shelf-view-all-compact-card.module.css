@@ -1,11 +1,12 @@
 .card {
   display: flex;
   min-height: 0;
+  height: 100%;
   align-items: center;
   justify-content: center;
   gap: 12px;
   border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: var(--shelf-dji-card-radius, 0);
+  border-radius: var(--shelf-dji-card-radius, 6px);
   background: #ffffff;
   color: #09090b;
   text-decoration: none;

@@ -46,6 +46,7 @@ import {
   hasAnyProductImageInput,
   linkUploadedImagesToProduct,
   parseGalleryUrls,
+  parseOrderedGalleryUrls,
   parseRemovedGalleryUrls,
   readMediaSrc,
   readProductGalleryFromRow
@@ -176,7 +177,8 @@ export async function saveProductDraftFormAction(formData: FormData) {
       primarySrc: readOptionalFormText(formData, "image_src"),
       primaryAlt: productName,
       uploadedUrls: uploadedImages.map((upload) => upload.publicUrl),
-      extraUrls: parseGalleryUrls(formData)
+      extraUrls: parseGalleryUrls(formData),
+      orderedUrls: parseOrderedGalleryUrls(formData)
     });
     if (mergedGallery) {
       draftInput.fields.image = mergedGallery.image;
@@ -452,7 +454,8 @@ async function performProductQuickEdit(formData: FormData): Promise<string | und
       uploadedUrls: uploadedImages.map((upload) => upload.publicUrl),
       extraUrls: parseGalleryUrls(formData),
       existingGallery: existingProduct ? readProductGalleryFromRow(existingProduct) : [],
-      removedUrls
+      removedUrls,
+      orderedUrls: parseOrderedGalleryUrls(formData)
     });
     if (mergedGallery) {
       quickInput.fields.image = mergedGallery.image;

@@ -54,7 +54,7 @@ describe("navbar ink resolver", () => {
   });
 
   it("resolves path tones for home, categories, and utility routes", () => {
-    expect(resolvePathNavbarTone("/")).toBe("dark");
+    expect(resolvePathNavbarTone("/")).toBe("light");
     expect(resolvePathNavbarTone("/category/agri-drones")).toBe("light");
     expect(resolvePathNavbarTone("/category/video-drones")).toBe("light");
     expect(resolvePathNavbarTone("/category/global-products")).toBe("light");
@@ -63,7 +63,7 @@ describe("navbar ink resolver", () => {
   });
 
   it("derives chrome mode from the route, not leftover page DOM", () => {
-    expect(resolveNavbarChromeMode("/")).toBe("solid");
+    expect(resolveNavbarChromeMode("/")).toBe("flush");
     expect(resolveNavbarChromeMode("/category/agri-drones")).toBe("flush");
     expect(resolveNavbarChromeMode("/login")).toBe("flush");
     expect(resolveNavbarChromeMode("/products")).toBe("solid");
@@ -119,11 +119,11 @@ describe("navbar ink resolver", () => {
 
   it("keeps path tone during streaming gap before hero surfaces mount", () => {
     mountInkDom(`<main id="g-main" class="home-page-canvas"></main>`);
-    // Home is solid chrome with dark ink — no flush streaming gap.
-    expect(resolveNavbarTone("dark", "/")).toBe("dark");
+    // Home is flush chrome with light ink over the hero streaming gap.
+    expect(resolveNavbarTone("light", "/")).toBe("light");
   });
 
-  it("returns dark on category routes when no hero surface is mounted", () => {
+  it("keeps light ink on category flush routes while showcase hero is still streaming", () => {
     mountInkDom(`
       <div class="TOP_NAVBAR adaptive-navbar">
         <header class="adaptive-navbar__bar"></header>
@@ -133,8 +133,9 @@ describe("navbar ink resolver", () => {
     const bar = document.body.querySelector(".adaptive-navbar__bar")!;
     mockRect(bar, { top: 0, bottom: 58, left: 0, right: 1440, width: 1440, height: 58 });
 
-    expect(resolveNavbarTone("light", "/category/global-products")).toBe("dark");
-    expect(resolveNavbarTone("light", "/category/video-drones")).toBe("dark");
+    expect(resolveNavbarTone("light", "/category/global-products")).toBe("light");
+    expect(resolveNavbarTone("light", "/category/video-drones")).toBe("light");
+    expect(resolveNavbarTone("light", "/category/accessories")).toBe("light");
   });
 
   it("returns dark when scrolled past hero on flush pages", () => {

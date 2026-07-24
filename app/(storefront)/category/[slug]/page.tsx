@@ -6,6 +6,7 @@ import {
   getCatalogCategoryDefinition,
   isCatalogCategorySlug
 } from "@/lib/catalog-categories";
+import { attachCatalogProductRatings } from "@/lib/catalog-product-ratings";
 import { getProductsForCategorySlug } from "@/services/catalog";
 import { getCategoryCmsMetadata } from "@/services/cms";
 import { CatalogPage } from "@/sections/catalog/catalog-page";
@@ -58,6 +59,8 @@ async function CategoryPageContent({ slug }: { slug: string }) {
     }
     products = [];
   }
+
+  products = await attachCatalogProductRatings(products);
 
   return (
     <CatalogPage

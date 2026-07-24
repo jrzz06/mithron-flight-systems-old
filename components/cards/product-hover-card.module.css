@@ -65,7 +65,7 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  aspect-ratio: var(--product-card-image-ratio);
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   isolation: isolate;
   border-bottom: none;
@@ -75,12 +75,22 @@
 
 .shell[data-card-variant="catalog"] {
   aspect-ratio: auto;
-  height: auto;
+  height: 100%;
+  border-radius: 1rem;
 }
 
 .shell[data-card-variant="catalog"] .media {
-  aspect-ratio: var(--product-card-image-ratio);
-  max-height: none;
+  aspect-ratio: auto;
+  height: 9rem;
+  max-height: 9rem;
+  background: #f9fafb;
+}
+
+@media (min-width: 640px) {
+  .shell[data-card-variant="catalog"] .media {
+    height: 12rem;
+    max-height: 12rem;
+  }
 }
 
 @container (max-width: 260px) {
@@ -224,7 +234,13 @@
 
 .shell[data-card-variant="catalog"] .body {
   gap: var(--product-card-body-gap);
-  padding: var(--card-pad) var(--product-card-pad-inline) var(--product-card-pad-block-end);
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .shell[data-card-variant="catalog"] .body {
+    padding: 1.25rem;
+  }
 }
 
 .body::before {
@@ -306,10 +322,13 @@
 
 .shell[data-card-variant="catalog"] .footer {
   flex-direction: column;
+  flex-wrap: nowrap;
   align-items: stretch;
   justify-content: flex-start;
-  gap: var(--product-card-footer-gap);
-  padding-top: var(--product-card-footer-pad-top);
+  gap: 8px;
+  padding-top: 0.625rem;
+  margin-top: auto;
+  border-top: 1px solid #f3f4f6;
 }
 
 .cta {
@@ -345,7 +364,9 @@
 }
 
 .shell[data-card-variant="catalog"] .description {
-  min-height: var(--product-card-desc-min-height);
+  min-height: 2.8em;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .description {
@@ -393,13 +414,13 @@
 
 @media (max-width: 767px) {
   .shell[data-card-variant="catalog"] .media {
-    aspect-ratio: var(--product-card-image-ratio);
+    aspect-ratio: 1 / 1;
     height: auto;
     max-height: none;
   }
 
   .media {
-    aspect-ratio: var(--product-card-image-ratio);
+    aspect-ratio: 1 / 1;
     height: auto;
     max-height: none;
   }
@@ -422,10 +443,11 @@
 
   .shell[data-card-variant="catalog"] .footer {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 6px;
-    padding-top: 4px;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
   }
 
   .price {
@@ -437,13 +459,13 @@
   }
 
   .shell[data-card-variant="catalog"] .price {
-    align-self: flex-start;
+    align-self: center;
     text-align: left;
     font-size: 0.9375rem;
   }
 
   .cta {
-    width: 100%;
+    width: auto;
     max-width: 100%;
     min-height: var(--mobile-touch-min, 44px);
     min-width: 0;
@@ -451,12 +473,12 @@
   }
 
   .shell[data-card-variant="catalog"] .cta {
-    width: 100%;
-    max-width: 100%;
+    width: auto;
+    max-width: min(148px, 100%);
     min-height: var(--mobile-touch-min, 44px);
     padding: 0 14px;
     font-size: 0.8125rem;
-    white-space: normal;
+    white-space: nowrap;
     text-align: center;
     box-sizing: border-box;
   }
@@ -470,24 +492,24 @@
 
 @media (max-width: 640px) {
   .shell[data-card-variant="catalog"] .media {
-    aspect-ratio: var(--catalog-mobile-media-aspect-ratio);
+    aspect-ratio: 1 / 1;
     height: auto;
     max-height: none;
   }
 
   .shell {
-    border-radius: var(--ds-r-sm);
+    border-radius: 1rem;
   }
 
   .card {
-    border-radius: var(--ds-r-sm);
+    border-radius: 1rem;
   }
 
   .media {
-    aspect-ratio: var(--catalog-mobile-media-aspect-ratio);
+    aspect-ratio: 1 / 1;
     height: auto;
     max-height: none;
-    border-radius: var(--ds-r-sm) var(--ds-r-sm) 0 0;
+    border-radius: 1rem 1rem 0 0;
   }
 
   .imageFrame {
@@ -512,8 +534,8 @@
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     min-height: 0;
     margin-top: 2px;
     font-size: 0.6875rem;
@@ -522,26 +544,27 @@
 
   .body {
     gap: 4px;
-    padding: 10px 12px 12px;
+    padding: 1rem;
   }
 
   .shell[data-card-variant="catalog"] .body {
     gap: 4px;
-    padding: 10px 12px 12px;
+    padding: 1rem;
   }
 
   .footer {
-    flex-direction: column;
-    align-items: stretch;
-    flex-wrap: nowrap;
-    gap: 6px;
-    padding-top: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
     min-height: 0;
   }
 
   .cta {
     display: inline-flex;
-    width: 100%;
+    width: auto;
     max-width: 100%;
     min-height: var(--mobile-touch-min, 44px);
     min-width: 0;
@@ -562,9 +585,9 @@
     flex: 0 0 auto;
     flex-shrink: 0;
     width: fit-content;
-    align-self: flex-end;
+    align-self: center;
     white-space: nowrap;
-    text-align: right;
+    text-align: left;
   }
 }
 

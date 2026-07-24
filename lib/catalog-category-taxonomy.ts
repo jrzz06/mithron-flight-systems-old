@@ -118,7 +118,7 @@ const categoryByLabel = new Map(
 export const CANONICAL_PRODUCT_CATEGORY_LABELS = catalogCategoryDefinitions.map((definition) => definition.label);
 
 export function isCatalogCategorySlug(value: string): value is CatalogCategorySlug {
-  return categoryBySlug.has(value as CatalogCategorySlug);
+  return (CATALOG_CATEGORY_SLUGS as readonly string[]).includes(value);
 }
 
 export function getCatalogCategoryDefinition(slug: CatalogCategorySlug) {

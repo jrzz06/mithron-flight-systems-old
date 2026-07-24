@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { MithronPageHeroImage } from "@/components/media/mithron-page-hero-image";
 import { MithronThumbImage } from "@/components/media/mithron-thumb-image";
 import { ProductSharedMedia } from "@/components/navigation/product-shared-media";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import type { ProductMediaPlanItem } from "@/lib/product-detail-experience";
 import { cn } from "@/lib/utils";
 import styles from "./product-showcase.module.css";
@@ -15,8 +16,8 @@ const SWIPE_THRESHOLD = 48;
 export function ProductImmersiveGallery({
   mediaPlan,
   productSlug,
-  showBadge: _showBadge = false,
-  badgeLabel: _badgeLabel
+  showBadge = false,
+  badgeLabel
 }: {
   mediaPlan: ProductMediaPlanItem[];
   /** Required for shared-element morph from catalog/home cards. */
@@ -314,8 +315,13 @@ export function ProductImmersiveGallery({
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <div className={styles.stageFill} aria-hidden="true" />
+            <PatternBackground
+              showBadge={showBadge}
+              badgeLabel={badgeLabel}
+              className={styles.stagePattern}
+            />
             <div className={styles.stageImageFrame}>
+              <div className={styles.stageProductShadow} aria-hidden="true" />
               {renderStageLayers({
                 sharedMorph: true,
                 sizes: "(min-width: 1024px) 58vw, 100vw"

@@ -1,4 +1,4 @@
-﻿/* Storefront catalog listing — imported by app/(storefront)/layout.tsx */
+/* Storefront catalog listing — imported by app/(storefront)/layout.tsx */
 
 .catalog-empty-state {
   display: grid;
@@ -23,22 +23,35 @@
   color: var(--ds-ink-2);
 }
 
+/*
+  Strict 2 / 4 column system — ZERO 1-col or 3-col intermediate states.
+  <1024: grid-cols-2 + gap-4
+  ≥1024: lg:grid-cols-4 + gap-6
+*/
 .catalog-product-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: auto;
-  gap: clamp(0.75rem, 1.6cqi, 1.25rem);
+  gap: 1.25rem; /* room for card shadows between cells */
   align-items: stretch;
+  justify-content: stretch;
+  justify-items: stretch;
   width: 100%;
   min-width: 0;
+  overflow: visible;
+  padding: 4px 2px 12px; /* shadow gutter so elevation isn't clipped */
 }
 
 .catalog-product-grid > *,
 .catalog-continued-grid__rows > * {
-  min-width: 0;
-  max-width: 100%;
-  width: 100%;
-  height: 100%;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  flex: none !important;
+  /* height: 100% only makes sense when the parent grid cell has a defined height.
+     With no grid-auto-rows, cells shrink to content; stretch alignment already
+     equalises the two cards in each row without ballooning the other rows. */
+  align-self: stretch !important;
+  justify-self: stretch !important;
 }
 
 .catalog-product-grid--continued {
@@ -60,38 +73,15 @@
 .catalog-continued-grid__rows {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: auto;
-  gap: clamp(0.75rem, 1.6cqi, 1.25rem);
+  /* No grid-auto-rows: 1fr — see .catalog-product-grid comment above */
+  gap: 1.25rem;
   align-items: stretch;
+  justify-content: stretch;
+  justify-items: stretch;
   width: 100%;
   min-width: 0;
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .catalog-product-grid,
-  .catalog-continued-grid__rows,
-  .catalog-virtualized-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(0.875rem, 1.4cqi, 1.125rem);
-    grid-auto-rows: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .catalog-product-grid,
-  .catalog-continued-grid__rows,
-  .catalog-virtualized-row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(0.75rem, 1.6cqi, 1.25rem);
-    grid-auto-rows: auto;
-  }
-}
-
-.catalog-continued-grid__load-more {
-  display: flex;
-  width: 100%;
-  justify-content: center;
-  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  overflow: visible;
+  padding: 4px 2px 12px;
 }
 
 .catalog-virtualized-row {
@@ -103,21 +93,508 @@
   width: 100%;
   min-width: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: auto;
-  gap: clamp(0.75rem, 1.6cqi, 1.25rem);
+  /* No grid-auto-rows: 1fr — virtualized rows contain exactly 2 or 4 cards;
+     stretch alignment makes them equal without a fixed row height. */
+  gap: 1.25rem;
   align-items: stretch;
+  overflow: visible;
+  padding: 4px 2px 12px;
 }
 
 .catalog-virtualized-row > .premium-product-card-shell {
   min-width: 0;
   width: 100%;
+  height: 100% !important;
+  align-self: stretch !important;
 }
 
-.catalog-product-grid--continued {
-  margin-top: clamp(1rem, 2vw, 1.5rem);
+/* Tablet (768px–1023px): keep 2 columns */
+@media (min-width: 768px) {
+  .catalog-product-grid,
+  .catalog-continued-grid__rows,
+  .catalog-virtualized-row {
+    gap: 1rem; /* gap-4 — match mobile so cards don't feel larger */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Desktop (≥1024px): strictly 4 columns — show 4 cards as soon as space allows */
+@media (min-width: 1024px) {
+  .catalog-product-grid,
+  .catalog-continued-grid__rows,
+  .catalog-virtualized-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.35rem; /* ~110% of prior 1.25rem */
+  }
+}
+
+.catalog-continued-grid__load-more {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
 }
 
 .catalog-product-grid--continued > .premium-product-card-shell {
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
 }
+
+/*
+  Catalog / category / PDP recommend only — homepage shelves frozen.
+  Glass morphism: translucent fill + blur(16px), barely-there border.
+*/
+[data-catalog-shelf-cards] {
+  --shelf-cutout-scale: 1.5;
+  --shelf-cutout-pad: 0px;
+  --shelf-card-ink: #18181b;
+  --shelf-card-pad-x: 10px;
+  --shelf-card-pad-bottom: 10px;
+  --shelf-card-pad-top: 4px;
+  --shelf-footer-gap: 8px;
+  --shelf-dji-card-radius: 14px;
+  --shelf-card-surface: rgba(255, 255, 255, 0.42);
+  --shelf-card-surface-hover: rgba(255, 255, 255, 0.56);
+  --catalog-card-image-ratio: 4 / 3;
+  --catalog-image-inset: 8px;
+  --catalog-footer-inline: 4px;
+  --catalog-glass-border: rgba(229, 231, 235, 0.9);
+  --catalog-glass-highlight: rgba(255, 255, 255, 0.55);
+  --catalog-card-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 4px 12px rgba(15, 23, 42, 0.1),
+    0 16px 36px rgba(15, 23, 42, 0.14);
+  --catalog-card-shadow-hover:
+    0 2px 6px rgba(15, 23, 42, 0.1),
+    0 12px 28px rgba(15, 23, 42, 0.16),
+    0 28px 56px rgba(15, 23, 42, 0.14);
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] {
+    --catalog-footer-inline: 8px;
+  }
+}
+
+.catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"],
+[data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"],
+.catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"],
+[data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"] {
+  --catalog-card-pad: 0;
+  --catalog-card-overlap: 0;
+  /* Kill homepage shelf carousel fixed widths (280px-class) so 1fr tracks fill the row */
+  --shelf-card-width: 100%;
+  --shelf-card-min-width: 0;
+  --shelf-card-max-width: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
+  aspect-ratio: auto !important;
+  box-sizing: border-box;
+  padding: 0.625rem !important; /* 10px — compact 2-col */
+  border-radius: 0.875rem !important; /* 14px */
+  border: 1px solid var(--catalog-glass-border, rgba(229, 231, 235, 0.9)) !important;
+  background: #ffffff !important;
+  box-shadow: var(--catalog-card-shadow) !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  container-type: normal;
+  transition:
+    box-shadow 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    border-color 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@media (min-width: 1024px) {
+  .catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"],
+  [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"],
+  .catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"],
+  [data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"] {
+    padding: 0.8125rem !important; /* ~13px — ~110% of prior 12px */
+  }
+}
+
+.catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"]:is(:hover, :focus-within, :focus-visible),
+[data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"]:is(:hover, :focus-within, :focus-visible),
+.catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"]:is(:hover, :focus-visible),
+[data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"]:is(:hover, :focus-visible) {
+  border-color: rgba(209, 213, 219, 1) !important;
+  background: #ffffff !important;
+  box-shadow: var(--catalog-card-shadow-hover) !important;
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"],
+  [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"],
+  .catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"],
+  [data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"] {
+    transition: none;
+  }
+
+  .catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"]:is(:hover, :focus-within, :focus-visible),
+  [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"]:is(:hover, :focus-within, :focus-visible) {
+    transform: none;
+  }
+}
+
+/* Normalized image well — 4:3 aspect; ~12px breathing room so product fills the panel */
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child {
+  position: relative !important;
+  padding: 0 !important;
+  background: #f9fafb !important; /* bg-gray-50 */
+  border: none !important;
+  border-radius: 0.625rem !important; /* 10px */
+  aspect-ratio: 4 / 3 !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: 200px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* Subtle radial cutout shadow — products / category / PDP recommend */
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  z-index: 0;
+  width: 58%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 50%,
+    rgba(15, 23, 42, 0.16) 0%,
+    rgba(15, 23, 42, 0.06) 45%,
+    transparent 72%
+  );
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Desktop: drop the phone/tablet image cap so wider 4-col tracks can grow */
+@media (min-width: 1024px) {
+  [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child {
+    max-height: none !important;
+    border-radius: 0.75rem !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child > div:first-child {
+  inset: var(--catalog-image-inset, 12px) !important;
+}
+
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child img,
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child [class*="productImage"] {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  filter: none !important;
+}
+
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:last-child {
+  padding: 6px 2px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  justify-content: space-between !important;
+  min-height: 0;
+}
+
+/*
+  Catalog footer — ALWAYS stacked (price above Buy Now).
+  2-col mobile AND 4-col desktop both produce narrow cards (~160–240px);
+  side-by-side footers overlap the price. No absolute positioning.
+*/
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="productFooter"] {
+  position: relative !important;
+  margin-top: auto !important;
+  margin-inline: 0 !important;
+  padding: 0.375rem 0 0 !important;
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-top: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+}
+
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="productPriceBlock"] {
+  position: relative !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+}
+
+/* Catalog listing: compact type on 2-col mobile, scaled up from sm */
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productKicker"] {
+  font-size: 10px !important;
+  letter-spacing: 0.07em !important;
+  margin-bottom: 4px !important;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productKicker"] {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="catalogRatingStar"] {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="catalogRatingStar"] {
+    width: 15px !important;
+    height: 15px !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="catalogRatingValue"] {
+  font-size: 12px !important;
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] h3 {
+  display: -webkit-box !important;
+  min-height: 0 !important;
+  max-height: calc(1.25em * 2 + 1px) !important;
+  overflow: hidden !important;
+  color: #111827 !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.015em !important;
+  white-space: normal !important;
+  text-overflow: ellipsis !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 2 !important;
+  line-clamp: 2 !important;
+  margin: 0 !important;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] h3 {
+    font-size: 15px !important;
+    min-height: 0 !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productDescriptor"] {
+  min-height: 0 !important;
+  margin-top: 3px !important;
+  color: #6b7280 !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  text-transform: none !important;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  overflow: hidden !important;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productDescriptor"] {
+    min-height: 0 !important;
+    font-size: 12.5px !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-compare-at] {
+  color: #9ca3af !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.15 !important;
+  text-decoration: line-through !important;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-compare-at] {
+    font-size: 13px !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceDji"],
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceCatalog"] {
+  color: #111827 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.12 !important;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceDji"],
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceCatalog"] {
+    font-size: 17px !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-gst-note] {
+  color: #9ca3af !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-gst-note] {
+    font-size: 12px !important;
+  }
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productBuyNowCatalog"] {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 2rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0.375rem 0.5rem !important;
+  border-radius: 0.5rem !important;
+  background: #065f46 !important;
+  color: #fff !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  transition:
+    background-color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"]:is(:hover, :focus-visible) [class*="productBuyNowCatalog"] {
+  background: #047857 !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 12px rgba(6, 95, 70, 0.28) !important;
+}
+
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"]:active [class*="productBuyNowCatalog"],
+[data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productBuyNowCatalog"]:active {
+  background: #064e3b !important;
+  transform: scale(0.98) !important;
+  box-shadow: none !important;
+}
+
+/* Catalog-only: kill cutout halo on every media descendant */
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] img,
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] picture,
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="productImage"],
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="mithron-responsive"],
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="MithronCardImage"],
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child * {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"]:is(:hover, :focus-visible) img,
+[data-catalog-shelf-cards] a[data-shelf-card-layout="dji"]:is(:hover, :focus-visible) [class*="productImage"] {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Stretch DJI cards equally in catalog 2/4 grids.
+   Cards share the height of their tallest sibling in the SAME row via
+   align-items: stretch on the grid — no forced row height needed.
+   !important beats homepage shelf carousel fixed widths (<1280px). */
+.catalog-product-grid > a[data-testid="home-product-card"],
+.catalog-continued-grid__rows > a[data-testid="home-product-card"],
+.catalog-virtualized-row > a[data-testid="home-product-card"] {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: none !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
+}
+
+/*
+  Desktop catalog card type — 84rem / 4-col; +1px vs prior compact scale.
+  Must follow the ≥640px type rules so these win on ≥1024px only.
+*/
+@media (min-width: 1024px) {
+  [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:last-child {
+    padding: 7px 2px 0 !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="productFooter"] {
+    padding: 0.4rem 0 0 !important;
+    gap: 7px !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productKicker"] {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="catalogRatingStar"] {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="catalogRatingValue"] {
+    font-size: 12px !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] h3 {
+    font-size: 16px !important;
+    letter-spacing: -0.015em !important;
+    line-height: 1.28 !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productDescriptor"] {
+    margin-top: 3px !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-compare-at] {
+    font-size: 14px !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceDji"],
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceCatalog"] {
+    font-size: 18px !important;
+    line-height: 1.15 !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-gst-note] {
+    font-size: 13px !important;
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productBuyNowCatalog"] {
+    min-height: 2.25rem !important;
+    padding: 0.45rem 0.7rem !important;
+    border-radius: 0.5rem !important;
+    font-size: 13.5px !important;
+    white-space: nowrap !important;
+  }
+}
+

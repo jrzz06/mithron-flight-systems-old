@@ -4,15 +4,34 @@ export type ProductShelfCardItem = {
   slug: string;
   name: string;
   price: number;
+  /** Compare-at / MRP when higher than `price` — shown struck on catalog cards. */
+  compareAt?: number | null;
   tagline: string;
   category: string;
   badge?: string;
-  badgeStyle?: string;
+  badgeStyle?: import("@/lib/product-badge").ProductBadgeStyle | string;
+  /** Real average rating (1–5). Catalog shows empty stars when absent. */
+  rating?: number;
+  /** Total number of customer reviews. */
+  reviewCount?: number;
+  /** When false, GST note is hidden. Defaults to charged when undefined. */
+  chargeTax?: boolean;
+  /** Admin tax-included flag — drives Incl. GST vs Excl. GST on catalog cards. */
+  taxIncluded?: boolean;
   image: {
     src: string;
     responsive?: import("@/config/types").ResponsiveMediaAsset;
   };
 };
+
+/** Catalog price note from admin tax settings. Null when tax is not charged. */
+export function getCatalogGstLabel(product: {
+  chargeTax?: boolean | null;
+  taxIncluded?: boolean | null;
+}): "Incl. GST" | "Excl. GST" | null {
+  if (product.chargeTax === false) return null;
+  return product.taxIncluded ? "Incl. GST" : "Excl. GST";
+}
 
 /** Short acronyms kept uppercase in product titles. */
 const PRESERVE_ACRONYMS = new Set([
@@ -46,7 +65,7 @@ export function compactProductMeta(product: Pick<ProductShelfCardItem, "tagline"
     .slice(0, 2)
     .join(",")
     .trim();
-  const detail = phrase ? clipProductPreviewText(phrase, 76) : phrase;
+  const detail = phrase ? clipProductPreviewText(phrase, 32) : phrase;
   return { detail };
 }
 

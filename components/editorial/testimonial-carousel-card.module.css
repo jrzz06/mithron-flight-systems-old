@@ -4,19 +4,15 @@
   --card-faint: rgba(15, 42, 28, 0.42);
   --card-accent: var(--brand-accent, #1f6b46);
   --card-star: #c9942e;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 292px;
-  padding: clamp(26px, 2.6vw, 32px);
-  border-radius: 20px;
+  min-height: 0;
+  border-radius: 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(252, 253, 250, 0.96) 100%);
   border: 1px solid rgba(31, 107, 70, 0.1);
   box-shadow:
     0 1px 1px rgba(15, 42, 28, 0.03),
-    0 8px 20px rgba(31, 107, 70, 0.08),
-    0 20px 44px rgba(15, 42, 28, 0.06);
+    0 6px 16px rgba(31, 107, 70, 0.07),
+    0 14px 32px rgba(15, 42, 28, 0.05);
   backdrop-filter: blur(10px);
   transition:
     transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -24,40 +20,37 @@
     border-color 240ms ease;
 }
 
+@media (min-width: 640px) {
+  .card {
+    border-radius: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card {
+    border-radius: 20px;
+  }
+}
+
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   border-color: rgba(31, 107, 70, 0.18);
   box-shadow:
     0 2px 4px rgba(15, 42, 28, 0.04),
-    0 14px 28px rgba(31, 107, 70, 0.12),
-    0 28px 56px rgba(15, 42, 28, 0.08);
-}
-
-.cardTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 18px;
+    0 10px 22px rgba(31, 107, 70, 0.1),
+    0 20px 40px rgba(15, 42, 28, 0.07);
 }
 
 .quoteIcon {
-  flex-shrink: 0;
   color: rgba(31, 107, 70, 0.28);
-  margin-top: -2px;
+  margin-top: -1px;
 }
 
 .starRow {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .star {
-  width: 15px;
-  height: 15px;
   color: var(--card-star);
   fill: currentColor;
   stroke: currentColor;
@@ -72,35 +65,32 @@
 
 .body {
   flex: 1 1 auto;
-  margin: 0;
+  margin-bottom: 0;
   color: var(--card-muted);
   font-family: var(--type-ui);
-  font-size: var(--type-body);
   font-weight: 400;
   line-height: var(--leading-body);
   letter-spacing: 0;
   text-wrap: pretty;
   font-synthesis: none;
+  /* Fallback when Tailwind line-clamp utilities are unavailable */
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 3;
   overflow: hidden;
 }
 
-.footer {
-  margin-top: clamp(18px, 2.2vw, 24px);
-  padding-top: 0;
-  border-top: none;
+@media (min-width: 640px) {
+  .body {
+    -webkit-line-clamp: 4;
+  }
 }
 
 .productLink {
-  display: flex;
-  align-items: center;
-  gap: 14px;
   min-width: 0;
   color: inherit;
   text-decoration: none;
-  border-radius: 14px;
+  border-radius: 12px;
   transition: color 180ms ease;
 }
 
@@ -122,11 +112,6 @@
 }
 
 .productThumb {
-  position: relative;
-  flex-shrink: 0;
-  width: 52px;
-  height: 52px;
-  overflow: hidden;
   border-radius: 999px;
   background:
     radial-gradient(circle at 35% 30%, #ffffff 0%, #f3f6f1 70%);
@@ -137,7 +122,13 @@
 .productImage {
   object-fit: contain;
   object-position: center;
-  padding: 5px;
+  padding: 3px;
+}
+
+@media (min-width: 640px) {
+  .productImage {
+    padding: 4px;
+  }
 }
 
 .meta {
@@ -148,7 +139,7 @@
   margin: 0;
   color: var(--card-ink);
   font-family: var(--type-display);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -159,11 +150,17 @@
   font-synthesis: none;
 }
 
+@media (min-width: 640px) {
+  .name {
+    font-size: 15px;
+  }
+}
+
 .productName {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   color: var(--card-faint);
   font-family: var(--type-ui);
-  font-size: var(--type-product-kicker);
+  font-size: 11px;
   font-weight: 400;
   line-height: 1.35;
   letter-spacing: 0;
@@ -174,17 +171,31 @@
   font-synthesis: none;
 }
 
+@media (min-width: 640px) {
+  .productName {
+    margin-top: 3px;
+    font-size: var(--type-product-kicker);
+  }
+}
+
 .viewProduct {
-  margin: 5px 0 0;
+  margin: 3px 0 0;
   color: var(--card-accent);
   font-family: var(--type-ui);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1.35;
   text-decoration: none;
   font-synthesis: none;
   transition: color 180ms ease;
+}
+
+@media (min-width: 640px) {
+  .viewProduct {
+    margin-top: 5px;
+    font-size: 12px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

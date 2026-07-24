@@ -112,8 +112,13 @@ describe("phase 1 auth and role flow stabilization", () => {
 
   it("keeps profile navigation pointed at account for signed-in customers", () => {
     const nav = readWorkspaceFile("components/navigation/store-nav.tsx");
-    expect(nav).toContain('href="/account"');
+    const profile = readWorkspaceFile("components/navigation/profile-nav-button.tsx");
+    expect(nav).toContain("ProfileNavButton");
     expect(nav).toContain("CartNavButton");
+    expect(profile).toContain('href="/account"');
+    expect(profile).toContain('href="/account/orders"');
+    expect(profile).toContain('href="/login?next=/account"');
+    expect(profile).toContain("setSignedIn(Boolean(data.session?.user))");
   });
 
   it("labels staff workspaces separately from the customer hub", () => {

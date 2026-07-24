@@ -15,19 +15,34 @@
     0 10px 28px rgba(0, 0, 0, 0.1);
   --discovery-motion: 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
   --discovery-section-y: 2.75rem;
-  padding: var(--discovery-section-y) 1.25rem;
+  /* Match catalog listing gutters */
+  padding: var(--discovery-section-y) clamp(0.75rem, 2vw, 1.25rem);
 }
 
 @media (min-width: 768px) {
   .discoverySection {
     --discovery-section-y: 3rem;
-    padding-inline: 2.5rem;
+    padding-inline: clamp(0.75rem, 2vw, 1.25rem);
   }
 }
 
 .discoveryInner {
   margin-inline: auto;
-  max-width: var(--ds-container-showcase, 1320px);
+  width: 100%;
+  max-width: 80rem; /* max-w-7xl */
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .discoveryInner {
+    padding-inline: 1.5rem; /* sm:px-6 */
+  }
+}
+
+@media (min-width: 1024px) {
+  .discoveryInner {
+    padding-inline: 2rem; /* lg:px-8 */
+  }
 }
 
 .discoverySectionTitle {
@@ -41,15 +56,17 @@
 
 .discoveryProductGrid {
   display: grid;
-  gap: var(--card-gap);
+  gap: var(--card-gap, 1.25rem);
   margin-top: 1.5rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  justify-items: stretch;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .discoveryProductGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--card-gap);
+    gap: 1.5rem;
   }
 }
 
@@ -79,7 +96,9 @@
 
 .discoveryProductGridItem :global(.productImage) {
   object-fit: contain;
-  padding: var(--product-card-image-pad);
+  width: 100%;
+  height: 100%;
+  padding: 0;
 }
 
 .discoveryProductGridItem :global(.productImageWell::before) {
@@ -450,7 +469,19 @@
   padding-bottom: 3.5rem;
 }
 
-@media (min-width: 768px) {
+/* Clear sticky mobile purchase bar + FAB over recommendation grids */
+@media (max-width: 1023px) {
+  .relatedSection,
+  .recentSection {
+    padding-bottom: max(9rem, calc(4.5rem + var(--store-bottom-chrome, 0px)));
+  }
+
+  .exploreSection {
+    padding-bottom: max(9rem, calc(4.5rem + var(--store-bottom-chrome, 0px)));
+  }
+}
+
+@media (min-width: 1024px) {
   .exploreSection {
     padding-bottom: 4rem;
   }
@@ -508,6 +539,6 @@
   .relatedSection,
   .recentSection,
   .exploreSection {
-    padding-inline: var(--mobile-page-inline, 12px);
+    padding-inline: var(--mobile-page-inline, 16px);
   }
 }

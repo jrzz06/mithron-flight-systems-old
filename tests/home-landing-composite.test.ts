@@ -208,8 +208,7 @@ describe("home landing composite contract", () => {
     expect(shelfCss).toContain(".productPriceDji");
     expect(shelfCss).toContain(".productBuyNowDji");
     expect(shelfCss).toContain(".productFooterDji");
-    expect(shelfCss).toMatch(/\.productCardDji\s+\.productFooterDji[\s\S]*?margin-top:\s*auto/);
-    expect(shelfCss).toMatch(/\.productCardDji\s+\.productName[\s\S]*?min-height:\s*calc\(1\.22em\s*\*\s*2\)/);
+    expect(shelfCss).toMatch(/\.productCardDji \.productFooterDji\s*\{[^}]*margin-top:\s*auto/s);
     expect(shelfCss).toContain("--shelf-dji-product-col");
     expect(shelfCss).toContain("repeat(4, minmax(0, var(--shelf-dji-product-col");
     expect(shelfCss).toContain("var(--shelf-row-gap");
@@ -503,7 +502,15 @@ describe("home landing composite contract", () => {
     expect(card).not.toContain("avatarUrl");
     expect(cardStyles).toContain(".productThumb");
     expect(cardStyles).toContain(".viewProduct");
-    expect(cardStyles).toContain("-webkit-line-clamp: 5");
+    expect(cardStyles).toContain("-webkit-line-clamp: 3");
+    expect(card).toContain("flex h-full flex-col justify-between");
+    expect(card).toContain("line-clamp-3");
+    expect(card).toContain("h-8 w-8");
+    expect(card).toContain("sm:h-10 sm:w-10");
+    expect(card).toContain("border-t border-gray-100/60");
+    expect(card).toContain("text-xs");
+    expect(card).toContain("sm:line-clamp-4");
+    expect(card).toContain("md:text-base");
     expect(sectionStyles).toContain("var(--brand-accent, #1f6b46)");
     expect(sectionStyles).toContain("--brand-accent");
     expect(sectionStyles).not.toContain("#4f6ef7");
@@ -511,7 +518,9 @@ describe("home landing composite contract", () => {
     expect(sectionStyles).toContain("--testimonial-heading: #0f2a1c");
     expect(sectionStyles).toContain("scroll-snap-type: x mandatory");
     expect(sectionStyles).toContain("scroll-behavior: smooth");
-    expect(sectionStyles).toContain("calc((100% - (var(--testimonial-gap) * 2)) / 3.15)");
+    expect(sectionStyles).toContain("--testimonial-card-width: 480px");
+    expect(sectionStyles).toContain("min(82vw, 320px)");
+    expect(sectionStyles).toContain("--testimonial-card-width: 420px");
     expect(sectionStyles).toContain("@keyframes testimonialMarquee");
     expect(sectionStyles).toContain(".marqueeTrack");
     expect(sectionStyles).toContain("translate3d(-50%, 0, 0)");
