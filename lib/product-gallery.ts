@@ -83,7 +83,7 @@ function mediaFromExistingOrSrc(
 ): JsonRecord {
   const existing = existingBySrc.get(src);
   if (existing) {
-    const next = { ...existing, src };
+    const next: JsonRecord = { ...existing, src };
     if (priority) next.priority = true;
     else delete next.priority;
     if (!next.alt) next.alt = alt;

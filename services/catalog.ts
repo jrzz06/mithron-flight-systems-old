@@ -1131,7 +1131,7 @@ function mapSearchIndexEntry(row: CatalogSearchIndexRow): CatalogSearchIndexEntr
     gallery: null,
     source_images: null,
     source_description: row.source_description ?? null
-  } as MithronProductShellRow);
+  } as unknown as MithronProductShellRow);
   if (!item) return null;
 
   return {

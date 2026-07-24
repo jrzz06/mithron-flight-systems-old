@@ -202,7 +202,7 @@ export function InventoryActionBridge({
             const productSlug = String(formData.get("product_slug") ?? "").trim();
             if (options?.removeOnSuccess && productSlug) {
               setLocalRows((current) => current.filter((row) => row.productSlug !== productSlug));
-              void realtime?.reconcileResources(["inventory", "mithron_products"]);
+              void realtime?.reconcileResources(["inventory", "products"]);
               return;
             }
             const quantity = Number(String(formData.get("quantity") ?? "").trim());
