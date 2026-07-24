@@ -12,7 +12,6 @@ on:
 jobs:
   promote:
     runs-on: ubuntu-latest
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,11 +19,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Wait for Vercel production deployment
-        run: sleep 90
       - name: Promote canonical alias
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npm run vercel:promote-canonical
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::VERCEL_TOKEN secret is missing — cannot promote final-mithron-deploy.vercel.app"
+            exit 1
+          fi
+          npm run vercel:promote-canonical

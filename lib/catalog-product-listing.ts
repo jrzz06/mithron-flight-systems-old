@@ -218,6 +218,10 @@ export function applyCatalogProductListing(
 export function slimCatalogListingProducts(products: Product[]): Product[] {
   return products.map((product) => ({
     ...product,
+    // Keep tax flags as concrete booleans across the RSC→client boundary.
+    // `undefined` serializes as `$undefined` and can drop GST notes after hydrate.
+    chargeTax: product.chargeTax !== false,
+    taxIncluded: Boolean(product.taxIncluded),
     description: undefined,
     gallery: product.image ? [product.image] : [],
     hotspots: [],

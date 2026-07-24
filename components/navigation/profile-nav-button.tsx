@@ -26,7 +26,7 @@ export function ProfileNavButton() {
   const open = activePanel === "profile";
   const mounted = open || exitingPanel === "profile";
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [anchor, setAnchor] = useState({ top: 0, right: 0 });
+  const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
   // Default guest until auth resolves so Orders / Sign out never flash for guests.
   const [signedIn, setSignedIn] = useState(false);
 
@@ -71,7 +71,10 @@ export function ProfileNavButton() {
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {
+      setAnchor(null);
+      return;
+    }
     syncAnchor();
     window.addEventListener("resize", syncAnchor);
     window.addEventListener("scroll", syncAnchor, { passive: true });
@@ -121,7 +124,7 @@ export function ProfileNavButton() {
         <UserRound className="size-[18px]" />
       </button>
 
-      {mounted ? (
+      {mounted && anchor ? (
         <div
           id="storefront-profile-popover"
           role="menu"
