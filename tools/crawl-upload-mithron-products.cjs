@@ -287,7 +287,7 @@ function serializeSourceProduct({ url, product, text, index, extractedAt }) {
       Currency: price.currency ?? "INR"
     },
     anchors: ["Overview", "Price", "Source"],
-    product_url: url,
+    product_url: `/product/${slug}`,
     sort_order: index,
     source_url: url,
     source_catalog_id: sourceCatalogId,

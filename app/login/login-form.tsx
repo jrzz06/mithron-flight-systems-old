@@ -149,8 +149,13 @@ function OtpInput({
 }) {
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
   function focusIndex(index: number) {
-    inputRefs.current[index]?.focus();
+    const target = Math.max(0, Math.min(OTP_LENGTH - 1, index));
+    inputRefs.current[target]?.focus();
   }
 
   function applyDigits(raw: string) {
@@ -175,8 +180,15 @@ function OtpInput({
   }
 
   function handleKeyDown(index: number, event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Backspace" && !value[index] && index > 0) {
-      focusIndex(index - 1);
+    if (event.key === "Backspace") {
+      if (!value[index] && index > 0) {
+        event.preventDefault();
+        const chars = value.padEnd(OTP_LENGTH, " ").split("");
+        chars[index - 1] = " ";
+        const next = chars.join("").trimEnd().replace(/\s/g, "");
+        onChange(next);
+        focusIndex(index - 1);
+      }
     }
   }
 
@@ -217,6 +229,7 @@ function VerificationPendingPanel({
   otpCode,
   changeEmailMode,
   newEmail,
+  resendCooldownSeconds = 0,
   onOtpChange,
   onVerify,
   onResend,
@@ -231,6 +244,7 @@ function VerificationPendingPanel({
   otpCode: string;
   changeEmailMode: boolean;
   newEmail: string;
+  resendCooldownSeconds?: number;
   onOtpChange: (value: string) => void;
   onVerify: () => void;
   onResend: () => void;
@@ -304,11 +318,15 @@ function VerificationPendingPanel({
         <button
           type="button"
           className={styles.secondaryButton}
-          disabled={busy}
+          disabled={busy || resendCooldownSeconds > 0}
           onClick={onResend}
           data-testid="auth-resend-verification"
         >
-          {busy ? "Sending…" : "Resend code"}
+          {resendCooldownSeconds > 0
+            ? `Resend code (${resendCooldownSeconds}s)`
+            : busy
+              ? "Sending…"
+              : "Resend code"}
         </button>
         <button
           type="button"
@@ -368,6 +386,16 @@ export function LoginForm({
   const busyCtx = useOptionalGlobalBusy();
   const beginBusy = busyCtx?.beginBusy;
   const endBusy = busyCtx?.endBusy;
+
+  const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldownSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldownSeconds((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldownSeconds]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -626,9 +654,10 @@ export function LoginForm({
   }
 
   async function resendVerification() {
-    if (!pendingEmail || !isMountedRef.current) return;
+    if (!pendingEmail || !isMountedRef.current || resendCooldownSeconds > 0) return;
     setStatus("resending");
     setNotice(null);
+    setResendCooldownSeconds(60);
 
     try {
       const response = await fetchWithTimeout("/api/auth/send-otp", {
@@ -644,6 +673,9 @@ export function LoginForm({
         const message = payload.error ?? "Unable to resend verification code.";
         setStatus("idle");
         setNotice(message);
+        if (response.status === 429) {
+          setResendCooldownSeconds(60);
+        }
         notify.error(message, { source: "auth", id: "otp:resend:error" });
         return;
       }
@@ -704,11 +736,12 @@ export function LoginForm({
 
   async function sendSignInOtp() {
     const normalizedEmail = normalizeSignupEmail(email);
-    if (!normalizedEmail || !isMountedRef.current) return;
+    if (!normalizedEmail || !isMountedRef.current || resendCooldownSeconds > 0) return;
 
     setStatus("sending_otp");
     setError(null);
     setNotice(null);
+    setResendCooldownSeconds(60);
 
     try {
       const response = await fetchWithTimeout("/api/auth/send-otp", {
@@ -724,6 +757,9 @@ export function LoginForm({
         const message = payload.error ?? "Unable to send sign-in code.";
         setStatus("idle");
         setError(message);
+        if (response.status === 429) {
+          setResendCooldownSeconds(60);
+        }
         notify.error(message, { source: "auth", id: "otp:send-signin:error" });
         return;
       }
@@ -913,6 +949,7 @@ export function LoginForm({
           otpCode={otpCode}
           changeEmailMode={changeEmailMode}
           newEmail={newEmail}
+          resendCooldownSeconds={resendCooldownSeconds}
           onOtpChange={setOtpCode}
           onVerify={verifySignupOtp}
           onResend={resendVerification}
@@ -1137,11 +1174,15 @@ export function LoginForm({
                   <button
                     type="button"
                     className={styles.secondaryButton}
-                    disabled={showBusy}
+                    disabled={showBusy || resendCooldownSeconds > 0}
                     onClick={sendSignInOtp}
                     data-testid="auth-send-otp"
                   >
-                    {status === "sending_otp" ? "Sending…" : "Resend code"}
+                    {resendCooldownSeconds > 0
+                      ? `Resend code (${resendCooldownSeconds}s)`
+                      : status === "sending_otp"
+                        ? "Sending…"
+                        : "Resend code"}
                   </button>
                   <button
                     type="button"

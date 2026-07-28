@@ -58,16 +58,9 @@ export function CmsHomeDashboardClient({ sections }: { sections: CmsDashboardSec
             </div>
 
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">
-                  {getBuilderSectionLabel(card.id)}
-                </h3>
-                {!card.isVisible ? (
-                  <span className="rounded-full border border-[var(--platform-border)] px-2 py-0.5 type-badge font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
-                    Hidden
-                  </span>
-                ) : null}
-              </div>
+              <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">
+                {getBuilderSectionLabel(card.id)}
+              </h3>
               <p className="mt-1 text-sm text-[var(--platform-text-secondary)]">{card.description}</p>
               {card.updatedAt ? (
                 <p className="mt-2 type-meta text-[var(--platform-text-muted)]">Updated {card.updatedAt}</p>
@@ -83,27 +76,6 @@ export function CmsHomeDashboardClient({ sections }: { sections: CmsDashboardSec
                 <Pencil className="size-3.5" aria-hidden="true" />
                 Edit
               </Link>
-              <form action={timedToggleCmsSectionVisibilityFormAction}>
-                <input type="hidden" name="section_key" value={card.visibilityKey} />
-                <input type="hidden" name="is_visible" value={card.isVisible ? "false" : "true"} />
-                <button
-                  type="submit"
-                  className="platform-btn-ghost platform-btn-sm inline-flex items-center gap-1.5"
-                  aria-label={
-                    card.isVisible
-                      ? `Hide ${getBuilderSectionLabel(card.id)}`
-                      : `Show ${getBuilderSectionLabel(card.id)}`
-                  }
-                  title={card.isVisible ? "Hide" : "Show"}
-                >
-                  {card.isVisible ? (
-                    <EyeOff className="size-3.5" aria-hidden="true" />
-                  ) : (
-                    <Eye className="size-3.5" aria-hidden="true" />
-                  )}
-                  <span className="hidden sm:inline">{card.isVisible ? "Hide" : "Show"}</span>
-                </button>
-              </form>
             </div>
           </article>
         ))}

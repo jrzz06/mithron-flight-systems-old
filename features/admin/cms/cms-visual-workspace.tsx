@@ -52,6 +52,15 @@ export type CmsWorkspaceMedia = {
   usage?: string;
 };
 
+function VisibilityToggle({ section }: { section: { status?: string } }) {
+  return (
+    <label className="flex items-center gap-2 text-xs font-medium text-[var(--platform-text-secondary)]">
+      <input type="checkbox" name="is_visible" value="true" defaultChecked={section.status !== "archived"} className="rounded border-[var(--platform-border)] text-[var(--platform-primary)]" />
+      Visible on storefront
+    </label>
+  );
+}
+
 export type CmsRestoreRevision = {
   table: string;
   entityId: string;
@@ -281,26 +290,13 @@ function parsePayloadJson(value: string) {
   }
 }
 
-function VisibilityToggle({ section }: { section: CmsWorkspaceSection }) {
-  return (
-    <label data-cms-section-visibility-toggle className="flex items-start justify-between gap-3 rounded-lg border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2">
-      <span>
-        <span className="block text-xs font-semibold text-[var(--platform-text-primary)]">Visible on site</span>
-        <span className="mt-0.5 block type-meta leading-4 text-[var(--platform-text-muted)]">Hide this section without deleting its draft.</span>
-      </span>
-      <input name="is_visible" type="checkbox" defaultChecked={section.isVisible} className="mt-1 h-4 w-4 accent-[var(--platform-accent)]" />
-      <input type="hidden" name="is_visible" value="off" />
-    </label>
-  );
-}
-
 function HiddenBase({ section }: { section: CmsWorkspaceSection }) {
   return (
     <>
       <input type="hidden" name="id" value={section.entityId} />
       <input type="hidden" name="sort_order" value={section.sortOrder} />
       <input type="hidden" name="change_summary" value={`Visual edit ${section.title}`} />
-      <VisibilityToggle section={section} />
+      <input type="hidden" name="is_visible" value="on" />
     </>
   );
 }
@@ -550,15 +546,7 @@ function SectionCard({
           </span>
         </span>
       </button>
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <button type="button" data-cms-section-hide-show onClick={onSelect} className="inline-flex h-7 items-center gap-1 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 type-meta font-semibold text-[var(--platform-text-secondary)] hover:border-[var(--platform-border)]">
-          {section.isVisible ? <Eye className="h-3 w-3" aria-hidden="true" /> : <EyeOff className="h-3 w-3" aria-hidden="true" />}
-          {section.isVisible ? "Visible" : "Hidden"}
-        </button>
-        <button type="button" data-cms-section-duplicate aria-disabled="true" className="inline-flex h-7 items-center gap-1 rounded-lg border border-[var(--platform-border)] bg-white/[0.03] px-2 type-meta font-semibold text-[var(--platform-text-muted)]">
-          <Copy className="h-3 w-3" aria-hidden="true" />
-          Duplicate
-        </button>
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-1.5">
         <form action={timedPublishCmsWorkspaceRecordFormAction} data-cms-section-card-publish data-cms-publish-confirmation>
           <PublishRecordFields section={section} />
           <OperationalSubmitButton

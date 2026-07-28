@@ -8,7 +8,7 @@ import { validateImageFile } from "@/lib/cms/section-validation";
 import { notify } from "@/lib/feedback/notify";
 import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
 import { raceWithTimeout } from "@/lib/fetch-with-timeout";
-import { resolveStorefrontSrc } from "@/lib/media/resolve-storefront-src";
+import { formatCmsImageUrl, resolveStorefrontSrc } from "@/lib/media/resolve-storefront-src";
 import { cn } from "@/lib/utils";
 
 function formatFormats(spec: CmsImageSpec) {
@@ -109,6 +109,7 @@ export function CmsImageField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewSrc, setPreviewSrc] = useState(defaultValue);
   const [previewAlt, setPreviewAlt] = useState(defaultAlt);
+  const [isMounted, setIsMounted] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
@@ -127,6 +128,10 @@ export function CmsImageField({
   const previewWidths = { desktop: "100%", tablet: "768px", mobile: "390px" } as const;
   const isCompact = variant === "compact";
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const srcFieldName = resolveSrcFieldName(name);
   const altFieldName = resolveAltFieldName(name, altName);
   const previewAspect = spec.aspectRatio.includes(":")
@@ -134,11 +139,14 @@ export function CmsImageField({
     : "16 / 9";
   const cropAspect = useMemo(() => aspectNumber(spec), [spec]);
 
+  const normalizedDefaultUrl = useMemo(() => formatCmsImageUrl(defaultValue), [defaultValue]);
+
   const displaySrc = useMemo(() => {
+    if (!isMounted) return normalizedDefaultUrl;
     if (!previewSrc) return "";
     if (previewSrc.startsWith("blob:") || previewSrc.startsWith("data:")) return previewSrc;
-    return resolveStorefrontSrc(previewSrc) || previewSrc;
-  }, [previewSrc]);
+    return formatCmsImageUrl(previewSrc);
+  }, [isMounted, normalizedDefaultUrl, previewSrc]);
 
   useEffect(() => {
     onUploadingChange?.(uploading);
@@ -253,7 +261,7 @@ export function CmsImageField({
           <p className="text-sm font-medium text-[var(--platform-text-primary)]">{label}</p>
           <span
             data-cms-image-size-badge
-            className="inline-flex w-fit items-center rounded-[6px] border-2 border-amber-600 bg-amber-50 px-2.5 py-1 text-xs font-bold tracking-wide text-amber-950"
+            className="inline-flex w-fit items-center rounded-[6px] border border-amber-600/40 bg-amber-50 px-2.5 py-1 text-xs font-bold tracking-wide text-amber-950"
           >
             Required {requiredSizeLabel(spec)}
           </span>
@@ -392,6 +400,7 @@ export function CmsImageField({
             <img
               src={displaySrc}
               alt={previewAlt || label}
+              suppressHydrationWarning
               className="absolute inset-0 size-full object-cover"
               style={hasSafeArea ? { objectPosition: "right center" } : undefined}
               onLoad={() => setLoadFailed(false)}

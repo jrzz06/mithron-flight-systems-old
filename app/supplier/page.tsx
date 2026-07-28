@@ -6,20 +6,18 @@ import { relativeTimeLabel, supplierEmptyMessage } from "@/lib/platform/copy";
 import { listSupplierInventory, listSupplierProducts } from "@/services/supplier-actions";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { getCurrentAuthContext } from "@/services/auth";
+import type { SupplierInventoryItem, SupplierProduct } from "@/lib/supplier/types";
 
-type ProductRow = Awaited<ReturnType<typeof listSupplierProducts>>[number];
-type InventoryRow = Awaited<ReturnType<typeof listSupplierInventory>>[number];
-
-function productStatus(product: ProductRow) {
-  return String(product.workflow_status ?? "draft");
+function productStatus(product: SupplierProduct) {
+  return product.workflowStatus ?? "draft";
 }
 
-function productSlug(product: ProductRow) {
-  return String(product.slug ?? "");
+function productSlug(product: SupplierProduct) {
+  return product.slug ?? "";
 }
 
-function productName(product: ProductRow) {
-  return String(product.name ?? productSlug(product));
+function productName(product: SupplierProduct) {
+  return product.name || productSlug(product);
 }
 
 function AttentionRow({
@@ -50,12 +48,12 @@ function ProductRowLink({
   product,
   actionLabel
 }: {
-  product: ProductRow;
+  product: SupplierProduct;
   actionLabel: string;
 }) {
   const slug = productSlug(product);
   const status = productStatus(product);
-  const updated = typeof product.updated_at === "string" ? relativeTimeLabel(product.updated_at) : "";
+  const updated = product.updatedAt ? relativeTimeLabel(product.updatedAt) : "";
   const href = actionLabel === "View listing" && status === "published"
     ? `/product/${encodeURIComponent(slug)}`
     : `/supplier/products/${encodeURIComponent(slug)}/edit`;
@@ -117,18 +115,18 @@ export default async function SupplierDashboardPage() {
   const pending = products.filter((product) => productStatus(product) === "pending_review");
   const published = products
     .filter((product) => productStatus(product) === "published")
-    .sort((left, right) => Date.parse(String(right.updated_at ?? "")) - Date.parse(String(left.updated_at ?? "")))
+    .sort((left, right) => Date.parse(String(right.updatedAt ?? "")) - Date.parse(String(left.updatedAt ?? "")))
     .slice(0, 5);
 
-  const lowStock = inventory.filter((row) => {
-    const status = String(row.stock_status ?? "");
+  const lowStock = inventory.filter((row: SupplierInventoryItem) => {
+    const status = row.stockStatus;
     return status === "low_stock" || status === "out_of_stock";
   });
 
   const nameBySlug = new Map(products.map((product) => [productSlug(product), productName(product)]));
   const stockCounts = inventory.reduce(
-    (acc, row) => {
-      const status = String(row.stock_status ?? "available");
+    (acc, row: SupplierInventoryItem) => {
+      const status = row.stockStatus || "available";
       if (status === "low_stock") acc.low += 1;
       else if (status === "out_of_stock") acc.out += 1;
       else acc.inStock += 1;
@@ -148,16 +146,16 @@ export default async function SupplierDashboardPage() {
     ...rejected.map((product) => ({
       key: `rejected-${productSlug(product)}`,
       title: productName(product),
-      detail: typeof product.rejection_reason === "string" && product.rejection_reason.trim()
-        ? product.rejection_reason.trim().slice(0, 120)
+      detail: product.rejectionReason && product.rejectionReason.trim()
+        ? product.rejectionReason.trim().slice(0, 120)
         : "Changes requested by our team.",
       href: `/supplier/products/${encodeURIComponent(productSlug(product))}/edit`,
       actionLabel: "Update product"
     })),
-    ...lowStock.map((row: InventoryRow) => ({
-      key: `stock-${String(row.id ?? row.product_slug)}`,
-      title: String(row.product_name ?? nameBySlug.get(String(row.product_slug ?? "")) ?? "Product"),
-      detail: String(row.stock_status) === "out_of_stock" ? "Out of stock — request a stock update." : "Low stock — review your quantities.",
+    ...lowStock.map((row: SupplierInventoryItem) => ({
+      key: `stock-${row.id || row.productSlug}`,
+      title: row.productName || nameBySlug.get(row.productSlug) || "Product",
+      detail: row.stockStatus === "out_of_stock" ? "Out of stock — request a stock update." : "Low stock — review your quantities.",
       href: "/supplier/inventory",
       actionLabel: "View stock"
     }))

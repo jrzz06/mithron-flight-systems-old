@@ -3,7 +3,7 @@ import {
   getWarehouseSnapshot,
   getProductManagerSnapshot
 } from "@/services/admin";
-import { getCsvInventoryRows } from "@/services/csv-inventory-source";
+import { CSV_INVENTORY_PAGE_SIZE, getCsvInventoryRows } from "@/services/csv-inventory-source";
 import { listAdminLeads } from "@/services/leads";
 import { listActiveWarehouses } from "@/services/warehouses";
 import { getUserGovernanceSnapshot, getAdminSuppliersSnapshot, getAuditObservabilitySnapshot } from "@/services/admin";
@@ -54,7 +54,12 @@ export async function loadAdminLiveResource(resource: AdminLiveResourceId): Prom
       };
     }
     case "inventory": {
-      const result = await getCsvInventoryRows({ all: true }).catch(() => ({ rows: [] as AdminEntityRow[] }));
+      // Live reconcile uses the paginated inventory page only.
+      // getCsvInventoryRows({ all: true }) is download-only (export route).
+      const result = await getCsvInventoryRows({
+        page: 1,
+        pageSize: CSV_INVENTORY_PAGE_SIZE
+      }).catch(() => ({ rows: [] as AdminEntityRow[] }));
       return {
         resource,
         generatedAt,

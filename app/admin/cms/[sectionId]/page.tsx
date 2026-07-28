@@ -4,7 +4,7 @@ import { AdminCmsLiveSync } from "@/components/admin/admin-cms-live-sync";
 import { getHomepageSectionDefinition, shelfKeyFromSectionId, type HomepageSectionId } from "@/config/homepage-section-registry";
 import { SHELF_PRODUCT_CARD_SLOTS } from "@/config/homepage-shelf";
 import { getCmsCoreSnapshot } from "@/services/admin";
-import { getHomepageProducts } from "@/services/catalog";
+import { getProducts } from "@/services/catalog";
 import { getHomepageCmsContent, getHomepageCmsDraftPreviewContent } from "@/services/homepage-cms";
 import { getHomepageCmsV2Content, getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
 import {
@@ -48,7 +48,7 @@ export default async function CmsSectionPage({ params }: SectionPageProps) {
     getHomepageCmsV2Content(),
     getHomepageCmsV2DraftPreviewContent(),
     getCmsCoreSnapshot(),
-    getHomepageProducts(),
+    getProducts(),
     getAdminSettingsPolicy()
   ]);
 
@@ -102,7 +102,7 @@ export default async function CmsSectionPage({ params }: SectionPageProps) {
     : undefined;
   const browseCatalog = mapProductsToSlotItems(products);
   const syncError = !products.length
-    ? "Homepage catalog could not be loaded. Product shelves and previews require published catalog products."
+    ? "No products found in the catalog. Please add and publish at least one product before configuring this section."
     : null;
 
   const sectionStatus = buildHomepageOutlineStatuses({

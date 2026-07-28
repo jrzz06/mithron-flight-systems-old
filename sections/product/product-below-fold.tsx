@@ -3,6 +3,7 @@ import { LazyHydrate } from "@/components/ui/lazy-hydrate";
 import { ProductRelatedSection } from "@/sections/product/product-related-section";
 import { ProductReviewsSection } from "@/sections/product/product-reviews-section";
 import type { ProductPageReview, ProductReviewSummary } from "@/lib/product-reviews/types";
+import type { CustomerProductReviewContext } from "@/lib/orders/review-eligibility";
 import type { ProductShellItem } from "@/services/catalog";
 
 function ProductRelatedFallback() {
@@ -14,12 +15,16 @@ export function ProductReviewsLazySection({
   productName,
   productSlug,
   reviews,
-  summary
+  summary,
+  isAuthenticated,
+  reviewContext
 }: {
   productName: string;
   productSlug: string;
   reviews: ProductPageReview[];
   summary: ProductReviewSummary;
+  isAuthenticated?: boolean;
+  reviewContext?: CustomerProductReviewContext | null;
 }) {
   return (
     <ProductReviewsSection
@@ -27,6 +32,8 @@ export function ProductReviewsLazySection({
       productSlug={productSlug}
       reviews={reviews}
       summary={summary}
+      isAuthenticated={isAuthenticated}
+      reviewContext={reviewContext}
     />
   );
 }

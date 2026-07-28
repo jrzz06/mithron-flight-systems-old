@@ -62,7 +62,7 @@ export function TestimonialCarouselCard({ item }: { item: TestimonialCarouselCar
         {item.body}
       </p>
 
-      <footer className="mt-4 border-t border-gray-100/60 pt-3">
+      <footer className="mt-4 pt-1">
         <Link
           href={item.productHref}
           className={cn(styles.productLink, "flex items-center gap-3")}

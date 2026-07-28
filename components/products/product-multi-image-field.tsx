@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 import { productImageUploadNotice } from "@/lib/product-image-limits";
 import { resolveNextImageSrc } from "@/lib/media/next-image-src";
+import { sanitizeProductImageSrc } from "@/lib/media/sanitize-product-image-src";
 import { ProductImageFileInput } from "@/components/products/product-image-file-input";
 
 // Must stay in sync with the server-side ALLOWED_MEDIA_MIME_TYPES in
@@ -40,7 +41,7 @@ function buildInitialItems(defaults?: ProductMultiImageFieldDefaults): PreviewIt
   const items: PreviewItem[] = [];
 
   const pushItem = (src: string, alt?: string) => {
-    const normalized = src.trim();
+    const normalized = sanitizeProductImageSrc(src);
     if (!normalized || seen.has(normalized)) return;
     seen.add(normalized);
     items.push({ src: normalized, alt });
@@ -89,29 +90,40 @@ export function ProductMultiImageField({
   const helper = productImageUploadNotice();
   const [items, setItems] = useState<PreviewItem[]>(() => buildInitialItems(defaults));
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [primaryUrlDraft, setPrimaryUrlDraft] = useState(() => buildInitialItems(defaults)[0]?.src ?? "");
 
-  const primarySrc = items[0]?.src ?? "";
   const galleryUrlsValue = useMemo(
     () => items.slice(1).map((item) => item.src).join("\n"),
     [items]
   );
 
   function reorder(fromIndex: number, toIndex: number) {
-    setItems((current) => moveItem(current, fromIndex, toIndex));
+    setItems((current) => {
+      const next = moveItem(current, fromIndex, toIndex);
+      setPrimaryUrlDraft(next[0]?.src ?? "");
+      return next;
+    });
   }
 
   function handlePrimaryUrlChange(value: string) {
-    const nextPrimary = value.trim();
+    setPrimaryUrlDraft(value);
+    const nextPrimary = sanitizeProductImageSrc(value);
     setItems((current) => {
-      const rest = current.slice(1).filter((item) => item.src !== nextPrimary);
-      if (!nextPrimary) return rest;
+      const rest = current.slice(1).filter((item) => item.src !== (nextPrimary ?? ""));
+      if (!nextPrimary) {
+        // Keep typing draft; drop primary only when field is emptied.
+        if (!value.trim()) return rest;
+        return current;
+      }
       const existing = current.find((item) => item.src === nextPrimary);
-      return [{ src: nextPrimary, alt: existing?.alt }, ...rest];
+      return [{ src: nextPrimary, alt: existing?.alt }, ...rest.filter((item) => item.src !== nextPrimary)];
     });
   }
 
   function handleGalleryUrlsChange(value: string) {
-    const urls = parseUrlLines(value);
+    const urls = parseUrlLines(value)
+      .map((url) => sanitizeProductImageSrc(url))
+      .filter((url): url is string => Boolean(url));
     setItems((current) => {
       const primary = current[0];
       const seen = new Set<string>();
@@ -154,7 +166,8 @@ export function ProductMultiImageField({
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {items.map((item, index) => {
-              const resolvedSrc = resolveNextImageSrc(item.src) ?? item.src;
+              const resolvedSrc = resolveNextImageSrc(item.src);
+              if (!resolvedSrc) return null;
               const isPrimary = index === 0;
               return (
                 <div
@@ -174,8 +187,9 @@ export function ProductMultiImageField({
                   }}
                   onDrop={(event) => {
                     event.preventDefault();
-                    const from = Number(event.dataTransfer.getData("text/plain"));
-                    const fromIndex = Number.isFinite(from) ? from : dragIndex;
+                    const rawData = event.dataTransfer.getData("text/plain");
+                    const parsedFrom = rawData && rawData.trim() !== "" ? Number(rawData) : Number.NaN;
+                    const fromIndex = Number.isFinite(parsedFrom) ? parsedFrom : dragIndex;
                     if (fromIndex == null || Number.isNaN(fromIndex)) return;
                     reorder(fromIndex, index);
                     setDragIndex(null);
@@ -262,9 +276,19 @@ export function ProductMultiImageField({
         <span className={labelClassName}>Primary image URL</span>
         <input
           name="image_src"
-          type="url"
-          value={primarySrc}
+          type="text"
+          inputMode="url"
+          autoComplete="off"
+          value={primaryUrlDraft}
           onChange={(event) => handlePrimaryUrlChange(event.target.value)}
+          onBlur={() => {
+            const sanitized = sanitizeProductImageSrc(primaryUrlDraft);
+            setPrimaryUrlDraft(sanitized ?? "");
+            if (!sanitized && primaryUrlDraft.trim()) {
+              // Drop invalid draft so submit never posts "/" or garbage.
+              setItems((current) => current.slice(1));
+            }
+          }}
           placeholder="Optional if uploading"
           className={fieldClassName}
         />

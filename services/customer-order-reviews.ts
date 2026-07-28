@@ -22,7 +22,7 @@ function text(value: unknown, fallback = "") {
 export async function listCustomerReviewsForOrder(orderId: string, userId: string, env: EnvSource = process.env) {
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
-    `${config.url}/rest/v1/customer_order_reviews?select=id,product_slug,rating,body,status,created_at&order_id=eq.${encodeURIComponent(orderId)}&user_id=eq.${encodeURIComponent(userId)}`,
+    `${config.url}/rest/v1/customer_order_reviews?select=id,order_id,product_slug,rating,title,body,status,created_at&order_id=eq.${encodeURIComponent(orderId)}&user_id=eq.${encodeURIComponent(userId)}`,
     { headers: headers(config.serviceRoleKey), cache: "no-store" }
   );
   if (!response.ok) return [];

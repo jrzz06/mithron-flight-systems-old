@@ -318,6 +318,20 @@ export type AdminSupplierItem = {
   registeredAt: string;
 };
 
+/** Derive supplier directory status from auth + governance (not governance alone). */
+export function resolveSupplierVerificationStatus(options: {
+  governanceStatus?: string | null;
+  emailConfirmedAt?: string | null;
+  bannedUntil?: string | null;
+}): "disabled" | "pending" | "verified" {
+  const governance = String(options.governanceStatus ?? "active").trim().toLowerCase();
+  const bannedUntil = options.bannedUntil;
+  const isBanned = bannedUntil ? Date.parse(bannedUntil) > Date.now() : false;
+  if (isBanned || governance === "disabled") return "disabled";
+  if (options.emailConfirmedAt) return "verified";
+  return "pending";
+}
+
 type SupabaseAuthUser = {
   id: string;
   email?: string;
@@ -540,6 +554,66 @@ async function listGovernanceAuthUsers(
       error: error instanceof Error ? error.message : String(error)
     };
   }
+}
+
+async function listAuthUsersByIds(
+  config: Extract<SupabaseAdminConfig, { configured: true }>,
+  ids: string[]
+) {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  const byId = new Map<string, SupabaseAuthUser>();
+  if (!uniqueIds.length) return { byId, error: undefined as string | undefined };
+
+  try {
+    const supabase = getSupabaseServiceClient(config);
+    const settled = await Promise.all(
+      uniqueIds.map(async (id) => {
+        try {
+          const result = await supabase.auth.admin.getUserById(id);
+          if (result.error || !result.data?.user) return null;
+          return result.data.user as SupabaseAuthUser;
+        } catch {
+          return null;
+        }
+      })
+    );
+    for (const user of settled) {
+      if (user?.id) byId.set(user.id, user);
+    }
+    return { byId, error: undefined as string | undefined };
+  } catch (error) {
+    return {
+      byId,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+function mapSupplierDirectoryItem(options: {
+  supplierId: string;
+  profile?: AdminRow;
+  roleRow?: AdminRow;
+  authUser?: SupabaseAuthUser;
+}): AdminSupplierItem {
+  const { supplierId, profile, roleRow, authUser } = options;
+  const email = String(authUser?.email ?? profile?.email ?? "");
+  const name = String(profile?.display_name ?? email);
+  const company = deriveCompanyLabel(email, {});
+  const phone = String(profile?.phone ?? "");
+  const governanceStatus = String(profile?.governance_status ?? "active");
+  return {
+    id: supplierId,
+    name,
+    company,
+    email,
+    phone,
+    verificationStatus: resolveSupplierVerificationStatus({
+      governanceStatus,
+      emailConfirmedAt: authUser?.email_confirmed_at ?? null,
+      bannedUntil: authUser?.banned_until ?? null
+    }),
+    registeredAt: String(roleRow?.created_at ?? profile?.created_at ?? "")
+  };
 }
 
 function adminFetchErrorMessage(error: unknown) {
@@ -1113,23 +1187,16 @@ export const loadAdminSuppliersSnapshot = cache(async (
     const profileById = new Map(
       matchedProfiles.rows.map((profile) => [String(profile.id ?? ""), profile] as const)
     );
+    const authUsers = await listAuthUsersByIds(config, pageIds);
+    if (authUsers.error) rolesStatus = "PARTIAL";
     const suppliers: AdminSupplierItem[] = supplierRoleRows.map((roleRow) => {
       const supplierId = String(roleRow.user_id ?? "");
-      const profile = profileById.get(supplierId);
-      const email = String(profile?.email ?? "");
-      const name = String(profile?.display_name ?? email);
-      const company = deriveCompanyLabel(email, {});
-      const phone = String(profile?.phone ?? "");
-      const governanceStatus = String(profile?.governance_status ?? "active");
-      return {
-        id: supplierId,
-        name,
-        company,
-        email,
-        phone,
-        verificationStatus: governanceStatus !== "active" ? governanceStatus : "pending",
-        registeredAt: String(roleRow.created_at ?? profile?.created_at ?? "")
-      };
+      return mapSupplierDirectoryItem({
+        supplierId,
+        profile: profileById.get(supplierId),
+        roleRow,
+        authUser: authUsers.byId.get(supplierId)
+      });
     });
 
     return {
@@ -1151,33 +1218,27 @@ export const loadAdminSuppliersSnapshot = cache(async (
   filteredTotal = rolesCount.status === "LIVE" ? rolesCount.count : supplierRoleRows.length;
 
   const supplierIds = supplierRoleRows.map((row) => String(row.user_id ?? "")).filter(Boolean);
-  const profiles =
+  const [profiles, authUsers] = await Promise.all([
     supplierIds.length > 0
-      ? await fetchAdminRows(
+      ? fetchAdminRows(
           config,
           "profiles",
           `select=id,email,display_name,phone,governance_status,created_at,updated_at&id=in.(${supplierIds.map(encodeURIComponent).join(",")})`
         )
-      : { status: "LIVE" as const, rows: [] as AdminRow[] };
+      : Promise.resolve({ status: "LIVE" as const, rows: [] as AdminRow[] }),
+    listAuthUsersByIds(config, supplierIds)
+  ]);
 
+  if (authUsers.error) rolesStatus = "PARTIAL";
   const profileById = new Map(profiles.rows.map((profile) => [String(profile.id ?? ""), profile]));
   const suppliers: AdminSupplierItem[] = supplierRoleRows.map((roleRow) => {
     const supplierId = String(roleRow.user_id ?? "");
-    const profile = profileById.get(supplierId);
-    const email = String(profile?.email ?? "");
-    const name = String(profile?.display_name ?? email);
-    const company = deriveCompanyLabel(email, {});
-    const phone = String(profile?.phone ?? "");
-    const governanceStatus = String(profile?.governance_status ?? "active");
-    return {
-      id: supplierId,
-      name,
-      company,
-      email,
-      phone,
-      verificationStatus: governanceStatus !== "active" ? governanceStatus : "pending",
-      registeredAt: String(roleRow.created_at ?? profile?.created_at ?? "")
-    };
+    return mapSupplierDirectoryItem({
+      supplierId,
+      profile: profileById.get(supplierId),
+      roleRow,
+      authUser: authUsers.byId.get(supplierId)
+    });
   });
 
   return {

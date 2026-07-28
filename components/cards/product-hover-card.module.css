@@ -70,7 +70,7 @@
   isolation: isolate;
   border-bottom: none;
   border-radius: 0;
-  background: var(--ds-card);
+  background: transparent;
 }
 
 .shell[data-card-variant="catalog"] {
@@ -83,7 +83,7 @@
   aspect-ratio: auto;
   height: 9rem;
   max-height: 9rem;
-  background: #f9fafb;
+  background: transparent;
 }
 
 @media (min-width: 640px) {

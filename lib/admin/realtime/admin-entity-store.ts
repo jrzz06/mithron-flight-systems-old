@@ -21,6 +21,15 @@ export type AdminLiveResourceId =
   | "dashboard"
   | "nav_metrics";
 
+/** Cap live collection growth from realtime INSERTs / hydrates (newest-first). */
+export const ADMIN_ENTITY_COLLECTION_MAX_ROWS = 500;
+
+function capAdminEntityRows(rows: AdminEntityRow[]): AdminEntityRow[] {
+  return rows.length > ADMIN_ENTITY_COLLECTION_MAX_ROWS
+    ? rows.slice(0, ADMIN_ENTITY_COLLECTION_MAX_ROWS)
+    : rows;
+}
+
 const TABLE_IDENTITY_KEYS: Partial<Record<AdminEntityTable, string[]>> = {
   inventory: ["id", "product_slug"],
   warehouse_stock: ["id", "product_slug", "warehouse_code"],
@@ -91,7 +100,7 @@ export function applyAdminEntityEvent(
   const index = rows.findIndex((row) => resolveAdminEntityId(table, row) === recordId);
   if (index === -1) {
     if (eventType === "INSERT" || eventType === "UPDATE" || eventType === "*") {
-      return [record, ...rows];
+      return capAdminEntityRows([record, ...rows]);
     }
     return rows;
   }
@@ -110,16 +119,19 @@ export function applyAuthoritativeEntityRows(
   options?: { replaceAll?: boolean; matchKey?: string }
 ) {
   if (options?.replaceAll) {
-    return [...authoritative];
+    return capAdminEntityRows([...authoritative]);
   }
 
   const matchKey = options?.matchKey;
   if (matchKey) {
+    const authoritativeKeys = new Set(
+      authoritative.map((next) => String(next[matchKey] ?? "").trim()).filter(Boolean)
+    );
     const keep = rows.filter((row) => {
       const value = String(row[matchKey] ?? "").trim();
-      return !authoritative.some((next) => String(next[matchKey] ?? "").trim() === value);
+      return !authoritativeKeys.has(value);
     });
-    return [...keep, ...authoritative];
+    return capAdminEntityRows([...keep, ...authoritative]);
   }
 
   let next = [...rows];
@@ -133,7 +145,7 @@ export function applyAuthoritativeEntityRows(
       next[index] = { ...next[index], ...row };
     }
   }
-  return next;
+  return capAdminEntityRows(next);
 }
 
 export function createEmptyAdminEntityCollections(): AdminEntityCollections {
@@ -147,7 +159,7 @@ export function hydrateAdminEntityCollection(
 ): AdminEntityCollections {
   return {
     ...collections,
-    [table]: [...rows]
+    [table]: capAdminEntityRows([...rows])
   };
 }
 

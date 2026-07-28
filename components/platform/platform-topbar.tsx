@@ -52,7 +52,11 @@ function resolvePrimaryAction(
   scope: PlatformScope | undefined,
   primaryAction: { label: string; href: string } | undefined
 ) {
-  return primaryAction ?? { label: "Add product", href: "/admin/products?tool=create#create-product" };
+  if (primaryAction) return primaryAction;
+  if (scope === "supplier") {
+    return { label: "Add product", href: "/supplier/products/new" };
+  }
+  return { label: "Add product", href: "/admin/products?tool=create#create-product" };
 }
 
 export function PlatformTopbar({

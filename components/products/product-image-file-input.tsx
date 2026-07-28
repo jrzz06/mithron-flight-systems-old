@@ -28,19 +28,32 @@ type ProductImageFileInputProps = {
 
 function readImageDimensions(file: File): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      const width = image.naturalWidth || 0;
-      const height = image.naturalHeight || 0;
-      URL.revokeObjectURL(objectUrl);
-      resolve({ width, height });
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
+    let objectUrl: string | null = null;
+    try {
+      objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+      const targetUrl = objectUrl;
+      image.onload = () => {
+        const width = image.naturalWidth || 0;
+        const height = image.naturalHeight || 0;
+        if (targetUrl) URL.revokeObjectURL(targetUrl);
+        resolve({ width, height });
+      };
+      image.onerror = () => {
+        if (targetUrl) URL.revokeObjectURL(targetUrl);
+        resolve({ width: 0, height: 0 });
+      };
+      image.src = objectUrl;
+    } catch {
+      if (objectUrl) {
+        try {
+          URL.revokeObjectURL(objectUrl);
+        } catch {
+          // ignore
+        }
+      }
       resolve({ width: 0, height: 0 });
-    };
-    image.src = objectUrl;
+    }
   });
 }
 

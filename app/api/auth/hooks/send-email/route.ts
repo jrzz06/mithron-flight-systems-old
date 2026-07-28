@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { isEmailBurstActive, markEmailBurst } from "@/lib/auth/delivery-cooldowns";
+import {
+  isEmailBurstActiveForRecipient,
+  markEmailBurstForRecipient
+} from "@/lib/auth/delivery-cooldowns";
 import {
   mapSendEmailHookToOutbound,
   verifySupabaseSendEmailHook
@@ -13,10 +16,6 @@ export async function POST(request: Request) {
   const rateKey = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
   const limit = await checkDistributedRateLimit(`auth-send-email-hook:${rateKey}`, 60, 60_000);
   if (!limit.allowed) {
-    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
-  }
-
-  if (await isEmailBurstActive(rateKey)) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
 
@@ -49,12 +48,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid hook payload." }, { status: 400 });
   }
 
+  if (await isEmailBurstActiveForRecipient(outbound.to)) {
+    return NextResponse.json(
+      { error: "Please wait about a minute before requesting another code for this email." },
+      { status: 429 }
+    );
+  }
+
   try {
     const result = await sendEmailWithFallback(outbound);
     if (!result.ok) {
       return NextResponse.json({ error: "No email provider configured." }, { status: 503 });
     }
-    await markEmailBurst(rateKey, 30);
+    await markEmailBurstForRecipient(outbound.to, 60);
     return NextResponse.json({ ok: true, provider: result.provider ?? null });
   } catch (error) {
     console.error("[mithron-auth] Send-email hook delivery failed across all providers.", error);

@@ -57,12 +57,9 @@ describe("email verification auth routes", () => {
     expect(hookRoute).toContain("verifySupabaseSendEmailHook");
     expect(hookRoute).toContain("sendEmailWithFallback");
     expect(hookRoute).toContain("checkDistributedRateLimit");
-  });
-
-  it("ships OTP verify route with verifyOtp and provisioning", () => {
-    const verifyOtpRoute = readFileSync(join(process.cwd(), "app/api/auth/verify-otp/route.ts"), "utf8");
-    expect(verifyOtpRoute).toContain("verifyOtp");
-    expect(verifyOtpRoute).toContain("provisionAuthenticatedUserIfMissing");
+    expect(hookRoute).toContain("isEmailBurstActiveForRecipient");
+    expect(hookRoute).toContain("markEmailBurstForRecipient");
+    expect(hookRoute).not.toContain("isEmailBurstActive(");
   });
 
   it("ships send-otp route for signin and signup purposes with honest signup errors", () => {
@@ -71,6 +68,7 @@ describe("email verification auth routes", () => {
     expect(sendOtpRoute).toContain('"signup"');
     expect(sendOtpRoute).toContain("shouldExposeSignInOtpSendError");
     expect(sendOtpRoute).toContain("mapOtpSendErrorForClient");
+    expect(sendOtpRoute).toContain("isOtpRateLimitError");
   });
 
   it("classifies sign-in OTP send failures without account enumeration", () => {

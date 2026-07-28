@@ -35,12 +35,21 @@ function cleanCopy(value: string | null | undefined) {
 }
 
 export function getCustomerFacingSpecs(product: Product) {
-  const raw = Object.entries(product.specs).filter(([key, value]) => {
-    if (HIDDEN_SPEC_KEYS.has(key)) return false;
-    return Boolean(value.trim());
-  });
+  if (!product || typeof product !== "object" || !product.specs) return [];
 
-  return sortSpecEntries(expandSpecEntries(raw));
+  let rawEntries: Array<[string, string]> = [];
+  if (Array.isArray(product.specs)) {
+    rawEntries = (product.specs as Array<{ key?: string; value?: string }>)
+      .filter((item) => item && typeof item === "object" && Boolean(item.key?.trim()) && Boolean(item.value?.trim()))
+      .map((item) => [item.key!.trim(), item.value!.trim()]);
+  } else if (typeof product.specs === "object") {
+    rawEntries = Object.entries(product.specs).filter(([key, value]) => {
+      if (HIDDEN_SPEC_KEYS.has(key)) return false;
+      return Boolean(typeof value === "string" && value.trim());
+    });
+  }
+
+  return sortSpecEntries(expandSpecEntries(rawEntries));
 }
 
 export function getHighlightSpecs(product: Product, limit = 6) {
@@ -69,6 +78,10 @@ function normalizeStoredDescriptionHtml(raw: string): string | null {
   if (!trimmed) return null;
 
   const decoded = decodeDescriptionEntities(trimmed);
+  if (hasHtmlTags(decoded)) {
+    return prepareEditorHtmlForDisplay(decoded);
+  }
+
   const plain = descriptionNormalizePlainText(decoded);
   const needsStructuralNormalize =
     /&#\d+;|&#x[0-9a-f]+;/i.test(trimmed)

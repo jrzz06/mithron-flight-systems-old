@@ -44,15 +44,20 @@ type OrderDetailShellProps = {
   children: ReactNode;
   scrollRef?: React.RefObject<HTMLDivElement | null>;
   header?: ReactNode;
+  /** Static order chrome (id, total, status) — outside the scroll body so it never overlaps content. */
+  orderHeader?: ReactNode;
 };
 
-export function OrderDetailShell({ children, scrollRef, header }: OrderDetailShellProps) {
+export function OrderDetailShell({ children, scrollRef, header, orderHeader }: OrderDetailShellProps) {
   return (
     <div
       data-order-detail-panel
       className={`flex min-h-0 min-w-0 flex-col border border-[var(--platform-border)] bg-[var(--platform-surface)] shadow-sm ${orderRadiusCard}`}
     >
-      {header ? <div className="shrink-0 border-b border-[var(--platform-border)] px-4 py-3 lg:hidden">{header}</div> : null}
+      {header ? <div className="shrink-0 border-b border-[var(--platform-border)] px-4 py-3 xl:hidden">{header}</div> : null}
+      {orderHeader ? (
+        <div className="shrink-0 border-b border-[var(--platform-border)] px-4 py-2">{orderHeader}</div>
+      ) : null}
       <div
         ref={scrollRef}
         className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4"
@@ -94,11 +99,11 @@ type OrderStickyHeaderProps = {
   defaultWarehouseCode: string;
 };
 
-/** Compact sticky strip so order id, total, and next step stay visible while scrolling. */
+/** Compact static order chrome (id, total, next step) — rendered outside the scroll body. */
 export function OrderStickyHeader({ order, defaultWarehouseCode }: OrderStickyHeaderProps) {
   const nextStep = nextStepForOrder(order);
   return (
-    <div className="sticky top-0 z-20 -mx-4 mb-2 border-b border-[var(--platform-border)] bg-[var(--platform-surface)]/95 px-4 py-2 backdrop-blur-sm">
+    <div className="min-w-0">
       <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -152,7 +157,7 @@ export function OrderDetailSection({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="sticky top-0 z-10 flex w-full items-center justify-between bg-[var(--platform-surface)] py-1 text-left"
+        className="flex w-full items-center justify-between bg-[var(--platform-surface)] py-1 text-left"
         aria-expanded={open}
       >
         <h3 className={orderSectionLabel}>{title}</h3>

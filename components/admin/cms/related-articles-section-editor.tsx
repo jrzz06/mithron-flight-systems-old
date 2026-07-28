@@ -52,7 +52,6 @@ export function RelatedArticlesSectionEditor({
   uploadImage: (file: File) => Promise<{ src: string; alt?: string } | null>;
 }) {
   const [items, setItems] = useState<CmsRelatedArticle[]>(() => padRelatedArticleSlots(initialItems));
-  const [sectionEnabled, setSectionEnabled] = useState(enabled);
   const [, startTransition] = useTransition();
 
   const updateItem = useCallback(
@@ -116,19 +115,7 @@ export function RelatedArticlesSectionEditor({
     <form className="flex flex-col gap-6" onChange={onDirty} onSubmit={handleSubmit}>
       <input type="hidden" name="section_key" value="related-articles" />
       <input type="hidden" name="article_count" value={String(RELATED_ARTICLE_SLOTS)} />
-      <input type="hidden" name="enabled" value={sectionEnabled ? "true" : "false"} />
-
-      <label className="inline-flex items-center gap-2 text-sm text-[var(--platform-text-secondary)]">
-        <input
-          type="checkbox"
-          checked={sectionEnabled}
-          onChange={(event) => {
-            setSectionEnabled(event.target.checked);
-            onDirty();
-          }}
-        />
-        Section enabled on homepage
-      </label>
+      <input type="hidden" name="enabled" value="true" />
 
       <div className="grid gap-4 rounded-[12px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-4 min-[1280px]:grid-cols-2">
         <CmsField label="Section title" name="section_title" defaultValue={initialSectionTitle} />

@@ -20,6 +20,7 @@ import {
   buildOrdersUrl,
   filterOrders,
   filtersToSearchParams,
+  indexOrderItemsByOrderId,
   orderItemsForOrder,
   orderSelectionKey,
   parseOrderFiltersFromSearchParams,
@@ -194,7 +195,18 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
   }, [liveOrders, selectedOrder, selectedOrderId]);
 
   useEffect(() => {
-    if (!liveSelectedOrder) return;
+    if (!liveSelectedOrder) {
+      const urlKey = searchParams.get("order")?.trim() ?? "";
+      if (urlKey) {
+        const params = filtersToSearchParams(new URLSearchParams(searchParams.toString()), filters, {
+          queue,
+          tool: createOpen ? "create" : undefined
+        });
+        params.delete("order");
+        router.replace(buildOrdersUrl(Object.fromEntries(params.entries())), { scroll: false });
+      }
+      return;
+    }
     const canonicalKey = orderSelectionKey(liveSelectedOrder);
     const urlKey = searchParams.get("order")?.trim() ?? "";
     if (urlKey && urlKey !== canonicalKey) {
@@ -223,10 +235,22 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
     [products]
   );
 
+  const orderItemsByOrderId = useMemo(
+    () => indexOrderItemsByOrderId(liveOrderItems),
+    [liveOrderItems]
+  );
+
   const filteredOrders = useMemo(() => {
-    const filtered = filterOrders(liveOrders, liveOrderItems, queue, filters, defaultWarehouseCode);
+    const filtered = filterOrders(
+      liveOrders,
+      liveOrderItems,
+      queue,
+      filters,
+      defaultWarehouseCode,
+      orderItemsByOrderId
+    );
     return sortOrders(filtered, filters.sort);
-  }, [liveOrders, liveOrderItems, queue, filters, defaultWarehouseCode]);
+  }, [liveOrders, liveOrderItems, orderItemsByOrderId, queue, filters, defaultWarehouseCode]);
 
   const replaceOrdersUrl = useCallback(
     (url: string) => {
@@ -339,7 +363,9 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
           const activeOrder = selectedOrderId
             ? optimisticOrders.find((order) => text(order.id) === selectedOrderId) ?? liveSelectedOrder
             : liveSelectedOrder;
-          const activeItems = activeOrder ? orderItemsForOrder(selectedOrderId, liveOrderItems) : [];
+          const activeItems = activeOrder
+            ? orderItemsForOrder(selectedOrderId, liveOrderItems, orderItemsByOrderId)
+            : [];
           const activeShipments = activeOrder
             ? liveShipments.filter((shipment) => text(shipment.order_id) === selectedOrderId)
             : [];
@@ -390,6 +416,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
               <AdminOrderList
                 orders={optimisticOrders}
                 orderItems={liveOrderItems}
+                orderItemsByOrderId={orderItemsByOrderId}
                 products={products}
                 shipments={liveShipments}
                 defaultWarehouseCode={defaultWarehouseCode}

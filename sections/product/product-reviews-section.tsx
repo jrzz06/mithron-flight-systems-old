@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ThumbsUp } from "@/components/icons/storefront-icons";
 import { useMemo, useState } from "react";
+import { OrderReviewForm } from "@/components/customer/order-review-form";
+import { REVIEW_UNAVAILABLE_MESSAGE, type CustomerProductReviewContext } from "@/lib/orders/review-eligibility";
 import type { ProductPageReview, ProductReviewSummary, ReviewSort } from "@/lib/product-reviews/types";
 import { cn } from "@/lib/utils";
 import styles from "./product-discovery.module.css";
@@ -91,9 +94,7 @@ function RatingDistribution({
             className={cn(styles.reviewDistributionRow, isActive && styles.reviewDistributionRowActive)}
             aria-pressed={isActive}
             aria-label={
-              isActive
-                ? `Clear ${stars}-star filter`
-                : `Show ${stars}-star reviews (${count})`
+              isActive ? `Clear ${stars}-star filter` : `Show ${stars}-star reviews (${count})`
             }
             onClick={() => onSelectRating(isActive ? null : stars)}
             disabled={count === 0 && !isActive}
@@ -201,20 +202,27 @@ function ReviewsEmptyState() {
   );
 }
 
+type ComposerMode = "write" | "edit" | null;
+
 export function ProductReviewsSection({
   productName,
   productSlug,
   reviews,
-  summary
+  summary,
+  isAuthenticated = false,
+  reviewContext = null
 }: {
   productName: string;
   productSlug: string;
   reviews: ProductPageReview[];
   summary: ProductReviewSummary;
+  isAuthenticated?: boolean;
+  reviewContext?: CustomerProductReviewContext | null;
 }) {
   const [sort, setSort] = useState<ReviewSort>("recent");
   const [query, setQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [composerMode, setComposerMode] = useState<ComposerMode>(null);
   const sortedReviews = useMemo(() => sortReviews(reviews, sort), [reviews, sort]);
   const filteredReviews = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -226,6 +234,15 @@ export function ProductReviewsSection({
     });
   }, [query, ratingFilter, sortedReviews]);
 
+  const writableOrders = reviewContext?.writableOrders ?? [];
+  const ownReviews = reviewContext?.ownReviews ?? [];
+  const writableOrder = writableOrders[0] ?? null;
+  const editableReview = ownReviews[0] ?? null;
+  const hasWritable = writableOrders.length > 0;
+  const hasOwnReviews = ownReviews.length > 0;
+  const writeLabel = hasOwnReviews ? "Write another review" : "Write a review";
+  const loginHref = `/login?next=${encodeURIComponent(`/product/${productSlug}#reviews`)}`;
+
   return (
     <section
       id="reviews"
@@ -234,9 +251,80 @@ export function ProductReviewsSection({
     >
       <div className={styles.discoveryInner}>
         <div className={styles.reviewsContainer}>
-          <h2 id="product-reviews-title" className={styles.reviewsTitle}>
-            Customer Reviews
-          </h2>
+          <div className={styles.reviewsHeaderRow}>
+            <h2 id="product-reviews-title" className={styles.reviewsTitle}>
+              Customer Reviews
+            </h2>
+            <div className={styles.reviewsCtaRow}>
+              {!isAuthenticated ? (
+                <Link href={loginHref} className={styles.reviewsCtaButton}>
+                  Sign in to write a review
+                </Link>
+              ) : (
+                <>
+                  {hasWritable ? (
+                    <button
+                      type="button"
+                      className={styles.reviewsCtaButton}
+                      onClick={() => setComposerMode(composerMode === "write" ? null : "write")}
+                      aria-expanded={composerMode === "write"}
+                    >
+                      {writeLabel}
+                    </button>
+                  ) : null}
+                  {hasOwnReviews ? (
+                    <button
+                      type="button"
+                      className={cn(styles.reviewsCtaButton, styles.reviewsCtaButtonSecondary)}
+                      onClick={() => setComposerMode(composerMode === "edit" ? null : "edit")}
+                      aria-expanded={composerMode === "edit"}
+                    >
+                      Edit your review
+                    </button>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </div>
+
+          {isAuthenticated && !hasWritable && !hasOwnReviews && reviewContext?.blockedReason === "awaiting_dispatch" ? (
+            <p className={styles.reviewsCtaHint}>{REVIEW_UNAVAILABLE_MESSAGE}</p>
+          ) : null}
+
+          {composerMode === "write" && writableOrder ? (
+            <div className={styles.reviewComposer} id="write-review">
+              <OrderReviewForm
+                orderId={writableOrder.orderId}
+                productSlug={productSlug}
+                productName={writableOrder.productName || productName}
+                compact
+                onSuccess={() => {
+                  window.location.reload();
+                }}
+              />
+            </div>
+          ) : null}
+
+          {composerMode === "edit" && editableReview ? (
+            <div className={styles.reviewComposer} id="write-review">
+              <OrderReviewForm
+                orderId={editableReview.orderId || writableOrder?.orderId || ""}
+                productSlug={productSlug}
+                productName={productName}
+                compact
+                existingReview={{
+                  id: editableReview.id,
+                  rating: editableReview.rating,
+                  title: editableReview.title,
+                  body: editableReview.body,
+                  status: editableReview.status
+                }}
+                onSuccess={() => {
+                  window.location.reload();
+                }}
+              />
+            </div>
+          ) : null}
 
           {!reviews.length ? (
             <ReviewsEmptyState />
@@ -268,7 +356,8 @@ export function ProductReviewsSection({
 
               <div className={styles.reviewsToolbar}>
                 <p className={styles.reviewsCount}>
-                  {filteredReviews.length} of {summary.totalReviews} review{summary.totalReviews === 1 ? "" : "s"}
+                  {filteredReviews.length} of {summary.totalReviews} review
+                  {summary.totalReviews === 1 ? "" : "s"}
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <label className={styles.reviewsSortLabel}>

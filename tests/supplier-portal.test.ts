@@ -29,10 +29,20 @@ describe("supplier portal workflow", () => {
   it("exposes admin approval queue for pending supplier products", () => {
     const approvalActions = readFileSync(join(root, "app/admin/suppliers/products/actions.ts"), "utf8");
     const approvalPage = readFileSync(join(root, "app/admin/suppliers/products/page.tsx"), "utf8");
+    const queue = readFileSync(join(root, "components/admin/admin-supplier-products-queue.tsx"), "utf8");
     expect(approvalActions).toContain("approveProductSubmissionFormAction");
     expect(approvalActions).toContain("rejectProductSubmissionFormAction");
+    expect(approvalActions).toContain("product_url: `/product/${slug}`");
     expect(approvalPage).toContain("pending_review");
     expect(approvalPage).toContain("supplier_label");
+    expect(queue).toContain("Clear supplier filter");
+    expect(queue).toContain("router.refresh()");
+  });
+
+  it("normalizes storefront catalog product URLs from slug", () => {
+    const catalog = readFileSync(join(root, "services/catalog.ts"), "utf8");
+    expect(catalog).toContain("productUrl: `/product/${row.slug}`");
+    expect(catalog).not.toContain("productUrl: row.product_url ??");
   });
 
   it("mounts supplier feedback dialog and toast bridge in supplier shell", () => {

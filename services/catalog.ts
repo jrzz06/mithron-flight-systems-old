@@ -40,6 +40,7 @@ import {
   tokenizeSearchQuery
 } from "@/lib/search-query";
 import { canonicalizeSpecRecord, formatAvailability, isSpecLikeBlob, parseInlineSpecPairs } from "@/lib/product-spec-text";
+import { getCatalogProductRatingMap } from "@/lib/catalog-product-ratings";
 import { customerFacingAvailability } from "@/services/inventory-csv";
 import { availabilityLabelFromQuantity, getInventoryQuantitiesBySlug } from "@/services/inventory";
 import type { OrderCatalogProduct } from "@/services/orders";
@@ -810,8 +811,11 @@ function countCustomerFacingSpecs(specs: Record<string, string>) {
 }
 
 function normalizeSpecs(row: MithronProductRow) {
+  const rawSpecs = (row.specs ?? {}) as Record<string, string>;
+  const hasAdminSpecs = countCustomerFacingSpecs(rawSpecs) > 0;
+
   const specs = canonicalizeSpecRecord(
-    Object.fromEntries(Object.entries(row.specs ?? {}).map(([key, value]) => [key, cleanText(value)])),
+    Object.fromEntries(Object.entries(rawSpecs).map(([key, value]) => [key, cleanText(value)])),
     { preserveKeys: INTERNAL_SPEC_KEYS }
   );
 
@@ -824,7 +828,7 @@ function normalizeSpecs(row: MithronProductRow) {
     Source: row.source_url ?? specs.Source ?? "Mithron product database"
   };
 
-  if (countCustomerFacingSpecs(merged) < 3) {
+  if (!hasAdminSpecs && countCustomerFacingSpecs(merged) < 3) {
     const parsed = parseInlineSpecPairs(row.source_description ?? row.tagline ?? "");
     for (const [key, value] of Object.entries(parsed)) {
       if (!merged[key]?.trim()) merged[key] = value;
@@ -957,7 +961,7 @@ function mapProductRow(row: MithronProductRow, linkedPrimaryImage?: MediaAsset, 
 
   return {
     slug: row.slug,
-    productUrl: row.product_url ?? `/product/${row.slug}`,
+    productUrl: `/product/${row.slug}`,
     workflowStatus: row.workflow_status ?? "published",
     publishedAt: row.published_at ?? undefined,
     archivedAt: row.archived_at ?? undefined,
@@ -1790,22 +1794,23 @@ async function fetchMediaAssetChunk(chunk: string[]) {
     console.warn(`[catalog] media_assets batch lookup failed (${chunk.length} ids): ${message}`);
   }
 
-  const recovered: MediaAssetRow[] = [];
-  for (const id of chunk) {
-    try {
-      const rows = await fetchSupabaseRows<MediaAssetRow>(
-        "media_assets",
-        `select=${MEDIA_ASSET_SELECT}&id=eq.${encodeURIComponent(id)}&limit=1`,
-        true
-      );
-      recovered.push(...rows);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[catalog] skipped media asset ${id}: ${message}`);
-    }
-  }
+  const recoveredChunks = await Promise.all(
+    chunk.map(async (id) => {
+      try {
+        return await fetchSupabaseRows<MediaAssetRow>(
+          "media_assets",
+          `select=${MEDIA_ASSET_SELECT}&id=eq.${encodeURIComponent(id)}&limit=1`,
+          true
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`[catalog] skipped media asset ${id}: ${message}`);
+        return [] as MediaAssetRow[];
+      }
+    })
+  );
 
-  return recovered;
+  return recoveredChunks.flat();
 }
 
 async function fetchMediaAssetsById(mediaIds: string[]) {
@@ -2230,6 +2235,14 @@ export const getProductAffinityRowBySlug = cache(async (slug: string): Promise<P
   return rows[0] ?? null;
 });
 
+function applyCatalogRatingsToProducts(products: Product[], ratingMap: Map<string, number>): Product[] {
+  if (!ratingMap.size) return products;
+  return products.map((product) => {
+    const rating = ratingMap.get(product.slug);
+    return rating && rating > 0 ? { ...product, rating } : product;
+  });
+}
+
 export const getCatalogShowroomProducts = cache(async (): Promise<Product[]> => {
   return readThroughCache(REDIS_CACHE_KEYS.catalogShowroom, 45, async () => {
     const categoryNames = [
@@ -2241,14 +2254,17 @@ export const getCatalogShowroomProducts = cache(async (): Promise<Product[]> => 
     ];
     if (!categoryNames.length) return [];
 
-    const rows = await overlayLiveInventoryAvailability(
-      await fetchCatalogRowsWithTags<MithronProductRow>(
-        `select=${catalogListSelect}&${publishedCatalogFilter}&category=${postgrestIn(categoryNames)}&order=sort_order.asc,slug.asc&limit=${CATALOG_SHOWROOM_LIMIT}`,
-        ["catalog", "catalog-products", "catalog-showroom"]
-      )
+    const rawRows = await fetchCatalogRowsWithTags<MithronProductRow>(
+      `select=${catalogListSelect}&${publishedCatalogFilter}&category=${postgrestIn(categoryNames)}&order=sort_order.asc,slug.asc&limit=${CATALOG_SHOWROOM_LIMIT}`,
+      ["catalog", "catalog-products", "catalog-showroom"]
     );
+    const slugs = rawRows.map((row) => row.slug).filter(Boolean);
+    const [rows, ratingMap] = await Promise.all([
+      overlayLiveInventoryAvailability(rawRows),
+      getCatalogProductRatingMap(slugs)
+    ]);
     const products = await mapRowsWithCatalogMedia(rows, mapProductRow, { scopeToRows: true });
-    return dedupeProductsBySlug(products);
+    return dedupeProductsBySlug(applyCatalogRatingsToProducts(products, ratingMap));
   });
 });
 
@@ -2414,7 +2430,7 @@ export async function getPublishedProductSitemapEntries(): Promise<ProductSitema
 
   return rows.map((row) => ({
     slug: row.slug,
-    productUrl: row.product_url,
+    productUrl: `/product/${row.slug}`,
     updatedAt: row.updated_at
   }));
 }
@@ -2513,11 +2529,16 @@ export const getProductsByCategorySlug = cache(async (slug: CatalogCategorySlug)
     const definition = getCatalogCategoryDefinition(slug);
     if (!definition.categoryNames.length) return [];
 
-    const rows = await overlayLiveInventoryAvailability(
-      await fetchCatalogRowsForCategoryName(definition.categoryNames[0]!)
-    );
+    const rawRows = await fetchCatalogRowsForCategoryName(definition.categoryNames[0]!);
+    const slugs = rawRows.map((row) => row.slug).filter(Boolean);
+    const [rows, ratingMap] = await Promise.all([
+      overlayLiveInventoryAvailability(rawRows),
+      getCatalogProductRatingMap(slugs)
+    ]);
     const products = await mapRowsWithCatalogMedia(rows, mapProductRow, { scopeToRows: true });
-    return dedupeProductsBySlug(filterProductsForCategorySlug(products, slug));
+    return dedupeProductsBySlug(
+      applyCatalogRatingsToProducts(filterProductsForCategorySlug(products, slug), ratingMap)
+    );
   });
 });
 

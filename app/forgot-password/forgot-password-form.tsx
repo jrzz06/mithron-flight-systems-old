@@ -5,7 +5,7 @@ import { recordClientAuthEvent } from "@/lib/auth/audit-client";
 import { resolveClientAuthOrigin } from "@/lib/site-url";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
-import styles from "../auth/auth-page.module.css";
+import styles from "../auth-page.module.css";
 
 type ForgotPasswordFormProps = {
   auditToken?: string | null;

@@ -165,7 +165,17 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
                   productSlug={slug}
                   productName={String(item.product_name ?? slug)}
                   disabled={!canReview}
-                  existingStatus={review ? String(review.status ?? "pending") : null}
+                  existingReview={
+                    review
+                      ? {
+                          id: String(review.id),
+                          rating: Number(review.rating ?? 5),
+                          title: typeof review.title === "string" ? review.title : "",
+                          body: typeof review.body === "string" ? review.body : "",
+                          status: typeof review.status === "string" ? review.status : "published"
+                        }
+                      : null
+                  }
                 />
               </li>
             );

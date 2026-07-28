@@ -89,7 +89,7 @@ export function OrderProgressTracker({
                 ) : null}
 
                 <div
-                  className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold sm:mx-auto ${
+                  className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold sm:mx-auto ${
                     isDone
                       ? "border-[var(--account-success)] bg-[var(--account-success)] text-white"
                       : isCurrent

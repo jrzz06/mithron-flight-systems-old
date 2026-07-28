@@ -1,9 +1,9 @@
-import { rewriteStorageUrlForCdn } from "@/lib/media/cdn-url";
+import { readMediaCdnPublicEnv, rewriteStorageUrlForCdn } from "@/lib/media/cdn-url";
 
 export type StorageProviderId = "supabase" | "r2";
 
 export function getActiveStorageProvider(
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
 ): StorageProviderId {
   const provider = env.MITHRON_STORAGE_PROVIDER?.trim().toLowerCase();
   if (provider === "r2") return "r2";
@@ -12,7 +12,7 @@ export function getActiveStorageProvider(
 
 export function resolvePublicMediaUrl(
   src: string,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
 ): string {
   const provider = getActiveStorageProvider(env);
   if (provider === "r2") {

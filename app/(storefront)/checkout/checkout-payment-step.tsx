@@ -31,7 +31,7 @@ export function CheckoutPaymentStep({
   return (
     <fieldset className={styles.fieldset}>
       <legend className={styles.legend}>Payment method</legend>
-      <p className={styles.paymentLead}>Choose how you would like to pay. You will complete payment in a secure gateway window.</p>
+      <p className={styles.paymentLead}>Choose your payment method. Payments are processed in a secure window.</p>
       <div className={styles.paymentOptions}>
         {paymentProviders.map((provider) => (
           <label

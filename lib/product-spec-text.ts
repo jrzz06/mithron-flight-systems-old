@@ -160,11 +160,16 @@ export function canonicalizeSpecRecord(
   return canonicalized;
 }
 
+const SORTED_SPEC_LABELS = [...KNOWN_SPEC_LABELS].sort((left, right) => right.length - left.length);
+const SPEC_LABEL_PATTERN = new RegExp(
+  `(${SORTED_SPEC_LABELS.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")}):\\s*`,
+  "gi"
+);
+
 function insertKnownSpecBoundaries(text: string) {
   let normalized = text;
-  const labels = [...KNOWN_SPEC_LABELS].sort((left, right) => right.length - left.length);
 
-  for (const label of labels) {
+  for (const label of SORTED_SPEC_LABELS) {
     const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     normalized = normalized.replace(new RegExp(`([a-z0-9)])(?=${escaped}:)`, "i"), "$1 ");
   }
@@ -219,13 +224,9 @@ export function parseInlineSpecPairs(text: string, options?: { knownLabelsOnly?:
   const normalized = insertKnownSpecBoundaries(sanitizeProductPreviewText(text));
   if (!normalized) return {};
 
-  const labels = [...KNOWN_SPEC_LABELS].sort((left, right) => right.length - left.length);
-  const pattern = new RegExp(
-    `(${labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")}):\\s*`,
-    "gi"
-  );
-
-  const matches = [...normalized.matchAll(pattern)];
+  // Reset lastIndex — SPEC_LABEL_PATTERN is a shared /g regex.
+  SPEC_LABEL_PATTERN.lastIndex = 0;
+  const matches = [...normalized.matchAll(SPEC_LABEL_PATTERN)];
   if (!matches.length) return options?.knownLabelsOnly ? {} : parseGenericSpecPairs(normalized);
 
   const pairs: Record<string, string> = {};

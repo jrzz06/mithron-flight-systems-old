@@ -10,7 +10,7 @@ import { maybeNormalizeProductDescription } from "@/lib/product-description-norm
 import { readExpectedUpdatedAt } from "@/lib/admin/conflict-handling";
 import { parseSupplierProductForm } from "@/lib/supplier/product-form";
 import { logSupplierProductFormDebug } from "@/lib/supplier/product-form-debug";
-import type { SupplierProductFormState } from "@/components/supplier/supplier-new-product-form";
+import type { SupplierProductFormState } from "@/lib/supplier/types";
 import { createNotificationRecord, fetchAdminRecordsByColumn } from "@/services/admin-actions";
 import { linkUploadedImagesToProduct } from "@/lib/product-gallery";
 import { resolveSupplierProductImageFields, readProductImageSrc } from "@/lib/supplier/product-image";
@@ -46,13 +46,12 @@ async function readSupplierProductDescriptionFields(formData: FormData) {
   // Keep the supplier's own wording exactly as written: sanitize/clean the
   // editor markup only, never run it through the deterministic
   // spec-boundary/bold-label rewriter. That rewriter exists for messy
-  // Wix-imported text, not for content a person just typed. The RichTextEditor's
-  // own "Improve with AI" action (app/api/editor/ai) remains available for
-  // suppliers who explicitly want an AI-polished rewrite.
-  // Preserve text/background color marks from the editor on save.
+  // Wix-imported text, not for content a person just typed.
+  const html = prepareEditorHtmlForSave(editor.html) || maybeNormalizeProductDescription(editor.html) || null;
   return {
-    description: prepareEditorHtmlForSave(editor.html) || maybeNormalizeProductDescription(editor.html) || null,
-    description_json: editor.json
+    description: html,
+    // Persist JSON only when the editor actually produced a document payload.
+    description_json: editor.json && Object.keys(editor.json as object).length ? editor.json : null
   };
 }
 
@@ -79,6 +78,30 @@ async function notifyAdminsOfSubmission(productName: string, slug: string, actor
   );
 }
 
+function readStructuredSpecsFromFormData(formData: FormData): Record<string, string> {
+  const keys = formData.getAll("spec_key").map((value) => (typeof value === "string" ? value.trim() : ""));
+  const values = formData.getAll("spec_value").map((value) => (typeof value === "string" ? value.trim() : ""));
+  const rowCount = Math.max(keys.length, values.length);
+  const specs: Record<string, string> = {};
+  const seenKeys = new Set<string>();
+
+  for (let index = 0; index < rowCount; index += 1) {
+    const key = keys[index] ?? "";
+    const value = values[index] ?? "";
+    if (!key || !value) continue;
+    const lowerKey = key.toLowerCase();
+    if (seenKeys.has(lowerKey)) continue;
+    seenKeys.add(lowerKey);
+    specs[key] = value;
+  }
+  return specs;
+}
+
+function readSubmitForApprovalFlag(formData: FormData) {
+  // Prefer any explicit "1" if multiple submitter/hidden values are present.
+  return formData.getAll("submit_for_approval").map(String).includes("1");
+}
+
 async function saveSupplierProductDraft(formData: FormData) {
   const rawEntries = Object.fromEntries(formData.entries());
   logSupplierProductFormDebug("raw FormData", rawEntries);
@@ -103,7 +126,7 @@ async function saveSupplierProductDraft(formData: FormData) {
   }
 
   const { name, category, price, slug } = parsed;
-  const submitForApproval = String(formData.get("submit_for_approval") ?? "0") === "1";
+  const submitForApproval = readSubmitForApprovalFlag(formData);
 
   logSupplierProductFormDebug("parsed values", {
     name,
@@ -125,7 +148,7 @@ async function saveSupplierProductDraft(formData: FormData) {
     variants: [],
     bundles: [],
     story: [],
-    specs: {},
+    specs: readStructuredSpecsFromFormData(formData),
     anchors: [],
     interests: [],
     ...await readSupplierProductDescriptionFields(formData)
@@ -192,7 +215,7 @@ async function saveSupplierProductDraft(formData: FormData) {
       supplierProductRedirect(
         "/supplier/products",
         "success",
-        `${FEEDBACK_MESSAGES.productCreated}${imageLinkWarning}`
+        `${FEEDBACK_MESSAGES.productSentForReview}${imageLinkWarning}`
       );
     } catch (submitError) {
       if (isNextRedirect(submitError)) throw submitError;
@@ -274,6 +297,7 @@ export async function updateSupplierProductFormStateAction(
         image,
         hero,
         gallery,
+        ...(String(formData.get("specs_editor_present") ?? "") === "1" ? { specs: readStructuredSpecsFromFormData(formData) } : {}),
         ...await readSupplierProductDescriptionFields(formData),
         updated_at: new Date().toISOString()
       },
@@ -302,6 +326,29 @@ export async function updateSupplierProductFormStateAction(
         imageLinkWarning = ` Uploaded images could not be linked (${message}) - reopen the product and re-save the images.`;
       }
     }
+
+    const submitForApproval = readSubmitForApprovalFlag(formData);
+    if (submitForApproval) {
+      try {
+        await submitSupplierProductForReview(context.userId, slug, context.userId);
+        await notifyAdminsOfSubmission(name, slug, context.userId);
+        revalidatePath(`/supplier/products/${slug}/edit`);
+        await revalidateSupplierProductSurfaces();
+        return {
+          status: "success",
+          message: `${FEEDBACK_MESSAGES.productSentForReview}${imageLinkWarning}`
+        };
+      } catch (submitError) {
+        if (isNextRedirect(submitError)) throw submitError;
+        revalidatePath(`/supplier/products/${slug}/edit`);
+        await revalidateSupplierProductSurfaces();
+        return {
+          status: "error",
+          message: `Changes saved but could not send for review. ${actionMessage(submitError)}${imageLinkWarning}`
+        };
+      }
+    }
+
     revalidatePath(`/supplier/products/${slug}/edit`);
     await revalidateSupplierProductSurfaces();
     return { status: "success", message: `Product changes saved.${imageLinkWarning}` };
@@ -325,7 +372,7 @@ export async function submitSupplierProductFormAction(formData: FormData) {
     await notifyAdminsOfSubmission(productName, slug, context.userId);
 
     await revalidateSupplierProductSurfaces();
-    supplierProductRedirect("/supplier/products", "success", FEEDBACK_MESSAGES.productUpdated);
+    supplierProductRedirect("/supplier/products", "success", FEEDBACK_MESSAGES.productSentForReview);
   } catch (error) {
     if (isNextRedirect(error)) throw error;
     supplierProductRedirect("/supplier/products", "error", actionMessage(error));

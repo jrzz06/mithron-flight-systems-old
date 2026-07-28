@@ -9,7 +9,7 @@
   --catalog-accent: var(--brand-accent-bright);
   --product-stage-floor: none;
   --product-stage-halo: none;
-  --product-stage-radial: radial-gradient(ellipse 80% 68% at 50% 50%, rgba(23, 77, 51, 0.05) 0%, rgba(148, 163, 184, 0.04) 54%, transparent 82%);
+  /* Inherit globals --product-stage-radial (mint-whisper → card white) */
   min-height: 100vh;
   position: relative;
   isolation: isolate;
@@ -445,5 +445,17 @@
   .editorialCta,
   .editorialImage {
     transition-duration: 1ms;
+  }
+}
+
+/* Mobile-only: max-width 480px — showroom gridSection & productGrid spacing.
+   Keeps showroom mode consistent with non-showroom catalog-grid-section. */
+@media (max-width: 480px) {
+  .gridSection {
+    padding-inline: 10px; /* was 1.5rem (24px) at ≤640px */
+  }
+
+  .productGrid {
+    gap: 8px; /* was 1rem (16px) — matches storefront-catalog.css catalog-product-grid fix */
   }
 }

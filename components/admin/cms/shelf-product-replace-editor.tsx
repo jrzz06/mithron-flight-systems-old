@@ -26,15 +26,19 @@ export function ProductPositionCard({
   slug,
   product,
   source,
+  browseCatalog = [],
   onClear,
-  onReplace
+  onReplace,
+  onSelectProduct
 }: {
   position: number;
   slug: string;
   product?: ProductReplaceItem;
   source: SlotAssignmentSource;
+  browseCatalog?: ProductReplaceItem[];
   onClear: () => void;
   onReplace: () => void;
+  onSelectProduct?: (product: ProductReplaceItem) => void;
 }) {
   const missingSelected = Boolean(slug) && !product;
 
@@ -48,8 +52,8 @@ export function ProductPositionCard({
           <p className="text-xs font-semibold text-[var(--platform-text-primary)]">Position {position}</p>
           <CmsAssignmentSourceBadge source={source} />
           {missingSelected ? (
-            <span className="rounded-[6px] border border-red-300 bg-red-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-800">
-              Unavailable
+            <span className="rounded-[6px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--platform-text-secondary)]">
+              Not assigned
             </span>
           ) : null}
         </div>
@@ -61,7 +65,7 @@ export function ProductPositionCard({
             data-cms-shelf-replace
           >
             <Replace className="size-3.5" aria-hidden="true" />
-            {slug ? "Replace product" : "Choose product"}
+            {slug ? "Search catalog" : "Search catalog"}
           </button>
           {slug ? (
             <button
@@ -75,6 +79,8 @@ export function ProductPositionCard({
           ) : null}
         </div>
       </div>
+
+
 
       {product ? (
         <div className="flex min-w-0 items-center gap-3 rounded-[8px] bg-[var(--platform-surface-muted)] p-3">
@@ -93,12 +99,12 @@ export function ProductPositionCard({
           </div>
         </div>
       ) : missingSelected ? (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900">
-          Selected slug <code className="font-mono">{slug}</code> is missing or unpublished. Pick another product.
+        <p className="rounded-[8px] border border-dashed border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-xs text-[var(--platform-text-secondary)]">
+          The previously selected product is no longer available. Please choose a product from the dropdown above.
         </p>
       ) : (
         <p className="rounded-[8px] border border-dashed border-[var(--platform-border)] px-3 py-4 text-center text-xs text-[var(--platform-text-muted)]">
-          No product in this slot yet.
+          No product in this slot yet. Pick one using the dropdown above.
         </p>
       )}
     </div>
@@ -197,12 +203,19 @@ export function ShelfProductReplaceEditor({
               slug={slug}
               product={product}
               source={source}
+              browseCatalog={browseCatalog}
               onClear={() => {
                 const next = [...slots];
                 next[index] = "";
                 persistSlots(next);
               }}
               onReplace={() => setReplaceIndex(index)}
+              onSelectProduct={(item) => {
+                const next = [...slots];
+                next[index] = item.slug;
+                setRemoteCacheItem(remoteCache.current, item);
+                persistSlots(next);
+              }}
             />
           );
         })}

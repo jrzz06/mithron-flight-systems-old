@@ -121,7 +121,7 @@ export function ProductConfigurator({
     ? formatAvailability(selectedVariant?.name ?? "In stock")
     : "In stock";
   const buyBoxTagline = product.tagline?.trim() ?? "";
-  const productUrl = product.productUrl ?? `/product/${product.slug}`;
+  const productUrl = `/product/${product.slug}`;
 
   const buildLineItem = useCallback(() => {
     const bundle = selectedBundle;
@@ -200,7 +200,9 @@ export function ProductConfigurator({
       name: product.name,
       sku: deriveProductSku(product.slug),
       image: product.image.src,
-      productUrl: typeof window !== "undefined" ? `${window.location.origin}${productUrl}` : productUrl,
+      productUrl: typeof window !== "undefined"
+        ? (productUrl.startsWith("http") ? productUrl : `${window.location.origin}${productUrl}`)
+        : productUrl,
       quantity
     };
   }, [product.image.src, product.name, product.slug, productUrl, quantity, selectedBundle]);

@@ -224,29 +224,28 @@ export function MiniCarouselSlotEditor({
                       <CmsAssignmentSourceBadge source="missing" />
                     </div>
                     {isMissing ? (
-                      <div className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
-                        <p className="font-semibold">Product missing from catalog</p>
-                        <p className="mt-0.5 text-xs text-red-800">
-                          Slug <span className="font-mono">{slot.slug}</span> no longer exists. Replace this slot before publishing.
-                        </p>
-                      </div>
+                      <p className="rounded-[8px] border border-dashed border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-xs text-[var(--platform-text-secondary)]">
+                        This product is no longer available. Use the dropdown below to choose a replacement.
+                      </p>
                     ) : (
                       <p className="text-sm text-[var(--platform-text-muted)]">No product assigned.</p>
                     )}
                   </div>
                 )}
 
-                <div className="flex shrink-0 items-start justify-end">
+                <div className="flex flex-col gap-2 shrink-0 items-end justify-start">
                   <button
                     type="button"
                     onClick={() => setReplaceIndex(index)}
                     className="platform-btn-secondary platform-btn-sm inline-flex items-center gap-1.5"
                   >
                     <Replace className="size-3.5" aria-hidden="true" />
-                    Replace
+                    Search catalog
                   </button>
                 </div>
               </div>
+
+
             </li>
             );
           })}

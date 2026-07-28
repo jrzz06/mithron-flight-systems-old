@@ -102,10 +102,8 @@ export function HomeProductShelfCard({
       <Link
         href={`/product/${product.slug}`}
         className={cn(
-          "premium-product-card-shell group flex w-full h-full flex-col overflow-hidden bg-white",
-          isCatalog
-            ? "rounded-xl border border-gray-200/90 p-2.5 lg:p-3"
-            : "border border-gray-200/80",
+          "group flex w-full h-full flex-col overflow-hidden bg-gradient-to-b from-[#e4eef6] via-[#f0f6fa] to-white",
+          isCatalog && "premium-product-card-shell rounded-xl border border-black/5 p-2 sm:p-2.5",
           styles.productCard,
           styles.productCardDji,
           isCatalog && styles.productCardCatalog
@@ -116,15 +114,12 @@ export function HomeProductShelfCard({
       >
         <div
           className={cn(
-            "relative mb-0 flex w-full items-center justify-center overflow-hidden p-0",
-            isCatalog
-              ? "aspect-[4/3] shrink-0 rounded-lg bg-gray-50"
-              : "aspect-[4/3] rounded-md bg-gray-50/80",
+            "relative mb-0 flex w-full shrink-0 items-center justify-center overflow-hidden bg-transparent p-0 aspect-[4/3]",
             styles.productImageWell
           )}
         >
-          {/* ~8–12px breathing room; higher cutout scale crops PNG margins */}
-          <div className={cn("absolute", isCatalog ? "inset-2" : "inset-2.5 sm:inset-3")}>
+          {/* Card padding is the only inset — no nested frame around the cutout */}
+          <div className="absolute inset-0">
             <ProductCardImage
               product={product}
               decorative
@@ -140,7 +135,11 @@ export function HomeProductShelfCard({
         <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col", styles.productBody)}>
           <div className={cn("flex min-w-0 flex-col", isCatalog && styles.productMetaStackCatalog)}>
             <p className={cn(styles.productKicker)}>{product.category || "\u00A0"}</p>
-            {isCatalog ? <CatalogStarRating rating={rating} reviewCount={product.reviewCount} /> : null}
+            {isCatalog ? (
+              <div className="h-5 my-0.5 flex items-center min-w-0" data-catalog-rating-slot="">
+                <CatalogStarRating rating={rating} reviewCount={product.reviewCount} />
+              </div>
+            ) : null}
             <h3
               className={cn(
                 "line-clamp-2",
@@ -165,7 +164,7 @@ export function HomeProductShelfCard({
               "mt-auto flex min-w-0",
               isCatalog
                 ? "relative flex-col items-stretch justify-start gap-2"
-                : "items-center justify-between gap-3 border-t border-gray-100 pt-4",
+                : "items-center justify-between gap-3",
               styles.productFooterDji,
               isCatalog && styles.productFooterCatalog
             )}
@@ -216,7 +215,7 @@ export function HomeProductShelfCard({
     <Link
       href={`/product/${product.slug}`}
       className={cn(
-        "premium-product-card-shell group flex h-full flex-col justify-between overflow-hidden rounded-xl border border-gray-200/80 bg-white p-2 sm:p-2.5",
+        "premium-product-card-shell group flex h-full flex-col justify-between overflow-hidden rounded-xl border border-black/5 bg-gradient-to-b from-[#e4eef6] via-[#f0f6fa] to-white p-2 sm:p-2.5",
         styles.productCard
       )}
       data-testid="home-product-card"
@@ -224,7 +223,7 @@ export function HomeProductShelfCard({
     >
       <div
         className={cn(
-          "relative mb-1.5 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/80 p-0",
+          "relative mb-1.5 flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-transparent p-0",
           styles.productImageWell
         )}
       >
@@ -236,7 +235,7 @@ export function HomeProductShelfCard({
             priority={priority}
             sizes={imageSizes}
             className={cn(
-              "h-full w-full max-h-full max-w-full object-contain mix-blend-multiply",
+              "h-full w-full max-h-full max-w-full object-contain",
               styles.productImage
             )}
             placeholderClassName={styles.productImagePlaceholder}

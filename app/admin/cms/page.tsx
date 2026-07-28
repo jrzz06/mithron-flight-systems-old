@@ -7,7 +7,7 @@ import { CMS_WORKSPACE_ANCHORS, CMS_WORKSPACE_PAGES } from "@/config/cms-workspa
 import { ModulePanel, OperationalFeedback } from "@/components/admin/module-panel";
 import { getCmsAdvancedWorkspaceSnapshot, getCmsCoreSnapshot, getCmsMarketingWorkspaceSnapshot } from "@/services/admin";
 import { getHomepageCmsContent, getHomepageCmsDraftPreviewContent } from "@/services/homepage-cms";
-import { getHomepageProducts } from "@/services/catalog";
+import { getProducts } from "@/services/catalog";
 import { getHomepageCmsV2Content, getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { buildCmsDashboardSections } from "@/lib/cms/build-dashboard-sections";
@@ -230,7 +230,7 @@ export default async function CmsPage({ searchParams }: CmsPageProps) {
     getHomepageCmsDraftPreviewContent(),
     getHomepageCmsV2Content(),
     getHomepageCmsV2DraftPreviewContent(),
-    getHomepageProducts(),
+    getProducts(),
     getAdminSettingsPolicy()
   ]);
   const snapshot = mergeCmsSnapshots(coreSnapshot, marketingSnapshot, advancedSnapshot);

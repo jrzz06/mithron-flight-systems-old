@@ -9,8 +9,7 @@ import { OrderStatusBadge } from "@/components/admin/orders/order-status-badge";
 import {
   orderClamp2,
   orderLongText,
-  orderRadiusControl,
-  orderWrapRow
+  orderRadiusControl
 } from "@/components/admin/orders/order-layout-utils";
 import { resolveNextImageSrc } from "@/lib/media/next-image-src";
 import {
@@ -33,6 +32,7 @@ import { fulfillmentStatusLabel, paymentStatusLabel } from "@/lib/orders/status"
 type AdminOrderListItemProps = {
   order: AdminRow;
   orderItems: AdminRow[];
+  orderItemsByOrderId?: Map<string, AdminRow[]>;
   products: AdminRow[];
   defaultWarehouseCode: string;
   selected: boolean;
@@ -63,6 +63,7 @@ function priorityLabel(priority: ReturnType<typeof orderPriorityBadge>) {
 export const AdminOrderListItem = memo(function AdminOrderListItem({
   order,
   orderItems,
+  orderItemsByOrderId,
   products,
   defaultWarehouseCode,
   selected,
@@ -83,8 +84,8 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
   const orderId = text(order.id);
   const orderNumber = publicOrderLabel(order);
   const warehouse = assignedWarehouseCode(order, defaultWarehouseCode);
-  const summary = productSummaryLine(orderId, orderItems);
-  const items = orderItemsForOrder(orderId, orderItems);
+  const summary = productSummaryLine(orderId, orderItems, orderItemsByOrderId);
+  const items = orderItemsForOrder(orderId, orderItems, orderItemsByOrderId);
   const firstItem = items[0];
   const thumb = firstItem ? resolveProductImage(products, text(firstItem.product_slug)) : null;
   const thumbSrc = thumb ? resolveNextImageSrc(thumb) : null;
@@ -121,47 +122,45 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
       }}
       className={`relative box-border block w-full shrink-0 cursor-pointer border-b border-[var(--platform-border)] px-3 py-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${orderHoverClass()} hover:bg-[var(--platform-surface-muted)] ${
         selected
-          ? "border-l-[3px] border-l-violet-500 bg-violet-500/10 pl-[calc(0.75rem-3px)] shadow-[inset_0_0_0_1px_rgba(124,106,247,0.12)]"
+          ? "border-l border-l-violet-500 bg-violet-500/10 pl-3 shadow-[inset_0_0_0_1px_rgba(124,106,247,0.12)]"
           : unread
-            ? "border-l-[3px] border-l-amber-400/70 bg-amber-400/[0.06]"
-            : "border-l-[3px] border-l-transparent"
+            ? "border-l border-l-amber-400/70 bg-amber-400/[0.06] pl-3"
+            : "border-l border-l-transparent pl-3"
       } ${isPending ? "opacity-60" : ""}`}
     >
       <div className="grid gap-2.5">
-        <div className={`${orderWrapRow} justify-between gap-x-2 gap-y-1`}>
-          <span className="flex min-w-0 flex-1 items-center gap-1.5">
-            {unread && !selected ? (
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
-                role="img"
-                aria-label="New activity"
-              />
-            ) : null}
-            <OrderIdText value={orderNumber} className="min-w-0 flex-1 text-sm font-semibold tracking-[-0.01em]" showCopy={false} />
-          </span>
-          <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
-            <p className={`shrink-0 text-sm font-semibold tabular-nums text-[var(--platform-text-primary)] ${orderLongText}`}>
-              {moneyText(order.total)}
-            </p>
-            {incomplete ? (
-              <span
-                className={`inline-flex h-6 max-w-full items-center gap-1.5 whitespace-nowrap border border-amber-500/40 bg-amber-500/10 px-2.5 type-badge font-medium text-amber-200 ${orderRadiusControl}`}
-                title="Order is missing products or address"
-              >
-                Needs setup
-              </span>
-            ) : (
-              <OrderStatusBadge status={text(order.status, "pending")} compact className="max-w-full" />
-            )}
-            {fulfillmentRaw !== "pending" ? (
-              <span
-                className={`inline-flex h-6 max-w-full items-center whitespace-nowrap border border-blue-500/30 bg-blue-500/10 px-2 type-badge font-medium text-blue-200 ${orderRadiusControl}`}
-                title={`Warehouse fulfillment: ${fulfillmentLabel}`}
-              >
-                Warehouse: {fulfillmentLabel}
-              </span>
-            ) : null}
-          </div>
+        <div className="flex min-w-0 items-center gap-1.5">
+          {unread && !selected ? (
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
+              role="img"
+              aria-label="New activity"
+            />
+          ) : null}
+          <OrderIdText value={orderNumber} className="min-w-0 flex-1 text-sm font-semibold tracking-[-0.01em]" showCopy={false} />
+        </div>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <p className="shrink-0 text-sm font-semibold tabular-nums text-[var(--platform-text-primary)]">
+            {moneyText(order.total)}
+          </p>
+          {incomplete ? (
+            <span
+              className={`inline-flex h-6 shrink-0 items-center gap-1.5 whitespace-nowrap border border-amber-500/40 bg-amber-500/10 px-2.5 type-badge font-medium text-amber-200 ${orderRadiusControl}`}
+              title="Order is missing products or address"
+            >
+              Needs setup
+            </span>
+          ) : (
+            <OrderStatusBadge status={text(order.status, "pending")} compact className="shrink-0" />
+          )}
+          {fulfillmentRaw !== "pending" ? (
+            <span
+              className={`inline-flex h-6 shrink-0 items-center whitespace-nowrap border border-blue-500/30 bg-blue-500/10 px-2 type-badge font-medium text-blue-200 ${orderRadiusControl}`}
+              title={`Warehouse fulfillment: ${fulfillmentLabel}`}
+            >
+              Warehouse: {fulfillmentLabel}
+            </span>
+          ) : null}
         </div>
 
         <div className="flex items-start gap-2.5">

@@ -4,6 +4,8 @@ import { normalizeCmsRole } from "@/lib/auth/permissions";
 import { supabaseFetch } from "@/lib/fetch-with-timeout";
 import { recordAuthActivityEvent } from "@/services/security-observability";
 
+import { resolveSupabaseCookieOptions } from "@/lib/supabase/cookie-config";
+
 const SYSTEM_LOGOUT_REASONS = new Set(["session_idle", "session_revoked", "disabled"]);
 
 function loginRedirectUrl(request: NextRequest, params?: Record<string, string>) {
@@ -22,10 +24,13 @@ function resolvePublishableKey() {
 }
 
 function createLogoutClient(request: NextRequest, response: NextResponse) {
+  const defaultCookieOptions = resolveSupabaseCookieOptions();
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     resolvePublishableKey(),
     {
+      cookieOptions: defaultCookieOptions,
       global: {
         fetch: supabaseFetch()
       },
@@ -35,7 +40,9 @@ function createLogoutClient(request: NextRequest, response: NextResponse) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, { ...defaultCookieOptions, ...options })
+          );
         }
       }
     }
@@ -58,7 +65,18 @@ async function performLogout(request: NextRequest, response: NextResponse) {
     request
   ).catch((error) => console.error("[mithron-auth] Failed to log auth.logout.", error));
 
-  await supabase.auth.signOut();
+  await supabase.auth.signOut().catch(() => {});
+
+  const cookieOpts = resolveSupabaseCookieOptions();
+  for (const cookie of request.cookies.getAll()) {
+    if (/^sb-[^-]+-auth-token(?:\.\d+)?$/i.test(cookie.name)) {
+      response.cookies.set(cookie.name, "", {
+        ...cookieOpts,
+        maxAge: 0,
+        expires: new Date(0)
+      });
+    }
+  }
 }
 
 export async function POST(request: NextRequest) {

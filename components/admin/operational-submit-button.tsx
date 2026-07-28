@@ -113,7 +113,29 @@ export function OperationalSubmitButton({
           typedTextLabel={typedTextLabel}
           onClose={() => setConfirmOpen(false)}
           onConfirm={() => {
-            queuedSubmit?.closest("form")?.requestSubmit(queuedSubmit);
+            const button = queuedSubmit;
+            const form = button?.closest("form");
+            if (!form || !button) {
+              setConfirmOpen(false);
+              return;
+            }
+            // Ensure named submit values survive confirm → requestSubmit
+            // (some browsers/React paths can drop submitter name/value).
+            if (name) {
+              let hidden = form.querySelector(
+                `input[data-operational-submit-flag="${CSS.escape(name)}"]`
+              ) as HTMLInputElement | null;
+              if (!hidden) {
+                hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = name;
+                hidden.setAttribute("data-operational-submit-flag", name);
+                form.appendChild(hidden);
+              }
+              hidden.value = value ?? "1";
+            }
+            setConfirmOpen(false);
+            form.requestSubmit(button);
           }}
         />
       ) : null}

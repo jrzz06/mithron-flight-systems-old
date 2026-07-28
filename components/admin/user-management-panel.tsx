@@ -49,10 +49,14 @@ type UserManagementPanelProps = {
 type FilterKey = "all" | "admin" | "warehouse" | "supplier" | "disabled";
 type PanelMode = "menu" | "edit" | "role" | "disable" | "reactivate" | "remove";
 
-const roleOptions = [
+const staffRoleOptions = [
   { value: "admin", label: "Admin" },
   { value: "warehouse", label: "Warehouse" },
-  { value: "supplier", label: "Supplier" },
+  { value: "supplier", label: "Supplier" }
+] as const;
+
+const roleOptions = [
+  ...staffRoleOptions,
   { value: "user", label: "User" }
 ] as const;
 
@@ -124,6 +128,20 @@ function HiddenUserFields({ user }: { user: ManagedUser }) {
       <input type="hidden" name="email" value={user.email} />
       <input type="hidden" name="display_name" value={user.name} />
     </>
+  );
+}
+
+function StaffRoleSelect({ value }: { value: ManagedUser["role"] }) {
+  return (
+    <select
+      name="role_key"
+      defaultValue={value}
+      className="h-10 rounded-lg border border-slate-700 bg-[#0c1118] px-3 text-sm text-slate-100 outline-none focus:border-emerald-500/70"
+    >
+      {staffRoleOptions.map((role) => (
+        <option key={role.value} value={role.value}>{role.label}</option>
+      ))}
+    </select>
   );
 }
 
@@ -242,6 +260,14 @@ export function UserManagementPanel({
   }
 
   useEffect(() => {
+    if (!activeUser) return;
+    const exists = liveUsers.some((u) => u.id === activeUser.id);
+    if (!exists) {
+      closePanel();
+    }
+  }, [activeUser, liveUsers]);
+
+  useEffect(() => {
     if (!mode) return;
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape") closePanel();
@@ -294,12 +320,14 @@ export function UserManagementPanel({
               <div className="absolute right-0 z-40 mt-2 w-[min(92vw,420px)] rounded-xl border border-slate-800 bg-[#0b1017] p-3 shadow-2xl shadow-black/30">
                 <form action={timedInviteUserAction} data-user-invite-form className="grid gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-100">Invite User</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">Send an invite with a predefined role.</p>
+                    <p className="text-sm font-semibold text-slate-100">Invite staff</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Admin, warehouse, or supplier only. Customers register via Create Account.
+                    </p>
                   </div>
                   <input name="email" type="email" required placeholder="name@company.com" className="h-10 rounded-lg border border-slate-700 bg-[#10151d] px-3 text-sm text-slate-100 outline-none placeholder:text-slate-600" />
                   <input name="display_name" placeholder="Display name" className="h-10 rounded-lg border border-slate-700 bg-[#10151d] px-3 text-sm text-slate-100 outline-none placeholder:text-slate-600" />
-                  <RoleSelect value="warehouse" />
+                  <StaffRoleSelect value="warehouse" />
                   <OperationalSubmitButton pendingLabel="Sending" className={compactActionClass()}>Send invite</OperationalSubmitButton>
                 </form>
               </div>
@@ -579,7 +607,14 @@ export function UserManagementPanel({
             ) : null}
 
             {mode === "remove" ? (
-              <form action={timedRemoveUserAction} data-user-remove-form className="mt-5 grid gap-3">
+              <form
+                action={async (formData) => {
+                  closePanel();
+                  await timedRemoveUserAction(formData);
+                }}
+                data-user-remove-form
+                className="mt-5 grid gap-3"
+              >
                 <HiddenUserFields user={activeUser} />
                 <p className="rounded-lg border border-rose-500/25 bg-rose-950/25 p-3 text-sm leading-6 text-rose-100">
                   Remove {activeUser.name || activeUser.email} permanently. This will revoke their access to the platform.

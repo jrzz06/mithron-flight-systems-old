@@ -20,7 +20,7 @@ describe("unified auth login form", () => {
   });
 
   it("routes email sign in through the server login API", () => {
-    expect(loginForm).toContain('fetch("/api/auth/login"');
+    expect(loginForm).toContain('fetchWithTimeout("/api/auth/login"');
     expect(loginForm).not.toContain("signInWithPassword");
     expect(loginForm).not.toContain('/api/auth/provision"');
   });
@@ -29,14 +29,14 @@ describe("unified auth login form", () => {
     expect(loginForm).toContain("Full name");
     expect(loginForm).toContain("Confirm password");
     expect(loginForm).toContain("Phone number");
-    expect(loginForm).toContain('fetch("/api/auth/signup"');
+    expect(loginForm).toContain('fetchWithTimeout("/api/auth/signup"');
   });
 
   it("shows verification pending actions", () => {
     expect(loginForm).toContain("auth-verification-pending");
     expect(loginForm).toContain("auth-resend-verification");
     expect(loginForm).toContain("auth-change-email");
-    expect(loginForm).toContain('fetch("/api/auth/change-email"');
+    expect(loginForm).toContain('fetchWithTimeout("/api/auth/change-email"');
     expect(loginForm).toContain("verification_pending");
   });
 
@@ -50,9 +50,14 @@ describe("unified auth login form", () => {
     expect(loginForm).toContain('data-testid="auth-send-otp"');
     expect(loginForm).toContain('data-testid="auth-verify-otp"');
     expect(loginForm).toContain('data-testid="auth-signin-otp-mode"');
-    expect(loginForm).toContain('fetch("/api/auth/send-otp"');
-    expect(loginForm).toContain('fetch("/api/auth/verify-otp"');
+    expect(loginForm).toContain('fetchWithTimeout("/api/auth/send-otp"');
+    expect(loginForm).toContain('fetchWithTimeout("/api/auth/verify-otp"');
     expect(loginForm).toContain("Sign in with email code");
+  });
+
+  it("applies resend cooldown on passwordless OTP resend", () => {
+    expect(loginForm).toContain("resendCooldownSeconds > 0");
+    expect(loginForm).toContain("Resend code (${resendCooldownSeconds}s)");
   });
 });
 

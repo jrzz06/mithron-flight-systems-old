@@ -33,10 +33,14 @@ import {
 } from "@/services/admin-settings-policy";
 import type { CreateUserFormState } from "@/components/admin/create-user-form";
 
-const manageableUserRoles = [
+const staffAssignableRoles = [
   "admin",
   "warehouse",
-  "supplier",
+  "supplier"
+] as const satisfies readonly CmsRole[];
+
+const manageableUserRoles = [
+  ...staffAssignableRoles,
   "user"
 ] as const satisfies readonly CmsRole[];
 
@@ -159,6 +163,16 @@ async function verifyManagedUserCredentials(email: string, password: string) {
   if (error) {
     throw new Error(`User account was created but login verification failed: ${error.message}`);
   }
+}
+
+function assertStaffAssignableRole(value: string | null | undefined) {
+  const role = normalizeCmsRole(value);
+  if (!role || !(staffAssignableRoles as readonly string[]).includes(role)) {
+    throw new Error(
+      `Role ${value ?? "empty"} cannot be created or invited through admin. Customers register via Create Account on the storefront.`
+    );
+  }
+  return role;
 }
 
 function assertManageableUserRole(value: string | null | undefined) {
@@ -676,7 +690,7 @@ export async function createManagedUserAction(formData: FormData): Promise<Manag
   const policy = await getAdminSettingsPolicy();
   assertAdminEmailDomainAllowed(email, policy);
   const displayName = readOptionalString(formData, "display_name");
-  const role = assertManageableUserRole(readRequiredString(formData, "role_key", "User"));
+  const role = assertStaffAssignableRole(readRequiredString(formData, "role_key", "User"));
   const assignedWarehouseCode = readOptionalString(formData, "assigned_warehouse_code");
   if (role === "warehouse" && !assignedWarehouseCode) {
     throw new Error("Warehouse users must be assigned to a warehouse site.");
@@ -860,7 +874,7 @@ export async function inviteManagedUserAction(formData: FormData) {
   const { actorId, actorRole } = await settingsActor();
   const email = assertEmail(readRequiredString(formData, "email", "Invite"));
   const displayName = readOptionalString(formData, "display_name");
-  const role = assertManageableUserRole(readRequiredString(formData, "role_key", "Invite"));
+  const role = assertStaffAssignableRole(readRequiredString(formData, "role_key", "Invite"));
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const supabase = serviceClient();
   await ensureCanonicalRoleRecord(role);

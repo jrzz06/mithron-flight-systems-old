@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { MediaAsset, Product } from "@/config/types";
+import { productPathFromSlug } from "@/lib/catalog/product-url";
+import { toAbsoluteUrl } from "@/lib/site-url";
 
 function resolveMetadataImage(asset: MediaAsset | undefined | null) {
   if (!asset?.src) return undefined;
@@ -19,7 +21,8 @@ export function buildProductMetadata(product: Product | null): Metadata {
     };
   }
 
-  const canonical = product.productUrl ?? `/product/${product.slug}`;
+  const canonicalPath = productPathFromSlug(product.slug);
+  const canonical = toAbsoluteUrl(canonicalPath);
   const title = product.seoTitle ?? `${product.name} - Mithron`;
   const description = product.seoDescription ?? product.tagline;
   const ogTitle = product.ogTitle ?? title;

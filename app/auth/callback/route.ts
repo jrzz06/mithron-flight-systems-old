@@ -35,12 +35,27 @@ async function failAuthProvisioning(
   );
 }
 
+function isRecoveryNextPath(rawNext: string | null) {
+  if (!rawNext?.trim()) return false;
+  try {
+    const parsed = new URL(rawNext, "http://mithron.local");
+    const pathname = parsed.pathname.length > 1 && parsed.pathname.endsWith("/")
+      ? parsed.pathname.slice(0, -1)
+      : parsed.pathname;
+    return pathname === "/reset-password";
+  } catch {
+    return rawNext.startsWith("/reset-password");
+  }
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const oauthError = requestUrl.searchParams.get("error");
   const oauthErrorDescription = requestUrl.searchParams.get("error_description");
   const code = requestUrl.searchParams.get("code");
-  const next = unwrapAuthNextPath(requestUrl.searchParams.get("next"), GUEST_AUTH_HOME);
+  const rawNext = requestUrl.searchParams.get("next");
+  const recoveryFlow = isRecoveryNextPath(rawNext) || requestUrl.searchParams.get("type") === "recovery";
+  const next = unwrapAuthNextPath(rawNext, GUEST_AUTH_HOME);
   const { supabase, applySessionCookies } = await createAuthRouteClient();
 
   if (oauthError) {
@@ -64,6 +79,12 @@ export async function GET(request: NextRequest) {
         NextResponse.redirect(failureUrl)
       );
     }
+  }
+
+  if (recoveryFlow) {
+    return applySessionCookies(
+      NextResponse.redirect(new URL("/reset-password", request.nextUrl.origin))
+    );
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();

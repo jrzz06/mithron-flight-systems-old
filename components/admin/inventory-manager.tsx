@@ -579,7 +579,7 @@ export function InventoryManager({
   }
 
   return (
-    <section data-inventory-system className="mithron-elevated-card grid gap-3 rounded-xl border border-slate-800 bg-[#0f141b] p-3 text-slate-100 md:p-4">
+    <section data-inventory-system className="mithron-elevated-card grid gap-3 rounded-xl border border-white/10 bg-[#0f141b] p-3 text-slate-100 md:p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="type-meta font-semibold uppercase tracking-[0.14em] text-slate-500">Stock control</p>
@@ -657,19 +657,19 @@ export function InventoryManager({
       ) : null}
 
       <div data-inventory-source-report className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="mithron-elevated-card rounded-lg border border-slate-800 bg-[#10151d] p-3">
+        <div className="mithron-elevated-card rounded-lg border-[0.5px] border-white/10 bg-[#10151d] p-3">
           <p className="text-xs text-slate-500">Total inventory items</p>
           <p className="mt-1 text-lg font-semibold text-slate-100">{formatNumber(inventoryMetrics?.totalInventoryItems ?? totalProductCount ?? 0)}</p>
         </div>
-        <div className="mithron-elevated-card rounded-lg border border-slate-800 bg-[#10151d] p-3">
+        <div className="mithron-elevated-card rounded-lg border-[0.5px] border-white/10 bg-[#10151d] p-3">
           <p className="text-xs text-slate-500">In stock</p>
           <p className="mt-1 text-lg font-semibold text-emerald-200">{formatNumber(inventoryMetrics?.inStock ?? 0)}</p>
         </div>
-        <div className="mithron-elevated-card rounded-lg border border-slate-800 bg-[#10151d] p-3">
+        <div className="mithron-elevated-card rounded-lg border-[0.5px] border-white/10 bg-[#10151d] p-3">
           <p className="text-xs text-slate-500">Low stock</p>
           <p className="mt-1 text-lg font-semibold text-amber-200">{formatNumber(inventoryMetrics?.lowStock ?? 0)}</p>
         </div>
-        <div className="mithron-elevated-card rounded-lg border border-slate-800 bg-[#10151d] p-3">
+        <div className="mithron-elevated-card rounded-lg border-[0.5px] border-white/10 bg-[#10151d] p-3">
           <p className="text-xs text-slate-500">Out of stock</p>
           <p className="mt-1 text-lg font-semibold text-rose-200">{formatNumber(inventoryMetrics?.outOfStock ?? 0)}</p>
         </div>
@@ -692,7 +692,7 @@ export function InventoryManager({
         ))}
       </div>
 
-      <div data-inventory-sticky-toolbar className="sticky top-0 z-20 grid gap-2 rounded-xl border border-slate-800 bg-[#10151d]/95 p-2 backdrop-blur-sm md:grid-cols-[minmax(220px,1fr)_160px_160px_auto]">
+      <div data-inventory-sticky-toolbar className="sticky top-0 z-20 grid gap-2 rounded-xl border border-white/10 bg-[#10151d]/95 p-2 backdrop-blur-sm md:grid-cols-[minmax(220px,1fr)_160px_160px_auto]">
         <label className="grid gap-1 text-xs font-medium text-slate-500">
           <span className="sr-only">Search</span>
           <span className="flex items-center gap-1 text-slate-400">

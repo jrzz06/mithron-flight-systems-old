@@ -1,6 +1,6 @@
 import { buildAuthAuditClientToken } from "@/lib/auth-audit-client";
 import { ForgotPasswordForm } from "./forgot-password-form";
-import styles from "../auth/auth-page.module.css";
+import styles from "../auth-page.module.css";
 
 export default async function ForgotPasswordPage() {
   const auditToken = buildAuthAuditClientToken();

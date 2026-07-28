@@ -165,6 +165,73 @@
   color: #000000;
 }
 
+.reviewsHeaderRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.reviewsCtaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reviewsCtaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--discovery-border);
+  background: #111;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--discovery-motion), border-color var(--discovery-motion);
+}
+
+.reviewsCtaButton:hover {
+  background: #222;
+}
+
+.reviewsCtaButtonSecondary {
+  background: transparent;
+  color: #111;
+}
+
+.reviewsCtaButtonSecondary:hover {
+  background: var(--discovery-hover);
+}
+
+.reviewsCtaHint {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: #5f6368;
+}
+
+.reviewComposer {
+  --account-ink: var(--ds-ink, #111);
+  --account-ink-muted: var(--ds-ink-2, #5f6368);
+  --account-surface: #fff;
+  --account-surface-muted: #f8f9fa;
+  --account-border: var(--discovery-border);
+  --account-border-strong: #dadce0;
+  --account-accent: var(--ds-accent, #0b6e4f);
+  --account-danger: #df1f2d;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--discovery-border);
+  border-radius: 16px;
+  background: var(--discovery-hover);
+}
+
 .reviewsSummaryGrid {
   display: grid;
   gap: 1.5rem;

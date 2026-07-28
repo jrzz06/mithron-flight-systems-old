@@ -29,13 +29,20 @@ export function parseProductPrice(value: FormDataEntryValue | null) {
 
 export function parseSupplierProductForm(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
-  const rawCategory = String(formData.get("category") ?? "Agri Drones").trim() || "Agri Drones";
+  const rawCategory =
+    String(formData.get("category") ?? "").trim()
+    || String(formData.get("category_route_key") ?? "").trim()
+    || "Agri Drones";
   const category = resolveCanonicalProductCategory(rawCategory);
   const slugInput = String(formData.get("slug") ?? "").trim();
   const price = parseProductPrice(formData.get("price"));
 
   if (!name) {
     throw new Error("Product name is required.");
+  }
+
+  if (!category) {
+    throw new Error("Select a product category.");
   }
 
   if (!Number.isFinite(price) || price <= 0) {

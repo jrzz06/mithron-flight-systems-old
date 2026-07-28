@@ -507,7 +507,8 @@ describe("home landing composite contract", () => {
     expect(card).toContain("line-clamp-3");
     expect(card).toContain("h-8 w-8");
     expect(card).toContain("sm:h-10 sm:w-10");
-    expect(card).toContain("border-t border-gray-100/60");
+    expect(card).toContain("mt-4 pt-1");
+    expect(card).not.toContain("border-t border-gray-100/60");
     expect(card).toContain("text-xs");
     expect(card).toContain("sm:line-clamp-4");
     expect(card).toContain("md:text-base");

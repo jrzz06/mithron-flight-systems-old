@@ -32,3 +32,16 @@ export function shouldExposeSignInOtpSendError(error: unknown) {
 export function mapOtpSendErrorForClient(error: unknown) {
   return mapAuthErrorForClient(error, "Unable to send verification code. Please try again later.");
 }
+
+export function isOtpRateLimitError(error: unknown) {
+  const message = normalizeOtpSendMessage(error).toLowerCase();
+  if (!message) return false;
+  return (
+    message.includes("rate limit")
+    || message.includes("rate_limit")
+    || message.includes("too many")
+    || message.includes("over_email_send_rate_limit")
+    || message.includes("after 6 seconds")
+    || message.includes("please wait")
+  );
+}

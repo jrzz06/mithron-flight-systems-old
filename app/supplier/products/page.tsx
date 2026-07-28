@@ -9,6 +9,7 @@ import { getCurrentAuthContext } from "@/services/auth";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { listSupplierProducts } from "@/services/supplier-actions";
 import { deleteSupplierProductFormAction, submitSupplierProductFormAction } from "./actions";
+import type { SupplierProduct } from "@/lib/supplier/types";
 
 function canSubmit(status: string) {
   return status === "draft" || status === "rejected";
@@ -30,8 +31,8 @@ export default async function SupplierProductsPage() {
     policyPromise,
     context.userId ? listSupplierProducts(context.userId) : Promise.resolve([])
   ]);
-  const draftCount = products.filter((product) => {
-    const status = String(product.workflow_status ?? "draft");
+  const draftCount = products.filter((product: SupplierProduct) => {
+    const status = product.workflowStatus ?? "draft";
     return status === "draft" || status === "rejected";
   }).length;
 
@@ -66,16 +67,16 @@ export default async function SupplierProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {products.length ? products.map((product) => {
-              const slug = String(product.slug);
-              const status = String(product.workflow_status ?? "draft");
+            {products.length ? products.map((product: SupplierProduct) => {
+              const slug = product.slug;
+              const status = product.workflowStatus ?? "draft";
               const hint = supplierStatusHint(status);
-              const updated = typeof product.updated_at === "string" ? relativeTimeLabel(product.updated_at) : "—";
+              const updated = product.updatedAt ? relativeTimeLabel(product.updatedAt) : "—";
 
               return (
                 <tr key={slug} className="border-t border-[var(--platform-border)]">
                   <td className="px-4 py-3.5 align-top">
-                    <div className="truncate text-sm font-semibold tracking-[-0.01em] text-[var(--platform-text-primary)]">{String(product.name)}</div>
+                    <div className="truncate text-sm font-semibold tracking-[-0.01em] text-[var(--platform-text-primary)]">{product.name}</div>
                     {hint ? <p className="mt-1.5 line-clamp-2 text-xs leading-4 text-[var(--platform-text-muted)]">{hint}</p> : null}
                   </td>
                   <td className="px-4 py-3.5 align-top">
@@ -111,7 +112,7 @@ export default async function SupplierProductsPage() {
                           <input type="hidden" name="slug" value={slug} />
                           <OperationalSubmitButton
                             pendingLabel="Deleting"
-                            confirmMessage={`Delete draft "${String(product.name)}"?`}
+                            confirmMessage={`Delete draft "${product.name}"?`}
                             confirmDescription="This cannot be undone. Type DELETE to confirm."
                             requireTypedText="DELETE"
                             typedTextLabel="Type DELETE to permanently remove this draft"

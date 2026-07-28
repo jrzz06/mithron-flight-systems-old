@@ -56,6 +56,11 @@ function isRemoteSrc(src: string) {
   return src.startsWith("http://") || src.startsWith("https://");
 }
 
+/** Same-origin CDN proxy paths must use native delivery like absolute remotes. */
+function isCdnOrRemoteSrc(src: string) {
+  return isRemoteSrc(src) || src.startsWith("/cdn-media/");
+}
+
 function resolveFormatVariants(
   responsive: ResponsiveMediaAsset | undefined,
   format: "avif" | "webp" | "png",
@@ -94,7 +99,7 @@ export function buildResponsiveImageModel(input: ResponsiveImageModelInput): Res
   const webpSrcSet = useSourceImage ? "" : createSrcSet(webpVariants);
   const pngSrcSet = useSourceImage || webpOnly ? "" : createSrcSet(getFormatVariants(responsive, "png"));
   const hasResponsiveVariants = !useSourceImage && Boolean(avifSrcSet || webpSrcSet || pngSrcSet);
-  const useNativeRemoteImage = isRemoteSrc(resolvedSrc) && !hasResponsiveVariants && !input.responsive;
+  const useNativeRemoteImage = isCdnOrRemoteSrc(resolvedSrc) && !hasResponsiveVariants && !input.responsive;
   const optimizedSrc = useSourceImage ? resolvedSrc : (bestVariant?.src ?? resolvedSrc);
   const primarySrc = useSourceImage ? resolvedSrc : optimizedSrc;
   const resolvedSizes = input.sizes ?? (fill ? "100vw" : undefined);

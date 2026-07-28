@@ -1,7 +1,5 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import { PlatformActionBar, PlatformActionGroup } from "@/components/platform/action-bar";
 import { RichTextEditorField } from "@/components/editor/RichTextEditor/rich-text-editor-field";
@@ -10,26 +8,10 @@ import { SupplierFormStatusOverlay } from "@/components/supplier/supplier-form-s
 import { SupplierInlineResultDialog } from "@/components/supplier/supplier-inline-result-dialog";
 import { ProductCategoryField } from "@/components/products/product-category-field";
 import { SupplierProductImageField } from "@/components/supplier/supplier-product-image-field";
-import { useSyncGlobalBusy } from "@/components/ui/global-busy";
-import { isSupplierProductFormDebugEnabled } from "@/lib/supplier/product-form-debug";
+import { SupplierProductSpecFields } from "@/components/supplier/supplier-product-spec-fields";
+import { useSupplierProductForm } from "@/hooks/use-supplier-product-form";
 import type { ProductCategoryOption } from "@/lib/product-category-options";
-import { wrapServerAction } from "@/hooks/use-async-action";
-
-export type SupplierProductFormState = {
-  status: "idle" | "success" | "error";
-  message: string;
-  debug?: Array<{ label: string; value: string }>;
-};
-
-const initialState: SupplierProductFormState = { status: "idle", message: "" };
-
-function fieldLabelFromInvalidTarget(target: EventTarget | null) {
-  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
-    return "Form field";
-  }
-  const labelledBy = target.labels?.[0]?.textContent?.trim();
-  return labelledBy || target.name || target.type || "Form field";
-}
+import type { SupplierProductFormState } from "@/lib/supplier/types";
 
 export function SupplierNewProductForm({
   action,
@@ -38,53 +20,25 @@ export function SupplierNewProductForm({
   action: (prevState: SupplierProductFormState, formData: FormData) => Promise<SupplierProductFormState>;
   categoryOptions?: ProductCategoryOption[];
 }) {
-  const searchParams = useSearchParams();
-  const debugEnabled = isSupplierProductFormDebugEnabled(searchParams);
-  const feedbackRef = useRef<HTMLParagraphElement>(null);
-  const timedAction = useMemo(() => wrapServerAction(action, { label: "Save product" }), [action]);
-  const [state, formAction, pending] = useActionState(timedAction, initialState);
-  const [pendingLabel, setPendingLabel] = useState("Saving draft");
-  const [dismissedErrorMessage, setDismissedErrorMessage] = useState("");
-  const [clientValidationError, setClientValidationError] = useState("");
-  const [lastSubmittedFields, setLastSubmittedFields] = useState<Record<string, string>>({});
-  const errorDialogOpen = state.status === "error" && Boolean(state.message) && dismissedErrorMessage !== state.message;
-  useSyncGlobalBusy("supplier-new-product", pending);
-
-  function handleInvalid(event: React.FormEvent<HTMLFormElement>) {
-    const target = event.target;
-    const label = fieldLabelFromInvalidTarget(target);
-    const message =
-      target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
-        ? target.validationMessage
-        : "Please complete all required fields.";
-    const nextError = `${label}: ${message}`;
-    setClientValidationError(nextError);
-    if (debugEnabled) {
-      console.info("[supplier-product-form] client validation blocked submit", { label, message });
-    }
-  }
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    setClientValidationError("");
-    const formData = new FormData(event.currentTarget);
-    const entries = Object.fromEntries(formData.entries());
-    setLastSubmittedFields(Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, String(value)])));
-    if (debugEnabled) {
-      console.info("[supplier-product-form] client submit", entries);
-    }
-  }
-
-  const debugEntries = [
-    ...(debugEnabled
-      ? [
-          { label: "Debug mode", value: "enabled (?product_debug=1 or SUPPLIER_PRODUCT_FORM_DEBUG=1)" },
-          { label: "Last client FormData", value: JSON.stringify(lastSubmittedFields, null, 2) || "(none yet)" },
-          { label: "Action pending", value: String(pending) },
-          { label: "Action state", value: JSON.stringify({ status: state.status, message: state.message }, null, 2) }
-        ]
-      : []),
-    ...(state.debug ?? [])
-  ];
+  const {
+    state,
+    formAction,
+    pending,
+    pendingLabel,
+    setPendingLabel,
+    feedbackRef,
+    clientValidationError,
+    resultDialogOpen,
+    dismissDialog,
+    debugEnabled,
+    debugEntries,
+    handleInvalid,
+    handleSubmit
+  } = useSupplierProductForm({
+    action,
+    actionLabel: "Save product",
+    syncKey: "supplier-new-product"
+  });
 
   return (
     <>
@@ -135,6 +89,8 @@ export function SupplierNewProductForm({
           placeholder="Describe capabilities, payload, warranty, and documentation..."
         />
 
+        <SupplierProductSpecFields />
+
         <SupplierProductImageField />
 
         {clientValidationError ? (
@@ -183,11 +139,11 @@ export function SupplierNewProductForm({
       </form>
 
       <SupplierInlineResultDialog
-        open={errorDialogOpen}
+        open={resultDialogOpen}
         status="error"
         title="Product not saved"
         message={state.message || clientValidationError || "Could not save product draft. Check the form and try again."}
-        onPrimary={() => setDismissedErrorMessage(state.message)}
+        onPrimary={dismissDialog}
       />
     </>
   );

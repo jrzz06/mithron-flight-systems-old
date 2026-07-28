@@ -98,45 +98,39 @@ export function ProductDetailEditDialog({
         }
         notify.error(result.message || FEEDBACK_MESSAGES.failedToSaveChanges, {
           source: "admin",
-          id: "product:quick-edit:error"
+          id: "product:quick-edit"
         });
       } catch (error) {
-        notify.error(
-          error instanceof Error ? error.message : FEEDBACK_MESSAGES.failedToSaveChanges,
-          { source: "admin", id: "product:quick-edit:error" }
-        );
+        notify.error(error instanceof Error ? error.message : FEEDBACK_MESSAGES.failedToSaveChanges, {
+          source: "admin",
+          id: "product:quick-edit"
+        });
       }
     });
   };
 
   return (
-    <div data-product-detail-modal className="fixed inset-0 z-50 grid place-items-center bg-black/55 p-4 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <form
-        id="update-product"
         onSubmit={handleSubmit}
-        data-product-quick-edit
-        className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[var(--platform-radius-lg)] bg-[var(--platform-surface)] shadow-none"
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-[var(--platform-border)] bg-[var(--platform-surface)] text-[var(--platform-text-primary)] shadow-2xl"
       >
-        <input type="hidden" name="product_slug" value={product.id} />
-        <input type="hidden" name="change_summary" value={`Edit product details ${product.id}`} />
-        {editorProduct?.updatedAt ? (
-          <input type="hidden" name="expected_updated_at" value={editorProduct.updatedAt} />
-        ) : null}
-
-        <div className="flex items-start justify-between gap-4 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--platform-border)] px-5 py-4">
           <div>
-            <p className="type-meta font-semibold uppercase tracking-[0.12em] text-[var(--platform-text-muted)]">Product info</p>
-            <h2 className="mt-1 text-lg font-medium text-[var(--platform-text-primary)]">Edit product</h2>
+            <h3 className="text-lg font-semibold tracking-[-0.01em]">Quick edit product</h3>
+            <p className="text-xs text-[var(--platform-text-muted)]">ID: {product.id}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            disabled={isSaving}
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--platform-text-secondary)] transition hover:bg-[var(--platform-accent-soft)] hover:text-[var(--platform-text-primary)] disabled:opacity-60"
+            className="rounded-lg p-1.5 text-[var(--platform-text-muted)] hover:bg-[var(--platform-surface-muted)] hover:text-[var(--platform-text-primary)]"
           >
-            Cancel
+            ✕
           </button>
         </div>
+
+        <input type="hidden" name="slug" value={product.id} />
+        {editorProduct?.updatedAt ? <input type="hidden" name="expected_updated_at" value={editorProduct.updatedAt} /> : null}
 
         {isLoading ? (
           <div className="grid gap-3 px-5 py-8" aria-busy="true">
@@ -163,15 +157,6 @@ export function ProductDetailEditDialog({
                   <input
                     name="name"
                     defaultValue={editorProduct.title}
-                    className="h-10 w-full rounded-[10px] border-0 bg-[var(--platform-surface)] px-3 text-sm text-[var(--platform-text-primary)] outline-none focus:bg-[var(--platform-accent-soft)] focus:ring-2 focus:ring-[var(--platform-focus-ring)]"
-                  />
-                </label>
-                <label className="grid gap-1.5 text-sm sm:col-span-2">
-                  <ProductFieldLabel>Tagline</ProductFieldLabel>
-                  <input
-                    name="tagline"
-                    defaultValue={editorProduct.tagline ?? ""}
-                    placeholder="Short subtitle shown under the product name"
                     className="h-10 w-full rounded-[10px] border-0 bg-[var(--platform-surface)] px-3 text-sm text-[var(--platform-text-primary)] outline-none focus:bg-[var(--platform-accent-soft)] focus:ring-2 focus:ring-[var(--platform-focus-ring)]"
                   />
                 </label>

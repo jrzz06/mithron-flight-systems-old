@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const products = await getPublishedProductSitemapEntries();
   const productEntries: MetadataRoute.Sitemap = products.map((product) => ({
-    url: toAbsoluteUrl(product.productUrl ?? `/product/${product.slug}`),
+    url: toAbsoluteUrl(`/product/${product.slug}`),
     lastModified: product.updatedAt ? new Date(product.updatedAt) : now,
     changeFrequency: "weekly",
     priority: 0.6

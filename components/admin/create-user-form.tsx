@@ -18,11 +18,10 @@ export type CreateUserFormState = {
 
 const initialState: CreateUserFormState = { status: "idle", message: "" };
 
-const roleOptions = [
+const staffRoleOptions = [
   { value: "admin", label: "Admin" },
   { value: "warehouse", label: "Warehouse" },
-  { value: "supplier", label: "Supplier" },
-  { value: "user", label: "User" }
+  { value: "supplier", label: "Supplier" }
 ] as const;
 
 function compactActionClass(tone: "default" | "success" = "default") {
@@ -52,7 +51,7 @@ export function CreateUserForm({
     [action]
   );
   const [state, formAction] = useActionState(timedAction, initialState);
-  const [role, setRole] = useState<typeof roleOptions[number]["value"]>("warehouse");
+  const [role, setRole] = useState<typeof staffRoleOptions[number]["value"]>("warehouse");
 
   useEffect(() => {
     if (state.status === "idle") return;
@@ -71,8 +70,10 @@ export function CreateUserForm({
   return (
     <form action={formAction} data-user-create-form className="grid gap-3">
       <div>
-        <p className="text-sm font-semibold text-slate-100">Create User</p>
-        <p className="mt-1 text-xs leading-5 text-slate-500">Add a user directly with one clear role.</p>
+        <p className="text-sm font-semibold text-slate-100">Create staff user</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          Admin, warehouse, and supplier only. Customers register via Create Account on the storefront.
+        </p>
       </div>
       <input
         name="email"
@@ -94,7 +95,7 @@ export function CreateUserForm({
         onChange={(event) => setRole(event.target.value as typeof role)}
         className="h-10 rounded-lg border border-slate-700 bg-[#0c1118] px-3 text-sm text-slate-100 outline-none focus:border-emerald-500/70"
       >
-        {roleOptions.map((option) => (
+        {staffRoleOptions.map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>

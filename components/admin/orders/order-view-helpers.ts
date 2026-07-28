@@ -318,12 +318,33 @@ export function orderNeedsAction(order: AdminRow) {
   return matchesAdminOrderQueue(order, "pending_verification");
 }
 
-export function orderItemsForOrder(orderId: string, orderItems: AdminRow[]) {
+export function indexOrderItemsByOrderId(orderItems: AdminRow[]) {
+  const map = new Map<string, AdminRow[]>();
+  for (const item of orderItems) {
+    const orderId = text(item.order_id);
+    if (!orderId) continue;
+    const list = map.get(orderId);
+    if (list) list.push(item);
+    else map.set(orderId, [item]);
+  }
+  return map;
+}
+
+export function orderItemsForOrder(
+  orderId: string,
+  orderItems: AdminRow[],
+  itemsByOrderId?: Map<string, AdminRow[]>
+) {
+  if (itemsByOrderId) return itemsByOrderId.get(orderId) ?? [];
   return orderItems.filter((item) => text(item.order_id) === orderId);
 }
 
-export function productSummaryLine(orderId: string, orderItems: AdminRow[]) {
-  const items = orderItemsForOrder(orderId, orderItems);
+export function productSummaryLine(
+  orderId: string,
+  orderItems: AdminRow[],
+  itemsByOrderId?: Map<string, AdminRow[]>
+) {
+  const items = orderItemsForOrder(orderId, orderItems, itemsByOrderId);
   if (!items.length) return { primary: "—", extra: 0 };
   const primary = items[0];
   const name = text(primary.product_name, text(primary.product_slug, "Item"));
@@ -343,9 +364,10 @@ export function resolveProductImage(products: AdminRow[], productSlug: string) {
 
 export function orderSearchHaystack(
   order: AdminRow,
-  orderItems: AdminRow[]
+  orderItems: AdminRow[],
+  itemsByOrderId?: Map<string, AdminRow[]>
 ) {
-  const items = orderItemsForOrder(text(order.id), orderItems);
+  const items = orderItemsForOrder(text(order.id), orderItems, itemsByOrderId);
   const itemText = items
     .map((item) => `${text(item.product_name)} ${text(item.product_slug)} ${text(item.sku)}`)
     .join(" ");
@@ -366,14 +388,16 @@ export function filterOrders(
   orderItems: AdminRow[],
   queue: string,
   filters: OrderFilterState,
-  defaultWarehouse: string
+  defaultWarehouse: string,
+  itemsByOrderId?: Map<string, AdminRow[]>
 ) {
   const normalizedQuery = filters.query.trim().toLowerCase();
+  const indexedItems = itemsByOrderId ?? indexOrderItemsByOrderId(orderItems);
 
   return orders.filter((order) => {
     if (!orderMatchesQueue(order, queue)) return false;
 
-    if (normalizedQuery && !orderSearchHaystack(order, orderItems).includes(normalizedQuery)) {
+    if (normalizedQuery && !orderSearchHaystack(order, orderItems, indexedItems).includes(normalizedQuery)) {
       return false;
     }
 
@@ -395,7 +419,7 @@ export function filterOrders(
     }
     if (filters.product) {
       const slug = filters.product.trim().toLowerCase();
-      const items = orderItemsForOrder(text(order.id), orderItems);
+      const items = orderItemsForOrder(text(order.id), orderItems, indexedItems);
       const hasProduct = items.some(
         (item) =>
           text(item.product_slug).toLowerCase().includes(slug) ||

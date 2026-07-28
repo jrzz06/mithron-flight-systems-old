@@ -1,4 +1,4 @@
-import styles from "../auth/auth-page.module.css";
+import styles from "../auth-page.module.css";
 
 export default function ResetPasswordLoading() {
   return (

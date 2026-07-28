@@ -7,20 +7,16 @@ import {
   fetchAdminRecordsByColumn,
   updateAdminRecord
 } from "@/services/admin-actions";
+import type {
+  SupplierInventoryItem,
+  SupplierProduct,
+  SupplierWorkflowStatus
+} from "@/lib/supplier/types";
 
 type JsonRecord = Record<string, unknown>;
 type EnvSource = Record<string, string | undefined>;
 
-export type SupplierInventoryRow = {
-  id: string;
-  product_slug: string;
-  product_name: string;
-  sku: string;
-  stock_status: string;
-  quantity: number;
-  reorder_threshold: number;
-  updated_at: string;
-};
+export type { SupplierInventoryItem, SupplierProduct, SupplierWorkflowStatus };
 
 const supplierProductMutationOptions = {
   guard: () => requirePermission("products.submit")
@@ -32,7 +28,7 @@ async function ensureSupplierProfile(userId: string, env: EnvSource = process.en
   await provisionAuthenticatedUserIfMissing({ userId, preferredRole: "supplier" }, env);
 }
 
-function mapSupplierProductError(error: unknown) {
+function mapSupplierProductError(error: unknown): Error {
   const message = error instanceof Error ? error.message : String(error);
   if (message.includes("code=23505") || message.includes("duplicate key")) {
     return new Error("A product with this name already exists. Try a different product name.");
@@ -64,7 +60,27 @@ function headers(serviceRoleKey: string) {
   };
 }
 
-export async function listSupplierProducts(supplierId: string, env: EnvSource = process.env) {
+function normalizeProductRecord(row: JsonRecord): SupplierProduct {
+  return {
+    slug: String(row.slug ?? ""),
+    name: String(row.name ?? row.slug ?? ""),
+    category: String(row.category ?? ""),
+    price: Number(row.price ?? 0),
+    tagline: row.tagline ? String(row.tagline) : undefined,
+    workflowStatus: (String(row.workflow_status ?? "draft") as SupplierWorkflowStatus),
+    rejectionReason: typeof row.rejection_reason === "string" ? row.rejection_reason : null,
+    isVisible: Boolean(row.is_visible),
+    specs: (row.specs && typeof row.specs === "object" ? row.specs : null) as Record<string, string> | null,
+    description: typeof row.description === "string" ? row.description : null,
+    descriptionJson: row.description_json ? (row.description_json as SupplierProduct["descriptionJson"]) : null,
+    imageSrc: typeof row.image === "string" ? row.image : undefined,
+    hero: typeof row.hero === "string" ? row.hero : undefined,
+    galleryUrls: Array.isArray(row.gallery) ? row.gallery.map(String) : [],
+    updatedAt: typeof row.updated_at === "string" ? row.updated_at : null
+  } as SupplierProduct;
+}
+
+export async function listSupplierProducts(supplierId: string, env: EnvSource = process.env): Promise<SupplierProduct[]> {
   const { timedAction } = await import("@/lib/perf/action-timer");
   return timedAction(
     "listSupplierProducts",
@@ -75,7 +91,8 @@ export async function listSupplierProducts(supplierId: string, env: EnvSource = 
         { headers: headers(config.serviceRoleKey), cache: "no-store" }
       );
       if (!response.ok) return [];
-      return (await response.json()) as JsonRecord[];
+      const rows = (await response.json()) as JsonRecord[];
+      return rows.map(normalizeProductRecord);
     },
     { panel: "supplier", phase: "server" }
   );
@@ -265,7 +282,11 @@ export async function deleteSupplierOwnedProduct(
   return productName;
 }
 
-export async function getSupplierOwnedProduct(supplierId: string, slug: string, env: EnvSource = process.env) {
+export async function getSupplierOwnedProduct(
+  supplierId: string,
+  slug: string,
+  env: EnvSource = process.env
+): Promise<SupplierProduct | null> {
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
     `${config.url}/rest/v1/mithron_products?select=slug,name,category,price,description,description_json,image,hero,workflow_status,rejection_reason,supplier_id,is_visible,updated_at&slug=eq.${encodeURIComponent(slug)}&supplier_id=eq.${supplierId}&limit=1`,
@@ -273,7 +294,8 @@ export async function getSupplierOwnedProduct(supplierId: string, slug: string, 
   );
   if (!response.ok) return null;
   const rows = (await response.json()) as JsonRecord[];
-  return rows[0] ?? null;
+  if (!rows[0]) return null;
+  return normalizeProductRecord(rows[0]);
 }
 
 export async function listAdminUserIds(env: EnvSource = process.env) {
@@ -290,17 +312,22 @@ export async function listAdminUserIds(env: EnvSource = process.env) {
 export async function listSupplierInventory(
   supplierId: string,
   env: EnvSource = process.env,
-  existingProducts?: JsonRecord[]
-): Promise<SupplierInventoryRow[]> {
+  existingProducts?: SupplierProduct[] | JsonRecord[]
+): Promise<SupplierInventoryItem[]> {
   const { timedAction } = await import("@/lib/perf/action-timer");
   return timedAction(
     "listSupplierInventory",
     async () => {
-      const products = existingProducts ?? await listSupplierProducts(supplierId, env);
+      const products = existingProducts
+        ? (existingProducts as SupplierProduct[]).map((p) =>
+            typeof p.slug === "string" ? p : normalizeProductRecord(p as JsonRecord)
+          )
+        : await listSupplierProducts(supplierId, env);
+
       const nameBySlug = new Map(
-        products.map((product) => [String(product.slug ?? ""), String(product.name ?? product.slug ?? "")])
+        products.map((product) => [product.slug, product.name || product.slug])
       );
-      const slugs = products.map((product) => String(product.slug)).filter(Boolean);
+      const slugs = products.map((product) => product.slug).filter(Boolean);
       if (!slugs.length) return [];
       const config = assertSupabaseAdminConfig(env);
       const response = await fetchWithTimeout(
@@ -311,13 +338,13 @@ export async function listSupplierInventory(
       const rows = (await response.json()) as JsonRecord[];
       return rows.map((row) => ({
         id: String(row.id ?? ""),
-        product_slug: String(row.product_slug ?? ""),
-        product_name: nameBySlug.get(String(row.product_slug ?? "")) ?? String(row.product_slug ?? ""),
+        productSlug: String(row.product_slug ?? ""),
+        productName: nameBySlug.get(String(row.product_slug ?? "")) ?? String(row.product_slug ?? ""),
         sku: String(row.sku ?? ""),
-        stock_status: String(row.stock_status ?? "available"),
+        stockStatus: String(row.stock_status ?? "available"),
         quantity: Number(row.quantity ?? 0),
-        reorder_threshold: Number(row.reorder_threshold ?? 0),
-        updated_at: String(row.updated_at ?? "")
+        reorderThreshold: Number(row.reorder_threshold ?? 0),
+        updatedAt: String(row.updated_at ?? "")
       }));
     },
     { panel: "supplier", phase: "server" }

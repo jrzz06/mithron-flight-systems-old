@@ -357,11 +357,15 @@ function readStructuredSpecs(formData: FormData) {
   const values = formData.getAll("spec_value").map((value) => (typeof value === "string" ? value.trim() : ""));
   const rowCount = Math.max(keys.length, values.length);
   const specs: Record<string, string> = {};
+  const seenKeys = new Set<string>();
 
   for (let index = 0; index < rowCount; index += 1) {
     const key = keys[index] ?? "";
     const value = values[index] ?? "";
     if (!key || !value) continue;
+    const lowerKey = key.toLowerCase();
+    if (seenKeys.has(lowerKey)) continue;
+    seenKeys.add(lowerKey);
     specs[key] = value;
   }
 
@@ -683,7 +687,7 @@ export function buildProductDraftFromFormData(formData: FormData): ProductDraftF
   const image = readMediaObject(formData, "image", "Product", name, { priority: true });
   const hero = readOptionalMediaObject(formData, "hero", "Product", name, { priority: true }) ?? image;
   const gallery = readMediaArray(formData, "gallery", "Product", name);
-  const productUrl = readOptionalString(formData, "product_url") ?? `/product/${slug}`;
+  const productUrl = `/product/${slug}`;
   const changeSummary = readOptionalString(formData, "change_summary");
 
   return {

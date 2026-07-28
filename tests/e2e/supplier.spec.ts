@@ -77,4 +77,20 @@ test.describe("Production supplier testing", () => {
 
     await expect(page.getByText(/saved|draft/i).first()).toBeVisible({ timeout: 30_000 });
   });
+
+  test("supplier edit form exposes save and send for review", async ({ page }) => {
+    test.skip(!hasRoleCredentials("supplier"), credentialsSkipMessage("supplier"));
+
+    await loginAsRole(page, "supplier", "/supplier/products");
+    await expect(page.getByRole("heading", { name: "My products" })).toBeVisible({ timeout: 25_000 });
+
+    const editLink = page.getByRole("link", { name: "Edit" }).first();
+    if (!(await editLink.count())) {
+      test.skip(true, "No editable supplier drafts available");
+    }
+
+    await editLink.click();
+    await expect(page.locator("[data-supplier-product-edit-form]")).toBeVisible({ timeout: 25_000 });
+    await expect(page.getByRole("button", { name: "Save and send for review" })).toBeVisible();
+  });
 });

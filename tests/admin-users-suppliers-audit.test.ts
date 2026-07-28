@@ -28,7 +28,16 @@ describe("admin suppliers directory", () => {
     const supplierActions = readFileSync(join(process.cwd(), "app/admin/suppliers/actions.ts"), "utf8");
     expect(supplierActions).toContain("revalidateAfterMutation");
     expect(supplierActions).toContain("SupplierActionState");
+    expect(supplierActions).toContain("email_confirm: true");
+    expect(supplierActions).toContain('governance_status: "active"');
     expect(supplierActions).not.toContain("redirect(");
+  });
+
+  it("derives supplier verification from email confirmation not active-as-pending", () => {
+    const adminService = readFileSync(join(process.cwd(), "services/admin.ts"), "utf8");
+    expect(adminService).toContain("resolveSupplierVerificationStatus");
+    expect(adminService).toContain("listAuthUsersByIds");
+    expect(adminService).not.toContain('governanceStatus !== "active" ? governanceStatus : "pending"');
   });
 });
 

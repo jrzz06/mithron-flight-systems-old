@@ -556,6 +556,8 @@ async function performProductQuickEdit(formData: FormData): Promise<string | und
 
   await revalidateCatalogSurfaces(quickInput.identity.slug);
   revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath(`/product/${quickInput.identity.slug}`);
   return imageLinkWarning ?? undefined;
 }
 

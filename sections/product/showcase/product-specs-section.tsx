@@ -3,8 +3,9 @@ import { getCustomerFacingSpecs } from "@/lib/product-detail-content";
 import styles from "./product-showcase.module.css";
 
 export function ProductSpecsSection({ product }: { product: Product }) {
+  if (!product || typeof product !== "object") return null;
   const specs = getCustomerFacingSpecs(product);
-  if (!specs.length) return null;
+  if (!Array.isArray(specs) || !specs.length) return null;
 
   return (
     <section id="product-specs" className={styles.specsSection} aria-label="Key specifications">

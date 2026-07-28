@@ -133,17 +133,21 @@ function CheckoutInvoice({
   items: Array<{ productName: string; bundleName: string; quantity: number; unitPrice: number }>;
 }) {
   const issuedAt = new Date().toLocaleString();
+  const isPaid = completed.mode === "payment";
+  const displayReference = completed.orderNumber.startsWith("LEAD-")
+    ? completed.orderNumber.replace("LEAD-", "ENQ-")
+    : completed.orderNumber;
 
   return (
     <div className={styles.invoiceCard}>
       <div className={styles.invoiceHeader}>
         <div>
-          <p className={styles.invoiceLabel}>Tax invoice</p>
-          <p className={styles.invoiceNumber}>{completed.orderNumber}</p>
+          <p className={styles.invoiceLabel}>{isPaid ? "Order receipt" : "Enquiry summary"}</p>
+          <p className={styles.invoiceNumber}>{displayReference}</p>
         </div>
         <div className={styles.invoiceMeta}>
           <p>{issuedAt}</p>
-          <p>{completed.mode === "payment" ? "Payment received" : "Enquiry submitted"}</p>
+          <p>{isPaid ? "Payment received" : "Enquiry submitted"}</p>
         </div>
       </div>
 
@@ -166,12 +170,12 @@ function CheckoutInvoice({
       </div>
 
       <div className={styles.invoiceTotal}>
-        <span>Total payable</span>
+        <span>{isPaid ? "Total paid" : "Estimated total"}</span>
         <span>{formatINR(completed.total)}</span>
       </div>
 
       <p className={styles.invoiceFootnote}>
-        {completed.mode === "payment"
+        {isPaid
           ? "Your payment has been received. Our team will verify the order and share dispatch updates by email and phone."
           : "Your enquiry has been received. Our team will contact you using the details above."}
       </p>
@@ -214,6 +218,8 @@ export function CheckoutPageClient() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [showManualBillingForm, setShowManualBillingForm] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(true);
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
   const contactTouchedRef = useRef({ fullName: false, phone: false, email: false });
   const [contactDraftReady, setContactDraftReady] = useState(false);
   const checkoutNextPath = `/checkout?flow=${flow}`;
@@ -496,6 +502,10 @@ export function CheckoutPageClient() {
     const promoCode = checkout.promoCode.trim();
     if (promoCode) payload.promoCode = promoCode;
     if (paymentProvider) payload.paymentProvider = paymentProvider;
+    if (enquiryMessage.trim()) {
+      payload.orderNote = enquiryMessage.trim();
+      payload.message = enquiryMessage.trim();
+    }
 
     if (usingSavedAddress) {
       payload.addressId = checkout.shippingAddressId;
@@ -856,7 +866,63 @@ export function CheckoutPageClient() {
     };
   }, [buildPaymentSuccessUrl, completed, loading, reportCheckoutError, router]);
 
-  function validateBase(requireAddress: boolean) {
+  const isStep1Complete = useMemo(() => {
+    return Boolean(
+      fullName.trim()
+      && fullName.trim().length >= 2
+      && checkout.email.trim()
+      && isValidCheckoutEmail(checkout.email.trim())
+      && phoneNational.trim()
+      && isValidCheckoutPhone(phone)
+    );
+  }, [fullName, checkout.email, phoneNational, phone]);
+
+  const [showDroneModal, setShowDroneModal] = useState(false);
+  const [modalTimer, setModalTimer] = useState(10);
+  const [preferredLanguage, setPreferredLanguage] = useState("English");
+  const [inquiryType, setInquiryType] = useState("Purchase Related");
+  const hasTriggeredDroneModalRef = useRef(false);
+
+  useEffect(() => {
+    if (isCartSessionReady && activeStep === 1 && !hasTriggeredDroneModalRef.current) {
+      hasTriggeredDroneModalRef.current = true;
+      setModalTimer(10);
+      setShowDroneModal(true);
+    }
+  }, [isCartSessionReady, activeStep]);
+
+  useEffect(() => {
+    if (!showDroneModal) return;
+    const interval = setInterval(() => {
+      setModalTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setShowDroneModal(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showDroneModal]);
+
+  const isStep2Complete = useMemo(() => {
+    if (usingSavedAddress) {
+      if (!billingSameAsShipping && !usingSavedBillingAddress && !isCompleteGuestAddress(guestBillingAddress)) {
+        return false;
+      }
+      return true;
+    }
+    if (!guestAddress.line1.trim() || !guestAddress.city.trim() || !guestAddress.region.trim() || !guestAddress.postalCode.trim()) {
+      return false;
+    }
+    if (!billingSameAsShipping && !usingSavedBillingAddress && !isCompleteGuestAddress(guestBillingAddress)) {
+      return false;
+    }
+    return true;
+  }, [usingSavedAddress, billingSameAsShipping, usingSavedBillingAddress, guestBillingAddress, guestAddress]);
+
+  const validateStep1 = useCallback(() => {
     if (!checkoutItems.length) {
       reportCheckoutError(isBuyNowFlow ? "Your Buy Now request expired." : "Your cart is empty.");
       return false;
@@ -890,25 +956,72 @@ export function CheckoutPageClient() {
       reportCheckoutError("Enter a valid phone number (8–15 digits).");
       return false;
     }
-    if (requireAddress) {
-      if (usingSavedAddress) {
-        if (!billingSameAsShipping && !usingSavedBillingAddress && !isCompleteGuestAddress(guestBillingAddress)) {
-          reportCheckoutError("Enter a complete billing address.");
-          return false;
-        }
-        return true;
-      }
-      if (!guestAddress.line1.trim() || !guestAddress.city.trim() || !guestAddress.region.trim() || !guestAddress.postalCode.trim()) {
-        reportCheckoutError("Enter a complete shipping address to pay online.");
-        return false;
-      }
-      if (!billingSameAsShipping && !isCompleteGuestAddress(guestBillingAddress)) {
+    setError("");
+    return true;
+  }, [checkout.email, checkoutItems.length, fullName, isBuyNowFlow, phoneCountryCode, phoneNational, reportCheckoutError]);
+
+  const validateStep2 = useCallback(() => {
+    if (usingSavedAddress) {
+      if (!billingSameAsShipping && !usingSavedBillingAddress && !isCompleteGuestAddress(guestBillingAddress)) {
         reportCheckoutError("Enter a complete billing address.");
         return false;
       }
+      setError("");
+      return true;
     }
+    if (!guestAddress.line1.trim() || !guestAddress.city.trim() || !guestAddress.region.trim() || !guestAddress.postalCode.trim()) {
+      reportCheckoutError("Enter a complete shipping address to pay online.");
+      return false;
+    }
+    if (!billingSameAsShipping && !usingSavedBillingAddress && !isCompleteGuestAddress(guestBillingAddress)) {
+      reportCheckoutError("Enter a complete billing address.");
+      return false;
+    }
+    setError("");
+    return true;
+  }, [billingSameAsShipping, guestAddress, guestBillingAddress, reportCheckoutError, usingSavedAddress, usingSavedBillingAddress]);
+
+  const goToStep = useCallback((targetStep: 1 | 2 | 3) => {
+    if (targetStep === 2) {
+      if (!validateStep1()) return;
+    } else if (targetStep === 3) {
+      if (!validateStep1()) return;
+      if (!validateStep2()) return;
+    }
+    setError("");
+    setActiveStep(targetStep);
+  }, [validateStep1, validateStep2]);
+
+  function validateBase(requireAddress: boolean) {
+    if (!validateStep1()) return false;
+    if (requireAddress && !validateStep2()) return false;
     return true;
   }
+
+  const step1Summary = useMemo(() => {
+    if (fullName.trim() && phone.trim() && checkout.email.trim()) {
+      return `${fullName.trim()} • ${phone.trim()} • ${checkout.email.trim()}`;
+    }
+    return "Enter full name, mobile number and email";
+  }, [fullName, phone, checkout.email]);
+
+  const step2Summary = useMemo(() => {
+    if (usingSavedAddress) {
+      const selected = shippingAddresses.find((a) => a.id === checkout.shippingAddressId);
+      return selected?.line1 ? `${selected.label ?? "Address"}: ${selected.line1}, ${selected.city}` : "Saved address selected";
+    }
+    if (guestAddress.line1.trim() && guestAddress.city.trim()) {
+      return `${guestAddress.line1.trim()}, ${guestAddress.city.trim()}`;
+    }
+    return "Enter delivery & billing address";
+  }, [usingSavedAddress, shippingAddresses, checkout.shippingAddressId, guestAddress]);
+
+  const step3Summary = useMemo(() => {
+    if (paymentProvider === "razorpay") return "Razorpay (Cards, UPI, Netbanking)";
+    if (paymentProvider === "cashfree") return "Cashfree (Cards, UPI, Bank Transfer)";
+    if (paymentProvider) return paymentProvider;
+    return "Select payment gateway method";
+  }, [paymentProvider]);
 
   async function openRazorpayCheckout(input: {
     key: string;
@@ -1444,7 +1557,7 @@ export function CheckoutPageClient() {
                 <p className={styles.successBody}>
                   {completed.mode === "payment"
                     ? `Order reference ${completed.orderNumber}. Keep this summary for your records.`
-                    : `Reference ${completed.orderNumber}. Our team will review your request and contact ${completed.fullName || "you"} at ${completed.phone}.`}
+                    : `Reference ${completed.orderNumber.replace("LEAD-", "ENQ-")}. Our team will review your request and contact ${completed.fullName || "you"} at ${completed.phone}.`}
                 </p>
 
                 <CheckoutInvoice completed={completed} items={items} />
@@ -1496,375 +1609,529 @@ export function CheckoutPageClient() {
             ) : (
               <form
                 id="checkout-form"
-                className={cn(styles.form, "pb-24 lg:pb-0")}
+                className={cn(styles.form, "pb-28 lg:pb-0")}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  void sendEnquiry();
+                  if (activeStep === 1) {
+                    if (validateStep1()) void sendEnquiry();
+                  } else if (activeStep === 2) {
+                    goToStep(3);
+                  } else {
+                    void placeOrder();
+                  }
                 }}
               >
-                <fieldset className={styles.fieldset}>
-                  <legend className={styles.legend}>Your contact details</legend>
-                  <p className={styles.fieldHint}>{CUSTOMER_CONTACT_REQUIRED_MESSAGE}</p>
-                  <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
-                    <label className={styles.field}>
-                      <span className={styles.label}>Full name <span className={styles.required}>*</span></span>
-                      <input
-                        required
-                        type="text"
-                        autoComplete="name"
-                        value={fullName}
-                        onChange={(event) => {
-                          contactTouchedRef.current.fullName = true;
-                          setFullName(event.target.value);
-                        }}
-                        className={styles.input}
-                      />
-                    </label>
-                    <div className={styles.field}>
-                      <span className={styles.label}>Mobile number <span className={styles.required}>*</span></span>
-                      <PhoneCountryField
-                        countryCode={phoneCountryCode}
-                        national={phoneNational}
-                        onCountryChange={(code) => {
-                          contactTouchedRef.current.phone = true;
-                          setPhoneCountryCode(code);
-                        }}
-                        onNationalChange={(national) => {
-                          contactTouchedRef.current.phone = true;
-                          setPhoneNational(national);
-                        }}
-                        selectClassName={styles.input}
-                        inputClassName={styles.input}
-                      />
-                    </div>
-                    <label className={cn(styles.field, styles.fieldGridFull)}>
-                      <span className={styles.label}>Email <span className={styles.required}>*</span></span>
-                      <input
-                        required
-                        type="email"
-                        autoComplete="email"
-                        value={checkout.email}
-                        onChange={(event) => {
-                          contactTouchedRef.current.email = true;
-                          setCheckoutEmail(event.target.value);
-                        }}
-                        className={styles.input}
-                      />
-                    </label>
-                  </div>
-                </fieldset>
-
-                {!isSignedIn && !isStorefrontGuestOnly() ? (
-                  <div className={styles.fieldset} data-testid="checkout-auth-prompt">
-                    <p className={styles.legend}>Track this request</p>
-                    <p className={styles.fieldHint}>
-                      Optional — log in or create an account so you can follow this enquiry. You can still send it as a guest.
-                    </p>
-                    <div className={styles.actions}>
-                      <Button asChild variant="outline" type="button">
-                        <Link href={loginNextHref}>Log in</Link>
-                      </Button>
-                      <Button asChild variant="outline" type="button">
-                        <Link href={signupNextHref}>Create account</Link>
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-
-                <details className={styles.fieldset} open={showEnquiry} onToggle={(event) => setShowEnquiry((event.target as HTMLDetailsElement).open)}>
-                  <summary className={styles.legend}>Message (optional)</summary>
-                  <label className={styles.field}>
-                    <span className={styles.label}>Anything we should know?</span>
-                    <textarea
-                      value={enquiryMessage}
-                      onChange={(event) => setEnquiryMessage(event.target.value)}
-                      rows={4}
-                      className={styles.textarea}
-                      placeholder="Share quantity, delivery timeline, or any questions."
-                    />
-                  </label>
-                </details>
-
-                <div className={styles.actions}>
-                  <Button type="submit" variant="accent" disabled={checkoutBusy || !checkoutItems.length}>
-                    {loading === "enquiry" ? "Sending enquiry..." : "Send enquiry to Mithron"}
-                  </Button>
-                </div>
-
                 {error ? <p className={styles.error} role="alert">{error}</p> : null}
 
-                <fieldset className={styles.fieldset}>
-                  <legend className={styles.legend}>Delivery address</legend>
-                  <p className={styles.fieldHint}>Required only if you pay online now.</p>
-
-                  {isSignedIn && shippingAddresses.length ? (
-                    <div className={styles.fieldGrid}>
-                      {shippingAddresses.map((address) => (
-                        <button
-                          key={address.id}
-                          type="button"
-                          onClick={() => {
-                            setShowNewAddressForm(false);
-                            setShippingAddressId(address.id);
-                          }}
-                          className={cn(
-                            styles.addressCard,
-                            checkout.shippingAddressId === address.id && !showNewAddressForm && styles.addressCardSelected
-                          )}
-                        >
-                          <p className={styles.addressCardTitle}>{address.label ?? "Address"}</p>
-                          <p className={styles.addressCardBody}>
-                            {address.line1}, {address.city}, {address.region} {address.postal_code}
-                          </p>
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        className={styles.textLink}
-                        onClick={() => {
-                          setShowNewAddressForm(true);
-                          setShippingAddressId("");
-                        }}
-                      >
-                        Add new address
-                      </button>
-                    </div>
-                  ) : null}
-
-                  {!usingSavedAddress ? (
-                    <div className={styles.addressForm}>
-                      <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
-                        <label className={styles.field}>
-                          <span className={styles.label}>Address type</span>
-                          <select
-                            value={guestAddress.label}
-                            onChange={(event) => setGuestAddress((current) => ({ ...current, label: event.target.value }))}
-                            className={styles.input}
-                          >
-                            <option value="Home">Home</option>
-                            <option value="Office">Office</option>
-                          </select>
-                        </label>
+                <div className={styles.stepperContainer}>
+                  {/* STEP 1: Personal & Contact Details */}
+                  <div className={cn(styles.accordionItem, activeStep === 1 && styles.accordionItemActive, isStep1Complete && styles.accordionItemComplete)}>
+                    <button
+                      type="button"
+                      className={styles.accordionHeader}
+                      onClick={() => goToStep(1)}
+                    >
+                      <div className={styles.stepHeaderLeft}>
+                        <span className={cn(styles.stepBadge, activeStep === 1 ? styles.stepBadgeActive : isStep1Complete ? styles.stepBadgeComplete : styles.stepBadgeInactive)}>
+                          {isStep1Complete && activeStep !== 1 ? "✓" : "1"}
+                        </span>
+                        <div className={styles.stepTitleGroup}>
+                          <span className={styles.stepTitle}>Personal & Contact Details</span>
+                          {activeStep !== 1 ? <span className={styles.stepSummary}>{step1Summary}</span> : null}
+                        </div>
                       </div>
-                      <label className={styles.field}>
-                        <span className={styles.label}>House / flat / apartment</span>
-                        <input
-                          value={guestAddress.line2}
-                          onChange={(event) => setGuestAddress((current) => ({ ...current, line2: event.target.value }))}
-                          className={styles.input}
-                          autoComplete="address-line2"
-                        />
-                      </label>
-                      <label className={styles.field}>
-                        <span className={styles.label}>Street</span>
-                        <input
-                          value={guestAddress.line1}
-                          onChange={(event) => setGuestAddress((current) => ({ ...current, line1: event.target.value }))}
-                          className={styles.input}
-                          autoComplete="street-address"
-                        />
-                      </label>
-                      <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
-                        <label className={styles.field}>
-                          <span className={styles.label}>City</span>
-                          <input
-                            value={guestAddress.city}
-                            onChange={(event) => setGuestAddress((current) => ({ ...current, city: event.target.value }))}
-                            className={styles.input}
-                            autoComplete="address-level2"
-                          />
-                        </label>
-                        <label className={styles.field}>
-                          <span className={styles.label}>Pincode</span>
-                          <input
-                            value={guestAddress.postalCode}
-                            onChange={(event) => setGuestAddress((current) => ({ ...current, postalCode: event.target.value }))}
-                            className={styles.input}
-                            autoComplete="postal-code"
-                          />
-                        </label>
-                      </div>
-                      <label className={styles.field}>
-                        <span className={styles.label}>State</span>
-                        <input
-                          value={guestAddress.region}
-                          onChange={(event) => setGuestAddress((current) => ({ ...current, region: event.target.value }))}
-                          className={styles.input}
-                          autoComplete="address-level1"
-                        />
-                      </label>
-                    </div>
-                  ) : null}
+                      {activeStep !== 1 && isStep1Complete ? <span className={styles.stepEditBadge}>Edit</span> : null}
+                    </button>
 
-                  <label className={styles.checkboxRow}>
-                    <input
-                      type="checkbox"
-                      checked={billingSameAsShipping}
-                      onChange={(event) => {
-                        const checked = event.target.checked;
-                        setBillingSameAsShipping(checked);
-                        if (checked) {
-                          setShowManualBillingForm(false);
-                        }
-                      }}
-                      className={styles.checkbox}
-                    />
-                    <span>Billing address is the same as shipping address</span>
-                  </label>
-                </fieldset>
-
-                {!billingSameAsShipping ? (
-                <fieldset className={styles.fieldset}>
-                  <legend className={styles.legend}>Billing address</legend>
-                  {isSignedIn && billingAddresses.length > 0 ? (
-                    <div className={styles.fieldGrid}>
-                      <p className={styles.fieldHint}>Select a saved billing address or enter a new one.</p>
-                      {billingAddresses.map((address) => (
-                        <button
-                          key={`billing-${address.id}`}
-                          type="button"
-                          onClick={() => {
-                            setBillingAddressId(address.id);
-                            setShowManualBillingForm(false);
-                          }}
-                          className={cn(
-                            styles.addressCard,
-                            billingAddressId === address.id && !showManualBillingForm && styles.addressCardSelected
-                          )}
-                        >
-                          <p className={styles.addressCardTitle}>{address.label ?? "Address"}</p>
-                          <p className={styles.addressCardBody}>
-                            {address.line1}, {address.city}, {address.region} {address.postal_code}
-                          </p>
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (showManualBillingForm) {
-                            setShowManualBillingForm(false);
-                            const defaultBilling = billingAddresses.find((address) => address.is_default) ?? billingAddresses[0];
-                            if (defaultBilling) {
-                              setBillingAddressId(defaultBilling.id);
-                            }
-                          } else {
-                            setBillingAddressId("");
-                            setShowManualBillingForm(true);
-                          }
-                        }}
-                        className={styles.textLink}
-                      >
-                        {showManualBillingForm ? "Use a saved address" : "Enter a different address"}
-                      </button>
-                      {showManualBillingForm ? (
-                        <div className={styles.addressForm}>
-                          <p className={styles.label}>Billing address</p>
+                    {activeStep === 1 ? (
+                      <div className={styles.accordionContent}>
+                        <p className={styles.fieldHint}>{CUSTOMER_CONTACT_REQUIRED_MESSAGE}</p>
+                        <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
                           <label className={styles.field}>
-                            <span className={styles.label}>Address line</span>
+                            <span className={styles.label}>Full name <span className={styles.required}>*</span></span>
                             <input
-                              value={guestBillingAddress.line1}
-                              onChange={(event) => setGuestBillingAddress((current) => ({ ...current, line1: event.target.value }))}
+                              required
+                              type="text"
+                              autoComplete="name"
+                              value={fullName}
+                              onChange={(event) => {
+                                contactTouchedRef.current.fullName = true;
+                                setFullName(event.target.value);
+                              }}
                               className={styles.input}
-                              autoComplete="billing street-address"
                             />
                           </label>
-                          <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
-                            <label className={styles.field}>
-                              <span className={styles.label}>City</span>
-                              <input
-                                value={guestBillingAddress.city}
-                                onChange={(event) => setGuestBillingAddress((current) => ({ ...current, city: event.target.value }))}
-                                className={styles.input}
-                                autoComplete="billing address-level2"
-                              />
-                            </label>
-                            <label className={styles.field}>
-                              <span className={styles.label}>Postal code</span>
-                              <input
-                                value={guestBillingAddress.postalCode}
-                                onChange={(event) => setGuestBillingAddress((current) => ({ ...current, postalCode: event.target.value }))}
-                                className={styles.input}
-                                autoComplete="billing postal-code"
-                              />
-                            </label>
+                          <div className={styles.field}>
+                            <span className={styles.label}>Mobile number <span className={styles.required}>*</span></span>
+                            <PhoneCountryField
+                              countryCode={phoneCountryCode}
+                              national={phoneNational}
+                              onCountryChange={(code) => {
+                                contactTouchedRef.current.phone = true;
+                                setPhoneCountryCode(code);
+                              }}
+                              onNationalChange={(national) => {
+                                contactTouchedRef.current.phone = true;
+                                setPhoneNational(national);
+                              }}
+                              selectClassName={styles.input}
+                              inputClassName={styles.input}
+                            />
                           </div>
-                          <label className={styles.field}>
-                            <span className={styles.label}>State / region</span>
+                          <label className={cn(styles.field, styles.fieldGridFull)}>
+                            <span className={styles.label}>Email <span className={styles.required}>*</span></span>
                             <input
-                              value={guestBillingAddress.region}
-                              onChange={(event) => setGuestBillingAddress((current) => ({ ...current, region: event.target.value }))}
+                              required
+                              type="email"
+                              autoComplete="email"
+                              value={checkout.email}
+                              onChange={(event) => {
+                                contactTouchedRef.current.email = true;
+                                setCheckoutEmail(event.target.value);
+                              }}
                               className={styles.input}
-                              autoComplete="billing address-level1"
                             />
                           </label>
                         </div>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className={styles.addressForm}>
-                      <p className={styles.label}>Billing address</p>
-                      <label className={styles.field}>
-                        <span className={styles.label}>Address line</span>
-                        <input
-                          value={guestBillingAddress.line1}
-                          onChange={(event) => setGuestBillingAddress((current) => ({ ...current, line1: event.target.value }))}
-                          className={styles.input}
-                          autoComplete="billing street-address"
-                        />
-                      </label>
-                      <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
-                        <label className={styles.field}>
-                          <span className={styles.label}>City</span>
-                          <input
-                            value={guestBillingAddress.city}
-                            onChange={(event) => setGuestBillingAddress((current) => ({ ...current, city: event.target.value }))}
-                            className={styles.input}
-                            autoComplete="billing address-level2"
-                          />
-                        </label>
-                        <label className={styles.field}>
-                          <span className={styles.label}>Postal code</span>
-                          <input
-                            value={guestBillingAddress.postalCode}
-                            onChange={(event) => setGuestBillingAddress((current) => ({ ...current, postalCode: event.target.value }))}
-                            className={styles.input}
-                            autoComplete="billing postal-code"
-                          />
-                        </label>
+
+                        {!isSignedIn && !isStorefrontGuestOnly() ? (
+                          <div className={styles.fieldset} data-testid="checkout-auth-prompt">
+                            <p className={styles.legend}>Track your enquiry or order</p>
+                            <p className={styles.fieldHint}>
+                              Log in or create an account to track updates, or continue as a guest.
+                            </p>
+                            <div className={styles.actions}>
+                              <Button asChild variant="outline" type="button">
+                                <Link href={loginNextHref}>Log in</Link>
+                              </Button>
+                              <Button asChild variant="outline" type="button">
+                                <Link href={signupNextHref}>Create account</Link>
+                              </Button>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {/* Optional Message Panel Accordion */}
+                        <details
+                          className={styles.messageAccordion}
+                          open={isMessageOpen}
+                          onToggle={(event) => setIsMessageOpen((event.target as HTMLDetailsElement).open)}
+                        >
+                          <summary className={styles.messageSummary}>
+                            <span>Add a note or special instructions (optional)</span>
+                            <span aria-hidden="true">{isMessageOpen ? "▲" : "▼"}</span>
+                          </summary>
+                          <div className={styles.messageBody}>
+                            <label className={styles.field}>
+                              <textarea
+                                value={enquiryMessage}
+                                onChange={(event) => setEnquiryMessage(event.target.value)}
+                                rows={3}
+                                className={styles.textarea}
+                                placeholder="Share quantity, delivery timeline, or custom questions..."
+                              />
+                            </label>
+                          </div>
+                        </details>
+
+                        <div className={styles.stepActions}>
+                          <Button
+                            type="button"
+                            variant="accent"
+                            disabled={checkoutBusy || !checkoutItems.length}
+                            onClick={() => {
+                              if (validateStep1()) void sendEnquiry();
+                            }}
+                          >
+                            {loading === "enquiry" ? "Sending enquiry..." : "Send as Enquiry Only"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={checkoutBusy || !checkoutItems.length}
+                            onClick={() => goToStep(2)}
+                          >
+                            Continue to Delivery Address →
+                          </Button>
+                        </div>
                       </div>
-                      <label className={styles.field}>
-                        <span className={styles.label}>State / region</span>
-                        <input
-                          value={guestBillingAddress.region}
-                          onChange={(event) => setGuestBillingAddress((current) => ({ ...current, region: event.target.value }))}
-                          className={styles.input}
-                          autoComplete="billing address-level1"
-                        />
-                      </label>
-                    </div>
+                    ) : null}
+                  </div>
+
+                  {/* STEP 2: Delivery Address */}
+                  <div className={cn(styles.accordionItem, activeStep === 2 && styles.accordionItemActive, isStep2Complete && styles.accordionItemComplete)}>
+                    <button
+                      type="button"
+                      className={styles.accordionHeader}
+                      onClick={() => goToStep(2)}
+                    >
+                      <div className={styles.stepHeaderLeft}>
+                        <span className={cn(styles.stepBadge, activeStep === 2 ? styles.stepBadgeActive : isStep2Complete ? styles.stepBadgeComplete : styles.stepBadgeInactive)}>
+                          {isStep2Complete && activeStep !== 2 ? "✓" : "2"}
+                        </span>
+                        <div className={styles.stepTitleGroup}>
+                          <span className={styles.stepTitle}>Delivery Address</span>
+                          {activeStep !== 2 ? <span className={styles.stepSummary}>{step2Summary}</span> : null}
+                        </div>
+                      </div>
+                      {activeStep !== 2 && isStep2Complete ? <span className={styles.stepEditBadge}>Edit</span> : null}
+                    </button>
+
+                    {activeStep === 2 ? (
+                      <div className={styles.accordionContent}>
+                        {isSignedIn && shippingAddresses.length ? (
+                          <div className={styles.fieldGrid}>
+                            {shippingAddresses.map((address) => (
+                              <button
+                                key={address.id}
+                                type="button"
+                                onClick={() => {
+                                  setShowNewAddressForm(false);
+                                  setShippingAddressId(address.id);
+                                }}
+                                className={cn(
+                                  styles.addressCard,
+                                  checkout.shippingAddressId === address.id && !showNewAddressForm && styles.addressCardSelected
+                                )}
+                              >
+                                <p className={styles.addressCardTitle}>{address.label ?? "Address"}</p>
+                                <p className={styles.addressCardBody}>
+                                  {address.line1}, {address.city}, {address.region} {address.postal_code}
+                                </p>
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              className={styles.textLink}
+                              onClick={() => {
+                                setShowNewAddressForm(true);
+                                setShippingAddressId("");
+                              }}
+                            >
+                              Add new address
+                            </button>
+                          </div>
+                        ) : null}
+
+                        {!usingSavedAddress ? (
+                          <div className={styles.addressForm}>
+                            <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
+                              <label className={styles.field}>
+                                <span className={styles.label}>Address type</span>
+                                <select
+                                  value={guestAddress.label}
+                                  onChange={(event) => setGuestAddress((current) => ({ ...current, label: event.target.value }))}
+                                  className={styles.input}
+                                >
+                                  <option value="Home">Home</option>
+                                  <option value="Work">Work</option>
+                                  <option value="Office">Office</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                              </label>
+                            </div>
+                            <label className={styles.field}>
+                              <span className={styles.label}>House / flat / apartment <span className={styles.required}>*</span></span>
+                              <input
+                                value={guestAddress.line2}
+                                onChange={(event) => setGuestAddress((current) => ({ ...current, line2: event.target.value }))}
+                                className={styles.input}
+                                autoComplete="address-line2"
+                                placeholder="House no, Flat, Building"
+                              />
+                            </label>
+                            <label className={styles.field}>
+                              <span className={styles.label}>Street address <span className={styles.required}>*</span></span>
+                              <input
+                                value={guestAddress.line1}
+                                onChange={(event) => setGuestAddress((current) => ({ ...current, line1: event.target.value }))}
+                                className={styles.input}
+                                autoComplete="street-address"
+                                placeholder="Street name, Area, Colony"
+                              />
+                            </label>
+                            <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
+                              <label className={styles.field}>
+                                <span className={styles.label}>City <span className={styles.required}>*</span></span>
+                                <input
+                                  value={guestAddress.city}
+                                  onChange={(event) => setGuestAddress((current) => ({ ...current, city: event.target.value }))}
+                                  className={styles.input}
+                                  autoComplete="address-level2"
+                                />
+                              </label>
+                              <label className={styles.field}>
+                                <span className={styles.label}>Pincode <span className={styles.required}>*</span></span>
+                                <input
+                                  value={guestAddress.postalCode}
+                                  onChange={(event) => setGuestAddress((current) => ({ ...current, postalCode: event.target.value }))}
+                                  className={styles.input}
+                                  autoComplete="postal-code"
+                                />
+                              </label>
+                            </div>
+                            <label className={styles.field}>
+                              <span className={styles.label}>State <span className={styles.required}>*</span></span>
+                              <input
+                                value={guestAddress.region}
+                                onChange={(event) => setGuestAddress((current) => ({ ...current, region: event.target.value }))}
+                                className={styles.input}
+                                autoComplete="address-level1"
+                              />
+                            </label>
+                          </div>
+                        ) : null}
+
+                        <label className={styles.checkboxRow}>
+                          <input
+                            type="checkbox"
+                            checked={billingSameAsShipping}
+                            onChange={(event) => {
+                              const checked = event.target.checked;
+                              setBillingSameAsShipping(checked);
+                              if (checked) {
+                                setShowManualBillingForm(false);
+                              }
+                            }}
+                            className={styles.checkbox}
+                          />
+                          <span>Billing address is the same as shipping address</span>
+                        </label>
+
+                        {!billingSameAsShipping ? (
+                          <div className={styles.fieldset}>
+                            <p className={styles.label}>Billing address</p>
+                            {isSignedIn && billingAddresses.length > 0 ? (
+                              <div className={styles.fieldGrid}>
+                                <p className={styles.fieldHint}>Select a saved billing address or enter a new one.</p>
+                                {billingAddresses.map((address) => (
+                                  <button
+                                    key={`billing-${address.id}`}
+                                    type="button"
+                                    onClick={() => {
+                                      setBillingAddressId(address.id);
+                                      setShowManualBillingForm(false);
+                                    }}
+                                    className={cn(
+                                      styles.addressCard,
+                                      billingAddressId === address.id && !showManualBillingForm && styles.addressCardSelected
+                                    )}
+                                  >
+                                    <p className={styles.addressCardTitle}>{address.label ?? "Address"}</p>
+                                    <p className={styles.addressCardBody}>
+                                      {address.line1}, {address.city}, {address.region} {address.postal_code}
+                                    </p>
+                                  </button>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (showManualBillingForm) {
+                                      setShowManualBillingForm(false);
+                                      const defaultBilling = billingAddresses.find((address) => address.is_default) ?? billingAddresses[0];
+                                      if (defaultBilling) {
+                                        setBillingAddressId(defaultBilling.id);
+                                      }
+                                    } else {
+                                      setBillingAddressId("");
+                                      setShowManualBillingForm(true);
+                                    }
+                                  }}
+                                  className={styles.textLink}
+                                >
+                                  {showManualBillingForm ? "Use a saved address" : "Enter a different address"}
+                                </button>
+                              </div>
+                            ) : null}
+
+                            {!usingSavedBillingAddress ? (
+                              <div className={styles.addressForm}>
+                                <label className={styles.field}>
+                                  <span className={styles.label}>Address line</span>
+                                  <input
+                                    value={guestBillingAddress.line1}
+                                    onChange={(event) => setGuestBillingAddress((current) => ({ ...current, line1: event.target.value }))}
+                                    className={styles.input}
+                                    autoComplete="billing street-address"
+                                  />
+                                </label>
+                                <div className={cn(styles.fieldGrid, styles.fieldGridTwo)}>
+                                  <label className={styles.field}>
+                                    <span className={styles.label}>City</span>
+                                    <input
+                                      value={guestBillingAddress.city}
+                                      onChange={(event) => setGuestBillingAddress((current) => ({ ...current, city: event.target.value }))}
+                                      className={styles.input}
+                                      autoComplete="billing address-level2"
+                                    />
+                                  </label>
+                                  <label className={styles.field}>
+                                    <span className={styles.label}>Postal code</span>
+                                    <input
+                                      value={guestBillingAddress.postalCode}
+                                      onChange={(event) => setGuestBillingAddress((current) => ({ ...current, postalCode: event.target.value }))}
+                                      className={styles.input}
+                                      autoComplete="billing postal-code"
+                                    />
+                                  </label>
+                                </div>
+                                <label className={styles.field}>
+                                  <span className={styles.label}>State / region</span>
+                                  <input
+                                    value={guestBillingAddress.region}
+                                    onChange={(event) => setGuestBillingAddress((current) => ({ ...current, region: event.target.value }))}
+                                    className={styles.input}
+                                    autoComplete="billing address-level1"
+                                  />
+                                </label>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        <div className={styles.stepActions}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={checkoutBusy}
+                            onClick={() => goToStep(1)}
+                          >
+                            ← Back to Contact
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="accent"
+                            disabled={checkoutBusy || !checkoutItems.length}
+                            onClick={() => goToStep(3)}
+                          >
+                            Proceed to Payment →
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* STEP 3: Payment Method & Place Order */}
+                  <div className={cn(styles.accordionItem, activeStep === 3 && styles.accordionItemActive)}>
+                    <button
+                      type="button"
+                      className={styles.accordionHeader}
+                      onClick={() => goToStep(3)}
+                    >
+                      <div className={styles.stepHeaderLeft}>
+                        <span className={cn(styles.stepBadge, activeStep === 3 ? styles.stepBadgeActive : styles.stepBadgeInactive)}>
+                          3
+                        </span>
+                        <div className={styles.stepTitleGroup}>
+                          <span className={styles.stepTitle}>Payment Method & Place Order</span>
+                          {activeStep !== 3 ? <span className={styles.stepSummary}>{step3Summary}</span> : null}
+                        </div>
+                      </div>
+                    </button>
+
+                    {activeStep === 3 ? (
+                      <div className={styles.accordionContent}>
+                        {paymentProviders.length > 0 ? (
+                          <CheckoutPaymentStepLazy
+                            paymentProviders={paymentProviders}
+                            paymentProvider={paymentProvider}
+                            onPaymentProviderChange={setPaymentProvider}
+                          />
+                        ) : (
+                          <p className={styles.fieldHint}>Select your payment method below to complete payment in a secure gateway window.</p>
+                        )}
+
+                        <div className={styles.stepActions}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={checkoutBusy}
+                            onClick={() => goToStep(2)}
+                          >
+                            ← Back to Address
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="accent"
+                            disabled={checkoutBusy || !checkoutItems.length}
+                            onClick={() => void placeOrder()}
+                          >
+                            {loading === "payment" || loading === "stub" ? "Processing payment..." : "Pay and Place Order"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Mobile Sticky CTA Bar */}
+                <div className={styles.mobileStickyBar}>
+                  {activeStep === 1 ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="accent"
+                        className="w-full"
+                        disabled={checkoutBusy || !checkoutItems.length}
+                        onClick={() => {
+                          if (validateStep1()) void sendEnquiry();
+                        }}
+                      >
+                        {loading === "enquiry" ? "Sending enquiry..." : "Send as Enquiry Only"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        disabled={checkoutBusy || !checkoutItems.length}
+                        onClick={() => goToStep(2)}
+                      >
+                        Continue to Delivery Address →
+                      </Button>
+                    </>
+                  ) : activeStep === 2 ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="accent"
+                        className="w-full"
+                        disabled={checkoutBusy || !checkoutItems.length}
+                        onClick={() => goToStep(3)}
+                      >
+                        Proceed to Payment →
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        disabled={checkoutBusy}
+                        onClick={() => goToStep(1)}
+                      >
+                        ← Back to Contact
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        variant="accent"
+                        className="w-full"
+                        disabled={checkoutBusy || !checkoutItems.length}
+                        onClick={() => void placeOrder()}
+                      >
+                        {loading === "payment" || loading === "stub" ? "Processing payment..." : "Pay and Place Order"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        disabled={checkoutBusy}
+                        onClick={() => goToStep(2)}
+                      >
+                        ← Back to Address
+                      </Button>
+                    </>
                   )}
-                </fieldset>
-                ) : null}
-
-                {paymentProviders.length > 0 ? (
-                  <CheckoutPaymentStepLazy
-                    paymentProviders={paymentProviders}
-                    paymentProvider={paymentProvider}
-                    onPaymentProviderChange={setPaymentProvider}
-                  />
-                ) : null}
-
-                <div className={styles.actions}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={checkoutBusy || !checkoutItems.length}
-                    onClick={() => void placeOrder()}
-                  >
-                    {loading === "payment" || loading === "stub"
-                      ? "Processing payment..."
-                      : "Pay and place order"}
-                  </Button>
                 </div>
               </form>
             )}
@@ -1883,6 +2150,174 @@ export function CheckoutPageClient() {
           ) : null}
         </div>
       </div>
+
+      {showDroneModal ? (
+        <div className={styles.droneModalOverlay} onClick={() => setShowDroneModal(false)}>
+          <div className={styles.droneModalCard} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.waterWaveTrack}>
+              <div className={styles.waterWaveFill} style={{ width: `${(modalTimer / 10) * 100}%` }}>
+                <svg className={styles.waterWaveSvg} viewBox="0 0 1200 48" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="emeraldWaterPrimary" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#1f6b46" />
+                      <stop offset="50%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#34d399" />
+                    </linearGradient>
+                    <linearGradient id="emeraldWaterSecondary" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(34, 197, 94, 0.75)" />
+                      <stop offset="100%" stopColor="rgba(52, 211, 153, 0.45)" />
+                    </linearGradient>
+                    <linearGradient id="emeraldWaterTertiary" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(16, 185, 129, 0.35)" />
+                      <stop offset="100%" stopColor="rgba(220, 252, 231, 0.18)" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    className={styles.waterWavePath3}
+                    d="M0,28 C200,48 400,8 600,28 C800,48 1000,8 1200,28 L1200,0 L0,0 Z"
+                  />
+                  <path
+                    className={styles.waterWavePath2}
+                    d="M0,22 C180,-2 360,42 540,22 C720,-2 900,42 1080,22 C1140,12 1200,22 1200,22 L1200,0 L0,0 Z"
+                  />
+                  <path
+                    className={styles.waterWavePath1}
+                    d="M0,18 C150,34 300,2 450,18 C600,34 750,2 900,18 C1050,34 1200,18 1200,18 L1200,0 L0,0 Z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className={styles.preSalesHeader}>
+              <h2 className={styles.preSalesTitle}>Pre-Sales Consultation</h2>
+              <p className={styles.preSalesSubtext}>
+                Thank you for choosing Mithron Drone Systems. To help us address your requirements, please share your details below. Our flight engineering team will contact you shortly.
+              </p>
+            </div>
+
+            <div className={styles.preSalesBody}>
+              <div className={styles.preSalesField}>
+                <label className={styles.preSalesLabel}>Type of your inquiry*</label>
+                <select
+                  value={inquiryType}
+                  onChange={(e) => setInquiryType(e.target.value)}
+                  className={styles.preSalesSelect}
+                >
+                  <option value="Purchase Related">Purchase Related</option>
+                  <option value="Bulk Order">Bulk Order</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Services">Services</option>
+                  <option value="Academic">Academic</option>
+                  <option value="Development">Development</option>
+                  <option value="Loan / Financing">Loan / Financing</option>
+                </select>
+              </div>
+
+              <div className={styles.preSalesGridTwo}>
+                <div className={styles.preSalesField}>
+                  <label className={styles.preSalesLabel}>Preferred Contact Language</label>
+                  <select
+                    value={preferredLanguage}
+                    onChange={(e) => setPreferredLanguage(e.target.value)}
+                    className={styles.preSalesSelect}
+                  >
+                    <option value="English">English</option>
+                    <option value="Tamil">Tamil</option>
+                    <option value="Hindi">Hindi</option>
+                  </select>
+                </div>
+
+                <div className={styles.preSalesField}>
+                  <label className={styles.preSalesLabel}>Product Summary</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={checkoutItems.map((i) => i.productName).join(", ") || "Drone System"}
+                    className={styles.preSalesInput}
+                    style={{ background: "#f8fafc" }}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.preSalesGridTwo}>
+                <div className={styles.preSalesField}>
+                  <label className={styles.preSalesLabel}>Your name*</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your name"
+                    className={styles.preSalesInput}
+                  />
+                </div>
+
+                <div className={styles.preSalesField}>
+                  <label className={styles.preSalesLabel}>Your email address*</label>
+                  <input
+                    type="email"
+                    value={checkout.email}
+                    onChange={(e) => setCheckoutContact({ email: e.target.value })}
+                    placeholder="Enter your email"
+                    className={styles.preSalesInput}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.preSalesField}>
+                <label className={styles.preSalesLabel}>Mobile number*</label>
+                <input
+                  type="tel"
+                  value={phoneNational}
+                  onChange={(e) => setPhoneNational(e.target.value)}
+                  placeholder="Enter mobile number"
+                  className={styles.preSalesInput}
+                />
+              </div>
+
+              <div className={styles.preSalesField}>
+                <label className={styles.preSalesLabel}>Specific notes or requirements</label>
+                <textarea
+                  value={enquiryMessage}
+                  onChange={(e) => setEnquiryMessage(e.target.value)}
+                  placeholder="Share quantity, delivery timeline, or custom questions..."
+                  className={styles.preSalesTextarea}
+                />
+              </div>
+
+              <div className={styles.preSalesFooter}>
+                <button
+                  type="button"
+                  className={styles.preSalesCancelBtn}
+                  onClick={() => {
+                    setShowDroneModal(false);
+                    goToStep(2);
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.preSalesSubmitBtn}
+                  onClick={() => {
+                    if (!validateStep1()) return;
+                    setShowDroneModal(false);
+                    const tag = `[Inquiry: ${inquiryType} | Language: ${preferredLanguage}]`;
+                    if (!enquiryMessage.includes("[Inquiry:")) {
+                      setEnquiryMessage((prev) => (prev ? `${tag} ${prev}` : tag));
+                    }
+                    void sendEnquiry();
+                  }}
+                >
+                  Submit Enquiry
+                </button>
+              </div>
+
+              <p className={styles.preSalesTimerHint}>Auto-closing in {modalTimer}s</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

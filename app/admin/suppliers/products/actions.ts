@@ -92,6 +92,7 @@ export async function approveProductSubmissionFormAction(formData: FormData): Pr
       {
         workflow_status: "published",
         is_visible: true,
+        product_url: `/product/${slug}`,
         approved_at: new Date().toISOString(),
         approved_by: actorId,
         rejection_reason: null,

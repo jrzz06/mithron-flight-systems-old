@@ -333,7 +333,8 @@ html[data-product-nav="pending"] {
   --elevation-product-hover: 0 4px 16px rgba(17, 17, 17, 0.1);
   --product-stage-floor: none;
   --product-stage-halo: none;
-  --product-stage-radial: radial-gradient(ellipse at center, rgba(148, 163, 184, 0.11) 0%, rgba(148, 163, 184, 0.035) 54%, transparent 80%);
+  /* Ambient product stage — transparent for card gradient flow */
+  --product-stage-radial: transparent;
   --surface-gradient-card: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
   --surface-gradient-cool: linear-gradient(180deg, #fcfcfd 0%, #f8fafc 54%, #f4f7fa 100%);
   --surface-aurora-layer:
@@ -475,8 +476,8 @@ html[data-product-nav="pending"] {
 .premium-product-card__media {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, #fcfdfe 0%, #f4f6f8 100%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  background: transparent !important;
+  border-bottom: none !important;
 }
 
 .premium-product-card__media--catalog {
@@ -532,22 +533,16 @@ html[data-product-nav="pending"] {
 .premium-product-card-shell {
   overflow: hidden;
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: var(--surface-card, #ffffff);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.08),
-    0 4px 12px rgba(15, 23, 42, 0.1),
-    0 16px 36px rgba(15, 23, 42, 0.14);
-  transition: box-shadow 260ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1), border-color 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #e4eef6 0%, #f0f6fa 45%, #ffffff 85%);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: all 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .premium-product-card-shell:is(:hover, :focus-within, :focus-visible) {
-  box-shadow:
-    0 2px 6px rgba(15, 23, 42, 0.1),
-    0 12px 28px rgba(15, 23, 42, 0.16),
-    0 28px 56px rgba(15, 23, 42, 0.14);
-  border-color: rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.09), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+  transform: translateY(-3px);
 }
 
 .premium-product-card.mithron-elevated-card--interactive:is(:hover, :focus-within, :focus-visible),
@@ -586,6 +581,11 @@ html {
   html:focus-within {
     scroll-behavior: smooth;
   }
+}
+
+html[data-instant-scroll="true"],
+html[data-instant-scroll="true"] * {
+  scroll-behavior: auto !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3205,7 +3205,7 @@ canvas {
   --insta-media: #f3f4f6;
   --product-stage-floor: none;
   --product-stage-halo: none;
-  --product-stage-radial: radial-gradient(ellipse 80% 68% at 50% 50%, rgba(23, 77, 51, 0.05) 0%, rgba(148, 163, 184, 0.04) 54%, transparent 82%);
+  --product-stage-radial: transparent;
   background: linear-gradient(180deg, #eef0f3 0%, var(--insta-page) 100%);
   color: var(--insta-ink);
 }
@@ -3763,7 +3763,7 @@ canvas {
     height: 100%;
   }
 
-  /* Clean vertical stack: fixed-height image well, body below — no overlap */
+  /* Clean vertical stack: fixed-height image area, body below — transparent media well */
   .catalog-page-shell .premium-product-card__media,
   .catalog-page-shell .premium-product-card__media--catalog {
     flex: 0 0 auto;
@@ -3772,8 +3772,9 @@ canvas {
     width: 100%;
     margin-bottom: 0;
     overflow: hidden;
-    border-radius: 0.75rem;
-    background: #f9fafb;
+    border-radius: 0;
+    background: transparent !important;
+    border-bottom: none !important;
   }
 
   .catalog-page-shell .premium-product-card__image-asset {
@@ -3783,7 +3784,7 @@ canvas {
     object-position: center center;
     transform: scale(var(--product-card-image-rest-scale, 1.04));
     transform-origin: center center;
-    mix-blend-mode: multiply;
+    mix-blend-mode: normal;
   }
 
   .catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__image-asset {
@@ -3997,7 +3998,7 @@ canvas {
   --catalog-card-pad: 20px;
   --catalog-card-radius: 10px;
   --catalog-card-overlap: 8px;
-  --catalog-card-image-pad: 24px;
+  --catalog-card-image-pad: 0px;
   --catalog-card-image-rest-scale: 1;
   --catalog-card-image-hover-scale: 1.04;
   --product-card-image-rest-scale: var(--catalog-card-image-rest-scale);
@@ -4009,15 +4010,11 @@ canvas {
   flex-direction: column;
   overflow: hidden;
   container-type: inline-size;
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: var(--catalog-card-radius);
-  background: #ffffff;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.08),
-    0 4px 12px rgba(15, 23, 42, 0.1),
-    0 16px 36px rgba(15, 23, 42, 0.14);
+  background: linear-gradient(180deg, #e4eef6 0%, #f0f6fa 45%, #ffffff 85%);
+  box-shadow: none;
   transition:
-    box-shadow 280ms var(--ease-cinematic, cubic-bezier(0.22, 0.61, 0.36, 1)),
     border-color 280ms var(--ease-cinematic, cubic-bezier(0.22, 0.61, 0.36, 1)),
     transform 280ms var(--ease-cinematic, cubic-bezier(0.22, 0.61, 0.36, 1));
 }
@@ -4030,18 +4027,12 @@ canvas {
   container-type: normal;
   border-radius: var(--shelf-dji-card-radius, 6px);
   border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.08),
-    0 4px 12px rgba(15, 23, 42, 0.1),
-    0 16px 36px rgba(15, 23, 42, 0.14);
+  box-shadow: none;
 }
 
 .catalog-page-shell .premium-product-card-shell:is(:hover, :focus-within, :focus-visible) {
   border-color: rgba(15, 23, 42, 0.1);
-  box-shadow:
-    0 2px 6px rgba(15, 23, 42, 0.1),
-    0 12px 28px rgba(15, 23, 42, 0.16),
-    0 28px 56px rgba(15, 23, 42, 0.14);
+  box-shadow: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -4089,31 +4080,34 @@ canvas {
   border: none;
   border-bottom: none;
   border-radius: 0;
-  /* Flat with shell — no inset grey well / panel-in-panel */
-  background: transparent;
+  background: transparent !important;
   display: grid;
   place-items: center;
 }
 
-.catalog-page-shell .premium-product-card__media::before,
-.catalog-page-shell .premium-product-card__media::after {
+.catalog-page-shell .premium-product-card__media::before {
   display: none;
   content: none;
+}
+
+/* Gradient lives on media background — avoid double haze via ::after */
+.catalog-page-shell .premium-product-card__media::after {
+  content: none;
+  display: none;
 }
 
 .catalog-page-shell .premium-product-card-shell[data-cta-layout="buy-row"] .premium-product-card__media {
-  background: transparent;
+  background: transparent !important;
 }
 
 .catalog-page-shell .premium-product-card-shell[data-cta-layout="buy-row"] .premium-product-card__media::after {
-  display: none;
   content: none;
+  display: none;
 }
 
 .catalog-page-shell .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__media::after,
 .catalog-page-shell .premium-product-card-shell[data-cta-layout="buy-row"] .premium-product-card:is(:hover, :focus-visible, :focus-within) .premium-product-card__media::after {
-  display: none;
-  content: none;
+  opacity: 1;
 }
 
 .catalog-page-shell .premium-product-card__media .mithron-responsive-image-frame {
@@ -4981,7 +4975,7 @@ canvas {
     min-height: 0;
   }
 
-  /* Clean vertical stack on small mobile: fixed-height image, body below — no overlap */
+  /* Clean vertical stack on small mobile: fixed-height image, body below — no nested gray plate */
   .catalog-page-shell .premium-product-card__media {
     flex: 0 0 auto;
     aspect-ratio: auto;
@@ -4989,8 +4983,8 @@ canvas {
     height: 9rem;
     max-height: 9rem;
     margin-bottom: 0;
-    border-radius: 0.75rem;
-    background: #f9fafb;
+    border-radius: 0;
+    background: var(--product-stage-radial);
     overflow: hidden;
   }
 
@@ -6252,4 +6246,17 @@ canvas {
   text-fill-color: #000000 !important;
   -webkit-mask-image: none !important;
   mask-image: none !important;
+}
+
+/* ==========================================================================
+   MOBILE-ONLY: max-width 480px container padding fix
+   Reduces catalog-grid-section side padding from ~14-24px → 10px so the
+   card-width formula (100vw − 2×10px − 8px) / 2 produces ~178px cards
+   on a 375-390px screen, matching the net-result target in the task.
+   max-width: 480px ONLY — do not add rules for larger breakpoints here.
+   ========================================================================== */
+@media (max-width: 480px) {
+  .catalog-grid-section {
+    padding-inline: 10px !important; /* was ~14px (Tailwind px-3.5) or 24px (showroom) */
+  }
 }

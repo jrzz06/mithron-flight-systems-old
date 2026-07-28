@@ -1,3 +1,5 @@
+import { productPathFromSlug } from "@/lib/catalog/product-url";
+
 /** Transition type passed to Next.js Link / router for product opens. */
 export const PRODUCT_OPEN_TRANSITION = "product-open";
 
@@ -7,7 +9,7 @@ export function productMediaTransitionName(slug: string) {
 }
 
 export function productHref(slug: string) {
-  return `/product/${slug}`;
+  return productPathFromSlug(slug);
 }
 
 export function isProductPath(pathname: string | null | undefined) {

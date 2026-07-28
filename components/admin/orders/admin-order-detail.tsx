@@ -11,6 +11,7 @@ import { AdminOrderShippingSection } from "@/components/admin/orders/admin-order
 import { AdminOrderSummarySection } from "@/components/admin/orders/admin-order-summary-section";
 import { AdminOrderTimeline } from "@/components/admin/orders/admin-order-timeline";
 import { OrderDetailShell, OrderStickyHeader } from "@/components/admin/orders/order-detail-primitives";
+import { AdminOrderDetailEmpty } from "@/components/admin/orders/admin-order-detail-panel";
 import { orderItemsForOrder, isHandedOffToWarehouse, type AdminRow } from "@/components/admin/orders/order-view-helpers";
 import type { AdminOrderFormAction } from "@/lib/admin/order-action-result";
 
@@ -61,6 +62,9 @@ export function AdminOrderDetail({
   addOrderItemsAction,
   removeOrderItemAction
 }: AdminOrderDetailProps) {
+  if (!order || typeof order !== "object" || !order.id) {
+    return <AdminOrderDetailEmpty />;
+  }
   const items = orderItemsForOrder(orderId, orderItems);
   const selectedShipments = shipments.filter((shipment) => String(shipment.order_id) === orderId);
   const detailScrollRef = useRef<HTMLDivElement>(null);
@@ -85,8 +89,11 @@ export function AdminOrderDetail({
   ) : null;
 
   return (
-    <OrderDetailShell scrollRef={detailScrollRef} header={backHeader}>
-      <OrderStickyHeader order={order} defaultWarehouseCode={defaultWarehouseCode} />
+    <OrderDetailShell
+      scrollRef={detailScrollRef}
+      header={backHeader}
+      orderHeader={<OrderStickyHeader order={order} defaultWarehouseCode={defaultWarehouseCode} />}
+    >
       {handedOffToWarehouse ? (
         <div className="rounded-[8px] border border-cyan-400/55 bg-cyan-500/15 px-3 py-2.5 text-sm font-medium leading-5 text-cyan-50">
           Handed off to warehouse — admin view is read-only.

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { ResetPasswordForm } from "./reset-password-form";
-import styles from "../auth/auth-page.module.css";
+import styles from "../auth-page.module.css";
 
 export const metadata: Metadata = {
   title: "Set new password · Mithron Flight Systems",

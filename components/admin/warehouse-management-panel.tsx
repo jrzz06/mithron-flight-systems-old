@@ -18,7 +18,7 @@ export function CreateWarehouseForm({ action }: CreateWarehouseFormProps) {
   );
 
   return (
-    <form action={timedAction} data-warehouse-create-form className="grid gap-3 rounded-xl border border-slate-800 bg-[#0f141b] p-4">
+    <form action={timedAction} data-warehouse-create-form className="grid gap-3 rounded-xl border border-white/10 bg-[#0f141b] p-4">
       <div>
         <p className="text-sm font-semibold text-slate-100">Create warehouse site</p>
         <p className="mt-1 text-xs text-slate-500">Every warehouse must exist in the database before operators can be assigned.</p>
@@ -63,20 +63,20 @@ export function WarehouseDirectory({ warehouses }: WarehouseDirectoryProps) {
         </div>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        {liveWarehouses.length ? liveWarehouses.map((warehouse) => (
+        {liveWarehouses.length ? liveWarehouses.filter((w) => Boolean(w && (w.code || w.name))).map((warehouse) => (
           <article
-            key={warehouse.code}
+            key={warehouse.code || warehouse.name}
             data-warehouse-card
-            data-warehouse-code={warehouse.code}
-            className="rounded-xl border border-slate-800 bg-[#0f141b] p-4"
+            data-warehouse-code={warehouse.code ?? ""}
+            className="rounded-xl border border-white/10 bg-[#0f141b] p-4"
           >
-            <p className="text-sm font-semibold text-slate-100">{warehouse.name}</p>
-            <p className="mt-1 text-xs text-slate-500">{warehouse.code}</p>
+            <p className="text-sm font-semibold text-slate-100">{warehouse.name || "Unnamed warehouse"}</p>
+            <p className="mt-1 text-xs text-slate-500">{warehouse.code ?? ""}</p>
             <p className="mt-2 text-sm text-slate-400">{warehouse.location || "Location not set"}</p>
-            <p className="mt-3 text-xs text-slate-500">{warehouse.operatorCount} operator{warehouse.operatorCount === 1 ? "" : "s"} assigned</p>
+            <p className="mt-3 text-xs text-slate-500">{(warehouse.operatorCount ?? 0)} operator{(warehouse.operatorCount === 1) ? "" : "s"} assigned</p>
           </article>
         )) : (
-          <p className="rounded-xl border border-slate-800 bg-[#0f141b] p-4 text-sm text-slate-500">
+          <p className="rounded-xl border border-white/10 bg-[#0f141b] p-4 text-sm text-slate-500">
             No warehouse sites exist yet. Create the first warehouse before assigning operators.
           </p>
         )}

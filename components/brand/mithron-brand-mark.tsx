@@ -36,6 +36,7 @@ export function MithronBrandMark({
   return (
     <span aria-hidden="true" className={className}>
       <img
+        suppressHydrationWarning
         src={delivery.href}
         srcSet={delivery.srcSet}
         sizes="128px"

@@ -281,7 +281,7 @@
   overflow: hidden;
   border: 1px solid var(--pdp-border);
   border-radius: var(--ds-r-xl);
-  background: #f9fafb;
+  background: var(--product-stage-radial);
   box-shadow: none;
 }
 
@@ -292,19 +292,13 @@
 
 .mediaGroundShadow {
   position: absolute;
-  left: 50%;
-  bottom: 8%;
+  inset: 0;
   z-index: 1;
-  width: min(56%, 340px);
-  height: clamp(28px, 6vw, 44px);
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse 70% 55% at 50% 50%,
-    rgba(15, 23, 42, 0.18) 0%,
-    rgba(15, 23, 42, 0.07) 42%,
-    transparent 72%
-  );
-  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  transform: none;
   pointer-events: none;
 }
 
@@ -494,10 +488,10 @@
   z-index: 1;
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--type-product-title);
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: var(--tracking-title);
+  font-size: clamp(1.875rem, 3.5vw, 2.75rem) !important;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   text-wrap: balance;
   color: #000000 !important;
   background: none !important;
@@ -513,11 +507,12 @@
 }
 
 .productSubtitle {
-  margin: 0.15rem 0 0;
-  max-width: 40ch;
-  font-size: 0.9375rem;
-  line-height: 1.55;
-  color: #4b5563;
+  margin: 0.35rem 0 0;
+  max-width: 44ch;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  font-weight: 450;
+  color: #374151;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -752,15 +747,16 @@
 .purchaseActions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
+  gap: 0.875rem;
+  margin-top: 1.5rem;
 }
 
 .purchaseButton {
   width: 100%;
-  min-height: 3.25rem;
+  min-height: clamp(3.25rem, 4vw, 3.625rem) !important;
+  padding: 0.875rem 1.5rem !important;
   border-radius: 999px !important;
-  font-size: 0.9375rem !important;
+  font-size: clamp(0.9375rem, 1.2vw, 1.0625rem) !important;
   font-weight: 600 !important;
   transition:
     transform var(--pdp-motion),
@@ -812,11 +808,13 @@
 
 .purchaseEnquiryButton {
   grid-column: 1 / -1;
+  min-height: clamp(3.25rem, 4vw, 3.625rem) !important;
   background: #ffffff !important;
   color: #111827 !important;
   border: 1px solid #e5e7eb !important;
   box-shadow: none !important;
-  font-weight: 500 !important;
+  font-size: clamp(0.9375rem, 1.2vw, 1.0625rem) !important;
+  font-weight: 600 !important;
 }
 
 @media (max-width: 480px) {
@@ -2144,5 +2142,13 @@
   .relatedCardCta {
     width: var(--mobile-touch-min, 44px);
     height: var(--mobile-touch-min, 44px);
+  }
+}
+
+/* Mobile-only: max-width 480px — reduce "Recommended next" container side
+   padding from 16px → 10px, consistent with catalog-grid-section fix. */
+@media (max-width: 480px) {
+  .relatedSection {
+    padding-inline: 10px;
   }
 }

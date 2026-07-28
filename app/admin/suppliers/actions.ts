@@ -10,13 +10,14 @@ import {
   reactivateManagedUserAction
 } from "@/app/admin/settings/actions";
 import { requireAdminPermission } from "@/services/auth";
+import { updateAdminRecord } from "@/services/admin-actions";
 
 export type SupplierActionState = {
   status: "idle" | "success" | "error";
   message: string;
 };
 
-const idleState: SupplierActionState = { status: "idle", message: "" };
+export const supplierActionIdleState: SupplierActionState = { status: "idle", message: "" };
 
 function actionError(error: unknown) {
   return (error instanceof Error ? error.message : String(error)).slice(0, 240);
@@ -52,13 +53,29 @@ export async function approveSupplierFormAction(
       const payload = new FormData();
       payload.set("user_id", supplierId);
       await reactivateManagedUserAction(payload);
-    } else if (verificationStatus === "pending") {
-      const supabase = serviceClient();
-      const updated = await supabase.auth.admin.updateUserById(supplierId, { email_confirm: true });
-      if (updated.error) {
-        throw new Error(updated.error.message || "Failed to approve supplier account.");
-      }
     }
+
+    const supabase = serviceClient();
+    const updated = await supabase.auth.admin.updateUserById(supplierId, { email_confirm: true });
+    if (updated.error) {
+      throw new Error(updated.error.message || "Failed to approve supplier account.");
+    }
+
+    // Persist durable active governance so Approve survives refresh alongside email_confirmed_at.
+    await updateAdminRecord(
+      "profiles",
+      "id",
+      supplierId,
+      {
+        governance_status: "active",
+        updated_at: new Date().toISOString()
+      },
+      context.userId!,
+      process.env,
+      { guard: () => requireAdminPermission("settings.write") }
+    ).catch((profileError) => {
+      console.warn("[admin-suppliers] Failed to set governance_status=active on approve.", profileError);
+    });
 
     await insertUserNotification({
       recipientId: supplierId,
@@ -70,7 +87,7 @@ export async function approveSupplierFormAction(
       actorId: context.userId!,
       payload: {
         event: "suppliers.approve",
-        verification_status: verificationStatus || "approved"
+        verification_status: "verified"
       },
       dedupeKey: `suppliers-approve:${supplierId}`
     });
@@ -119,5 +136,3 @@ export async function suspendSupplierFormAction(
     return { status: "error", message: actionError(error) };
   }
 }
-
-export { idleState as supplierActionIdleState };

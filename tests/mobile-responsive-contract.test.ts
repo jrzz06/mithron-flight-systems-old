@@ -251,14 +251,20 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(cardCss).toMatch(/\.description \{[\s\S]*?flex:\s*0\s+1\s+auto/);
   });
 
-  it("removes catalog product image stage overlays for a seamless white card", () => {
+  it("keeps catalog product image area flat white with a radial cutout shadow", () => {
     const globalsCss = source("app/globals.css");
 
     expect(globalsCss).toMatch(
-      /\.catalog-page-shell \.premium-product-card__media::after[\s\S]*display:\s*none/
+      /\.catalog-page-shell \.premium-product-card__media\s*\{[\s\S]*background:\s*var\(--product-stage-radial\)/
     );
     expect(globalsCss).toMatch(
-      /\.catalog-page-shell \.premium-product-card__media\s*\{[\s\S]*background:\s*#ffffff/
+      /--product-stage-radial:\s*radial-gradient\(/
+    );
+    expect(globalsCss).toMatch(
+      /\.catalog-page-shell \.premium-product-card-shell\s*\{[\s\S]*box-shadow:\s*none/
+    );
+    expect(globalsCss).toMatch(
+      /\.catalog-page-shell \.premium-product-card__media\s*\{[\s\S]*border-radius:\s*0/
     );
   });
 

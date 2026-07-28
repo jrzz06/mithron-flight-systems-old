@@ -25,19 +25,22 @@ export default async function SupplierEditProductPage({ params }: { params: Prom
   ]);
   if (!product) notFound();
 
-  const workflowStatus = String(product.workflow_status ?? "draft");
-  const rejectionReason = typeof product.rejection_reason === "string" ? product.rejection_reason : null;
+  const workflowStatus = product.workflowStatus ?? "draft";
+  const rejectionReason = product.rejectionReason ?? null;
   const canEdit = ["draft", "rejected"].includes(workflowStatus);
   const canSubmit = ["draft", "rejected"].includes(workflowStatus);
   const statusHint = supplierStatusHint(workflowStatus);
 
-  const imageSrc = readProductImageSrc(product.image) || readProductImageSrc(product.hero);
+  const imageSrc = product.imageSrc || readProductImageSrc(product.hero);
   const primarySrc = imageSrc;
-  const galleryUrls = readProductGalleryFromRow(product)
-    .map((item) => readMediaSrc(item))
-    .filter((src) => src && src !== primarySrc);
-  const description = typeof product.description === "string" ? product.description : "";
-  const descriptionJson = product.description_json as JSONContent | string | null | undefined;
+  const galleryUrls = product.galleryUrls && product.galleryUrls.length
+    ? product.galleryUrls.filter((src) => src && src !== primarySrc)
+    : readProductGalleryFromRow(product as Record<string, unknown>)
+        .map((item) => readMediaSrc(item))
+        .filter((src) => src && src !== primarySrc);
+
+  const description = product.description ?? "";
+  const descriptionJson = (product.descriptionJson ?? (product as unknown as Record<string, unknown>).description_json) as JSONContent | string | null | undefined;
 
   return (
     <div className="max-w-xl grid gap-5">
@@ -67,15 +70,16 @@ export default async function SupplierEditProductPage({ params }: { params: Prom
             categoryOptions={categoryOptions}
             defaults={{
               slug,
-              name: String(product.name ?? ""),
-              category: String(product.category ?? "Agri Drones"),
-              price: Number(product.price ?? 0),
+              name: product.name || "",
+              category: product.category || "Agri Drones",
+              price: product.price || 0,
               description,
               descriptionJson: descriptionJson ?? undefined,
+              specs: product.specs ?? undefined,
               imageSrc,
-              imageAlt: String(product.name ?? ""),
+              imageAlt: product.name || "",
               galleryUrls,
-              updatedAt: typeof product.updated_at === "string" ? product.updated_at : null
+              updatedAt: product.updatedAt ?? null
             }}
           />
           {canSubmit ? (

@@ -1,15 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AdminTableShell } from "@/components/admin/module-panel";
 import { AdminOrderListItem } from "@/components/admin/orders/admin-order-list-item";
-import { orderMatchesSelectionKey, orderSelectionKey, text, type AdminRow } from "@/components/admin/orders/order-view-helpers";
+import {
+  indexOrderItemsByOrderId,
+  orderMatchesSelectionKey,
+  orderSelectionKey,
+  text,
+  type AdminRow
+} from "@/components/admin/orders/order-view-helpers";
 import type { AdminOrderFormAction } from "@/lib/admin/order-action-result";
 
 type AdminOrderListProps = {
   orders: AdminRow[];
   orderItems: AdminRow[];
+  orderItemsByOrderId?: Map<string, AdminRow[]>;
   products: AdminRow[];
   shipments: AdminRow[];
   defaultWarehouseCode: string;
@@ -32,6 +39,7 @@ const ESTIMATED_ROW_HEIGHT = 148;
 export function AdminOrderList({
   orders,
   orderItems,
+  orderItemsByOrderId,
   products,
   shipments,
   defaultWarehouseCode,
@@ -61,6 +69,20 @@ export function AdminOrderList({
   const handleSelectKey = useCallback((selectionKey: string) => {
     onSelectOrderRef.current(selectionKey);
   }, []);
+
+  const itemsByOrderId = useMemo(
+    () => orderItemsByOrderId ?? indexOrderItemsByOrderId(orderItems),
+    [orderItemsByOrderId, orderItems]
+  );
+
+  const shipmentOrderIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const shipment of shipments) {
+      const orderId = text(shipment.order_id);
+      if (orderId) set.add(orderId);
+    }
+    return set;
+  }, [shipments]);
 
   const rowVirtualizer = useVirtualizer({
     count: orders.length,
@@ -120,7 +142,7 @@ export function AdminOrderList({
               const selectionKey = orderSelectionKey(order);
               const isSelected =
                 orderMatchesSelectionKey(order, selectedKey, orders) || selectedOrderId === orderId;
-              const hasShipment = shipments.some((s) => text(s.order_id) === orderId);
+              const hasShipment = shipmentOrderIds.has(orderId);
               const index = virtualRow.index;
 
               return (
@@ -128,12 +150,17 @@ export function AdminOrderList({
                   key={orderId || selectionKey}
                   data-index={index}
                   ref={rowVirtualizer.measureElement}
+                  // Virtualization carve-out: absolute + translateY is required for
+                  // windowed list rows. Do NOT convert to document flow — that is a
+                  // different concern from the ban on absolute overlays for in-panel
+                  // banners/actions (see admin-orders-layout-resilience tests).
                   className="absolute left-0 top-0 w-full"
                   style={{ transform: `translateY(${virtualRow.start}px)` }}
                 >
                   <AdminOrderListItem
                     order={order}
                     orderItems={orderItems}
+                    orderItemsByOrderId={itemsByOrderId}
                     products={products}
                     defaultWarehouseCode={defaultWarehouseCode}
                     selected={isSelected}

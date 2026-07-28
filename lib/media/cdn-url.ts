@@ -8,8 +8,42 @@
  *
  * Custom CDN example: https://media.mithron.com/storage/v1/object/public/...
  * Edge example: /cdn-media/storage/v1/object/public/...
+ *
+ * Hydration note: Next/Turbopack only reliably inlines statically referenced
+ * `process.env.NEXT_PUBLIC_*` keys. Rewrite matching uses the URL pattern itself
+ * (not an env-origin prefix compare) so SSR and client always agree.
  */
 import { CANONICAL_PRODUCTION_HOST } from "@/lib/site-url";
+
+const PUBLIC_STORAGE_PATH = "/storage/v1/object/public/";
+const SUPABASE_PUBLIC_STORAGE_RE =
+  /^https?:\/\/[^/]+\.supabase\.co(\/storage\/v1\/object\/public\/.+)$/i;
+
+// Module-scope static reads — required for client-bundle inlining.
+const PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const PUBLIC_MEDIA_CDN_ORIGIN = process.env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN;
+const PUBLIC_MEDIA_CDN_VIA_VERCEL = process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL;
+const PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
+
+/**
+ * Next.js only inlines `NEXT_PUBLIC_*` when each key is read statically.
+ * Keep both a module-scope reference (bundler) and a live static read (tests can override).
+ */
+export function readMediaCdnPublicEnv(): Record<string, string | undefined> {
+  return {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_MEDIA_CDN_ORIGIN: process.env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN ?? PUBLIC_MEDIA_CDN_ORIGIN,
+    NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL: process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL ?? PUBLIC_MEDIA_CDN_VIA_VERCEL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? PUBLIC_SITE_URL,
+    // Server-only fallbacks used by getMediaCdnOrigin; harmless when undefined on the client.
+    MITHRON_PRODUCTION_HOST: process.env.MITHRON_PRODUCTION_HOST,
+    VERCEL: process.env.VERCEL,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    MITHRON_STORAGE_PROVIDER: process.env.MITHRON_STORAGE_PROVIDER,
+    MITHRON_R2_PUBLIC_ORIGIN: process.env.MITHRON_R2_PUBLIC_ORIGIN
+  };
+}
 
 function parseOrigin(raw: string | undefined | null): string | null {
   const trimmed = raw?.trim();
@@ -38,7 +72,7 @@ function resolveSiteOrigin(env: Record<string, string | undefined>): string | nu
 }
 
 function vercelMediaCdnEnabled(env: Record<string, string | undefined>): boolean {
-  const flag = env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL?.trim().toLowerCase();
+  const flag = (env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL ?? PUBLIC_MEDIA_CDN_VIA_VERCEL)?.trim().toLowerCase();
   if (flag === "0" || flag === "false" || flag === "off") return false;
   if (flag === "1" || flag === "true" || flag === "on") return true;
   // Default on for local + Vercel so storefront media URLs stay 1:1 (`/cdn-media/...`).
@@ -50,8 +84,8 @@ function vercelMediaCdnEnabled(env: Record<string, string | undefined>): boolean
  * Returns the CDN origin used by rewriteStorageUrlForCdn.
  * Custom CDN → bare origin. Vercel edge mode → `{siteOrigin}/cdn-media`.
  */
-export function getMediaCdnOrigin(env: Record<string, string | undefined> = process.env) {
-  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN);
+export function getMediaCdnOrigin(env: Record<string, string | undefined> = readMediaCdnPublicEnv()) {
+  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN ?? PUBLIC_MEDIA_CDN_ORIGIN);
   if (custom) return custom;
 
   if (!vercelMediaCdnEnabled(env)) return null;
@@ -60,24 +94,41 @@ export function getMediaCdnOrigin(env: Record<string, string | undefined> = proc
   return `${siteOrigin}/cdn-media`;
 }
 
-export function getSupabaseStorageOrigin(env: Record<string, string | undefined> = process.env) {
-  return parseOrigin(env.NEXT_PUBLIC_SUPABASE_URL);
+export function getSupabaseStorageOrigin(env: Record<string, string | undefined> = readMediaCdnPublicEnv()) {
+  return parseOrigin(env.NEXT_PUBLIC_SUPABASE_URL ?? PUBLIC_SUPABASE_URL);
+}
+
+/** Extract `/storage/v1/object/public/...` from a Supabase public storage URL. */
+function matchSupabasePublicStoragePath(src: string): string | null {
+  const match = src.match(SUPABASE_PUBLIC_STORAGE_RE);
+  return match?.[1] ?? null;
 }
 
 export function rewriteStorageUrlForCdn(
   src: string,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
 ): string {
   const trimmed = src?.trim() ?? "";
   if (!trimmed) return trimmed;
 
-  const storageOrigin = getSupabaseStorageOrigin(env);
-  if (!storageOrigin) return trimmed;
-  if (!trimmed.startsWith(storageOrigin)) return trimmed;
-  if (!trimmed.includes("/storage/v1/object/public/")) return trimmed;
+  // Pattern-match any *.supabase.co public storage URL so client bundles do not
+  // need NEXT_PUBLIC_SUPABASE_URL inlined to produce the same /cdn-media path as SSR.
+  const storagePath = matchSupabasePublicStoragePath(trimmed);
+  if (!storagePath) {
+    // Preserve previous strict behavior for non-supabase hosts when env origin is set
+    // (e.g. custom self-hosted storage that still uses the public path shape).
+    const storageOrigin = getSupabaseStorageOrigin(env);
+    if (!storageOrigin || !trimmed.startsWith(storageOrigin) || !trimmed.includes(PUBLIC_STORAGE_PATH)) {
+      return trimmed;
+    }
+    const path = trimmed.slice(storageOrigin.length);
+    const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN ?? PUBLIC_MEDIA_CDN_ORIGIN);
+    if (custom) return `${custom}${path}`;
+    if (!vercelMediaCdnEnabled(env)) return trimmed;
+    return `/cdn-media${path}`;
+  }
 
-  const storagePath = trimmed.slice(storageOrigin.length);
-  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN);
+  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN ?? PUBLIC_MEDIA_CDN_ORIGIN);
   if (custom) {
     return `${custom}${storagePath}`;
   }
@@ -92,7 +143,7 @@ export function rewriteStorageUrlForCdn(
 /** Reverse a /cdn-media (or absolute CDN) storage URL back to the Supabase public URL. */
 export function unwrapCdnStorageUrl(
   src: string,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
 ): string {
   const trimmed = src?.trim() ?? "";
   if (!trimmed) return trimmed;
@@ -108,7 +159,7 @@ export function unwrapCdnStorageUrl(
     return `${storageOrigin}${absoluteMatch[1]}`;
   }
 
-  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN);
+  const custom = parseOrigin(env.NEXT_PUBLIC_MEDIA_CDN_ORIGIN ?? PUBLIC_MEDIA_CDN_ORIGIN);
   if (custom && trimmed.startsWith(custom) && trimmed.includes(PUBLIC_STORAGE_PATH)) {
     return `${storageOrigin}${trimmed.slice(custom.length)}`;
   }
@@ -116,7 +167,7 @@ export function unwrapCdnStorageUrl(
   return trimmed;
 }
 
-export function isMediaCdnHostname(hostname: string, env: Record<string, string | undefined> = process.env) {
+export function isMediaCdnHostname(hostname: string, env: Record<string, string | undefined> = readMediaCdnPublicEnv()) {
   const cdnOrigin = getMediaCdnOrigin(env);
   if (!cdnOrigin) return false;
   try {
@@ -126,8 +177,6 @@ export function isMediaCdnHostname(hostname: string, env: Record<string, string 
   }
 }
 
-const PUBLIC_STORAGE_PATH = "/storage/v1/object/public/";
-
 /**
  * True when `src` points at Supabase public storage — either the direct
  * `*.supabase.co` URL or a CDN-rewritten equivalent (`/cdn-media/…` or custom CDN origin).
@@ -135,12 +184,12 @@ const PUBLIC_STORAGE_PATH = "/storage/v1/object/public/";
  */
 export function isTrustedCatalogStorageSrc(
   src: string,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
 ): boolean {
   const trimmed = src?.trim() ?? "";
   if (!trimmed || !trimmed.includes(PUBLIC_STORAGE_PATH)) return false;
 
-  if (/^https?:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(trimmed)) {
+  if (SUPABASE_PUBLIC_STORAGE_RE.test(trimmed)) {
     return true;
   }
 

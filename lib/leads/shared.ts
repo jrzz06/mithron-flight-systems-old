@@ -56,8 +56,8 @@ export function leadSourceBadgeClass(source: unknown) {
 }
 
 export function formatLeadReference(leadNumber: number | null | undefined) {
-  if (!leadNumber || !Number.isFinite(leadNumber)) return "Lead";
-  return `LEAD-${String(Math.trunc(leadNumber)).padStart(5, "0")}`;
+  if (!leadNumber || !Number.isFinite(leadNumber)) return "ENQ-00001";
+  return `ENQ-${String(Math.trunc(leadNumber)).padStart(5, "0")}`;
 }
 
 export function isLeadConverted(lead: Pick<AdminLeadRow, "status" | "converted_order_id">) {

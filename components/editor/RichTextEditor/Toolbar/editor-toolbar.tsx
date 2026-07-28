@@ -51,6 +51,8 @@ function ToolbarButton({
       aria-label={label}
       aria-pressed={active}
       disabled={disabled}
+      onMouseDown={(event) => event.preventDefault()}
+      onTouchStart={(event) => event.preventDefault()}
       onClick={onClick}
       className={cn(
         "inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-transparent transition-colors",

@@ -149,8 +149,9 @@ function buildUpdate(existing, crawled, options) {
   if (!existing.source_catalog_id && crawled.source_catalog_id) {
     patch.source_catalog_id = crawled.source_catalog_id;
   }
-  if (!existing.product_url && crawled.product_url) {
-    patch.product_url = crawled.product_url;
+  if (!existing.product_url || !String(existing.product_url).startsWith("/product/")) {
+    const slug = String(existing.slug || crawled.slug || "").trim();
+    if (slug) patch.product_url = `/product/${slug}`;
   }
 
   const shouldSetDescription = options.forceDescriptions || !existing.description?.trim();
@@ -180,7 +181,7 @@ async function fetchAllProducts(supabase) {
   while (true) {
     const { data, error } = await supabase
       .from("mithron_products")
-      .select("slug,source_catalog_id,source_url,price,compare_at,on_sale,description,tagline,bundles,source_description")
+      .select("slug,product_url,source_catalog_id,source_url,price,compare_at,on_sale,description,tagline,bundles,source_description")
       .range(from, from + pageSize - 1);
 
     if (error) throw new Error(`Failed to read mithron_products: ${error.message}`);

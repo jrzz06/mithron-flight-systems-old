@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   getMediaCdnOrigin,
   isTrustedCatalogStorageSrc,
+  readMediaCdnPublicEnv,
   rewriteStorageUrlForCdn,
   unwrapCdnStorageUrl
 } from "@/lib/media/cdn-url";
+import { buildResponsiveImageModel } from "@/lib/media/responsive-image-model";
 
 describe("media CDN rewrite", () => {
   it("rewrites Supabase storage URLs to the configured CDN origin", () => {
@@ -61,6 +63,50 @@ describe("media CDN rewrite", () => {
       NEXT_PUBLIC_SITE_URL: "https://final-mithron-deploy.vercel.app"
     });
     expect(rewritten).toBe("https://media.mithron.com/storage/v1/object/public/mithron-products/foo.webp");
+  });
+
+  it("rewrites *.supabase.co storage URLs even when the env bag omits NEXT_PUBLIC_SUPABASE_URL", () => {
+    const src = "https://abc.supabase.co/storage/v1/object/public/mithron-products/foo.webp";
+    // Client bundles may not inline env into a passed bag; pattern rewrite must still match SSR.
+    expect(rewriteStorageUrlForCdn(src, {})).toBe(
+      "/cdn-media/storage/v1/object/public/mithron-products/foo.webp"
+    );
+  });
+
+  it("readMediaCdnPublicEnv exposes the static NEXT_PUBLIC keys used by rewrites", () => {
+    const env = readMediaCdnPublicEnv();
+    expect(env).toHaveProperty("NEXT_PUBLIC_SUPABASE_URL");
+    expect(env).toHaveProperty("NEXT_PUBLIC_MEDIA_CDN_ORIGIN");
+    expect(env).toHaveProperty("NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL");
+    expect(env).toHaveProperty("NEXT_PUBLIC_SITE_URL");
+  });
+});
+
+describe("hero image model CDN/native parity", () => {
+  it("treats /cdn-media delivery without variants as native remote (same as https)", () => {
+    const previous = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const previousFlag = process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+    process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL = "1";
+    try {
+      const supabaseSrc =
+        "https://example.supabase.co/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w.webp";
+      const model = buildResponsiveImageModel({
+        src: supabaseSrc,
+        imageRole: "hero"
+      });
+      expect(model.primarySrc).toBe(
+        "/cdn-media/storage/v1/object/public/mithron-hero/storefront/hero-slide-01-3840w.webp"
+      );
+      expect(model.mode).toBe("remote");
+      expect(model.useNativeRemoteImage).toBe(true);
+      expect(model.assetId).toBe("remote");
+    } finally {
+      if (previous === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      else process.env.NEXT_PUBLIC_SUPABASE_URL = previous;
+      if (previousFlag === undefined) delete process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL;
+      else process.env.NEXT_PUBLIC_MEDIA_CDN_VIA_VERCEL = previousFlag;
+    }
   });
 });
 

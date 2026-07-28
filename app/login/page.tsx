@@ -5,7 +5,7 @@ import styles from "./login.module.css";
 import { mapAuthPageNotice } from "@/lib/auth/client-errors";
 import { resolveLoginPageRedirect } from "@/lib/auth/post-auth-redirect";
 import { getAuthProviderAvailability } from "@/lib/auth/provider-registry";
-import { buildLoginRedirectPath, unwrapAuthNextPath } from "@/lib/auth/redirects";
+import { unwrapAuthNextPath } from "@/lib/auth/redirects";
 import { buildAuthAuditClientToken } from "@/lib/auth-audit-client";
 import { createClient } from "@/lib/server";
 import { LoginFormClient } from "./login-form-client";
@@ -46,7 +46,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     }
 
     await supabase.auth.signOut();
-    redirect(buildLoginRedirectPath(nextPath || "/account", { auth_status: "role_required" }));
+    redirect(`/login?auth_status=role_required${nextPath ? `&next=${encodeURIComponent(nextPath)}` : ""}`);
   }
 
   const auditToken = buildAuthAuditClientToken();

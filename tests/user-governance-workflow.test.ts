@@ -31,7 +31,9 @@ describe("enterprise user governance workflow", () => {
     expect(userPanel).toContain("CreateUserForm");
     expect(userPanel).toContain("createUserFormAction");
     const createUserForm = readFileSync(join(process.cwd(), "components/admin/create-user-form.tsx"), "utf8");
-    expect(createUserForm).toContain("data-user-create-form");
+    expect(createUserForm).toContain("staffRoleOptions");
+    expect(createUserForm).toContain("Create staff user");
+    expect(createUserForm).not.toContain('value: "user"');
     expect(createUserForm).toContain("Login credentials");
     expect(createUserForm).toContain("temporaryPassword");
     expect(userPanel).toContain("data-user-invite-form");
@@ -87,6 +89,9 @@ describe("enterprise user governance workflow", () => {
 
     expect(actions).toContain("auth.admin.createUser");
     expect(actions).toContain("auth.admin.generateLink");
+    expect(actions).toContain("assertStaffAssignableRole");
+    expect(actions).toContain("staffAssignableRoles");
+    expect(actions).toContain("Customers register via Create Account");
     expect(actions).toContain("auth.admin.updateUserById");
     expect(actions).toContain("auth.admin.deleteUser");
     expect(actions).toContain("upsertUserRoleRecord");

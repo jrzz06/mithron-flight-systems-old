@@ -44,7 +44,7 @@ export function AdminOrderDetailEmpty() {
   return (
     <div
       data-order-detail-panel
-      className={`flex min-h-[min(280px,50vh)] min-w-0 flex-col items-center justify-center gap-3 border border-dashed border-[var(--platform-border)] bg-[var(--platform-surface-muted)]/30 px-6 py-10 text-center ${orderRadiusCard}`}
+      className={`flex min-h-70 min-w-0 flex-col items-center justify-center gap-3 border border-dashed border-[var(--platform-border)] bg-[var(--platform-surface-muted)]/30 px-6 py-10 text-center ${orderRadiusCard}`}
     >
       <div className="grid h-14 w-14 place-items-center rounded-full bg-[var(--platform-surface-muted)] text-[var(--platform-text-muted)]">
         <ClipboardList className="h-7 w-7" aria-hidden />

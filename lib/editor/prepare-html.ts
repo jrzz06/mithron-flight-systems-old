@@ -16,18 +16,11 @@ export function decodeEscapedEditorHtml(raw: string) {
   let value = String(raw ?? "").trim();
   if (!value) return "";
 
-  for (let pass = 0; pass < 2; pass += 1) {
+  for (let pass = 0; pass < 5; pass += 1) {
     if (!/&(?:lt|gt|amp|quot|#39|#x27|nbsp);/i.test(value)) break;
     const decoded = decodeDescriptionEntities(value);
     if (decoded === value) break;
-    const introducedTags = /<[a-z][\s>/]/i.test(decoded) && !/<[a-z][\s>/]/i.test(value);
-    const reducedEntities = (decoded.match(/&(?:lt|gt|amp);/gi) ?? []).length
-      < (value.match(/&(?:lt|gt|amp);/gi) ?? []).length;
-    if (introducedTags || reducedEntities) {
-      value = decoded;
-      continue;
-    }
-    break;
+    value = decoded;
   }
 
   return value.trim();
@@ -72,6 +65,13 @@ export function cleanupEditorHtmlMarkup(html: string) {
     if (next === value) break;
     value = next;
   }
+
+  value = value.replace(/<strong>\s*<strong>([\s\S]*?)<\/strong>\s*<\/strong>/gi, "<strong>$1</strong>");
+  value = value.replace(/<b>\s*<b>([\s\S]*?)<\/b>\s*<\/b>/gi, "<b>$1</b>");
+  value = value.replace(/<em>\s*<em>([\s\S]*?)<\/em>\s*<\/em>/gi, "<em>$1</em>");
+  value = value.replace(/<i>\s*<i>([\s\S]*?)<\/i>\s*<\/i>/gi, "<i>$1</i>");
+  value = value.replace(/<u>\s*<u>([\s\S]*?)<\/u>\s*<\/u>/gi, "<u>$1</u>");
+  value = value.replace(/<s>\s*<s>([\s\S]*?)<\/s>\s*<\/s>/gi, "<s>$1</s>");
 
   value = value.replace(/<(\w+)(\s[^>]*)?>\s*(?:<br\s*\/?>\s*)*<\/\1>/gi, "");
   value = value.replace(/(<br\s*\/?>\s*){2,}/gi, "<br />");

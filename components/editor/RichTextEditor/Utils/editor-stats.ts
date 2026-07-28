@@ -1,27 +1,50 @@
 import type { JSONContent } from "@tiptap/core";
 
-export function countEditorWords(json: JSONContent | null | undefined) {
-  const text = extractPlainText(json);
-  if (!text.trim()) return 0;
-  return text.trim().split(/\s+/).filter(Boolean).length;
+export function countTextWords(text: string): number {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).filter(Boolean).length;
 }
 
-export function countEditorCharacters(json: JSONContent | null | undefined) {
-  return extractPlainText(json).length;
+export function countEditorWords(jsonOrText: JSONContent | string | null | undefined): number {
+  if (typeof jsonOrText === "string") {
+    const plain = jsonOrText.replace(/<[^>]+>/g, " ");
+    return countTextWords(plain);
+  }
+  const text = extractPlainText(jsonOrText);
+  return countTextWords(text);
 }
 
-export function estimateReadingMinutes(json: JSONContent | null | undefined) {
-  const words = countEditorWords(json);
+export function countEditorCharacters(jsonOrText: JSONContent | string | null | undefined): number {
+  if (typeof jsonOrText === "string") {
+    const plain = jsonOrText.replace(/<[^>]+>/g, " ").trim();
+    return plain.length;
+  }
+  return extractPlainText(jsonOrText).length;
+}
+
+export function estimateReadingMinutes(jsonOrText: JSONContent | string | null | undefined): number {
+  const words = countEditorWords(jsonOrText);
   return Math.max(1, Math.round(words / 200));
 }
 
-function extractPlainText(json: JSONContent | null | undefined) {
+function extractPlainText(json: JSONContent | null | undefined): string {
   if (!json) return "";
   const parts: string[] = [];
+
   function walk(node: JSONContent) {
-    if (node.type === "text" && node.text) parts.push(node.text);
-    node.content?.forEach(walk);
+    if (!node) return;
+    if (typeof node.text === "string" && node.text) {
+      parts.push(node.text);
+    }
+    if (Array.isArray(node.content)) {
+      for (const child of node.content) {
+        walk(child);
+      }
+    }
   }
+
   walk(json);
   return parts.join(" ");
 }
+

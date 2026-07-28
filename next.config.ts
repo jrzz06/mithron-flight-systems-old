@@ -194,7 +194,9 @@ const nextConfig: NextConfig = {
         destination: "/category/global-products",
         permanent: true
       },
-      { source: "/supplier/orders", destination: "/supplier", permanent: true }
+      { source: "/supplier/orders", destination: "/supplier", permanent: true },
+      { source: "/product-page/:slug", destination: "/product/:slug", permanent: true },
+      { source: "/product-page/:slug/", destination: "/product/:slug", permanent: true }
     ];
   },
   async rewrites() {

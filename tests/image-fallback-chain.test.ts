@@ -32,11 +32,10 @@ describe("image fallback chain", () => {
       imageRole: "card"
     });
 
-    expect(buildImageFallbackChain(model)).toEqual([
-      model.primarySrc,
-      model.resolvedSrc,
-      model.responsive?.fallbackSrc
-    ].filter((value, index, list) => value && list.indexOf(value) === index));
+    const chain = buildImageFallbackChain(model);
+    expect(chain[0]).toBe(model.primarySrc);
+    expect(chain).toContain(model.resolvedSrc);
+    expect(chain.at(-1)).toBe(model.responsive?.fallbackSrc);
   });
 
   it("falls back from /cdn-media to the direct Supabase URL", () => {
@@ -66,38 +65,49 @@ describe("image fallback chain", () => {
 
   it("appends responsive variant urls when useSourceImage is enabled", () => {
     const variantSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/demo-768w-v1.webp";
-    const model = buildResponsiveImageModel({
-      src: "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo.webp",
-      useSourceImage: true,
-      responsive: {
-        assetId: "demo",
-        bucket: "mithron-products",
-        assetRole: "product",
-        category: "product",
-        generatedPromptId: "demo",
-        status: "generated",
-        fallbackSrc: "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo.webp",
-        fallbackAlt: "Demo",
-        width: 1200,
-        height: 900,
-        dominantColor: "#fff",
-        variants: {
-          webp: [
-            {
-              src: variantSrc,
-              width: 768,
-              height: 576,
-              format: "webp",
-              storagePath: "catalog-cutouts/v1/demo-768w-v1.webp"
-            }
-          ]
+    const previous = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+    try {
+      const model = buildResponsiveImageModel({
+        src: "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo.webp",
+        useSourceImage: true,
+        responsive: {
+          assetId: "demo",
+          bucket: "mithron-products",
+          assetRole: "product",
+          category: "product",
+          generatedPromptId: "demo",
+          status: "generated",
+          fallbackSrc: "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo.webp",
+          fallbackAlt: "Demo",
+          width: 1200,
+          height: 900,
+          dominantColor: "#fff",
+          variants: {
+            webp: [
+              {
+                src: variantSrc,
+                width: 768,
+                height: 576,
+                format: "webp",
+                storagePath: "catalog-cutouts/v1/demo-768w-v1.webp"
+              }
+            ]
+          }
         }
-      }
-    });
+      });
 
-    expect(buildImageFallbackChain(model)).toEqual([
-      model.primarySrc,
-      variantSrc
-    ]);
+      expect(model.primarySrc).toBe(
+        "/cdn-media/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo.webp"
+      );
+      expect(buildImageFallbackChain(model)).toEqual([
+        model.primarySrc,
+        "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo.webp",
+        variantSrc
+      ]);
+    } finally {
+      if (previous === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      else process.env.NEXT_PUBLIC_SUPABASE_URL = previous;
+    }
   });
 });

@@ -84,7 +84,17 @@ async function redirectAfterSystemLogout(
   loginUrl.searchParams.set("logout_reason", reason);
   const redirectResponse = secureRedirectResponse(request, loginUrl);
   const supabase = createSupabaseOnRequest(request, redirectResponse);
-  await supabase.auth.signOut();
+  await supabase.auth.signOut().catch(() => {});
+  const cookieOpts = resolveSupabaseCookieOptions();
+  for (const cookie of request.cookies.getAll()) {
+    if (/^sb-[^-]+-auth-token(?:\.\d+)?$/i.test(cookie.name)) {
+      redirectResponse.cookies.set(cookie.name, "", {
+        ...cookieOpts,
+        maxAge: 0,
+        expires: new Date(0)
+      });
+    }
+  }
   return redirectResponse;
 }
 
@@ -493,7 +503,9 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
 
   const pathname = request.nextUrl.pathname;
   const authCode = request.nextUrl.searchParams.get("code");
-  if (authCode && pathname !== "/auth/callback") {
+  // Password-recovery PKCE lands on /reset-password?code=… — do not steal that code
+  // into the OAuth callback or the user never sees the reset form.
+  if (authCode && pathname !== "/auth/callback" && pathname !== "/reset-password") {
     const callbackUrl = request.nextUrl.clone();
     callbackUrl.pathname = "/auth/callback";
     return secureRedirectResponse(request, callbackUrl);
@@ -501,7 +513,8 @@ async function handleProxyRequest(request: NextRequest, event: NextFetchEvent) {
 
   // OAuth PKCE exchange must run in the auth callback route without middleware
   // touching Supabase cookies first — otherwise code_verifier no longer matches.
-  if (pathname === "/auth/callback" || pathname === "/auth/confirm") {
+  // Same for /reset-password when exchanging a recovery code on the client.
+  if (pathname === "/auth/callback" || pathname === "/auth/confirm" || pathname === "/reset-password") {
     return secureNextResponse(request);
   }
 

@@ -179,8 +179,10 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
   let detailInventory = snapshot.data.inventory;
 
   if (selectedOrderId) {
-    const detail = await loadWarehouseOrderDetail(selectedOrderId);
-    if (detail.data.order) {
+    const detail = await loadWarehouseOrderDetail(selectedOrderId).catch(() => ({
+      data: { order: null, orderItems: [], products: [], shipments: [] }
+    }));
+    if (detail.data?.order) {
       hydratedSelectedOrder = detail.data.order;
       const otherItems = snapshot.data.orderItems.filter(
         (item) => text(item.order_id) !== selectedOrderId
@@ -201,6 +203,8 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
         .map((item) => text(item.product_slug))
         .filter(Boolean);
       detailInventory = await loadInventoryForProductSlugs(slugs);
+    } else {
+      hydratedSelectedOrder = null;
     }
   }
 

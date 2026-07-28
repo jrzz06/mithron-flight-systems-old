@@ -96,6 +96,15 @@ describe("supplier workflow guards", () => {
     expect(actions).toContain("supplierProductRedirect");
     expect(actions).toContain("product_status");
     expect(actions).toContain("if (isNextRedirect(submitError)) throw submitError");
+    expect(actions).toContain("readSubmitForApprovalFlag");
+    expect(actions).toContain("productSentForReview");
+  });
+
+  it("exposes save and send for review on supplier edit form", () => {
+    const supplierEditForm = readFileSync(join(root, "components/supplier/supplier-edit-product-form.tsx"), "utf8");
+    expect(supplierEditForm).toContain("Save and send for review");
+    expect(supplierEditForm).toContain('name="submit_for_approval"');
+    expect(supplierEditForm).toContain('value="1"');
   });
 
   it("ships supplier portal routes and admin approval queue", () => {

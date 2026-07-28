@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isEmailBurstActive, isOtpCooldownActive, markEmailBurst, markOtpCooldown } from "@/lib/auth/delivery-cooldowns";
 import { authEmailDeliveryUnavailableResponse, isAuthEmailDeliveryConfigured } from "@/lib/auth/email-delivery-ready";
-import { mapOtpSendErrorForClient, shouldExposeSignInOtpSendError } from "@/lib/auth/otp-send-errors";
+import { mapOtpSendErrorForClient, isOtpRateLimitError, shouldExposeSignInOtpSendError } from "@/lib/auth/otp-send-errors";
 import { buildAuthConfirmUrl, resolveRequestOrigin } from "@/lib/auth/request-origin";
 import { normalizeSignupEmail, rejectClientSuppliedRole, validateSignupEmail } from "@/lib/auth/signup-validation";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       if (shouldExposeSignInOtpSendError(error)) {
         return NextResponse.json(
           { error: mapOtpSendErrorForClient(error) },
-          { status: 400 }
+          { status: isOtpRateLimitError(error) ? 429 : 400 }
         );
       }
     }
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     console.warn("[mithron-auth] Signup OTP resend failed.", error.message);
     return NextResponse.json(
       { error: mapOtpSendErrorForClient(error) },
-      { status: 400 }
+      { status: isOtpRateLimitError(error) ? 429 : 400 }
     );
   }
 

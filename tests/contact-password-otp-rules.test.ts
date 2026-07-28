@@ -62,6 +62,14 @@ describe("honest OTP delivery wiring", () => {
       RESEND_API_KEY: "re_test"
     })).toBe(true);
 
+    // Hosted Supabase SMTP path (hook off) is enough for auth mail.
+    expect(isAuthEmailDeliveryConfigured({
+      AUTH_HOOK_SEND_EMAIL_SECRET: "",
+      BREVO_SMTP_LOGIN: "smtp-login@brevo.com",
+      BREVO_SMTP_KEY: "xsmtpsib-test",
+      BREVO_FROM_EMAIL: "noreply@mithron.com"
+    })).toBe(true);
+
     const signup = readFileSync(join(process.cwd(), "app/api/auth/signup/route.ts"), "utf8");
     const sendOtp = readFileSync(join(process.cwd(), "app/api/auth/send-otp/route.ts"), "utf8");
     expect(signup).toContain("isAuthEmailDeliveryConfigured");

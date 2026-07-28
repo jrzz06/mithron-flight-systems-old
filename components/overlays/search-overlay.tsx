@@ -360,28 +360,47 @@ export function SearchOverlay() {
     const panel = panelRef.current;
     if (!panel) return;
 
+    let rafId: number | null = null;
+    let lastSyncAt = 0;
+    const MIN_SYNC_MS = 200;
+
     const syncHeaderBottom = () => {
       // Use layout height (offsetHeight), not clipped getBoundingClientRect — clip-path
       // would otherwise pull the backdrop up while the sheet is still sliding open.
       const top = panel.getBoundingClientRect().top;
       const bottom = top + panel.offsetHeight;
       document.documentElement.style.setProperty("--search-header-bottom", `${Math.ceil(bottom)}px`);
+      lastSyncAt = performance.now();
+    };
+
+    const scheduleSync = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        const elapsed = performance.now() - lastSyncAt;
+        if (elapsed < MIN_SYNC_MS) {
+          scheduleSync();
+          return;
+        }
+        syncHeaderBottom();
+      });
     };
 
     syncHeaderBottom();
-    const resizeObserver = new ResizeObserver(syncHeaderBottom);
+    const resizeObserver = new ResizeObserver(scheduleSync);
     resizeObserver.observe(panel);
-    window.addEventListener("resize", syncHeaderBottom);
-    window.addEventListener("scroll", syncHeaderBottom, { passive: true });
+    window.addEventListener("resize", scheduleSync);
+    window.addEventListener("scroll", scheduleSync, { passive: true });
 
     // Re-measure after the clip-path open transition settles.
     const settleTimer = window.setTimeout(syncHeaderBottom, 240);
 
     return () => {
       window.clearTimeout(settleTimer);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
-      window.removeEventListener("resize", syncHeaderBottom);
-      window.removeEventListener("scroll", syncHeaderBottom);
+      window.removeEventListener("resize", scheduleSync);
+      window.removeEventListener("scroll", scheduleSync);
       document.documentElement.style.removeProperty("--search-header-bottom");
     };
   }, [open, hasActiveQuery, visibleProducts.length, isLoading]);

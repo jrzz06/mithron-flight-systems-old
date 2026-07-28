@@ -31,6 +31,7 @@
 .catalog-product-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 1.25rem; /* room for card shadows between cells */
   align-items: stretch;
   justify-content: stretch;
@@ -73,7 +74,7 @@
 .catalog-continued-grid__rows {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* No grid-auto-rows: 1fr — see .catalog-product-grid comment above */
+  grid-auto-rows: 1fr;
   gap: 1.25rem;
   align-items: stretch;
   justify-content: stretch;
@@ -93,8 +94,7 @@
   width: 100%;
   min-width: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* No grid-auto-rows: 1fr — virtualized rows contain exactly 2 or 4 cards;
-     stretch alignment makes them equal without a fixed row height. */
+  grid-auto-rows: 1fr;
   gap: 1.25rem;
   align-items: stretch;
   overflow: visible;
@@ -145,7 +145,7 @@
   Glass morphism: translucent fill + blur(16px), barely-there border.
 */
 [data-catalog-shelf-cards] {
-  --shelf-cutout-scale: 1.5;
+  --shelf-cutout-scale: 1;
   --shelf-cutout-pad: 0px;
   --shelf-card-ink: #18181b;
   --shelf-card-pad-x: 10px;
@@ -153,12 +153,12 @@
   --shelf-card-pad-top: 4px;
   --shelf-footer-gap: 8px;
   --shelf-dji-card-radius: 14px;
-  --shelf-card-surface: rgba(255, 255, 255, 0.42);
-  --shelf-card-surface-hover: rgba(255, 255, 255, 0.56);
+  --shelf-card-surface: #ffffff;
+  --shelf-card-surface-hover: #ffffff;
   --catalog-card-image-ratio: 4 / 3;
-  --catalog-image-inset: 8px;
+  --catalog-image-inset: 0px;
   --catalog-footer-inline: 4px;
-  --catalog-glass-border: rgba(229, 231, 235, 0.9);
+  --catalog-glass-border: rgba(15, 23, 42, 0.08);
   --catalog-glass-highlight: rgba(255, 255, 255, 0.55);
   --catalog-card-shadow:
     0 1px 2px rgba(15, 23, 42, 0.08),
@@ -168,6 +168,18 @@
     0 2px 6px rgba(15, 23, 42, 0.1),
     0 12px 28px rgba(15, 23, 42, 0.16),
     0 28px 56px rgba(15, 23, 42, 0.14);
+
+  /* ── Fluid type scale (330px → 768px viewport anchors) ────────────────────
+     Each token interpolates linearly between the two clamp bounds so every
+     viewport width (330, 360, 390, 414, 480 …) gets a proportional size
+     instead of jumping at a breakpoint. The min/max clamps stop growth
+     outside that range. Override per breakpoint below as needed for desktop.
+     ─────────────────────────────────────────────────────────────────────── */
+  --font-eyebrow: clamp(10px, 0.228vw + 9.25px, 11px);   /* category label */
+  --font-title:   clamp(12px, 0.457vw + 10.5px, 14px);   /* product title   */
+  --font-body:    clamp(11px, 0.228vw + 10.25px, 12px);  /* description     */
+  --font-price:   clamp(14px, 0.457vw + 12.5px, 16px);   /* final price      */
+  --font-button:  clamp(12px, 0.228vw + 11.25px, 13px);  /* Buy Now label   */
 }
 
 @media (min-width: 640px) {
@@ -198,18 +210,15 @@
   justify-self: stretch !important;
   aspect-ratio: auto !important;
   box-sizing: border-box;
-  padding: 0.625rem !important; /* 10px — compact 2-col */
+  padding: 0.5rem 0.625rem !important; /* 8px top/bottom, 10px sides — compact 2-col */
   border-radius: 0.875rem !important; /* 14px */
-  border: 1px solid var(--catalog-glass-border, rgba(229, 231, 235, 0.9)) !important;
-  background: #ffffff !important;
-  box-shadow: var(--catalog-card-shadow) !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  background: linear-gradient(180deg, #e4eef6 0%, #f0f6fa 45%, #ffffff 85%) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
   overflow: hidden !important;
   isolation: isolate;
   container-type: normal;
-  transition:
-    box-shadow 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    border-color 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: all 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @media (min-width: 1024px) {
@@ -217,7 +226,7 @@
   [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"],
   .catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"],
   [data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"] {
-    padding: 0.8125rem !important; /* ~13px — ~110% of prior 12px */
+    padding: 0.625rem 0.75rem !important; /* 10px top/bottom, 12px sides */
   }
 }
 
@@ -225,10 +234,10 @@
 [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"]:is(:hover, :focus-within, :focus-visible),
 .catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"]:is(:hover, :focus-visible),
 [data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"]:is(:hover, :focus-visible) {
-  border-color: rgba(209, 213, 219, 1) !important;
-  background: #ffffff !important;
-  box-shadow: var(--catalog-card-shadow-hover) !important;
-  transform: translateY(-2px);
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  background: linear-gradient(180deg, #e4eef6 0%, #f0f6fa 45%, #ffffff 85%) !important;
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.09), 0 4px 12px -2px rgba(15, 23, 42, 0.04) !important;
+  transform: translateY(-3px) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -245,18 +254,17 @@
   }
 }
 
-/* Normalized image well — 4:3 aspect; ~12px breathing room so product fills the panel */
+/* Image stage — gradient bg via design token; no nested plate */
 [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child {
   position: relative !important;
   padding: 0 !important;
-  background: #f9fafb !important; /* bg-gray-50 */
+  background: transparent !important;
   border: none !important;
-  border-radius: 0.625rem !important; /* 10px */
+  border-radius: 0 !important;
   aspect-ratio: 4 / 3 !important;
   width: 100% !important;
   height: auto !important;
   min-height: 0 !important;
-  max-height: 200px !important;
   overflow: hidden !important;
   display: flex !important;
   align-items: center !important;
@@ -264,36 +272,23 @@
   flex-shrink: 0 !important;
 }
 
-/* Subtle radial cutout shadow — products / category / PDP recommend */
+/* Keep ::after off — gradient lives on the well itself (avoids double haze) */
 [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 8%;
-  z-index: 0;
-  width: 58%;
-  height: 22%;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse 70% 55% at 50% 50%,
-    rgba(15, 23, 42, 0.16) 0%,
-    rgba(15, 23, 42, 0.06) 45%,
-    transparent 72%
-  );
-  transform: translateX(-50%);
-  pointer-events: none;
+  content: none !important;
+  display: none !important;
 }
 
 /* Desktop: drop the phone/tablet image cap so wider 4-col tracks can grow */
 @media (min-width: 1024px) {
   [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child {
     max-height: none !important;
-    border-radius: 0.75rem !important;
+    border-radius: 0 !important;
   }
 }
 
 [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child > div:first-child {
-  inset: var(--catalog-image-inset, 12px) !important;
+  inset: var(--catalog-image-inset, 0px) !important;
+  z-index: 1;
 }
 
 [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child img,
@@ -344,16 +339,23 @@
   flex: 0 0 auto !important;
 }
 
-/* Catalog listing: compact type on 2-col mobile, scaled up from sm */
+/* Catalog listing: fluid type on 2-col mobile, scaled up from sm */
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productKicker"] {
-  font-size: 10px !important;
+  font-size: var(--font-eyebrow, 10px) !important;
   letter-spacing: 0.07em !important;
   margin-bottom: 4px !important;
 }
 
 @media (min-width: 640px) {
+  [data-catalog-shelf-cards] {
+    /* Wider viewport: boost clamp ceiling so tokens scale up on tablet+ */
+    --font-eyebrow: clamp(11px, 0.3vw + 10px, 12px);
+    --font-title:   clamp(14px, 0.6vw + 12.5px, 16px);
+    --font-body:    clamp(12px, 0.3vw + 11px, 13px);
+    --font-price:   clamp(16px, 0.6vw + 14.5px, 18px);
+    --font-button:  clamp(12px, 0.3vw + 11px, 13px);
+  }
   [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productKicker"] {
-    font-size: 12px !important;
     margin-bottom: 6px !important;
   }
 }
@@ -374,95 +376,66 @@
   font-size: 12px !important;
 }
 
+/* Title: fluid font-size, HARD 2-line cap at every width — box size is fixed,
+   text conforms to it. max-height = 2 lines × line-height so the box never
+   grows regardless of font rendering differences across devices. */
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] h3 {
   display: -webkit-box !important;
   min-height: 0 !important;
-  max-height: calc(1.25em * 2 + 1px) !important;
+  max-height: calc(1.25em * 2 + 1px) !important; /* 2 lines × 1.25 line-height */
   overflow: hidden !important;
   color: #111827 !important;
-  font-size: 13px !important;
+  font-size: var(--font-title, 13px) !important;
   font-weight: 650 !important;
   line-height: 1.25 !important;
   letter-spacing: -0.015em !important;
   white-space: normal !important;
   text-overflow: ellipsis !important;
   -webkit-box-orient: vertical !important;
-  -webkit-line-clamp: 2 !important;
+  -webkit-line-clamp: 2 !important;  /* HARD cap — text gets ellipsis, not height */
   line-clamp: 2 !important;
   margin: 0 !important;
 }
 
-@media (min-width: 640px) {
-  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] h3 {
-    font-size: 15px !important;
-    min-height: 0 !important;
-  }
-}
-
+/* Description: fluid font-size, HARD 1-line cap at every width — if it can't
+   say anything useful in one line it gets an ellipsis, not extra card height. */
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productDescriptor"] {
   min-height: 0 !important;
   margin-top: 3px !important;
   color: #6b7280 !important;
-  font-size: 11px !important;
-  line-height: 1.35 !important;
+  font-size: var(--font-body, 11px) !important;
+  line-height: 1.3 !important;
+  max-height: calc(1.3em * 1 + 1px) !important; /* 1 line × 1.3 line-height */
   text-transform: none !important;
   display: -webkit-box !important;
   -webkit-box-orient: vertical !important;
-  -webkit-line-clamp: 1 !important;
+  -webkit-line-clamp: 1 !important;  /* HARD cap at 1 line always */
   line-clamp: 1 !important;
   overflow: hidden !important;
 }
 
-@media (min-width: 640px) {
-  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productDescriptor"] {
-    min-height: 0 !important;
-    font-size: 12.5px !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-  }
-}
-
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-compare-at] {
   color: #9ca3af !important;
-  font-size: 11px !important;
+  font-size: calc(var(--font-body, 11px) - 1px) !important; /* 1px below body scale */
   font-weight: 500 !important;
   line-height: 1.15 !important;
   text-decoration: line-through !important;
 }
 
-@media (min-width: 640px) {
-  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-compare-at] {
-    font-size: 13px !important;
-  }
-}
-
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceDji"],
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceCatalog"] {
   color: #111827 !important;
-  font-size: 14px !important;
+  font-size: var(--font-price, 14px) !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
   line-height: 1.12 !important;
 }
 
-@media (min-width: 640px) {
-  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceDji"],
-  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productPriceCatalog"] {
-    font-size: 17px !important;
-  }
-}
-
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-gst-note] {
   color: #9ca3af !important;
-  font-size: 10px !important;
+  font-size: calc(var(--font-eyebrow, 10px) - 0px) !important; /* same as eyebrow */
   font-weight: 400 !important;
   text-transform: none !important;
-}
-
-@media (min-width: 640px) {
-  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [data-catalog-gst-note] {
-    font-size: 12px !important;
-  }
 }
 
 [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productBuyNowCatalog"] {
@@ -477,7 +450,7 @@
   border-radius: 0.5rem !important;
   background: #065f46 !important;
   color: #fff !important;
-  font-size: 11px !important;
+  font-size: var(--font-button, 11px) !important;
   font-weight: 600 !important;
   letter-spacing: 0.01em !important;
   flex: 0 0 auto !important;
@@ -598,3 +571,82 @@
   }
 }
 
+/* ==========================================================================
+   MOBILE-ONLY: max-width 480px card-grid spacing fix
+   Applies to ALL three grid contexts via shared [data-catalog-shelf-cards]
+   and .catalog-product-grid selectors:
+     1. Main product / category catalog grid
+     2. "You may also like" / related / discovery rail
+     3. Category cards (Accessories, etc.)
+   DO NOT add tablet/desktop rules here — max-width: 480px only.
+   ========================================================================== */
+@media (max-width: 480px) {
+
+  /* Override type tokens to the narrow-end clamp values (= min of mobile scale).
+     The base ruleset clamp() values already produce correct sizes, but these
+     explicit min-value overrides ensure no rounding surprises on 320-330px devices. */
+  [data-catalog-shelf-cards] {
+    --font-eyebrow: 10px;
+    --font-title:   12px;
+    --font-body:    11px;
+    --font-price:   14px;
+    --font-button:  12px;
+  }
+
+  /* 1 — Grid column-gap: ~16-19px → 8px */
+  .catalog-product-grid,
+  .catalog-continued-grid__rows,
+  .catalog-virtualized-row {
+    gap: 8px !important;
+  }
+
+  /* 2 — Card shell padding: sides 10px, top 4px, bottom 6px
+          Card width = (100vw - 2×container-pad - 8px) / 2 via 1fr columns — no px hardcoded. */
+  .catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"],
+  [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"],
+  .catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"],
+  [data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"] {
+    padding: 4px 10px 6px !important; /* top 4px, sides 10px, bottom 6px */
+  }
+
+  /* 3 — Image well: cap max-height ~15-20% shorter to trim card height */
+  [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:first-child {
+    max-height: 110px !important;
+  }
+
+  /* 4 — Body inner padding */
+  [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] > div:last-child {
+    padding: 4px 0 0 !important;
+  }
+
+  /* 5 — Title/description hard clamps already in base ruleset; only spacing override needed */
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] h3 {
+    margin: 0 0 2px !important;
+    line-height: 1.25 !important; /* ensure line-height consistent on narrow devices */
+  }
+
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productDescriptor"] {
+    margin-top: 2px !important;
+  }
+
+  /* 6 — Footer: tighten vertical gap to 4px */
+  [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="productFooter"] {
+    padding: 3px 0 0 !important;
+    gap: 4px !important;
+  }
+
+  /* 7 — Price block internal gap */
+  [data-catalog-shelf-cards] a[data-shelf-card-layout="dji"] [class*="productPriceBlock"] {
+    gap: 2px !important;
+  }
+
+  /* 8 — Buy Now: min-height 40px (↑ from ~32px), full-width.
+          Deliberate exception — 32px is below Apple/Google 44px tap-target min. */
+  [data-catalog-shelf-cards] a[data-card-presentation="catalog"] [class*="productBuyNowCatalog"] {
+    min-height: 40px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 6px !important;
+    border-radius: 8px !important;
+  }
+}

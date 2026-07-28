@@ -23,10 +23,11 @@ import { Specification } from "@/lib/editor/extensions/specification";
 export type EditorExtensionOptions = {
   placeholder?: string;
   characterLimit?: number;
+  enableInputRules?: boolean;
 };
 
 export function createEditorExtensions(options: EditorExtensionOptions = {}): Extensions {
-  const { placeholder = "Start writing...", characterLimit } = options;
+  const { placeholder = "Start writing...", characterLimit, enableInputRules = true } = options;
 
   return [
     StarterKit.configure({
@@ -35,7 +36,8 @@ export function createEditorExtensions(options: EditorExtensionOptions = {}): Ex
       orderedList: { keepMarks: true },
       codeBlock: { HTMLAttributes: { class: "editor-code-block" } },
       blockquote: { HTMLAttributes: { class: "editor-blockquote" } },
-      horizontalRule: { HTMLAttributes: { class: "editor-divider" } }
+      horizontalRule: { HTMLAttributes: { class: "editor-divider" } },
+      ...(enableInputRules === false ? { inputRules: false } : {})
     }),
     Underline,
     TextStyle,
@@ -44,7 +46,7 @@ export function createEditorExtensions(options: EditorExtensionOptions = {}): Ex
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Link.configure({
       openOnClick: false,
-      autolink: true,
+      autolink: enableInputRules,
       validate: (url) => /^https?:\/\//i.test(url),
       HTMLAttributes: {
         rel: "noopener noreferrer",

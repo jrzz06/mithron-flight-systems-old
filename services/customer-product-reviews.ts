@@ -1,5 +1,12 @@
 import { cache } from "react";
 import { assertSupabaseAdminConfig } from "@/lib/env";
+import {
+  canCustomerReviewOrder,
+  type CustomerProductReviewBlockedReason,
+  type CustomerProductReviewContext,
+  type OwnProductReviewSummary,
+  type WritableReviewOrder
+} from "@/lib/orders/review-eligibility";
 import type { ProductPageReview, ProductReviewSummary, ProductReviewsPayload } from "@/lib/product-reviews/types";
 import {
   createAdminRecord,
@@ -313,9 +320,6 @@ export async function updateCustomerReviewByOwner(
   if (!existing || existing.userId !== input.userId) {
     throw new Error("Review not found.");
   }
-  if (existing.status === "published") {
-    throw new Error("Published reviews cannot be edited. Contact support if you need changes.");
-  }
 
   const body = text(input.body ?? existing.body);
   if (!body) throw new Error("Review content is required.");
@@ -323,6 +327,10 @@ export async function updateCustomerReviewByOwner(
   if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
     throw new Error("Rating must be between 1 and 5.");
   }
+
+  // Keep published reviews live after edit (no pending re-moderation gate).
+  const nextStatus: CustomerReviewStatus =
+    existing.status === "rejected" ? "pending" : existing.status === "published" ? "published" : "pending";
 
   const config = assertSupabaseAdminConfig(env);
   const response = await fetchWithTimeout(
@@ -335,7 +343,7 @@ export async function updateCustomerReviewByOwner(
         body: body.slice(0, 4000),
         rating,
         image_urls: (input.imageUrls ?? existing.imageUrls).slice(0, 6),
-        status: "pending",
+        status: nextStatus,
         updated_at: new Date().toISOString()
       })
     }
@@ -559,6 +567,112 @@ export async function markReviewHelpful(
   });
 
   return helpfulCount;
+}
+
+export async function getCustomerProductReviewContext(
+  userId: string,
+  productSlug: string,
+  env: EnvSource = process.env
+): Promise<CustomerProductReviewContext> {
+  const slug = productSlug.trim();
+  const empty: CustomerProductReviewContext = {
+    ownReviews: [],
+    writableOrders: [],
+    blockedReason: "not_purchased"
+  };
+  if (!userId.trim() || !slug) return empty;
+
+  const config = assertSupabaseAdminConfig(env);
+
+  const [ownRows, ordersResponse] = await Promise.all([
+    fetchRows(
+      [
+        `select=${REVIEW_SELECT}`,
+        `product_slug=eq.${encodeURIComponent(slug)}`,
+        `user_id=eq.${encodeURIComponent(userId)}`,
+        "order=created_at.desc",
+        "limit=50"
+      ].join("&"),
+      env
+    ).catch(() => [] as CustomerProductReview[]),
+    fetchWithTimeout(
+      [
+        `${config.url}/rest/v1/orders?select=`,
+        "id,order_number,status,fulfillment_status,payment_status,created_at,",
+        `order_items!inner(product_slug,product_name)`,
+        `&created_by_user_id=eq.${encodeURIComponent(userId)}`,
+        `&order_items.product_slug=eq.${encodeURIComponent(slug)}`,
+        `&order=created_at.desc`,
+        `&limit=50`
+      ].join(""),
+      { headers: headers(config.serviceRoleKey), cache: "no-store" }
+    )
+  ]);
+
+  const ownReviews: OwnProductReviewSummary[] = ownRows.map((review) => ({
+    id: review.id,
+    orderId: review.orderId,
+    productSlug: review.productSlug,
+    rating: review.rating,
+    title: review.title,
+    body: review.body,
+    status: review.status,
+    createdAt: review.createdAt
+  }));
+
+  const reviewedOrderKeys = new Set(
+    ownReviews
+      .filter((review) => review.orderId)
+      .map((review) => `${review.orderId}::${review.productSlug}`)
+  );
+
+  let purchasedOrders: Array<{
+    orderId: string;
+    orderNumber: string;
+    productSlug: string;
+    productName: string;
+    reviewable: boolean;
+  }> = [];
+
+  if (ordersResponse.ok) {
+    const orders = (await ordersResponse.json()) as JsonRecord[];
+    for (const order of Array.isArray(orders) ? orders : []) {
+      const orderId = text(order.id);
+      if (!orderId) continue;
+      const items = Array.isArray(order.order_items) ? (order.order_items as JsonRecord[]) : [];
+      const match = items.find((item) => text(item.product_slug) === slug) ?? items[0];
+      if (!match) continue;
+      purchasedOrders.push({
+        orderId,
+        orderNumber: text(order.order_number, orderId),
+        productSlug: slug,
+        productName: text(match.product_name, slug),
+        reviewable: canCustomerReviewOrder(order)
+      });
+    }
+  }
+
+  const writableOrders: WritableReviewOrder[] = purchasedOrders
+    .filter((order) => order.reviewable && !reviewedOrderKeys.has(`${order.orderId}::${order.productSlug}`))
+    .map((order) => ({
+      orderId: order.orderId,
+      orderNumber: order.orderNumber,
+      productSlug: order.productSlug,
+      productName: order.productName
+    }));
+
+  let blockedReason: CustomerProductReviewBlockedReason = null;
+  if (!writableOrders.length && !ownReviews.length) {
+    if (!purchasedOrders.length) {
+      blockedReason = "not_purchased";
+    } else if (purchasedOrders.some((order) => !order.reviewable)) {
+      blockedReason = "awaiting_dispatch";
+    } else {
+      blockedReason = "not_purchased";
+    }
+  }
+
+  return { ownReviews, writableOrders, blockedReason };
 }
 
 export { toProductPageReview, buildSummary, sortReviews };

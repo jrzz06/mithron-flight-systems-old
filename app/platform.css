@@ -998,3 +998,30 @@ body:has([data-control-plane]) {
   min-height: 100dvh;
   background: var(--platform-bg);
 }
+
+/* ==========================================================================
+   Panel layout: aspect-ratio-agnostic height fix (16:10, 4:3, 21:9 etc.)
+   Problem: the fixed sidebar used h-screen (= 100vh). On many browsers,
+   100vh is computed against the MAXIMUM viewport (browser chrome hidden).
+   On 16:10 / 4:3 displays with visible browser chrome, the sidebar
+   overflows the visual viewport, causing overlaps with panel content.
+   Fix: height: 100dvh — always equals the CURRENT dynamic viewport height.
+   This is ratio-independent; 4:3, 16:10, 16:9, 21:9 all behave identically.
+   ========================================================================== */
+
+/* Belt-and-suspenders: override Tailwind h-screen utility in case h-dvh
+   isn't in the generated bundle (Tailwind 3 purge may omit unused utilities). */
+[data-control-plane] aside.lg\:h-screen,
+[data-control-plane] aside[class*="h-screen"] {
+  height: 100dvh !important;
+}
+
+/* Nav scroll region: ensure it fills the remaining flex height and scrolls
+   without overflowing the sidebar. min-height: 0 allows the flex child to
+   shrink below its content size (required for overflow: auto to work). */
+[data-control-plane] aside > div.mt-6 {
+  min-height: 0;
+  flex: 1 1 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}

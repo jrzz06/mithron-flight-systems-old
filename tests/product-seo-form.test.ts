@@ -96,7 +96,8 @@ describe("product seo workflow", () => {
 
     expect(metadata.title).toBe("Agri Kisan Drone Small | Mithron Flight Systems");
     expect(metadata.description).toBe("Premium agricultural drone with modular payload delivery.");
-    expect(metadata.alternates?.canonical).toBe("/product/source-agri-kisan-drone-small-8-liter");
+    expect(metadata.alternates?.canonical).toContain("/product/source-agri-kisan-drone-small-8-liter");
+    expect(String(metadata.alternates?.canonical)).toMatch(/^https?:\/\//);
     expect(openGraph.title).toBe("Agri Kisan Drone Small | Mithron");
     expect(openGraph.description).toBe("Cinematic product preview for social sharing.");
     expect(openGraph.images?.[0]).toMatchObject({

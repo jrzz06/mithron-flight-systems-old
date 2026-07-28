@@ -142,9 +142,35 @@ export function getSiteOrigin(env: Record<string, string | undefined> = process.
   return getSiteUrl(env).origin;
 }
 
+function rewriteLegacyProductPath(pathname: string) {
+  const match = pathname.match(/^\/product-page\/([^/]+)\/?$/i);
+  if (!match?.[1]) return pathname;
+  return `/product/${decodeURIComponent(match[1])}`;
+}
+
+/**
+ * Build an absolute URL on the configured site origin.
+ * Absolute inputs are re-hosted onto the site origin (never double-prefixed).
+ * Legacy `/product-page/{slug}` paths rewrite to `/product/{slug}`.
+ */
 export function toAbsoluteUrl(path: string, env: Record<string, string | undefined> = process.env) {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return new URL(normalizedPath, getSiteUrl(env)).toString();
+  const trimmed = String(path ?? "").trim();
+  const site = getSiteUrl(env);
+
+  if (!trimmed) return site.toString();
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const incoming = new URL(trimmed);
+      const pathname = rewriteLegacyProductPath(incoming.pathname);
+      return new URL(`${pathname}${incoming.search}${incoming.hash}`, site).toString();
+    } catch {
+      /* fall through to relative handling */
+    }
+  }
+
+  const normalizedPath = rewriteLegacyProductPath(trimmed.startsWith("/") ? trimmed : `/${trimmed}`);
+  return new URL(normalizedPath, site).toString();
 }
 
 export function hasConfiguredSiteUrl(env: Record<string, string | undefined> = process.env) {

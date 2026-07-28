@@ -91,7 +91,7 @@ export function buildWebSiteJsonLd() {
 }
 
 export function buildProductJsonLd(product: Product) {
-  const productUrl = toAbsoluteUrl(product.productUrl ?? `/product/${product.slug}`);
+  const productUrl = toAbsoluteUrl(`/product/${product.slug}`);
   const images = productImages(product);
 
   return {

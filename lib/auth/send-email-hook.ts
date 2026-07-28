@@ -104,7 +104,11 @@ export function buildAuthConfirmUrl(input: {
   const url = new URL("/auth/confirm", origin);
   url.searchParams.set("token_hash", input.tokenHash);
   url.searchParams.set("type", input.emailActionType);
-  if (input.redirectTo?.trim()) {
+  // Recovery must always land on the reset form after confirm — do not unwrap
+  // /reset-password as an auth bounce into /account.
+  if (input.emailActionType === "recovery") {
+    url.searchParams.set("next", "/reset-password");
+  } else if (input.redirectTo?.trim()) {
     url.searchParams.set("next", unwrapAuthNextPath(input.redirectTo, "/account"));
   }
   return url.toString();

@@ -142,7 +142,7 @@ export function TestimonialsSectionEditor({
             { value: "rating", label: "Highest rating" }
           ]}
         />
-        <input type="hidden" name="enabled" value={reviews.enabled ? "true" : "false"} />
+        <input type="hidden" name="enabled" value="true" />
       </div>
 
       <div className="grid gap-4">

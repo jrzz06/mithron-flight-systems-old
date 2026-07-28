@@ -1,4 +1,4 @@
-import { isMediaCdnHostname } from "@/lib/media/cdn-url";
+import { isMediaCdnHostname, readMediaCdnPublicEnv } from "@/lib/media/cdn-url";
 
 const IMAGE_EXTENSION = /\.(avif|gif|jpe?g|png|webp|svg|ico)$/i;
 const LOCAL_MEDIA_PREFIX = /^\/(?:media|assets|optimized)\//;
@@ -42,7 +42,7 @@ function isAllowedRemoteImageUrl(parsed: URL, env: Record<string, string | undef
 
 export function isNextImageRenderableSrc(
   src: string,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
 ) {
   const trimmed = src.trim();
   if (!trimmed) return false;
@@ -67,8 +67,8 @@ export function isNextImageRenderableSrc(
 
 export function resolveNextImageSrc(
   src: string | null | undefined,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
 ) {
-  if (!src?.trim()) return null;
+  if (!src?.trim() || src.trim() === "/") return null;
   return isNextImageRenderableSrc(src, env) ? src.trim() : null;
 }

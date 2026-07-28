@@ -75,32 +75,48 @@ export function AdminSupplierProductsQueue({
     formData: FormData
   ) {
     const slug = String(formData.get("slug") ?? "").trim();
-    startTransition(() => {
-      if (slug) removeProduct(slug);
-    });
 
     const result = await wrapServerAction(action, { label: "Review supplier product" })(formData);
     feedbackFromResult(result);
 
     if (result.ok) {
-      const params = new URLSearchParams();
-      if (supplierFilter) params.set("supplier", supplierFilter);
+      startTransition(() => {
+        if (slug) removeProduct(slug);
+      });
       markControlPlaneLiveSyncFlush();
       void realtime?.reconcileResources(["suppliers"]);
       if (supplierFilter) {
         router.replace(`/admin/suppliers/products?supplier=${encodeURIComponent(supplierFilter)}`);
       }
+      router.refresh();
       return;
     }
 
     void realtime?.reconcileResources(["suppliers"]);
+    router.refresh();
   }
 
   return (
     <AdminSection
       title="Pending product submissions"
-      description={`${Math.max(pendingCount - (products.length - optimisticProducts.length), optimisticProducts.length)} item${optimisticProducts.length === 1 ? "" : "s"} awaiting review`}
-      actions={optimisticProducts.length > 0 ? <StatusPill status="pending_review" /> : undefined}
+      description={
+        supplierFilter
+          ? `${optimisticProducts.length} pending submission${optimisticProducts.length === 1 ? "" : "s"} for this supplier`
+          : `${Math.max(pendingCount - (products.length - optimisticProducts.length), optimisticProducts.length)} item${optimisticProducts.length === 1 ? "" : "s"} awaiting review`
+      }
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          {supplierFilter ? (
+            <a
+              href="/admin/suppliers/products"
+              className="text-xs font-medium text-[var(--platform-accent)]"
+            >
+              Clear supplier filter
+            </a>
+          ) : null}
+          {optimisticProducts.length > 0 ? <StatusPill status="pending_review" /> : null}
+        </div>
+      }
     >
       <div className="grid gap-2">
         {optimisticProducts.length ? optimisticProducts.map((product) => {
@@ -271,7 +287,9 @@ export function AdminSupplierProductsQueue({
           );
         }) : (
           <p className="rounded-[8px] border border-dashed border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-4 py-8 text-center text-sm text-[var(--platform-text-muted)]">
-            No products waiting for approval.
+            {supplierFilter
+              ? "No pending submissions for this supplier."
+              : "No products waiting for approval."}
           </p>
         )}
       </div>

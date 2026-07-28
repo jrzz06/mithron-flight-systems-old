@@ -6,6 +6,7 @@ import { relativeTimeLabel, supplierEmptyMessage } from "@/lib/platform/copy";
 import { getCurrentAuthContext } from "@/services/auth";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { listSupplierInventory, listSupplierProducts } from "@/services/supplier-actions";
+import type { SupplierInventoryItem } from "@/lib/supplier/types";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -28,6 +29,9 @@ export default async function SupplierInventoryPage({ searchParams }: { searchPa
   const inventory = context.userId
     ? await listSupplierInventory(context.userId, process.env, products)
     : [];
+  const workflowBySlug = new Map(
+    products.map((product) => [product.slug, product.workflowStatus ?? "draft"] as const)
+  );
 
   return (
     <div data-supplier-inventory-route className="grid gap-5">
@@ -63,24 +67,33 @@ export default async function SupplierInventoryPage({ searchParams }: { searchPa
               </tr>
             </thead>
             <tbody>
-              {inventory.length ? inventory.map((row) => {
-                const slug = String(row.product_slug ?? "");
-                const stockStatus = String(row.stock_status ?? "available");
-                const productName = String(row.product_name ?? slug);
-                const updatedAt = typeof row.updated_at === "string" ? relativeTimeLabel(row.updated_at) : "—";
+              {inventory.length ? inventory.map((row: SupplierInventoryItem) => {
+                const slug = row.productSlug;
+                const stockStatus = row.stockStatus || "available";
+                const productName = row.productName || slug;
+                const updatedAt = row.updatedAt ? relativeTimeLabel(row.updatedAt) : "—";
                 const attention = needsStockAttention(stockStatus);
+                const workflowStatus = workflowBySlug.get(slug) ?? "draft";
+                const productHref =
+                  workflowStatus === "published"
+                    ? `/product/${encodeURIComponent(slug)}`
+                    : `/supplier/products/${encodeURIComponent(slug)}/edit`;
                 return (
                   <tr
-                    key={String(row.id)}
+                    key={row.id}
                     className={`border-t border-[var(--platform-border)] ${attention ? "bg-amber-950/10" : ""}`}
                   >
                     <td className="px-4 py-3 text-[var(--platform-text-primary)]">
-                      <Link href={`/supplier/products/${encodeURIComponent(slug)}/edit`} className="block truncate font-medium hover:text-[var(--platform-accent)]">
+                      <Link
+                        href={productHref}
+                        className="block truncate font-medium hover:text-[var(--platform-accent)]"
+                        {...(workflowStatus === "published" ? { target: "_blank", rel: "noreferrer" } : {})}
+                      >
                         {productName}
                       </Link>
                     </td>
-                    <td className="truncate px-4 py-3 text-[var(--platform-text-secondary)]">{String(row.sku ?? "—")}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-[var(--platform-text-secondary)]">{String(row.quantity ?? 0)}</td>
+                    <td className="truncate px-4 py-3 text-[var(--platform-text-secondary)]">{row.sku || "—"}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-[var(--platform-text-secondary)]">{row.quantity ?? 0}</td>
                     <td className="px-4 py-3">
                       <StatusPill status={stockStatus} />
                     </td>

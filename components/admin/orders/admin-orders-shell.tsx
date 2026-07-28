@@ -12,6 +12,9 @@ type AdminOrdersShellProps = {
   hasSelectedOrder?: boolean;
 };
 
+/** Shared scroll contract for master / detail / 2xl actions columns. */
+const scrollColumnClass = "min-h-0 min-w-0 overflow-x-hidden overflow-y-auto";
+
 export function AdminOrdersShell({
   header,
   filters,
@@ -22,41 +25,47 @@ export function AdminOrdersShell({
   hasSelectedOrder = false
 }: AdminOrdersShellProps) {
   return (
-    <div data-admin-orders-shell className="grid min-w-0 gap-0 overflow-x-clip">
-      <div className="sticky top-0 z-20 -mx-1 space-y-2 border-b border-[var(--platform-border)] bg-[var(--platform-bg)]/95 px-1 pb-3 backdrop-blur-sm">
+    <div
+      data-admin-orders-shell
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-x-clip"
+    >
+      <div className="sticky top-0 z-20 -mx-1 shrink-0 space-y-2 border-b border-[var(--platform-border)] bg-[var(--platform-bg)]/95 px-1 pb-3 backdrop-blur-sm">
         {header}
         {filters}
         {toolbar}
       </div>
 
       <div
-        className={`mt-4 grid min-w-0 gap-4 ${
+        className={`mt-4 grid min-h-0 min-w-0 flex-1 gap-4 ${
           hasSelectedOrder && actions
-            ? "lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(240px,280px)_minmax(0,1fr)_minmax(260px,300px)]"
-            : "lg:grid-cols-[minmax(260px,300px)_minmax(0,1fr)]"
+            ? "xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)_minmax(260px,300px)]"
+            : "xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]"
         }`}
       >
         <div
-          className={`min-h-0 min-w-0 overflow-x-hidden lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto ${
-            hasSelectedOrder ? "hidden lg:flex lg:flex-col" : "flex flex-col"
+          className={`${scrollColumnClass} ${
+            hasSelectedOrder ? "hidden xl:flex xl:flex-col" : "flex flex-col"
           }`}
         >
           {list}
         </div>
 
         <div
-          className={`min-h-0 min-w-0 flex-col gap-4 overflow-x-hidden lg:col-start-2 lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto ${
-            hasSelectedOrder ? "flex" : "hidden lg:flex"
+          className={`${scrollColumnClass} flex-col gap-4 xl:col-start-2 ${
+            hasSelectedOrder ? "flex" : "hidden xl:flex"
           }`}
         >
-          <div className="min-h-0 min-w-0 flex-1">{detail}</div>
+          {/* Intrinsic height — do not flex-1; actions must sit below in document flow */}
+          <div className="min-w-0">{detail}</div>
           {actions ? (
             <div className="min-w-0 shrink-0 overflow-x-hidden 2xl:hidden">{actions}</div>
           ) : null}
         </div>
 
         {actions ? (
-          <div className="hidden min-h-0 min-w-0 flex-col overflow-x-hidden 2xl:col-start-3 2xl:flex 2xl:max-h-[calc(100dvh-11rem)] 2xl:overflow-y-auto">
+          <div
+            className={`hidden ${scrollColumnClass} flex-col 2xl:col-start-3 2xl:flex`}
+          >
             {actions}
           </div>
         ) : null}

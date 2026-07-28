@@ -7,7 +7,7 @@ import { mapAuthErrorForClient } from "@/lib/auth/client-errors";
 import { recordClientAuthEvent } from "@/lib/auth/audit-client";
 import { createClient } from "@/lib/client";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import styles from "../auth/auth-page.module.css";
+import styles from "../auth-page.module.css";
 
 function readRecoveryTokensFromHash() {
   if (typeof window === "undefined") return null;
@@ -27,6 +27,16 @@ function hasRecoveryHash() {
   );
 }
 
+function readRecoveryCodeFromSearch() {
+  if (typeof window === "undefined") return null;
+  const code = new URLSearchParams(window.location.search).get("code")?.trim();
+  return code || null;
+}
+
+function clearAuthParamsFromUrl() {
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 export function ResetPasswordForm() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -38,8 +48,24 @@ export function ResetPasswordForm() {
   useEffect(() => {
     let active = true;
     const recoveryHash = hasRecoveryHash();
+    const recoveryCode = readRecoveryCodeFromSearch();
 
     async function resolveRecoverySession() {
+      // PKCE recovery: /reset-password?code=…
+      if (recoveryCode) {
+        const { error } = await supabase.auth.exchangeCodeForSession(recoveryCode);
+        if (!active) return;
+        if (error) {
+          console.warn("[mithron-auth] Recovery code exchange failed.", error.message);
+          setRecoveryReady(false);
+          return;
+        }
+        clearAuthParamsFromUrl();
+        setRecoveryReady(true);
+        return;
+      }
+
+      // Legacy implicit recovery: /reset-password#access_token=…&refresh_token=…
       const recoveryTokens = readRecoveryTokensFromHash();
       if (recoveryTokens) {
         const { error } = await supabase.auth.setSession({
@@ -51,7 +77,7 @@ export function ResetPasswordForm() {
           setRecoveryReady(false);
           return;
         }
-        window.history.replaceState({}, document.title, window.location.pathname);
+        clearAuthParamsFromUrl();
         setRecoveryReady(true);
         return;
       }
@@ -80,7 +106,7 @@ export function ResetPasswordForm() {
       }
     });
 
-    const timeout = recoveryHash
+    const timeout = recoveryHash || recoveryCode
       ? window.setTimeout(() => {
           if (!active) return;
           setRecoveryReady((current) => (current === null ? false : current));

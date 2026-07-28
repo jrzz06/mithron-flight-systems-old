@@ -146,6 +146,13 @@ export function resolveStorefrontSrc(src: string, options?: { heroSlideId?: stri
   return `/${canonical.replace(/^\/+/, "")}`;
 }
 
+export function formatCmsImageUrl(url: string | undefined | null): string {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed) return "";
+  if (trimmed.startsWith("blob:") || trimmed.startsWith("data:")) return trimmed;
+  return resolveStorefrontSrc(trimmed) || trimmed;
+}
+
 export function resolveHeroSlideSrc(src: string, slideId: string) {
   const canonical = HERO_FALLBACK_BY_ID[slideId] ?? canonicalStorefrontPath(src);
   return remotePrimaryForPath(canonical) ?? remotePrimaryForPath(canonicalStorefrontPath(src)) ?? resolveStorefrontSrc(src, { heroSlideId: slideId }) ?? src;

@@ -38,14 +38,14 @@ export function mapAuthErrorForClient(error: unknown, fallback = GENERIC_SIGN_IN
     return OAUTH_CODE_MESSAGES[oauthCode];
   }
 
-  if (lower.includes("too many") || lower.includes("rate limit") || lower.includes("rate_limit") || lower.includes("locked")) {
-    return TOO_MANY_ATTEMPTS;
+  if (lower.includes("too many") || lower.includes("rate limit") || lower.includes("rate_limit") || lower.includes("locked") || lower.includes("over_email_send_rate_limit")) {
+    return "Too many requests. Please wait a moment before trying again.";
   }
   if (lower.includes("email not confirmed") || lower.includes("email_not_confirmed")) {
     return "Please verify your email before signing in.";
   }
-  if (lower.includes("invalid login credentials") || lower.includes("invalid email or password")) {
-    return INVALID_CREDENTIALS;
+  if (lower.includes("invalid login credentials") || lower.includes("invalid email or password") || lower.includes("invalid_credentials")) {
+    return "Invalid email or password. Please check your credentials and try again.";
   }
   if (lower.includes("user not found") || lower.includes("account not found")) {
     return ACCOUNT_NOT_FOUND;
@@ -55,8 +55,11 @@ export function mapAuthErrorForClient(error: unknown, fallback = GENERIC_SIGN_IN
     || lower.includes("invalid code")
     || lower.includes("code expired")
     || lower.includes("session expired")
+    || lower.includes("invalid_grant")
+    || lower.includes("otp_expired")
+    || lower.includes("token_expired")
   ) {
-    return VERIFICATION_FAILED;
+    return "The verification code entered is invalid or expired. Please request a new code.";
   }
   if (lower.includes("disabled")) {
     return ACCOUNT_DISABLED;
@@ -78,8 +81,8 @@ export function mapAuthErrorForClient(error: unknown, fallback = GENERIC_SIGN_IN
   ) {
     return "Email delivery is temporarily unavailable. Please try again later.";
   }
-  if (lower.includes("email_exists") || lower.includes("already been registered")) {
-    return "This email is already linked to an account. Sign in with email or contact support.";
+  if (lower.includes("email_exists") || lower.includes("already been registered") || lower.includes("already_registered") || lower.includes("user_already_exists")) {
+    return "An account with this email already exists. Try signing in instead.";
   }
   if (
     lower.includes("supabase")

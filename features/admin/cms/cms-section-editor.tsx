@@ -1003,7 +1003,7 @@ function V2BannerForm({
         onPreviewChange={() => onDirty?.()}
         onUploadingChange={onUploadingChange}
       />
-      <input type="hidden" name="enabled" value={banner.enabled ? "true" : "false"} />
+      <input type="hidden" name="enabled" value="true" />
     </form>
   );
 }
@@ -1086,7 +1086,7 @@ function FullViewportBannerForm({
         onPreviewChange={() => onDirty?.()}
         onUploadingChange={onUploadingChange}
       />
-      <input type="hidden" name="enabled" value={banner.enabled ? "true" : "false"} />
+      <input type="hidden" name="enabled" value="true" />
     </form>
   );
 }

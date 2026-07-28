@@ -16,7 +16,7 @@ import { mergeHomepageCmsV2Content } from "@/config/homepage-cms-v2";
 import { homepageSectionRegistry } from "@/config/homepage-section-registry";
 import { footerContent } from "@/config/storefront-content";
 import { mergeHomepageCmsContent, extractHomepageV1LiveFields } from "@/services/homepage-cms";
-import { getHomepageProducts } from "@/services/catalog";
+import { getProducts } from "@/services/catalog";
 import { buildPinnedMiniCarouselSlides, resolveMiniCarouselEditorState } from "@/lib/cms/homepage-slot-assignment";
 import { getHomepageCmsV2DraftPreviewContent } from "@/services/homepage-cms-v2";
 import { readRichTextHtmlField } from "@/lib/editor/read-form-content";
@@ -187,7 +187,9 @@ async function revalidateCmsCutoverPaths(table?: string, scope: CmsRevalidateSco
   revalidateTag("cms-footer-lead", "max");
   if (table) revalidateTag(`cms-${table}`, "max");
   revalidatePath("/admin/cms");
-  // Homepage content changes need page refresh; layout too so shell-bound caches drop.
+  revalidatePath("/preview/home");
+  revalidatePath("/preview/home", "page");
+  revalidatePath("/preview/home", "layout");
   revalidatePath("/", "page");
   revalidatePath("/", "layout");
   if (table === "site_navigation" || table === "footer_columns" || table === "footer_links") {
@@ -466,7 +468,7 @@ export async function publishHomepageV1FormAction() {
 export async function pinMiniCarouselDraftClientAction(): Promise<{ ok: boolean; message: string }> {
   try {
     await requirePermission("cms.write");
-    const [products, homepageV2] = await Promise.all([getHomepageProducts(), getHomepageCmsV2DraftPreviewContent()]);
+    const [products, homepageV2] = await Promise.all([getProducts(), getHomepageCmsV2DraftPreviewContent()]);
     const state = resolveMiniCarouselEditorState(homepageV2.miniCarousel, products);
     const slides = buildPinnedMiniCarouselSlides(state.slots);
     await mutateHomepageV2Draft((current) => ({

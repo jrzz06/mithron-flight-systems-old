@@ -25,7 +25,7 @@ export function PlatformSidebar({
   homeHref = "/"
 }: PlatformSidebarProps) {
   return (
-    <aside className="bg-[var(--platform-surface-raised)] px-3 py-4 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:h-screen lg:w-[248px] lg:flex-col">
+    <aside className="bg-[var(--platform-surface-raised)] px-3 py-4 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:h-dvh lg:w-[248px] lg:flex-col">
       <div className="px-2">
         <Link
           href={homeHref}

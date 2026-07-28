@@ -205,7 +205,7 @@ export function CatalogPage({
       ) : null}
       <section
         id="catalog-grid"
-        className={isShowroom ? styles.gridSection : "catalog-grid-section mx-auto w-full max-w-2xl px-6 sm:px-8 md:px-10 lg:max-w-[84rem] lg:px-8 scroll-mt-28"}
+        className={isShowroom ? styles.gridSection : "catalog-grid-section mx-auto w-full max-w-2xl px-3.5 sm:px-6 md:px-10 lg:max-w-[84rem] lg:px-8 scroll-mt-28"}
         data-navbar-ink="dark"
       >
         <Suspense fallback={<CatalogListingSkeleton />}>

@@ -27,6 +27,7 @@ export const FEEDBACK_MESSAGES = {
   changesSaved: "Changes saved",
   productCreated: "Product created",
   productUpdated: "Product updated",
+  productSentForReview: "Product sent for review",
   productApproved: "Product approved",
   productRejected: "Product rejected",
   inventoryUpdated: "Inventory updated",

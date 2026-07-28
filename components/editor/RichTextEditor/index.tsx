@@ -68,18 +68,45 @@ export function RichTextEditor({
   defaultJson
 }: RichTextEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hiddenHtmlInputRef = useRef<HTMLInputElement>(null);
+  const hiddenJsonInputRef = useRef<HTMLInputElement>(null);
   const uploadImagesRef = useRef<(files: FileList | File[]) => Promise<void>>(async () => {});
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [draftRecovered, setDraftRecovered] = useState(false);
   const prepareOptions = useMemo(() => prepareOptionsForDocument(documentType), [documentType]);
+
+  const resolvedFeatures = useMemo(() => {
+    const isProductDesc =
+      documentType === "product_description" || documentType === "supplier_product_description";
+    return {
+      ai: features.ai ?? true,
+      media: isProductDesc ? false : (features.media ?? true),
+      fullscreen: features.fullscreen ?? true,
+      tables: isProductDesc ? false : (features.tables ?? true),
+      blocks: features.blocks ?? true
+    };
+  }, [documentType, features]);
+
   const initialContent = useMemo(
     () => resolveInitialContent({ value, defaultJson, defaultValue, documentType }),
     [value, defaultJson, defaultValue, documentType]
   );
 
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  const onChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const editor = useEditor({
-    extensions: [...createEditorExtensions({ placeholder }), SlashCommands],
+    extensions: [
+      ...createEditorExtensions({
+        placeholder,
+        enableInputRules: documentType !== "product_description"
+      }),
+      SlashCommands
+    ],
     content: initialContent,
     immediatelyRender: false,
     onCreate: ({ editor: createdEditor }) => {
@@ -100,9 +127,14 @@ export function RichTextEditor({
     },
     onUpdate: ({ editor: nextEditor }) => {
       const json = nextEditor.getJSON();
-      onChange?.(json);
       setIsDirty(true);
       writeEditorDraft(documentType, documentId, json);
+      if (onChangeRef.current) {
+        if (onChangeTimerRef.current) clearTimeout(onChangeTimerRef.current);
+        onChangeTimerRef.current = setTimeout(() => {
+          onChangeRef.current?.(json);
+        }, 300);
+      }
     },
     editorProps: {
       attributes: {
@@ -110,7 +142,7 @@ export function RichTextEditor({
         "data-placeholder": placeholder
       },
       handleDrop: (view, event) => {
-        if (!features.media) return false;
+        if (!resolvedFeatures.media) return false;
         const files = event.dataTransfer?.files;
         if (!files?.length || !editor) return false;
         event.preventDefault();
@@ -119,7 +151,7 @@ export function RichTextEditor({
       },
       handlePaste: (view, event) => {
         const files = event.clipboardData?.files;
-        if (features.media && files?.length && editor) {
+        if (resolvedFeatures.media && files?.length && editor) {
           event.preventDefault();
           void uploadImagesRef.current(files);
           return true;
@@ -160,7 +192,7 @@ export function RichTextEditor({
   }));
 
   useEffect(() => {
-    if (!editor || value === undefined) return;
+    if (!editor || value === undefined || editor.isFocused) return;
     const current = JSON.stringify(editor.getJSON());
     const incomingDoc = value ?? emptyEditorDocument();
     const incoming = JSON.stringify(incomingDoc);
@@ -171,31 +203,60 @@ export function RichTextEditor({
 
   useEffect(() => {
     if (!editor) return;
-    const sync = () => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const flushHiddenInputs = () => {
       const json = editor.getJSON();
-      setSerialized({ json: JSON.stringify(json), html: editorJsonToHtml(json, prepareOptions) });
+      const html = editorJsonToHtml(json, prepareOptions);
+      const jsonStr = JSON.stringify(json);
+      if (hiddenHtmlInputRef.current) hiddenHtmlInputRef.current.value = html;
+      if (hiddenJsonInputRef.current) hiddenJsonInputRef.current.value = jsonStr;
+      return { jsonStr, html };
+    };
+    const sync = () => {
+      const { jsonStr, html } = flushHiddenInputs();
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setSerialized({ json: jsonStr, html });
+      }, 300);
     };
     sync();
     editor.on("update", sync);
+
+    const form = hiddenHtmlInputRef.current?.form ?? hiddenJsonInputRef.current?.form;
+    const onFormSubmit = () => {
+      flushHiddenInputs();
+    };
+    form?.addEventListener("submit", onFormSubmit, true);
+
     return () => {
+      if (timer) clearTimeout(timer);
       editor.off("update", sync);
+      form?.removeEventListener("submit", onFormSubmit, true);
     };
   }, [editor, prepareOptions]);
 
   const stats = useMemo(() => {
+    if (editor) {
+      const text = editor.getText();
+      return {
+        characters: countEditorCharacters(text),
+        words: countEditorWords(text),
+        readingMinutes: estimateReadingMinutes(text)
+      };
+    }
     const json = parseEditorJson(serialized.json);
     return {
       characters: countEditorCharacters(json),
       words: countEditorWords(json),
       readingMinutes: estimateReadingMinutes(json)
     };
-  }, [serialized.json]);
+  }, [editor, serialized.json]);
 
   if (!editor) {
     return (
       <div data-rich-text-editor className={cn("min-h-[220px] rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface)]", className)}>
-        {name ? <input type="hidden" name={name} value={serialized.html} /> : null}
-        {jsonName ? <input type="hidden" name={jsonName} value={serialized.json} /> : null}
+        {name ? <input ref={hiddenHtmlInputRef} type="hidden" name={name} defaultValue={serialized.html} /> : null}
+        {jsonName ? <input ref={hiddenJsonInputRef} type="hidden" name={jsonName} defaultValue={serialized.json} /> : null}
       </div>
     );
   }
@@ -211,17 +272,17 @@ export function RichTextEditor({
         editor={editor}
         documentType={documentType}
         isFullscreen={isFullscreen}
-        onToggleFullscreen={features.fullscreen ? () => setIsFullscreen((current) => !current) : undefined}
+        onToggleFullscreen={resolvedFeatures.fullscreen ? () => setIsFullscreen((current) => !current) : undefined}
         onInsertImage={
-          features.media
+          resolvedFeatures.media
             ? () => {
                 fileInputRef.current?.click();
               }
             : undefined
         }
       />
-      {features.ai ? <EditorAiMenu editor={editor} documentType={documentType} /> : null}
-      <EditorBubbleMenu editor={editor} />
+      {resolvedFeatures.ai ? <EditorAiMenu editor={editor} documentType={documentType} /> : null}
+      <EditorBubbleMenu editor={editor} documentType={documentType} />
       <EditorContent editor={editor} />
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--platform-border)] px-3 py-2 text-xs text-[var(--platform-text-muted)]">
         <div className="flex flex-wrap gap-3">
@@ -259,8 +320,8 @@ export function RichTextEditor({
           event.target.value = "";
         }}
       />
-      {name ? <input type="hidden" name={name} value={serialized.html} /> : null}
-      {jsonName ? <input type="hidden" name={jsonName} value={serialized.json} /> : null}
+      {name ? <input ref={hiddenHtmlInputRef} type="hidden" name={name} defaultValue={serialized.html} /> : null}
+      {jsonName ? <input ref={hiddenJsonInputRef} type="hidden" name={jsonName} defaultValue={serialized.json} /> : null}
     </div>
   );
 }

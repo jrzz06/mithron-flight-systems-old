@@ -32,9 +32,17 @@ function keyFor(variant: NotifyVariant, title: string, options?: NotifyOptions) 
   return `${source}${variant}:${title}${description}${id}`;
 }
 
+function pruneStaleEntries(nowTs: number) {
+  const maxAge = ERROR_DEDUPE_WINDOW_MS;
+  for (const [key, ts] of recent) {
+    if (nowTs - ts > maxAge) recent.delete(key);
+  }
+}
+
 function shouldSkip(key: string, variant: NotifyVariant) {
-  const last = recent.get(key);
   const ts = now();
+  pruneStaleEntries(ts);
+  const last = recent.get(key);
   const windowMs = variant === "error" ? ERROR_DEDUPE_WINDOW_MS : DEDUPE_WINDOW_MS;
   if (typeof last === "number" && ts - last < windowMs) return true;
   recent.set(key, ts);

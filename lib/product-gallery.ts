@@ -1,36 +1,40 @@
 import type { AdminMutationOptions } from "@/services/admin-actions";
 import { upsertProductMediaAssetRecord } from "@/services/admin-actions";
 import type { UploadedProductImage } from "@/services/product-image-upload";
+import { sanitizeProductImageSrc, sanitizeProductImageSrcList } from "@/lib/media/sanitize-product-image-src";
 
 type JsonRecord = Record<string, unknown>;
 
 export function parseGalleryUrls(formData: FormData) {
   const value = formData.get("gallery_urls");
   if (typeof value !== "string" || !value.trim()) return [];
-  return value
-    .split(/[\n,]+/g)
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return sanitizeProductImageSrcList(
+    value
+      .split(/[\n,]+/g)
+      .map((item) => item.trim())
+  );
 }
 
 export function parseRemovedGalleryUrls(formData: FormData) {
-  return formData
-    .getAll("removed_gallery_urls")
-    .map((value) => String(value).trim())
-    .filter(Boolean);
+  return sanitizeProductImageSrcList(
+    formData
+      .getAll("removed_gallery_urls")
+      .map((value) => String(value).trim())
+  );
 }
 
 export function parseOrderedGalleryUrls(formData: FormData) {
-  return formData
-    .getAll("ordered_gallery_urls")
-    .map((value) => String(value).trim())
-    .filter(Boolean);
+  return sanitizeProductImageSrcList(
+    formData
+      .getAll("ordered_gallery_urls")
+      .map((value) => String(value).trim())
+  );
 }
 
 export function readMediaSrc(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "";
   const src = (value as JsonRecord).src;
-  return typeof src === "string" && src.trim() ? src.trim() : "";
+  return sanitizeProductImageSrc(typeof src === "string" ? src : "") ?? "";
 }
 
 export function readProductGalleryFromRow(row: unknown): JsonRecord[] {
@@ -55,15 +59,7 @@ export function dedupeGalleryBySrc(items: JsonRecord[]) {
 }
 
 function dedupeSrcList(urls: string[]) {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const url of urls) {
-    const normalized = url.trim();
-    if (!normalized || seen.has(normalized)) continue;
-    seen.add(normalized);
-    result.push(normalized);
-  }
-  return result;
+  return sanitizeProductImageSrcList(urls);
 }
 
 function mediaFromSrc(src: string, alt: string, priority = false): JsonRecord {

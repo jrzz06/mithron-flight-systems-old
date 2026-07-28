@@ -51,6 +51,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Recovery links must land on the reset form with an active session — never
+  // bounce through post-auth home (unwrapAuthNextPath treats /reset-password as a bounce).
+  if (type === "recovery") {
+    return applySessionCookies(
+      NextResponse.redirect(new URL("/reset-password", request.nextUrl.origin))
+    );
+  }
+
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) {
     return applySessionCookies(
