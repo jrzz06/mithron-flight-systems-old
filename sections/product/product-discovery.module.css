@@ -536,15 +536,10 @@
   padding-bottom: 3.5rem;
 }
 
-/* Clear sticky mobile purchase bar + FAB over recommendation grids */
+/* Clear sticky mobile purchase bar over the last recommendation block only */
 @media (max-width: 1023px) {
-  .relatedSection,
   .recentSection {
-    padding-bottom: max(9rem, calc(120px + var(--store-bottom-chrome, 0px)));
-  }
-
-  .exploreSection {
-    padding-bottom: max(9rem, calc(120px + var(--store-bottom-chrome, 0px)));
+    padding-bottom: calc(var(--store-bottom-chrome, 0px) + 0.75rem);
   }
 }
 
@@ -607,5 +602,13 @@
   .recentSection,
   .exploreSection {
     padding-inline: var(--mobile-page-inline, 16px);
+  }
+
+  .discoveryInner {
+    padding-inline: 0;
+  }
+
+  .discoveryProductGrid {
+    gap: 1rem;
   }
 }

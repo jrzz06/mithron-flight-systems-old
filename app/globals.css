@@ -3494,11 +3494,6 @@ canvas {
     --store-bottom-chrome: calc(12rem + env(safe-area-inset-bottom, 0px));
     --assistant-fab-offset: calc(var(--assistant-fab-inset) + var(--store-bottom-chrome) + env(safe-area-inset-bottom, 0px));
   }
-
-  /* Keep recommendation grids scroll-clear of sticky purchase chrome */
-  :root:has([data-product-mobile-purchase-bar]) article {
-    padding-bottom: max(7.5rem, calc(120px + env(safe-area-inset-bottom, 0px)));
-  }
 }
 
 @media (max-width: 390px) {
