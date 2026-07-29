@@ -27,7 +27,7 @@ export function decodeEscapedEditorHtml(raw: string) {
 }
 
 function looksLikeHtml(value: string) {
-  return /<[a-z][\s>/]/i.test(value);
+  return /<[a-z][a-z0-9]*[\s>\/]/i.test(value);
 }
 
 function plainTextToSemanticHtml(text: string) {

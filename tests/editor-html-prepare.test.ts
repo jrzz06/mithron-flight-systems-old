@@ -61,6 +61,19 @@ describe("editor html prepare pipeline", () => {
     );
   });
 
+  it("renders h3 headings instead of escaping them as plain text", () => {
+    const html = "<h3 id=\"foo\">Title</h3>";
+    const clean = prepareEditorHtmlForDisplay(html);
+    expect(clean).toContain("<h3");
+    expect(clean).toContain("Title");
+    expect(clean).not.toContain("&lt;h3");
+  });
+
+  it("still decodes escaped entities after heading fix", () => {
+    const escaped = "&lt;p&gt;Hello &lt;strong&gt;world&lt;/strong&gt;&lt;/p&gt;";
+    expect(prepareEditorHtmlForDisplay(escaped)).toBe("<p>Hello <strong>world</strong></p>");
+  });
+
   it("strips tags for plain text helpers", () => {
     expect(editorHtmlToPlainText("<p>Hello <strong>world</strong></p>")).toBe("Hello world");
   });
