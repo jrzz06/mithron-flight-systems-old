@@ -164,12 +164,12 @@ export function HomeProductShelfCard({
               "mt-auto flex min-w-0",
               isCatalog
                 ? "relative flex-col items-stretch justify-start gap-2"
-                : "items-center justify-between gap-3",
+                : "flex-col items-stretch justify-start gap-2 md:flex-row md:items-center md:justify-between md:gap-3",
               styles.productFooterDji,
               isCatalog && styles.productFooterCatalog
             )}
           >
-            <div className={cn("relative min-w-0", styles.productPriceBlock, isCatalog && styles.productPriceBlockCatalog)}>
+            <div className={cn("relative min-w-0 flex-1", styles.productPriceBlock, isCatalog && styles.productPriceBlockCatalog)}>
               {isCatalog ? (
                 <span
                   className={styles.productCompareAt}
@@ -197,7 +197,7 @@ export function HomeProductShelfCard({
             </div>
             <span
               className={cn(
-                "relative flex-shrink-0",
+                "relative w-full shrink-0 md:w-auto",
                 isCatalog && "w-full",
                 styles.productBuyNowDji,
                 isCatalog && styles.productBuyNowCatalog

@@ -527,10 +527,16 @@
   justify-content: space-between;
   gap: 10px;
   margin-top: auto;
+  min-width: 0;
   padding: 0;
   border-top: none;
   overflow: visible;
   box-sizing: border-box;
+}
+
+.productCardDji .productPriceBlock {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .productPriceDji {
@@ -1898,7 +1904,8 @@
 
   /* Catalog cards always stack — never side-by-side on narrow 2/4 grids */
   .productCardCatalog .productFooterCatalog,
-  .productCardDji.productCardCatalog .productFooterDji {
+  .productCardDji.productCardCatalog .productFooterDji,
+  .productCardDji:not(.productCardCatalog) .productFooterDji {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
@@ -1906,9 +1913,70 @@
     border-top: none;
   }
 
-  .productCardCatalog .productBuyNowCatalog {
+  .productCardCatalog .productBuyNowCatalog,
+  .productCardDji:not(.productCardCatalog) .productBuyNowDji {
     width: 100%;
     max-width: 100%;
+    height: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background-color: #064e3b;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .productCardDji .productPriceBlock,
+  .productCardDji .productPriceDji {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .productCardDji .productPriceDji {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .productCardDji .productName,
+  .productCardDji .productNameCatalog {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    height: 34px;
+    min-height: 34px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #111827;
+  }
+
+  .productCardDji .productDescriptor,
+  .productCardDji .productDescriptorFixed {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    min-height: 0;
+    height: auto;
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 8px;
+  }
+
+  .productCard.productCardDji,
+  .productCardDji {
+    height: 100%;
+    padding: 12px;
+    border-radius: 16px;
   }
 
   .productFooter > span:first-child,
@@ -1917,7 +1985,7 @@
     min-width: 0;
     overflow: visible;
     font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-    font-size: clamp(1.1875rem, 4.4vw, 1.375rem);
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.01em;
     line-height: 1.15;
@@ -1930,19 +1998,19 @@
   .productBuyNowDji {
     flex-shrink: 0;
     box-sizing: border-box;
-    min-height: 40px;
+    min-height: 36px;
     min-width: 0;
     max-width: none;
-    height: auto;
-    padding: 0 16px;
+    height: 36px;
+    padding: 0 12px;
     border-radius: 8px;
-    font-size: 0.8125rem;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.01em;
     white-space: nowrap;
     text-align: center;
     overflow: visible;
-    background: var(--brand-accent, #065f46);
+    background: #064e3b;
     color: #ffffff;
   }
 
