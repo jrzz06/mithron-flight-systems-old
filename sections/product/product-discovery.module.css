@@ -540,11 +540,11 @@
 @media (max-width: 1023px) {
   .relatedSection,
   .recentSection {
-    padding-bottom: max(9rem, calc(4.5rem + var(--store-bottom-chrome, 0px)));
+    padding-bottom: max(9rem, calc(120px + var(--store-bottom-chrome, 0px)));
   }
 
   .exploreSection {
-    padding-bottom: max(9rem, calc(4.5rem + var(--store-bottom-chrome, 0px)));
+    padding-bottom: max(9rem, calc(120px + var(--store-bottom-chrome, 0px)));
   }
 }
 
