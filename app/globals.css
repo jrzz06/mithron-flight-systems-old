@@ -1102,26 +1102,27 @@ html[data-overlay-open="search"] .storefront-root .TOP_NAVBAR.adaptive-navbar:no
   }
 }
 
-.storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .adaptive-navbar__bar {
-  position: absolute;
-  inset-inline: 0;
-  top: 100%;
-  z-index: 2;
-  width: 100%;
-  color: var(--adaptive-navbar-ink);
-  border-bottom: none;
-  background: transparent;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
 .TOP_NAVBAR.adaptive-navbar {
   position: relative;
   z-index: var(--z-nav);
 }
 
 @media (min-width: 768px) {
+  /* Desktop flush: transparent overlay over cinematic hero */
+  .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .adaptive-navbar__bar {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    z-index: 2;
+    width: 100%;
+    color: var(--adaptive-navbar-ink);
+    border-bottom: none;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .mithron-topbar {
     position: relative;
     z-index: 2;
@@ -1132,19 +1133,6 @@ html[data-overlay-open="search"] .storefront-root .TOP_NAVBAR.adaptive-navbar:no
     --topbar-muted: rgba(10, 12, 16, 0.62);
     --topbar-hover: rgba(10, 12, 16, 0.82);
     --topbar-border: rgba(15, 23, 42, 0.08);
-  }
-
-  .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .adaptive-navbar__bar {
-    position: absolute;
-    inset-inline: 0;
-    top: 100%;
-    z-index: 2;
-    width: 100%;
-    border-bottom: none;
-    background: transparent;
-    box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
   }
 
   .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]):is(:hover, :focus-within) .adaptive-navbar__bar {
@@ -3509,7 +3497,7 @@ canvas {
 
   /* Keep recommendation grids scroll-clear of sticky purchase chrome */
   :root:has([data-product-mobile-purchase-bar]) article {
-    padding-bottom: max(2.5rem, calc(1.25rem + env(safe-area-inset-bottom, 0px)));
+    padding-bottom: max(7.5rem, calc(120px + env(safe-area-inset-bottom, 0px)));
   }
 }
 
@@ -3590,27 +3578,50 @@ canvas {
     line-height: var(--hero-heading-leading, 0.9);
   }
 
-  .storefront-root[data-nav-chrome="solid"] .TOP_NAVBAR.adaptive-navbar {
-    padding-top: env(safe-area-inset-top, 0px);
-    background: #ffffff;
-    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.08);
+  /* Mobile: sticky solid nav; hero sits below (no flush overlay) */
+  .storefront-header-shell {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
   }
 
+  .storefront-root[data-nav-chrome="solid"] .TOP_NAVBAR.adaptive-navbar,
   .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) {
     padding-top: env(safe-area-inset-top, 0px);
+    background: #ffffff;
+    box-shadow: none;
+    --adaptive-navbar-ink: rgba(10, 12, 16, 0.97);
+    --adaptive-navbar-hover: rgba(10, 12, 16, 0.82);
+    --adaptive-navbar-muted: rgba(10, 12, 16, 0.62);
+    --adaptive-navbar-underline: rgba(10, 12, 16, 0.72);
+    --adaptive-navbar-border: rgba(17, 17, 19, 0.1);
   }
 
+  .storefront-root[data-nav-chrome="solid"] .TOP_NAVBAR.adaptive-navbar .adaptive-navbar__bar,
   .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .adaptive-navbar__bar {
-    position: absolute;
-    inset-inline: 0;
-    top: 100%;
+    position: relative;
+    inset: auto;
+    top: auto;
     z-index: 2;
     width: 100%;
-    border-bottom: none;
-    background: transparent;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
     box-shadow: none;
+    color: rgba(10, 12, 16, 0.97);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+
+  .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .adaptive-navbar__bar .adaptive-navbar__link,
+  .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .adaptive-navbar__bar .adaptive-navbar__icon,
+  .storefront-root[data-nav-chrome="flush"] .TOP_NAVBAR.adaptive-navbar:not([data-nav-variant="login"]) .nav-hamburger {
+    color: rgba(10, 12, 16, 0.97) !important;
+    text-shadow: none !important;
+  }
+
+  .storefront-root[data-nav-chrome="flush"] [data-testid="home-hero"],
+  .storefront-root:has(.catalog-hero-section--showcase) .catalog-hero-section--showcase {
+    margin-top: 0;
   }
 
   .storefront-root[data-nav-chrome="solid"] .TOP_NAVBAR.adaptive-navbar .adaptive-navbar__bar .adaptive-navbar__link,
