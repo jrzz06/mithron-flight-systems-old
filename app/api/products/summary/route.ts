@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { PUBLIC_EDGE_CACHE_CONTROL } from "@/lib/env";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { getProductCoreBySlug } from "@/services/catalog";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+
+const PUBLIC_CACHE_HEADERS = { "Cache-Control": PUBLIC_EDGE_CACHE_CONTROL };
 
 function readIp(request: Request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
@@ -24,16 +26,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, slug, error: "Not found." }, { status: 404 });
     }
 
-    return NextResponse.json({
-      ok: true,
-      slug: core.slug,
-      name: core.name,
-      category: core.category,
-      price: core.price,
-      image: core.image?.src ?? null,
-      url: `/product/${core.slug}`,
-      availability: core.availability ?? null
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+        slug: core.slug,
+        name: core.name,
+        category: core.category,
+        price: core.price,
+        image: core.image?.src ?? null,
+        url: `/product/${core.slug}`,
+        availability: core.availability ?? null
+      },
+      { headers: PUBLIC_CACHE_HEADERS }
+    );
   } catch (error) {
     console.error("[products/summary] failed", error);
     return NextResponse.json(

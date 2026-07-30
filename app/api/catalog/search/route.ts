@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PUBLIC_EDGE_CACHE_CONTROL } from "@/lib/env";
 import { toSlimCatalogSearchIndex } from "@/lib/search/catalog-search-payload";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { getCartDrawerSuggestions, getCatalogSearchIndex, getFeaturedSearchProducts, searchCatalogProducts } from "@/services/catalog";
@@ -6,7 +7,7 @@ import { getCartDrawerSuggestions, getCatalogSearchIndex, getFeaturedSearchProdu
 const MAX_QUERY_LENGTH = 120;
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 48;
-const INDEX_CACHE_CONTROL = "public, s-maxage=60, stale-while-revalidate=600";
+const PUBLIC_CACHE_HEADERS = { "Cache-Control": PUBLIC_EDGE_CACHE_CONTROL };
 
 function parseLimit(value: string | null) {
   if (!value?.trim()) return DEFAULT_LIMIT;
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
       const index = await getCatalogSearchIndex();
       return NextResponse.json(
         { query: "", index: toSlimCatalogSearchIndex(index) },
-        { headers: { "Cache-Control": INDEX_CACHE_CONTROL } }
+        { headers: PUBLIC_CACHE_HEADERS }
       );
     }
 
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
 
     if (!query) {
       const featured = await getFeaturedSearchProducts(4);
-      return NextResponse.json({ query: "", results: featured });
+      return NextResponse.json({ query: "", results: featured }, { headers: PUBLIC_CACHE_HEADERS });
     }
 
     if (query.length > MAX_QUERY_LENGTH) {
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
     }
 
     const results = await searchCatalogProducts(query, limit);
-    return NextResponse.json({ query, results });
+    return NextResponse.json({ query, results }, { headers: PUBLIC_CACHE_HEADERS });
   } catch (error) {
     console.error("[catalog-search] failed", error);
     return NextResponse.json({ error: "Catalog search failed." }, { status: 500 });

@@ -104,6 +104,36 @@ export function assertSupabaseAdminConfig(env: EnvSource = process.env) {
   return config;
 }
 
+/**
+ * Runtime handlers use `@supabase/supabase-js` over HTTPS (PostgREST) — not a direct Postgres
+ * socket. Optional `DATABASE_URL` / `SUPABASE_DATABASE_URL` are for CLI migrations and
+ * tooling only; use the Transaction pooler (port 6543) with `pgbouncer=true` there.
+ */
+export const PUBLIC_EDGE_CACHE_CONTROL =
+  "public, s-maxage=60, stale-while-revalidate=300" as const;
+
+/** Append `pgbouncer=true` when missing — required for Supabase transaction pooler (6543). */
+export function normalizeSupabasePoolerConnectionString(connectionString: string) {
+  const trimmed = connectionString.trim();
+  if (!trimmed) return trimmed;
+  if (/[?&]pgbouncer=true/i.test(trimmed)) return trimmed;
+  return `${trimmed}${trimmed.includes("?") ? "&" : "?"}pgbouncer=true`;
+}
+
+function isSupabasePoolerHost(connectionString: string) {
+  return /:6543\b/.test(connectionString) || /pooler\.supabase\.com/i.test(connectionString);
+}
+
+/**
+ * Resolves optional direct Postgres URL for migrations/CLI (not used by Next.js runtime).
+ * Normalizes transaction-pooler strings so serverless tools avoid prepared-statement errors.
+ */
+export function getOptionalSupabaseDatabaseUrl(env: EnvSource = process.env): string | null {
+  const raw = getValue(env, "DATABASE_URL") ?? getValue(env, "SUPABASE_DATABASE_URL");
+  if (!raw) return null;
+  return isSupabasePoolerHost(raw) ? normalizeSupabasePoolerConnectionString(raw) : raw;
+}
+
 export function assertProductionRuntimeConfig(env: EnvSource = process.env) {
   if (env.NODE_ENV !== "production") return;
 

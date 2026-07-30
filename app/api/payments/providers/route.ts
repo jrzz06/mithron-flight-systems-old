@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PUBLIC_EDGE_CACHE_CONTROL } from "@/lib/env";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import { listPublicPaymentProviders } from "@/services/payments/gateway";
 
@@ -10,5 +11,8 @@ export async function GET(request: Request) {
   }
 
   const providers = listPublicPaymentProviders();
-  return NextResponse.json({ providers });
+  return NextResponse.json(
+    { providers },
+    { headers: { "Cache-Control": PUBLIC_EDGE_CACHE_CONTROL } }
+  );
 }

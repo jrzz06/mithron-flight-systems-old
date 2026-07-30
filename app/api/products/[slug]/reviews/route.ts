@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PUBLIC_EDGE_CACHE_CONTROL } from "@/lib/env";
 import { checkDistributedRateLimit } from "@/lib/rate-limit-redis";
 import type { ReviewSort } from "@/lib/product-reviews/types";
 import { getProductReviewsPayload } from "@/services/customer-product-reviews";
@@ -22,7 +23,9 @@ export async function GET(request: Request, context: RouteContext) {
 
   try {
     const payload = await getProductReviewsPayload(slug, productName, { sort });
-    return NextResponse.json(payload);
+    return NextResponse.json(payload, {
+      headers: { "Cache-Control": PUBLIC_EDGE_CACHE_CONTROL }
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not load reviews.";
     return NextResponse.json({ error: message }, { status: 500 });
