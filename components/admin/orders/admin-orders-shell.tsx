@@ -27,16 +27,16 @@ export function AdminOrdersShell({
   return (
     <div
       data-admin-orders-shell
-      className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-x-clip"
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-x-clip overflow-hidden"
     >
-      <div className="sticky top-0 z-20 -mx-1 shrink-0 space-y-2 border-b border-[var(--platform-border)] bg-[var(--platform-bg)]/95 px-1 pb-3 backdrop-blur-sm">
+      <div className="z-20 -mx-1 shrink-0 space-y-2 border-b border-[var(--platform-border)] bg-[var(--platform-bg)]/95 px-1 pb-3 backdrop-blur-sm">
         {header}
         {filters}
         {toolbar}
       </div>
 
       <div
-        className={`mt-4 grid min-h-0 min-w-0 flex-1 gap-4 ${
+        className={`mt-4 grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 ${
           hasSelectedOrder && actions
             ? "xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)_minmax(260px,300px)]"
             : "xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]"

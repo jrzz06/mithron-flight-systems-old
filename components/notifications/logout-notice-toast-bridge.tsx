@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { clearBrowserAuthSession } from "@/lib/auth/clear-browser-session";
 import { FEEDBACK_MESSAGES } from "@/lib/feedback/messages";
 import { notify } from "@/lib/feedback/notify";
 
@@ -22,31 +23,35 @@ export function LogoutNoticeToastBridge() {
     if (lastNoticeKey.current === dedupeKey) return;
     lastNoticeKey.current = dedupeKey;
 
-    if (logoutStatus === "signed_out") {
-      notify.success(FEEDBACK_MESSAGES.loggedOut, {
-        source: "auth",
-        id: "logout:signed_out"
-      });
-    } else if (logoutReason === "session_idle" || logoutReason === "session_revoked") {
-      notify.warning(FEEDBACK_MESSAGES.sessionExpired, {
-        source: "auth",
-        id: `logout:${logoutReason}`
-      });
-    } else if (logoutReason === "disabled") {
-      notify.error(FEEDBACK_MESSAGES.accessDenied, {
-        source: "auth",
-        id: "logout:disabled",
-        description: "This account has been disabled. Contact support."
-      });
-    }
+    void (async () => {
+      await clearBrowserAuthSession();
 
-    const cleanedParams = new URLSearchParams(searchParams.toString());
-    for (const key of LOGOUT_PARAMS) {
-      cleanedParams.delete(key);
-    }
-    const cleanedQuery = cleanedParams.toString();
-    const cleanedUrl = cleanedQuery ? `${pathname}?${cleanedQuery}` : pathname;
-    router.replace(cleanedUrl, { scroll: false });
+      if (logoutStatus === "signed_out") {
+        notify.success(FEEDBACK_MESSAGES.loggedOut, {
+          source: "auth",
+          id: "logout:signed_out"
+        });
+      } else if (logoutReason === "session_idle" || logoutReason === "session_revoked") {
+        notify.warning(FEEDBACK_MESSAGES.sessionExpired, {
+          source: "auth",
+          id: `logout:${logoutReason}`
+        });
+      } else if (logoutReason === "disabled") {
+        notify.error(FEEDBACK_MESSAGES.accessDenied, {
+          source: "auth",
+          id: "logout:disabled",
+          description: "This account has been disabled. Contact support."
+        });
+      }
+
+      const cleanedParams = new URLSearchParams(searchParams.toString());
+      for (const key of LOGOUT_PARAMS) {
+        cleanedParams.delete(key);
+      }
+      const cleanedQuery = cleanedParams.toString();
+      const cleanedUrl = cleanedQuery ? `${pathname}?${cleanedQuery}` : pathname;
+      router.replace(cleanedUrl, { scroll: false });
+    })();
   }, [pathname, router, searchParams]);
 
   return null;

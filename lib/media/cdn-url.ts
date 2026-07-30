@@ -210,3 +210,34 @@ export function isTrustedCatalogStorageSrc(
 
   return false;
 }
+
+/**
+ * Stable identity for comparing product media URLs that may differ only by
+ * delivery form (`/cdn-media/...` vs absolute `*.supabase.co/...`).
+ * Used to prevent duplicate PDP thumbs for the same storage object.
+ */
+export function mediaSrcIdentityKey(
+  src: string,
+  env: Record<string, string | undefined> = readMediaCdnPublicEnv()
+): string {
+  const trimmed = src?.trim() ?? "";
+  if (!trimmed) return "";
+
+  const unwrapped = unwrapCdnStorageUrl(trimmed, env).split("?")[0].trim();
+  const storageMatch = unwrapped.match(/\/storage\/v1\/object\/public\/(.+)$/i);
+  if (storageMatch?.[1]) {
+    return storageMatch[1].replace(/\/+/g, "/").toLowerCase();
+  }
+
+  try {
+    const pathname = /^https?:\/\//i.test(unwrapped)
+      ? new URL(unwrapped).pathname
+      : unwrapped.startsWith("/")
+        ? unwrapped
+        : `/${unwrapped}`;
+    const basename = pathname.split("/").filter(Boolean).pop();
+    return (basename || pathname).toLowerCase();
+  } catch {
+    return unwrapped.toLowerCase();
+  }
+}

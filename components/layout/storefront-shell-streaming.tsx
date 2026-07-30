@@ -30,8 +30,19 @@ function loadAssistantWidget() {
   return import("@/components/assistant/mithron-assistant-widget").then((mod) => mod.MithronAssistantWidget);
 }
 
+function loadPreSalesWidget() {
+  return import("@/components/pre-sales/pre-sales-consultation-widget").then(
+    (mod) => mod.PreSalesConsultationWidget
+  );
+}
+
 const MithronAssistantWidget = dynamic(
   () => loadAssistantWidget().catch(() => loadAssistantWidget()),
+  { ssr: false, loading: () => null }
+);
+
+const PreSalesConsultationWidget = dynamic(
+  () => loadPreSalesWidget().catch(() => loadPreSalesWidget()),
   { ssr: false, loading: () => null }
 );
 
@@ -58,6 +69,7 @@ export function StorefrontShellStreamingLayout({
   const [searchPrewarmed, setSearchPrewarmed] = useState(false);
   const [cartPrewarmed, setCartPrewarmed] = useState(false);
   const [assistantMounted, setAssistantMounted] = useState(false);
+  const [preSalesMounted, setPreSalesMounted] = useState(false);
   const isMountedRef = useRef(false);
   const navRef = useRef<HTMLDivElement>(null);
   const headerShellRef = useRef<HTMLDivElement>(null);
@@ -118,6 +130,7 @@ export function StorefrontShellStreamingLayout({
     let timerId: ReturnType<typeof globalThis.setTimeout> | undefined;
     let idleId: number | undefined;
     let assistantTimerId: ReturnType<typeof globalThis.setTimeout> | undefined;
+    let preSalesTimerId: ReturnType<typeof globalThis.setTimeout> | undefined;
 
     const preloadSupportOverlays = () => {
       if (!active) return;
@@ -134,11 +147,18 @@ export function StorefrontShellStreamingLayout({
       setAssistantMounted(true);
     };
 
+    // Mount pre-sales early so its internal 3s auto-open is measured from shell ready.
+    const mountPreSalesSoon = () => {
+      if (!active || !isMountedRef.current) return;
+      setPreSalesMounted(true);
+    };
+
     if ("requestIdleCallback" in globalThis) {
       idleId = globalThis.requestIdleCallback(preloadSupportOverlays, { timeout: 3000 });
     } else {
       timerId = globalThis.setTimeout(preloadSupportOverlays, 3000);
     }
+    preSalesTimerId = globalThis.setTimeout(mountPreSalesSoon, 0);
     assistantTimerId = globalThis.setTimeout(mountAssistantWhenIdle, 4500);
 
     return () => {
@@ -148,6 +168,9 @@ export function StorefrontShellStreamingLayout({
       }
       if (timerId) {
         globalThis.clearTimeout(timerId);
+      }
+      if (preSalesTimerId) {
+        globalThis.clearTimeout(preSalesTimerId);
       }
       if (assistantTimerId) {
         globalThis.clearTimeout(assistantTimerId);
@@ -202,6 +225,11 @@ export function StorefrontShellStreamingLayout({
         {cartPrewarmed || hasOpenedCart ? (
           <SoftErrorBoundary label="Cart drawer">
             <CartDrawer />
+          </SoftErrorBoundary>
+        ) : null}
+        {preSalesMounted ? (
+          <SoftErrorBoundary label="Pre-Sales Consultation">
+            <PreSalesConsultationWidget />
           </SoftErrorBoundary>
         ) : null}
         {assistantMounted ? (

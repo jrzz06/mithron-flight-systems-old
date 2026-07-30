@@ -156,6 +156,30 @@ export function writePressureJourney() {
   sleep(THINK.long());
 }
 
+/** Light read-only pass to warm ISR pages + edge-cached APIs before SLA measurement. */
+export function warmupJourney() {
+  group("warmup", () => {
+    request(ROUTES.home, { kind: "page", name: "warmup_home", okStatuses: [200] });
+    sleep(THINK.short());
+    request(ROUTES.catalogSearch("drone"), {
+      kind: "api",
+      name: "warmup_catalog_search",
+      okStatuses: [200, 429]
+    });
+    sleep(THINK.short());
+    request(ROUTES.productsPage, { kind: "page", name: "warmup_products", okStatuses: [200] });
+    sleep(THINK.short());
+    request(ROUTES.productPage, { kind: "page", name: "warmup_pdp", okStatuses: [200] });
+    sleep(THINK.short());
+    request(ROUTES.productSummary(HOT_SLUG), {
+      kind: "api",
+      name: "warmup_product_summary",
+      okStatuses: [200, 404, 429]
+    });
+  });
+  sleep(THINK.medium());
+}
+
 /** Weighted mix: 70% browser / 20% cart / 10% write-pressure */
 export function weightedUserJourney() {
   const roll = Math.random();

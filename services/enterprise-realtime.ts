@@ -47,6 +47,7 @@ export type EnterpriseRealtimeTable =
   | "warehouse_stock"
   | "enquiries"
   | "contact_requests"
+  | "leads"
   | "payments"
   | "customer_addresses"
   | "mithron_products"
@@ -111,6 +112,7 @@ export const ENTERPRISE_REALTIME_SCOPES: Record<EnterpriseRealtimeScope, Enterpr
       "audit_logs",
       "enquiries",
       "contact_requests",
+      "leads",
       "inventory",
       "warehouse_stock",
       "inventory_movements",

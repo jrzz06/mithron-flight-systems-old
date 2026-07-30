@@ -87,22 +87,22 @@ async function buildPricingPayload(items: PersistedCartItem[]): Promise<CartPric
 }
 
 export async function POST(request: Request) {
-  const rateKey = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
-  // Rate limit unchanged (60/min) — do not relax under load.
-  const limiter = await checkDistributedRateLimit(`cart-pricing:${rateKey}`, 60, 60_000);
-  if (!limiter.allowed) {
-    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
-  }
-
-  const body = await request.json().catch(() => null);
-  const items = parseItems(body);
-  if (!items?.length) {
-    return NextResponse.json({ error: "Valid cart items are required." }, { status: 400 });
-  }
-
-  const fingerprint = cartPricingFingerprint(items);
-
   try {
+    const rateKey = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
+    // Rate limit unchanged (60/min) — do not relax under load.
+    const limiter = await checkDistributedRateLimit(`cart-pricing:${rateKey}`, 60, 60_000);
+    if (!limiter.allowed) {
+      return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+    }
+
+    const body = await request.json().catch(() => null);
+    const items = parseItems(body);
+    if (!items?.length) {
+      return NextResponse.json({ error: "Valid cart items are required." }, { status: 400 });
+    }
+
+    const fingerprint = cartPricingFingerprint(items);
+
     let pending = inflightPricing.get(fingerprint);
     if (!pending) {
       pending = rememberInflight(

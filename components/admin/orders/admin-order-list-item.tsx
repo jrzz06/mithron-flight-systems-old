@@ -120,7 +120,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           window.open(href, "_blank", "noopener,noreferrer");
         }
       }}
-      className={`relative box-border block w-full shrink-0 cursor-pointer border-b border-[var(--platform-border)] px-3 py-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${orderHoverClass()} hover:bg-[var(--platform-surface-muted)] ${
+      className={`relative box-border block w-full shrink-0 cursor-pointer border-b border-[var(--platform-border)] px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${orderHoverClass()} hover:bg-[var(--platform-surface-muted)] ${
         selected
           ? "border-l border-l-violet-500 bg-violet-500/10 pl-3 shadow-[inset_0_0_0_1px_rgba(124,106,247,0.12)]"
           : unread
@@ -128,7 +128,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
             : "border-l border-l-transparent pl-3"
       } ${isPending ? "opacity-60" : ""}`}
     >
-      <div className="grid gap-2.5">
+      <div className="grid gap-1.5">
         <div className="flex min-w-0 items-center gap-1.5">
           {unread && !selected ? (
             <span
@@ -137,15 +137,15 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
               aria-label="New activity"
             />
           ) : null}
-          <OrderIdText value={orderNumber} className="min-w-0 flex-1 text-sm font-semibold tracking-[-0.01em]" showCopy={false} />
+          <OrderIdText value={orderNumber} className="min-w-0 flex-1 text-xs font-semibold tracking-[-0.01em]" showCopy={false} />
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <p className="shrink-0 text-sm font-semibold tabular-nums text-[var(--platform-text-primary)]">
+          <p className="shrink-0 text-xs font-semibold tabular-nums text-[var(--platform-text-primary)]">
             {moneyText(order.total)}
           </p>
           {incomplete ? (
             <span
-              className={`inline-flex h-6 shrink-0 items-center gap-1.5 whitespace-nowrap border border-amber-500/40 bg-amber-500/10 px-2.5 type-badge font-medium text-amber-200 ${orderRadiusControl}`}
+              className={`inline-flex h-5 shrink-0 items-center gap-1 whitespace-nowrap border border-amber-500/40 bg-amber-500/10 px-2 type-badge font-medium text-amber-200 ${orderRadiusControl}`}
               title="Order is missing products or address"
             >
               Needs setup
@@ -153,9 +153,9 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           ) : (
             <OrderStatusBadge status={text(order.status, "pending")} compact className="shrink-0" />
           )}
-          {fulfillmentRaw !== "pending" ? (
+          {fulfillmentRaw !== "pending" && !["cancelled", "delivered", "returned"].includes(fulfillmentRaw) ? (
             <span
-              className={`inline-flex h-6 shrink-0 items-center whitespace-nowrap border border-blue-500/30 bg-blue-500/10 px-2 type-badge font-medium text-blue-200 ${orderRadiusControl}`}
+              className={`inline-flex h-5 shrink-0 items-center whitespace-nowrap border border-blue-500/30 bg-blue-500/10 px-1.5 type-badge font-medium text-blue-200 ${orderRadiusControl}`}
               title={`Warehouse fulfillment: ${fulfillmentLabel}`}
             >
               Warehouse: {fulfillmentLabel}
@@ -163,16 +163,16 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           ) : null}
         </div>
 
-        <div className="flex items-start gap-2.5">
+        <div className="flex items-start gap-2">
           <OrderProductThumbnail src={thumbSrc} size="list" className="shrink-0" />
-          <div className="min-w-0 flex-1 space-y-1">
-            <p className={`${orderClamp2} ${orderLongText} text-sm font-medium text-[var(--platform-text-primary)]`}>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className={`${orderClamp2} ${orderLongText} text-xs font-medium text-[var(--platform-text-primary)]`}>
               {customerName(order)}
             </p>
-            <p className="truncate text-xs leading-4 text-[var(--platform-text-muted)]" title={text(order.customer_email, "No email")}>
+            <p className="truncate text-[11px] leading-4 text-[var(--platform-text-muted)]" title={text(order.customer_email, "No email")}>
               {text(order.customer_email, "No email")}
             </p>
-            <p className="line-clamp-1 text-xs leading-4 text-[var(--platform-text-secondary)]">
+            <p className="line-clamp-1 text-[11px] leading-4 text-[var(--platform-text-secondary)]">
               {summary.primary}
               {summary.extra > 0 ? ` +${summary.extra} more` : ""}
               {productQty ? ` · Qty ${productQty}` : ""}
@@ -180,7 +180,7 @@ export const AdminOrderListItem = memo(function AdminOrderListItem({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--platform-border)]/50 pt-2 type-meta leading-4 text-[var(--platform-text-muted)]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-[var(--platform-border)]/50 pt-1.5 type-meta leading-4 text-[var(--platform-text-muted)]">
           <span>{warehouse}</span>
           <span aria-hidden>·</span>
           <span>{date}</span>

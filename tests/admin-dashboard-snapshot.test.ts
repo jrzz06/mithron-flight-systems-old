@@ -17,11 +17,15 @@ describe("admin dashboard snapshot", () => {
     expect(adminService).toContain("workflow_status=eq.pending_review");
     expect(adminService).toContain("status=in.(paid,admin_review,pending_payment)");
     expect(adminService).toContain("stock_status=in.(low_stock,out_of_stock)");
-    expect(adminService).toContain("enquiries.open");
+    expect(adminService).toContain("leads.open");
+    expect(adminService).toContain('countTableRows(config, "leads", "select=id&status=eq.new&limit=1")');
+    expect(adminService).toContain("mithron_products(name)");
 
     expect(page).toContain("formatDashboardCount");
     expect(page).toContain("operationalCounts.pendingSupplierSubmissions");
     expect(page).toContain("operationalCounts.openEnquiries");
+    expect(page).toContain("Customer leads");
+    expect(page).toContain('href: "/admin/leads"');
     expect(page).not.toContain("Review queue");
     expect(page).not.toContain("Open queue");
   });

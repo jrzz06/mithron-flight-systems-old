@@ -355,11 +355,36 @@ export function productSummaryLine(
   };
 }
 
+function mediaSrc(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = mediaSrc(item);
+      if (nested) return nested;
+    }
+    return null;
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return mediaSrc(record.src ?? record.url ?? record.image ?? record.desktop ?? record.mobile ?? record[0]);
+  }
+  return null;
+}
+
 export function resolveProductImage(products: AdminRow[], productSlug: string) {
   const product = products.find((row) => text(row.slug) === productSlug);
   if (!product) return null;
-  const image = text(product.image) || text(product.hero);
-  return image || null;
+  return (
+    mediaSrc(product.image) ||
+    mediaSrc(product.hero) ||
+    mediaSrc(product.gallery) ||
+    mediaSrc(product.source_images) ||
+    null
+  );
 }
 
 export function orderSearchHaystack(
@@ -487,6 +512,46 @@ export function nextStepForOrder(order: AdminRow) {
   const fulfillment = text(order.fulfillment_status, "pending");
   const paymentStatus = text(order.payment_status, "pending");
 
+  if (status === "cancelled" || fulfillment === "cancelled") {
+    return {
+      title: "Order cancelled",
+      description: "This order is cancelled. You can permanently delete it from Danger Zone if needed.",
+      action: "none" as const,
+      button: ""
+    };
+  }
+  if (status === "delivered" || fulfillment === "delivered") {
+    return {
+      title: "Order delivered",
+      description: "This order is complete. No further fulfillment action is required.",
+      action: "none" as const,
+      button: ""
+    };
+  }
+  if (status === "refunded" || paymentStatus === "refunded") {
+    return {
+      title: "Order refunded",
+      description: "This order has been refunded. No further fulfillment action is required.",
+      action: "none" as const,
+      button: ""
+    };
+  }
+  if (fulfillment === "returned") {
+    if (paymentStatus !== "refunded") {
+      return {
+        title: "Resolve return",
+        description: "Shipment has been marked as returned/damaged. Restock is already handled in the warehouse workflow. Next: refund and mark the order as refunded from Payment actions below.",
+        action: "none" as const,
+        button: ""
+      };
+    }
+    return {
+      title: "Return resolved",
+      description: "This order was returned and refunded. No further action is required.",
+      action: "none" as const,
+      button: ""
+    };
+  }
   if (status === "paid") {
     return {
       title: "Verify order",
@@ -528,14 +593,6 @@ export function nextStepForOrder(order: AdminRow) {
       button: ""
     };
   }
-  if (fulfillment === "returned" && paymentStatus !== "refunded") {
-    return {
-      title: "Resolve return",
-      description: "Shipment has been marked as returned/damaged. Restock is already handled in the warehouse workflow. Next: refund and mark the order as refunded from Payment actions below.",
-      action: "none" as const,
-      button: ""
-    };
-  }
   return {
     title: "No action required",
     description: "This order is moving through fulfillment or already completed.",
@@ -569,11 +626,24 @@ export function canPermanentlyDeleteOrder(order: AdminRow | null) {
   return status === "cancelled" || channel === "enquiry";
 }
 
-/** True once warehouse owns the order (fulfillment left pending). */
+const IDLE_OR_TERMINAL_FULFILLMENT = new Set(["", "pending", "cancelled", "delivered", "returned"]);
+
+/** True once warehouse actively owns the order (not pending and not terminal). */
 export function isHandedOffToWarehouse(order: AdminRow | null) {
   if (!order) return false;
   const fulfillment = text(order.fulfillment_status, "pending");
-  return fulfillment !== "" && fulfillment !== "pending";
+  return !IDLE_OR_TERMINAL_FULFILLMENT.has(fulfillment);
+}
+
+/** Cancelled / delivered / refunded / returned (or archived/deleted) — no setup or handoff notices. */
+export function isTerminalOrder(order: AdminRow | null) {
+  if (!order) return false;
+  if (isOrderArchived(order) || isOrderDeleted(order)) return true;
+  const status = text(order.status, "pending");
+  const fulfillment = text(order.fulfillment_status, "pending");
+  if (["cancelled", "delivered", "refunded"].includes(status)) return true;
+  if (["cancelled", "delivered", "returned"].includes(fulfillment)) return true;
+  return false;
 }
 
 /**
@@ -582,6 +652,7 @@ export function isHandedOffToWarehouse(order: AdminRow | null) {
  */
 export function isIncompleteDraftOrder(order: AdminRow | null, hasItems?: boolean) {
   if (!order) return false;
+  if (isTerminalOrder(order)) return false;
   const metadata = orderMetadata(order);
   if (metadata.needs_products === true || metadata.needs_address === true) return true;
   if (hasItems === undefined) return false;
@@ -642,6 +713,8 @@ export function hasIdentifiedCustomer(order: AdminRow) {
 }
 
 export function fulfillmentReadinessMessage(order: AdminRow, hasItems: boolean) {
+  if (isTerminalOrder(order) || isHandedOffToWarehouse(order)) return null;
+
   const missing: string[] = [];
   if (!hasIdentifiedCustomer(order)) missing.push("customer details");
   if (!hasItems) missing.push("at least one product");

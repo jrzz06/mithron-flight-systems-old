@@ -23,14 +23,28 @@ describe("logout CSRF protection", () => {
   it("uses POST forms for account and control panel logout buttons", () => {
     const accountProfile = readFileSync(join(process.cwd(), "app/(storefront)/account/profile/page.tsx"), "utf8");
     const platformNav = readFileSync(join(process.cwd(), "components/platform/platform-nav.tsx"), "utf8");
+    const platformTopbar = readFileSync(join(process.cwd(), "components/platform/platform-topbar.tsx"), "utf8");
+    const profileNav = readFileSync(join(process.cwd(), "components/navigation/profile-nav-button.tsx"), "utf8");
+    const logoutForm = readFileSync(join(process.cwd(), "components/auth/logout-form.tsx"), "utf8");
+    const logoutBridge = readFileSync(
+      join(process.cwd(), "components/notifications/logout-notice-toast-bridge.tsx"),
+      "utf8"
+    );
+    const clearBrowserSession = readFileSync(join(process.cwd(), "lib/auth/clear-browser-session.ts"), "utf8");
     const warehouseLayout = readFileSync(join(process.cwd(), "app/warehouse/layout.tsx"), "utf8");
     const supplierLayout = readFileSync(join(process.cwd(), "app/supplier/layout.tsx"), "utf8");
 
     expect(accountProfile).toContain("LogoutForm");
-    expect(readFileSync(join(process.cwd(), "components/auth/logout-form.tsx"), "utf8")).toContain('action="/auth/logout"');
-    expect(readFileSync(join(process.cwd(), "components/auth/logout-form.tsx"), "utf8")).not.toContain("firebaseSignOut");
+    expect(logoutForm).toContain('"/auth/logout"');
+    expect(logoutForm).toContain("clearBrowserAuthSession");
+    expect(logoutForm).toContain('method="post"');
+    expect(logoutForm).not.toContain("firebaseSignOut");
     expect(accountProfile).not.toContain('href="/auth/logout"');
-    expect(platformNav).toContain('action="/auth/logout"');
+    expect(platformNav).toContain("LogoutForm");
+    expect(platformTopbar).toContain("LogoutForm");
+    expect(profileNav).toContain("LogoutForm");
+    expect(logoutBridge).toContain("clearBrowserAuthSession");
+    expect(clearBrowserSession).toContain('scope: "local"');
     expect(warehouseLayout).toContain("ControlPlaneParallelLayout");
     expect(warehouseLayout).toContain("data-warehouse-frame");
     expect(supplierLayout).toContain("ControlPlaneParallelLayout");

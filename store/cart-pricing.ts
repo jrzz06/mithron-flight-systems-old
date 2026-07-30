@@ -92,9 +92,24 @@ export const useCartPricingStore = create<CartPricingStore>((set, get) => ({
           body: JSON.stringify({ items }),
           cache: "no-store"
         });
-        const payload = (await response.json()) as CartPricingResponse & { error?: string };
+        const rawText = await response.text();
+        let payload: (CartPricingResponse & { error?: string }) | null = null;
+        try {
+          payload = rawText ? (JSON.parse(rawText) as CartPricingResponse & { error?: string }) : null;
+        } catch {
+          throw new Error("Unable to load current cart pricing. Please retry.");
+        }
         if (!response.ok) {
-          throw new Error(payload.error ?? "Unable to load current cart pricing.");
+          throw new Error(payload?.error ?? "Unable to load current cart pricing.");
+        }
+        if (
+          !payload
+          || !Array.isArray(payload.lines)
+          || typeof payload.subtotal !== "number"
+          || typeof payload.taxTotal !== "number"
+          || typeof payload.total !== "number"
+        ) {
+          throw new Error("Unable to load current cart pricing. Please retry.");
         }
 
         const pricingChanged =
@@ -114,11 +129,15 @@ export const useCartPricingStore = create<CartPricingStore>((set, get) => ({
           }
         });
       } catch (error) {
+        const message =
+          error instanceof Error && !/Unexpected token|is not valid JSON/i.test(error.message)
+            ? error.message
+            : "Unable to load current cart pricing. Please retry.";
         set((state) => ({
           snapshot: {
             ...state.snapshot,
             isResolving: false,
-            error: error instanceof Error ? error.message : "Unable to load current cart pricing."
+            error: message
           }
         }));
       }

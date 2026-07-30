@@ -1,6 +1,6 @@
 "use client";
 
-import { orderMetadata, text, type AdminRow } from "@/components/admin/orders/order-view-helpers";
+import { orderMetadata, isTerminalOrder, text, type AdminRow } from "@/components/admin/orders/order-view-helpers";
 import { orderRadiusControl } from "@/components/admin/orders/order-layout-utils";
 
 export function AdminOrderContactRequestBanner({
@@ -10,6 +10,8 @@ export function AdminOrderContactRequestBanner({
   order: AdminRow;
   itemCount: number;
 }) {
+  if (isTerminalOrder(order)) return null;
+
   const sourceContactRequestId = text(order.source_contact_request_id)
     || text(orderMetadata(order).source_contact_request_id);
   if (!sourceContactRequestId) return null;

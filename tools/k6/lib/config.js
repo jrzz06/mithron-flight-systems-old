@@ -40,6 +40,10 @@ export const CART_PRICING_BODY = JSON.stringify({
 export const SCENARIO = String(__ENV.SCENARIO || "average").toLowerCase();
 export const TARGET = String(__ENV.TARGET || "local").toLowerCase(); // local | preview | production
 
+/** Fair production runs: warm-up phase + allow Vercel edge cache on public GETs. */
+export const FAIR_MODE = SCENARIO === "fair" || __ENV.FAIR_MODE === "1";
+export const ALLOW_EDGE_CACHE = FAIR_MODE || __ENV.ALLOW_EDGE_CACHE === "1";
+
 /** Spike / soak can exhaust Supabase pooler + Vercel — require explicit confirm. */
 export function assertSafetyGates() {
   if (SCENARIO === "spike" && __ENV.CONFIRM_SPIKE !== "1") {

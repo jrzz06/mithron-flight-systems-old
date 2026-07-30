@@ -157,17 +157,6 @@ export type PendingSupplierSubmission = {
   updatedAt: string;
 };
 
-function combineCountMetrics(label: string, left: CountMetric, right: CountMetric): CountMetric {
-  if (left.status === "UNAVAILABLE" && right.status === "UNAVAILABLE") {
-    return { table: label, count: 0, status: "UNAVAILABLE" };
-  }
-  return {
-    table: label,
-    count: (left.status === "LIVE" ? left.count : 0) + (right.status === "LIVE" ? right.count : 0),
-    status: left.status === "LIVE" || right.status === "LIVE" ? "LIVE" : "UNAVAILABLE"
-  };
-}
-
 export function formatDashboardCount(metric: CountMetric) {
   return metric.status === "LIVE" ? String(metric.count) : "—";
 }
@@ -224,7 +213,8 @@ const dashboardQueries = {
   activityLogs: "select=id,action,entity_table,entity_id,severity,created_at&order=created_at.desc&limit=8",
   deploymentRequests: "select=id,requester_email,region,mission_profile,status,created_at,updated_at&status=in.(pending,triaged,approved,scheduled,blocked,escalated)&order=updated_at.desc&limit=8",
   staffTasks: "select=id,title,status,priority,assigned_to,due_at,created_at,updated_at&status=in.(open,in_progress,blocked)&order=updated_at.desc&limit=8",
-  lowStockInventory: "select=product_slug,sku,stock_status,quantity,reorder_threshold,updated_at&stock_status=in.(low_stock,out_of_stock)&order=updated_at.desc&limit=8"
+  lowStockInventory:
+    "select=product_slug,sku,stock_status,quantity,reorder_threshold,updated_at,mithron_products(name)&stock_status=in.(low_stock,out_of_stock)&order=updated_at.desc&limit=8"
 } as const;
 
 const operationsQueries = {
@@ -734,7 +724,7 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
     pendingOrdersReview: { table: "orders.pending_review", count: 0, status: "UNAVAILABLE" },
     lowStockAlerts: { table: "inventory.low_stock", count: 0, status: "UNAVAILABLE" },
     pendingSupplierSubmissions: { table: "mithron_products.pending_review", count: 0, status: "UNAVAILABLE" },
-    openEnquiries: { table: "enquiries.open", count: 0, status: "UNAVAILABLE" }
+    openEnquiries: { table: "leads.open", count: 0, status: "UNAVAILABLE" }
   };
   const emptyData = {
     metrics: [] as CountMetric[],
@@ -777,12 +767,10 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
         ...metric,
         table: "mithron_products.pending_review"
       })),
-      Promise.all([
-        countTableRows(config, "enquiries", "select=id&status=eq.new&limit=1"),
-        countTableRows(config, "orders", "select=id&channel=eq.enquiry&status=eq.admin_review&limit=1")
-      ]).then(([contactEnquiries, checkoutEnquiries]) =>
-        combineCountMetrics("enquiries.open", { ...contactEnquiries, table: "enquiries.new" }, { ...checkoutEnquiries, table: "orders.enquiry_review" })
-      )
+      countTableRows(config, "leads", "select=id&status=eq.new&limit=1").then((metric) => ({
+        ...metric,
+        table: "leads.open"
+      }))
     ]).then(([pendingOrdersReview, lowStockAlertsCount, pendingSupplierSubmissions, openEnquiries]) => ({
       pendingOrdersReview,
       lowStockAlerts: lowStockAlertsCount,
@@ -798,6 +786,20 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
   ]);
   const rowTables = [recentOrders, ordersNeedingReview, recentNotifications, recentActivity, lowStockAlerts];
   const operationalMetricList = Object.values(operationalCounts);
+
+  const lowStockAlertRows: AdminRow[] = lowStockAlerts.rows.map((row) => {
+    const embedded = row.mithron_products;
+    const embeddedName =
+      embedded && typeof embedded === "object" && !Array.isArray(embedded)
+        ? String((embedded as Record<string, unknown>).name ?? "").trim()
+        : "";
+    const slug = typeof row.product_slug === "string" ? row.product_slug.trim() : "";
+    const existingName = typeof row.product_name === "string" ? row.product_name.trim() : "";
+    return {
+      ...row,
+      product_name: embeddedName || existingName || slug
+    };
+  });
 
   return {
     status:
@@ -815,7 +817,7 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
       ordersNeedingReview: ordersNeedingReview.rows,
       recentNotifications: recentNotifications.rows,
       recentActivity: recentActivity.rows,
-      lowStockAlerts: lowStockAlerts.rows,
+      lowStockAlerts: lowStockAlertRows,
       pendingSupplierSubmissionRows
     }
   };

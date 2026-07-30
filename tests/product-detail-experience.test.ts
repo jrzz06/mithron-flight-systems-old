@@ -53,6 +53,38 @@ describe("product detail experience", () => {
     expect(srcs).toEqual(["/image-a.png", "/image-b.png", "/image-c.png"]);
   });
 
+  it("deduplicates the same storage object across /cdn-media and absolute Supabase URLs", () => {
+    const storagePath = "/storage/v1/object/public/mithron-products/products/source-10-liters/01.webp";
+    const cdnSrc = `/cdn-media${storagePath}`;
+    const absoluteSrc = `https://abc.supabase.co${storagePath}`;
+    const plan = buildProductMediaPlan({
+      ...baseProduct,
+      hero: { src: cdnSrc, alt: "Hero CDN" },
+      image: {
+        src: absoluteSrc,
+        alt: "Linked primary",
+        responsive: {
+          assetId: "demo-linked",
+          bucket: "mithron-products",
+          assetRole: "product",
+          category: "product",
+          generatedPromptId: "demo",
+          status: "generated",
+          fallbackSrc: absoluteSrc,
+          fallbackAlt: "Linked primary",
+          width: 1200,
+          height: 900,
+          dominantColor: "#fff",
+          variants: { webp: [] }
+        }
+      },
+      gallery: [{ src: absoluteSrc, alt: "Gallery primary duplicate" }]
+    });
+
+    expect(plan).toHaveLength(1);
+    expect(plan[0]?.responsive?.assetId).toBe("demo-linked");
+  });
+
   it("keeps Wix/original src instead of swapping to a cutout responsive fallback", () => {
     const cutoutSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/catalog-cutouts/v1/demo-drone.webp";
     const rawSrc = "https://example.supabase.co/storage/v1/object/public/mithron-products/products/demo-drone/raw.png";

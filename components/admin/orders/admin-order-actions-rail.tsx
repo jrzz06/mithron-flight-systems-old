@@ -25,6 +25,7 @@ import {
   isHandedOffToWarehouse,
   isOrderArchived,
   isOrderDeleted,
+  isTerminalOrder,
   nextStepForOrder,
   numberText,
   publicOrderLabel,
@@ -93,7 +94,8 @@ export function AdminOrderActionsRail({
   const warehouseName = warehouses.find((warehouse) => warehouse.code === warehouseCode)?.name ?? warehouseCode;
   const archived = isOrderArchived(order);
   const deleted = isOrderDeleted(order);
-  const isClosed = archived || deleted;
+  const terminal = isTerminalOrder(order);
+  const isClosed = archived || deleted || terminal;
   const fulfillment = text(order.fulfillment_status, "pending");
   const handedOffToWarehouse = isHandedOffToWarehouse(order);
   const hasItems = Boolean(firstItem);
@@ -144,7 +146,9 @@ export function AdminOrderActionsRail({
       <ActionGroup title="Fulfillment">
         {isClosed ? (
           <p className="platform-type-body text-[var(--platform-text-muted)]">
-            This order is no longer active.
+            {text(order.status) === "cancelled" || fulfillment === "cancelled"
+              ? "This order is cancelled. Permanently delete it from Danger Zone if needed."
+              : "This order is no longer active."}
           </p>
         ) : null}
 

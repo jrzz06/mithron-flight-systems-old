@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect } from "react";
 
 function useIsomorphicLayoutEffect(effect: () => void | (() => void), deps: React.DependencyList) {
@@ -15,7 +15,6 @@ function useIsomorphicLayoutEffect(effect: () => void | (() => void), deps: Reac
 
 export function StorefrontScrollRestoration() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   // Enforce manual scroll restoration globally for the customer storefront layout
   useEffect(() => {
@@ -24,7 +23,7 @@ export function StorefrontScrollRestoration() {
     }
   }, []);
 
-  // Synchronously reset scroll coordinates to (0, 0) before DOM paint on route change
+  // Synchronously reset scroll coordinates to (0, 0) before DOM paint on pathname change
   useIsomorphicLayoutEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -62,7 +61,7 @@ export function StorefrontScrollRestoration() {
       bodyEl.style.scrollBehavior = previousBodyBehavior;
       htmlEl.removeAttribute("data-instant-scroll");
     };
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return null;
 }

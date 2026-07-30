@@ -1,6 +1,6 @@
 import http from "k6/http";
 import { check } from "k6";
-import { BASE_URL } from "./config.js";
+import { ALLOW_EDGE_CACHE, BASE_URL } from "./config.js";
 import { apiLatency, pageLatency, rateLimited, supabaseProxyLatency } from "./metrics.js";
 
 /**
@@ -32,7 +32,7 @@ export function request(path, opts = {}) {
     headers: {
       Accept: kind === "page" ? "text/html,application/xhtml+xml" : "application/json",
       "User-Agent": "mithron-k6-suite/1.0",
-      "Cache-Control": "no-cache",
+      ...(ALLOW_EDGE_CACHE && method === "GET" ? {} : { "Cache-Control": "no-cache" }),
       ...headers
     },
     responseCallback: http.expectedStatuses(...okStatuses)

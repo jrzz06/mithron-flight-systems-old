@@ -80,6 +80,7 @@ export function AdminOrderProductsSection({
 }: AdminOrderProductsSectionProps) {
   const warehouse = assignedWarehouseCode(order, defaultWarehouseCode);
   const [showPicker, setShowPicker] = useState(false);
+  const [previewSlug, setPreviewSlug] = useState<string | null>(null);
   const realtime = useOptionalAdminRealtime();
   const { appendOptimisticOrderItems, patchOrder } = useAdminOrdersLiveState();
   const canModifyProducts =
@@ -188,8 +189,13 @@ export function AdminOrderProductsSection({
               item.metadata && typeof item.metadata === "object" && !Array.isArray(item.metadata)
                 ? (item.metadata as Record<string, unknown>)
                 : {};
-            const variant = text(itemMeta.variant_label) || text(itemMeta.variant) || sku || "—";
+            const variantRaw = text(itemMeta.variant_label) || text(itemMeta.variant);
+            const variant =
+              variantRaw && variantRaw.toLowerCase() !== sku.toLowerCase() ? variantRaw : "";
             const catalog = catalogProducts.find((row) => row.slug === slug);
+            const productRecord = slug
+              ? (products.find((row) => text(row.slug) === slug) ?? null)
+              : null;
             const qty = Number(item.quantity ?? 1) || 1;
             const lineTotal = Number(item.line_total ?? 0) || 0;
             const unitPrice = qty > 0 ? lineTotal / qty : lineTotal;
@@ -206,78 +212,145 @@ export function AdminOrderProductsSection({
             const imageSrc = image ? resolveNextImageSrc(image) : null;
             const productName = text(item.product_name, slug || "Product");
             const isOptimistic = Boolean(item._optimistic);
+            const previewOpen = Boolean(slug) && previewSlug === slug;
+            const catalogPrice =
+              typeof catalog?.price === "number"
+                ? catalog.price
+                : Number(productRecord?.price ?? unitPrice) || unitPrice;
+            const productStatus = text(productRecord?.status) || text(productRecord?.publish_status);
+            const productCategory =
+              text(productRecord?.category) || text(productRecord?.category_slug);
+            const productSku = text(productRecord?.sku) || sku;
+            const priceDiffers =
+              Number.isFinite(catalogPrice) && Math.abs(catalogPrice - unitPrice) > 0.009;
 
             return (
-              <article
-                key={text(item.id) || `${slug}-${sku}`}
-                className={`${orderProductCardGrid} ${orderHoverClass()} hover:border-[var(--platform-border-strong)] ${
-                  isOptimistic ? "opacity-70" : ""
-                }`}
-              >
-                <OrderProductThumbnail src={imageSrc} alt={productName} size="detail" />
-                <div className={orderProductCardBody}>
-                  <p className={`${orderClamp2} ${orderLongText} platform-type-section-title font-semibold text-[var(--platform-text-primary)]`}>
-                    {slug ? (
-                      <Link
-                        href={`/admin/products?product_slug=${encodeURIComponent(slug)}`}
-                        className="hover:text-violet-300 hover:underline"
-                      >
-                        {productName}
-                      </Link>
-                    ) : (
-                      productName
-                    )}
-                    {isOptimistic ? (
-                      <span className="ml-2 text-xs font-medium text-[var(--platform-accent)]">Adding…</span>
-                    ) : null}
-                  </p>
-                  <OrderFieldGrid columns={2}>
-                    <OrderField label="SKU" value={sku || "—"} />
-                    <OrderField label="Variant" value={variant} />
-                    <OrderField label="Quantity" value={numberText(item.quantity)} />
-                    <OrderField label="Unit price" value={moneyText(unitPrice)} />
-                    <OrderField label="GST" value={moneyText(tax.taxAmount)} />
-                    <OrderField label="Line total" value={moneyText(lineTotal)} />
-                    <OrderField label="Warehouse" value={warehouse} />
-                    <OrderField label="Available" value={numberText(available)} />
-                  </OrderFieldGrid>
-                </div>
-                <div className={`${orderWrapRow} @sm:col-span-2 @sm:justify-end`}>
-                  <OrderStockBadge available={available} />
-                  {canRemoveProducts && text(item.id) && !isOptimistic ? (
-                    <form
-                      action={timedRemoveOrderItem}
-                      className="inline-flex"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <input type="hidden" name="order_id" value={text(order.id)} />
-                      <input type="hidden" name="order_item_id" value={text(item.id)} />
-                      <input type="hidden" name="queue" value={queue} />
-                      <input type="hidden" name="q" value={filtersQuery} />
-                      {text(order.updated_at) ? (
-                        <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
+              <div key={text(item.id) || `${slug}-${sku}`} className="grid gap-2">
+                <article
+                  className={`${orderProductCardGrid} ${orderHoverClass()} hover:border-[var(--platform-border-strong)] ${
+                    isOptimistic ? "opacity-70" : ""
+                  }`}
+                >
+                  <OrderProductThumbnail
+                    src={imageSrc}
+                    alt={productName}
+                    size="detail"
+                    enlargeOnClick={Boolean(imageSrc)}
+                  />
+                  <div className={orderProductCardBody}>
+                    <p className={`${orderClamp2} ${orderLongText} platform-type-section-title font-semibold text-[var(--platform-text-primary)]`}>
+                      {productName}
+                      {isOptimistic ? (
+                        <span className="ml-2 text-xs font-medium text-[var(--platform-accent)]">Adding…</span>
                       ) : null}
-                      <OperationalSubmitButton
-                        pendingLabel="Removing..."
-                        confirmMessage={`Remove ${productName} from this order?`}
-                        confirmDescription="This removes the line item from the order. Stock will be recalculated."
-                        confirmLabel="Remove item"
-                        className={`${orderInlineButtonClass} border-rose-700/60 text-rose-200 hover:bg-rose-950/30`}
+                    </p>
+                    <OrderFieldGrid columns={2}>
+                      <OrderField label="SKU" value={sku || "—"} />
+                      {variant ? <OrderField label="Variant" value={variant} /> : null}
+                      <OrderField label="Quantity" value={numberText(item.quantity)} />
+                      <OrderField label="Unit price" value={moneyText(unitPrice)} />
+                      <OrderField label="GST" value={moneyText(tax.taxAmount)} />
+                      <OrderField label="Line total" value={moneyText(lineTotal)} />
+                      <OrderField label="Warehouse" value={warehouse} />
+                      <OrderField label="Available" value={numberText(available)} />
+                    </OrderFieldGrid>
+                  </div>
+                  <div className={`${orderWrapRow} @sm:col-span-2 @sm:justify-end`}>
+                    <OrderStockBadge available={available} />
+                    {canRemoveProducts && text(item.id) && !isOptimistic ? (
+                      <form
+                        action={timedRemoveOrderItem}
+                        className="inline-flex"
+                        onClick={(event) => event.stopPropagation()}
                       >
-                        Remove
-                      </OperationalSubmitButton>
-                    </form>
-                  ) : null}
-                  {slug ? (
-                    <Link
-                      href={`/admin/products?product_slug=${encodeURIComponent(slug)}`}
-                      className={`${orderInlineButtonClass} text-violet-300 hover:bg-[var(--platform-surface)]`}
-                    >
-                      View product
-                    </Link>
-                  ) : null}
-                </div>
-              </article>
+                        <input type="hidden" name="order_id" value={text(order.id)} />
+                        <input type="hidden" name="order_item_id" value={text(item.id)} />
+                        <input type="hidden" name="queue" value={queue} />
+                        <input type="hidden" name="q" value={filtersQuery} />
+                        {text(order.updated_at) ? (
+                          <input type="hidden" name="expected_updated_at" value={text(order.updated_at)} />
+                        ) : null}
+                        <OperationalSubmitButton
+                          pendingLabel="Removing..."
+                          confirmMessage={`Remove ${productName} from this order?`}
+                          confirmDescription="This removes the line item from the order. Stock will be recalculated."
+                          confirmLabel="Remove item"
+                          className={`${orderInlineButtonClass} border-rose-700/60 text-rose-200 hover:bg-rose-950/30`}
+                        >
+                          Remove
+                        </OperationalSubmitButton>
+                      </form>
+                    ) : null}
+                    {slug ? (
+                      <button
+                        type="button"
+                        aria-expanded={previewOpen}
+                        onClick={() => setPreviewSlug(previewOpen ? null : slug)}
+                        className={`${orderInlineButtonClass} text-violet-300 hover:bg-[var(--platform-surface)]`}
+                      >
+                        {previewOpen ? "Hide product" : "View product"}
+                      </button>
+                    ) : null}
+                  </div>
+                </article>
+
+                {previewOpen ? (
+                  <div
+                    data-order-product-mini-panel
+                    className={`grid gap-3 border border-[var(--platform-border)] bg-[var(--platform-surface)]/50 p-3 sm:grid-cols-[7.5rem_minmax(0,1fr)] ${orderRadiusControl}`}
+                  >
+                    <OrderProductThumbnail
+                      src={imageSrc}
+                      alt={productName}
+                      size="preview"
+                      enlargeOnClick={Boolean(imageSrc)}
+                      className="!h-[7.5rem] !w-[7.5rem] justify-self-start"
+                    />
+                    <div className="grid min-w-0 content-start gap-2">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                            Catalog product
+                          </p>
+                          <p className={`${orderClamp2} ${orderLongText} text-sm font-semibold text-[var(--platform-text-primary)]`}>
+                            {productName}
+                          </p>
+                          <p className="mt-0.5 truncate font-mono text-[11px] text-[var(--platform-text-muted)]" title={slug}>
+                            {slug}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewSlug(null)}
+                          className="shrink-0 text-xs text-[var(--platform-text-muted)] hover:text-[var(--platform-text-primary)]"
+                          aria-label="Close product preview"
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <OrderFieldGrid columns={2}>
+                        <OrderField label="Catalog price" value={moneyText(catalogPrice)} />
+                        <OrderField label="Stock" value={numberText(available)} />
+                        {productSku ? <OrderField label="Catalog SKU" value={productSku} /> : null}
+                        {productCategory ? <OrderField label="Category" value={productCategory} /> : null}
+                        {productStatus ? <OrderField label="Status" value={productStatus} /> : null}
+                        {priceDiffers ? (
+                          <OrderField label="Order unit price" value={moneyText(unitPrice)} />
+                        ) : null}
+                      </OrderFieldGrid>
+                      <div className={`${orderWrapRow} justify-end`}>
+                        <OrderStockBadge available={available} />
+                        <Link
+                          href={`/admin/products?product_slug=${encodeURIComponent(slug)}`}
+                          className={`${orderInlineButtonClass} text-[var(--platform-text-secondary)] hover:bg-[var(--platform-surface)]`}
+                        >
+                          Open full editor
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             );
           })
         ) : (

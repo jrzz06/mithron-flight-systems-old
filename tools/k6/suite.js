@@ -15,8 +15,8 @@
  *
  * Run examples — see tools/k6/README.md
  */
-import { assertSafetyGates, BASE_URL, SCENARIO, TARGET } from "./lib/config.js";
-import { weightedUserJourney } from "./lib/journeys.js";
+import { assertSafetyGates, BASE_URL, FAIR_MODE, SCENARIO, TARGET } from "./lib/config.js";
+import { warmupJourney, weightedUserJourney } from "./lib/journeys.js";
 import { buildReports } from "./lib/report.js";
 
 assertSafetyGates();
@@ -72,27 +72,65 @@ const SCENARIOS = {
   }
 };
 
-if (!SCENARIOS[SCENARIO]) {
-  throw new Error(`Unknown SCENARIO="${SCENARIO}". Use validate | average | spike | soak.`);
+if (!SCENARIOS[SCENARIO] && SCENARIO !== "fair") {
+  throw new Error(`Unknown SCENARIO="${SCENARIO}". Use validate | average | fair | spike | soak.`);
 }
+
+const FAIR_WARMUP_DURATION = "2m30s";
+
+const fairScenarios = {
+  warmup: {
+    executor: "ramping-vus",
+    startVUs: 0,
+    stages: [
+      { duration: "30s", target: 15 },
+      { duration: "90s", target: 15 },
+      { duration: "30s", target: 0 }
+    ],
+    gracefulRampDown: "15s",
+    exec: "warmup",
+    tags: { phase: "warmup" }
+  },
+  average: {
+    executor: "ramping-vus",
+    startTime: FAIR_WARMUP_DURATION,
+    startVUs: 0,
+    stages: [
+      { duration: "2m", target: 100 },
+      { duration: "5m", target: 100 },
+      { duration: "1m", target: 0 }
+    ],
+    gracefulRampDown: "30s",
+    exec: "default",
+    tags: { phase: "average" }
+  }
+};
 
 const activeThresholds =
   SCENARIO === "validate"
     ? {
-        // Wiring only — local Redis/SSR often exceeds production SLAs.
         http_req_failed: ["rate<0.05"],
         checks: ["rate>0.9"]
       }
-    : THRESHOLDS;
+    : FAIR_MODE
+      ? {
+          "http_req_duration{phase:average}": ["p(99)<1500"],
+          "http_req_failed{phase:average}": ["rate<0.01"],
+          "mithron_journey_fail_rate{phase:average}": ["rate<0.05"],
+          "checks{phase:average}": ["rate>0.95"]
+        }
+      : THRESHOLDS;
 
 export const options = {
-  scenarios: {
-    [SCENARIO]: SCENARIOS[SCENARIO]
-  },
+  scenarios: FAIR_MODE ? fairScenarios : { [SCENARIO]: SCENARIOS[SCENARIO] },
   thresholds: activeThresholds,
   summaryTrendStats: ["avg", "min", "med", "p(90)", "p(95)", "p(99)", "max"],
   userAgent: "mithron-k6-suite/1.0"
 };
+
+export function warmup() {
+  warmupJourney();
+}
 
 export default function () {
   weightedUserJourney();
@@ -108,9 +146,13 @@ export function handleSummary(data) {
 }
 
 export function setup() {
-  console.log(`Mithron k6 suite · scenario=${SCENARIO} · target=${TARGET} · BASE_URL=${BASE_URL}`);
+  const label = FAIR_MODE ? "fair (warmup + average, edge-cache GETs)" : SCENARIO;
+  console.log(`Mithron k6 suite · scenario=${label} · target=${TARGET} · BASE_URL=${BASE_URL}`);
   console.log(
     "Routes: real catalog/search + cart/pricing + pages. No fictional /api/products. No destructive admin writes."
   );
+  if (FAIR_MODE) {
+    console.log("Fair mode: 2m30s warm-up @ 15 VUs, then average load; public GETs allow CDN cache.");
+  }
   return { startedAt: Date.now() };
 }

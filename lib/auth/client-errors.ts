@@ -151,6 +151,12 @@ export function mapAuthPageNotice(input: {
   if (input.admin_status === "forbidden" || input.access_status === "forbidden") {
     return { tone: "neutral" as const, message: "You do not have permission to open that page." };
   }
+  if (input.access_status === "control_panel_only") {
+    return {
+      tone: "neutral" as const,
+      message: "Storefront browsing is limited for your role. You can continue in the control panel."
+    };
+  }
   return null;
 }
 

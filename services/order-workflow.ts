@@ -83,6 +83,16 @@ export function assertAdminMayMutatePreWarehouseOrder(order: JsonRecord) {
   }
 }
 
+/**
+ * Admin may permanently/soft-delete cancelled orders even after fulfillment was set to cancelled.
+ * Non-cancelled orders still require pre-warehouse (fulfillment pending) ownership.
+ */
+export function assertAdminMayDeleteOrder(order: JsonRecord) {
+  const status = String(order.status ?? "").trim();
+  if (status === "cancelled") return;
+  assertAdminMayMutatePreWarehouseOrder(order);
+}
+
 /** Warehouse emergency delete is allowed once the order is in packing/dispatched (or still pending if staff-created). */
 export function assertWarehouseMayDeleteOrder(order: JsonRecord) {
   const fulfillment = String(order.fulfillment_status ?? "pending").trim() || "pending";
@@ -755,7 +765,7 @@ export async function softDeleteAdminOrderWorkflow(
   const rows = await fetchAdminRecordsByColumn("orders", "id", input.orderId, env);
   const order = rows[0];
   if (!order) throw new Error("Order not found.");
-  assertAdminMayMutatePreWarehouseOrder(order);
+  assertAdminMayDeleteOrder(order);
 
   const status = String(order.status ?? "");
   const channel = String(order.channel ?? "checkout");
@@ -846,7 +856,7 @@ export async function permanentDeleteAdminOrderWorkflow(
   const rows = await fetchAdminRecordsByColumn("orders", "id", input.orderId, env);
   const order = rows[0];
   if (!order) throw new Error("Order not found.");
-  assertAdminMayMutatePreWarehouseOrder(order);
+  assertAdminMayDeleteOrder(order);
 
   const expectedUpdatedAt = String(input.expectedUpdatedAt ?? order.updated_at ?? "").trim();
   if (expectedUpdatedAt && String(order.updated_at ?? "") !== expectedUpdatedAt) {

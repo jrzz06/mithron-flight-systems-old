@@ -26,7 +26,6 @@ const ProductEnquiryModal = dynamic(
 export type ProductConfiguratorModel = {
   slug: string;
   name: string;
-  tagline: string;
   category: string;
   badge?: string;
   badgeStyle?: import("@/lib/product-badge").ProductBadgeStyle;
@@ -120,7 +119,6 @@ export function ProductConfigurator({
   const stockLabel = isAvailabilityVariant(product.variants)
     ? formatAvailability(selectedVariant?.name ?? "In stock")
     : "In stock";
-  const buyBoxTagline = product.tagline?.trim() ?? "";
   const productUrl = `/product/${product.slug}`;
 
   const buildLineItem = useCallback(() => {
@@ -242,8 +240,6 @@ export function ProductConfigurator({
               <ProductRibbon text={product.badge} style={product.badgeStyle} placement="inline" />
             </div>
           ) : null}
-
-          {buyBoxTagline ? <p className={styles.productSubtitle}>{buyBoxTagline}</p> : null}
 
           <div className={styles.priceBlock}>
             <p className={styles.priceHero}>

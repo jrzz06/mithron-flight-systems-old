@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getMediaCdnOrigin,
   isTrustedCatalogStorageSrc,
+  mediaSrcIdentityKey,
   readMediaCdnPublicEnv,
   rewriteStorageUrlForCdn,
   unwrapCdnStorageUrl
@@ -151,6 +152,19 @@ describe("unwrapCdnStorageUrl", () => {
     expect(unwrapCdnStorageUrl(`/cdn-media${storagePath}`, env)).toBe(`https://abc.supabase.co${storagePath}`);
     expect(unwrapCdnStorageUrl(`https://final-mithron-deploy.vercel.app/cdn-media${storagePath}`, env)).toBe(
       `https://abc.supabase.co${storagePath}`
+    );
+  });
+});
+
+describe("mediaSrcIdentityKey", () => {
+  it("treats /cdn-media and absolute Supabase URLs as the same storage object", () => {
+    const env = { NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co" };
+    const storagePath = "/storage/v1/object/public/mithron-products/products/source-10-liters/01.webp";
+    expect(mediaSrcIdentityKey(`/cdn-media${storagePath}`, env)).toBe(
+      mediaSrcIdentityKey(`https://abc.supabase.co${storagePath}`, env)
+    );
+    expect(mediaSrcIdentityKey(`/cdn-media${storagePath}`, env)).toBe(
+      "mithron-products/products/source-10-liters/01.webp"
     );
   });
 });

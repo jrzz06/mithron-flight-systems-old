@@ -21,6 +21,7 @@ import {
 import { dedupeProductsBySlug } from "@/lib/catalog-shelf-layout";
 import { resolveCatalogCardImage } from "@/lib/media/catalog-card-image";
 import { isCatalogCutoutAsset } from "@/lib/media/catalog-cutout";
+import { mediaSrcIdentityKey } from "@/lib/media/cdn-url";
 import {
   getFeaturedFromCatalogIndex,
   searchCatalogIndex,
@@ -40,7 +41,10 @@ import {
   tokenizeSearchQuery
 } from "@/lib/search-query";
 import { formatAvailability, isSpecLikeBlob } from "@/lib/product-spec-text";
-import { getCatalogProductRatingMap } from "@/lib/catalog-product-ratings";
+import {
+  getCatalogProductRatingDetailsMap,
+  type CatalogProductRating
+} from "@/lib/catalog-product-ratings";
 import { customerFacingAvailability } from "@/services/inventory-csv";
 import { availabilityLabelFromQuantity, getInventoryQuantitiesBySlug } from "@/services/inventory";
 import type { OrderCatalogProduct } from "@/services/orders";
@@ -588,9 +592,7 @@ function mediaFromSourceImage(image: SourceImageRecord | undefined, alt: string)
 
 function enrichImageWithLinkedResponsive(image: MediaAsset, linked?: MediaAsset): MediaAsset {
   if (!linked?.responsive || image.responsive) return image;
-  const normalizedImageSrc = image.src.split("?")[0];
-  const normalizedLinkedSrc = linked.src.split("?")[0];
-  if (normalizedImageSrc === normalizedLinkedSrc) {
+  if (mediaSrcIdentityKey(image.src) === mediaSrcIdentityKey(linked.src)) {
     return { ...image, responsive: linked.responsive };
   }
   return image;
@@ -614,7 +616,7 @@ function enrichGalleryWithLinkedResponsive(gallery: MediaAsset[], linkedGalleryM
   if (!linkedGalleryMedia?.length) return gallery;
   return gallery.map((item) => enrichImageWithLinkedResponsive(item, linkedGalleryMedia.find((linked) => {
     if (!linked.responsive) return false;
-    return linked.src.split("?")[0] === item.src.split("?")[0];
+    return mediaSrcIdentityKey(linked.src) === mediaSrcIdentityKey(item.src);
   })));
 }
 
@@ -641,15 +643,16 @@ function mediaFromMediaAssetRow(row: MediaAssetRow | undefined, fallbackAlt: str
   // asset — dropping it caused PDP `missing_source_image` → notFound() for valid products.
   const kind = normalizedRow.mime_type?.startsWith("video/") ? "video" : "image";
   const responsive = buildProductResponsiveAsset(normalizedRow, fallbackAlt, process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const normalizedSrc = normalizeProductImageSrc(src);
 
   return {
     id: typeof normalizedRow.id === "string" ? normalizedRow.id : undefined,
-    src,
+    src: normalizedSrc,
     alt: cleanText(normalizedRow.alt_text ?? normalizedRow.alt ?? normalizedRow.caption, fallbackAlt),
     kind,
     width: dimensions.width,
     height: dimensions.height,
-    local: false,
+    local: normalizedSrc.startsWith("/"),
     responsive
   };
 }
@@ -668,7 +671,24 @@ function selectPrimaryProductImage(row: Pick<MithronProductRow, "image" | "hero"
 }
 
 function dedupeMediaAssets(items: MediaAsset[]) {
-  return items.filter((item, index, list) => list.findIndex((candidate) => candidate.src === item.src) === index);
+  const chosen = new Map<string, MediaAsset>();
+  for (const item of items) {
+    const src = typeof item.src === "string" ? item.src.trim() : "";
+    if (!src) continue;
+    const key = mediaSrcIdentityKey(src);
+    if (!key) continue;
+    const existing = chosen.get(key);
+    if (!existing) {
+      chosen.set(key, item);
+      continue;
+    }
+    const existingScore = (existing.responsive ? 2 : 0) + mediaQualityScore(existing, 0);
+    const nextScore = (item.responsive ? 2 : 0) + mediaQualityScore(item, 0);
+    if (nextScore > existingScore) {
+      chosen.set(key, item);
+    }
+  }
+  return [...chosen.values()];
 }
 
 function postgrestIn(values: string[]) {
@@ -2233,11 +2253,15 @@ export const getProductAffinityRowBySlug = cache(async (slug: string): Promise<P
   return rows[0] ?? null;
 });
 
-function applyCatalogRatingsToProducts(products: Product[], ratingMap: Map<string, number>): Product[] {
+function applyCatalogRatingsToProducts(
+  products: Product[],
+  ratingMap: Map<string, CatalogProductRating>
+): Product[] {
   if (!ratingMap.size) return products;
   return products.map((product) => {
-    const rating = ratingMap.get(product.slug);
-    return rating && rating > 0 ? { ...product, rating } : product;
+    const entry = ratingMap.get(product.slug);
+    if (!entry || entry.average <= 0 || entry.reviewCount <= 0) return product;
+    return { ...product, rating: entry.average, reviewCount: entry.reviewCount };
   });
 }
 
@@ -2259,7 +2283,7 @@ export const getCatalogShowroomProducts = cache(async (): Promise<Product[]> => 
     const slugs = rawRows.map((row) => row.slug).filter(Boolean);
     const [rows, ratingMap] = await Promise.all([
       overlayLiveInventoryAvailability(rawRows),
-      getCatalogProductRatingMap(slugs)
+      getCatalogProductRatingDetailsMap(slugs)
     ]);
     const products = await mapRowsWithCatalogMedia(rows, mapProductRow, { scopeToRows: true });
     return dedupeProductsBySlug(applyCatalogRatingsToProducts(products, ratingMap));
@@ -2533,7 +2557,7 @@ export const getProductsByCategorySlug = cache(async (slug: CatalogCategorySlug)
     const slugs = rawRows.map((row) => row.slug).filter(Boolean);
     const [rows, ratingMap] = await Promise.all([
       overlayLiveInventoryAvailability(rawRows),
-      getCatalogProductRatingMap(slugs)
+      getCatalogProductRatingDetailsMap(slugs)
     ]);
     const products = await mapRowsWithCatalogMedia(rows, mapProductRow, { scopeToRows: true });
     return dedupeProductsBySlug(

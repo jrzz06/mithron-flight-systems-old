@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, LogOut, Plus, Search, UserRound } from "lucide-react";
+import { Bell, Plus, Search, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
+import { LogoutForm } from "@/components/auth/logout-form";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import type { PlatformRouteTitle, PlatformSearchItem, PlatformScope } from "@/components/platform/types";
 import { GlobalBusySpinner } from "@/components/ui/global-busy";
@@ -183,15 +184,11 @@ export function PlatformTopbar({
               <UserRound className="h-4 w-4 text-[var(--platform-text-muted)]" aria-hidden="true" />
               <span className="max-w-[130px] truncate capitalize">{normalizeRole(role)}</span>
             </div>
-            <form action="/auth/logout" method="post">
-              <button
-                type="submit"
-                aria-label="Sign out"
-                className="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--platform-surface-muted)]/70 text-[var(--platform-text-muted)] transition hover:bg-[var(--platform-surface-muted)]"
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </form>
+            <LogoutForm
+              label="Sign out"
+              iconOnly
+              buttonClassName="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--platform-surface-muted)]/70 text-[var(--platform-text-muted)] transition hover:bg-[var(--platform-surface-muted)] disabled:opacity-60"
+            />
           </div>
         </div>
       </div>

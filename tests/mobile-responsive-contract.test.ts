@@ -405,6 +405,7 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--store-bottom-chrome:/);
     expect(launcherCss).toContain("var(--assistant-fab-offset");
     expect(launcherCss).toContain("var(--z-overlay-launcher)");
+    expect(launcherCss).toMatch(/@media \(max-width: 767px\)[\s\S]*display:\s*none/);
   });
 
   it("uses 44px default store button height on touch surfaces", () => {

@@ -6,6 +6,7 @@ import {
   StorefrontShellHeaderChrome
 } from "@/components/layout/storefront-shell-chrome";
 import { StorefrontShellStreamingLayout } from "@/components/layout/storefront-shell-streaming";
+import { ProductNavigationEffects } from "@/components/navigation/product-navigation-effects";
 import { StorefrontLiveSync } from "@/components/storefront/storefront-live-sync";
 import { StorefrontScrollRestoration } from "@/components/storefront/storefront-scroll-restoration";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,9 +50,8 @@ function StorefrontPageFallback() {
 export default function StorefrontLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
-      <Suspense fallback={null}>
-        <StorefrontScrollRestoration />
-      </Suspense>
+      <StorefrontScrollRestoration />
+      <ProductNavigationEffects />
       <StorefrontLiveSync />
       <StorefrontShellStreamingLayout
         headerChrome={(

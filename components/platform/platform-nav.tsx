@@ -12,7 +12,6 @@ import {
   Images,
   LayoutDashboard,
   LineChart,
-  LogOut,
   Package,
   Settings,
   ShoppingCart,
@@ -21,6 +20,7 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
+import { LogoutForm } from "@/components/auth/logout-form";
 import { useControlPlaneNavMetrics } from "@/components/platform/control-plane-nav-metrics-provider";
 import { PlatformNavBadge } from "@/components/platform/platform-nav-badge";
 import type { PlatformNavGroup, PlatformNavIconKey, PlatformScope } from "@/components/platform/types";
@@ -83,11 +83,14 @@ export function PlatformNav({ groups, dataAttribute = "data-platform-nav", scope
     if (scope === "admin" && href.startsWith("/admin/orders")) {
       return navMetrics.admin.pendingOrdersReview;
     }
+    if (scope === "admin" && href.startsWith("/admin/leads")) {
+      return navMetrics.admin.newEnquiries;
+    }
     if (scope === "admin" && href.startsWith("/admin/enquiries")) {
       return navMetrics.admin.newEnquiries;
     }
     if (scope === "admin" && href.startsWith("/admin/contact-requests")) {
-      return navMetrics.admin.newContactRequests;
+      return navMetrics.admin.newEnquiries;
     }
     if (scope === "warehouse" && href.startsWith("/warehouse/fulfillment")) {
       return navMetrics.warehouse.fulfillmentPending;
@@ -111,11 +114,14 @@ export function PlatformNav({ groups, dataAttribute = "data-platform-nav", scope
     if (scope === "admin" && href.startsWith("/admin/orders")) {
       return "orders needing review";
     }
+    if (scope === "admin" && href.startsWith("/admin/leads")) {
+      return "new leads";
+    }
     if (scope === "admin" && href.startsWith("/admin/enquiries")) {
-      return "new enquiries";
+      return "new leads";
     }
     if (scope === "admin" && href.startsWith("/admin/contact-requests")) {
-      return "new contact requests";
+      return "new leads";
     }
     if (scope === "warehouse" && href.startsWith("/warehouse/fulfillment")) {
       return "orders awaiting fulfillment";
@@ -223,15 +229,12 @@ export function PlatformNav({ groups, dataAttribute = "data-platform-nav", scope
         );
         })}
       </nav>
-      <form action="/auth/logout" method="post" className="px-1 pb-1">
-        <button
-          type="submit"
-          className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] px-3 py-2 text-[13px] font-medium text-[var(--platform-text-secondary)] transition-[colors,transform] duration-100 hover:bg-[var(--platform-surface-muted)] hover:text-[var(--platform-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--platform-accent)]/30 active:scale-[0.97]"
-        >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-          Sign out
-        </button>
-      </form>
+      <LogoutForm
+        className="px-1 pb-1"
+        label="Sign out"
+        showIcon
+        buttonClassName="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] px-3 py-2 text-[13px] font-medium text-[var(--platform-text-secondary)] transition-[colors,transform] duration-100 hover:bg-[var(--platform-surface-muted)] hover:text-[var(--platform-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--platform-accent)]/30 active:scale-[0.97] disabled:opacity-60"
+      />
     </div>
   );
 }

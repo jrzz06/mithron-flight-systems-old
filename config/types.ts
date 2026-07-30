@@ -133,6 +133,8 @@ export type Product = {
   taxIncluded?: boolean;
   /** Storefront average rating when reviews exist. */
   rating?: number;
+  /** Published visible customer review count for catalog cards. */
+  reviewCount?: number;
   category: string;
   interests: string[];
   image: MediaAsset;

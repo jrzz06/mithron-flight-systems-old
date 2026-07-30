@@ -52,6 +52,7 @@ describe("storefront motion audit regressions", () => {
     const layout = source("app/(storefront)/layout.tsx");
     const component = source("sections/home/home-landing-composite.tsx");
     const globals = source("app/globals.css");
+    const restoration = source("components/storefront/storefront-scroll-restoration.tsx");
 
     expect(layout).not.toContain("LenisProvider");
     expect(layout).not.toContain("lenis-provider");
@@ -60,6 +61,18 @@ describe("storefront motion audit regressions", () => {
     expect(globals).toMatch(/@media \(prefers-reduced-motion: no-preference\)[\s\S]*html\s*{[^}]*scroll-behavior:\s*smooth/s);
     expect(globals).not.toContain("html.lenis");
     expect(globals).not.toContain("new Lenis");
+
+    // Pathname-only reset (catalog filter/searchParams must keep scroll)
+    expect(restoration).not.toContain("useSearchParams");
+    expect(restoration).toContain("}, [pathname]);");
+    expect(restoration).not.toContain("}, [pathname, searchParams]);");
+
+    // Product scroll-lock cleanup must be mounted
+    expect(layout).toContain("ProductNavigationEffects");
+
+    // Instant route reset applies to document scroll only — not nested carousels
+    expect(globals).toContain('html[data-instant-scroll="true"]');
+    expect(globals).not.toContain('html[data-instant-scroll="true"] *');
   });
 
   it("removes non-scroll-scrubbed ambient homepage motion", () => {

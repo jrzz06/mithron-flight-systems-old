@@ -594,8 +594,7 @@ html {
   }
 }
 
-html[data-instant-scroll="true"],
-html[data-instant-scroll="true"] * {
+html[data-instant-scroll="true"] {
   scroll-behavior: auto !important;
 }
 

@@ -103,8 +103,6 @@
 
 @media (max-width: 767px) {
   .root {
-    right: clamp(12px, 4vw, 16px);
-    bottom: var(--assistant-fab-offset, calc(var(--assistant-fab-inset, 14px) + env(safe-area-inset-bottom, 0px)));
-    z-index: var(--z-overlay-launcher, 30);
+    display: none;
   }
 }

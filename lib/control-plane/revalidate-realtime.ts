@@ -137,11 +137,15 @@ const TABLE_REVALIDATION: Record<string, { tags: string[]; paths: string[] }> = 
   },
   enquiries: {
     tags: ["admin-dashboard", "control-plane-enquiries"],
-    paths: ["/admin", "/admin/enquiries"]
+    paths: ["/admin", "/admin/enquiries", "/admin/leads"]
   },
   contact_requests: {
     tags: ["admin-dashboard", "control-plane-enquiries"],
-    paths: ["/admin/enquiries", "/admin/contact-requests"]
+    paths: ["/admin/enquiries", "/admin/contact-requests", "/admin/leads"]
+  },
+  leads: {
+    tags: ["admin-dashboard", "control-plane-enquiries"],
+    paths: ["/admin", "/admin/leads"]
   },
   notifications: {
     tags: ["admin-dashboard", "control-plane-notifications"],
@@ -207,6 +211,7 @@ const CONTROL_PLANE_INVALIDATION: Record<
   blog_posts: { adminBlog: true },
   enquiries: { adminDashboard: true, adminEnquiries: true, navMetrics: true },
   contact_requests: { adminDashboard: true, adminEnquiries: true, navMetrics: true },
+  leads: { adminDashboard: true, adminEnquiries: true, navMetrics: true },
   cms_pages: { cmsSnapshots: true },
   cms_sections: { cmsSnapshots: true },
   hero_banners: { cmsSnapshots: true },

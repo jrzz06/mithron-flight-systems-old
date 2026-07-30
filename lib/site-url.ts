@@ -18,6 +18,8 @@ const DEFAULT_ALLOWED_APP_HOSTS = [
   CANONICAL_PRODUCTION_HOST,
   BRAND_PRODUCTION_HOST,
   "mithron.co",
+  "www.rtacademia.com",
+  "rtacademia.com",
   ...LOCAL_APP_HOSTS
 ] as const;
 
@@ -25,7 +27,9 @@ export const DEFAULT_AUTH_REDIRECT_ORIGINS = [
   "http://127.0.0.1:3000",
   "http://localhost:3000",
   CANONICAL_PRODUCTION_ORIGIN,
-  BRAND_PRODUCTION_ORIGIN
+  BRAND_PRODUCTION_ORIGIN,
+  "https://www.rtacademia.com",
+  "https://rtacademia.com"
 ] as const;
 
 function normalizeSiteUrl(value: string) {
@@ -190,6 +194,16 @@ export function resolveClientAuthOrigin(env: Record<string, string | undefined> 
     const browserOrigin = sanitizeAppOrigin(window.location.origin, env);
     if (browserOrigin && isAllowedAppHost(new URL(browserOrigin).hostname, env)) {
       return browserOrigin;
+    }
+    // Never fall through to localhost when the page is already on a live HTTPS host.
+    if (
+      window.location.protocol === "https:"
+      && host
+      && !LOCAL_APP_HOSTS.some((localHost) => host === localHost || host.startsWith(`${localHost}:`))
+    ) {
+      const configured = sanitizeAppOrigin(env.NEXT_PUBLIC_SITE_URL, env);
+      if (configured) return configured;
+      return getCanonicalProductionOrigin(env);
     }
   }
 

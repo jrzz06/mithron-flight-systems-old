@@ -1,10 +1,14 @@
+"use client";
+
+import { Fragment, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   OperationalDangerAction,
   OperationalMoreActions,
   OperationalPrimaryAction
 } from "@/components/admin/operational-action-panel";
+import { OrderProductThumbnail } from "@/components/admin/orders/order-product-thumbnail";
+import { resolveNextImageSrc } from "@/lib/media/next-image-src";
 import { parseShipmentTracking } from "@/lib/customer/shipment-tracking";
 import { employeeFulfillmentLabel } from "@/lib/warehouse/operational-labels";
 import {
@@ -105,6 +109,7 @@ export function WarehouseFulfillmentDetail({
   dispatchAction,
   cancelAction
 }: WarehouseFulfillmentDetailProps) {
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
   const customerName = warehouseCustomerName(order);
   const customerEmail = warehouseCustomerEmail(order);
   const customerPhone = warehouseCustomerPhone(order);
@@ -112,6 +117,10 @@ export function WarehouseFulfillmentDetail({
   const step = orderRow.fulfillmentStatus;
   const tracking = parseShipmentTracking(order.shipment_tracking);
   const hint = nextStepHint(step);
+
+  function togglePreview(itemId: string) {
+    setPreviewItemId((current) => (current === itemId ? null : itemId));
+  }
 
   return (
     <div className="grid min-w-0 gap-5">
@@ -232,6 +241,9 @@ export function WarehouseFulfillmentDetail({
 
       <section className="grid min-w-0 gap-3">
         <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Products</h3>
+        <p className="text-sm text-[var(--platform-text-muted)]">
+          Click a product image or View product to confirm you are picking the correct item.
+        </p>
         <div className="min-w-0 overflow-x-auto rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
@@ -245,44 +257,123 @@ export function WarehouseFulfillmentDetail({
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--platform-border)]">
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-3 py-3">
-                    <div className="relative grid aspect-square size-10 shrink-0 place-items-center overflow-hidden rounded border border-[var(--platform-border)] bg-[var(--platform-surface)]">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
+              {items.map((item) => {
+                const previewOpen = previewItemId === item.id;
+                const imageSrc = item.image ? resolveNextImageSrc(item.image) : null;
+                const detailsHref = `/warehouse/fulfillment/${orderRow.orderId}/products/${encodeURIComponent(item.id)}`;
+
+                return (
+                  <Fragment key={item.id}>
+                    <tr>
+                      <td className="px-3 py-3">
+                        <OrderProductThumbnail
+                          src={imageSrc}
                           alt={item.productName}
-                          width={40}
-                          height={40}
-                          unoptimized
-                          className="h-full w-full object-contain"
+                          size="detail"
+                          enlargeOnClick={Boolean(imageSrc)}
+                          className="!h-16 !w-16 [&_img]:object-contain"
                         />
-                      ) : (
-                        <span className="text-xs text-[var(--platform-text-muted)]">{item.productName.slice(0, 1)}</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="max-w-[16rem] px-3 py-3">
-                    <span className="block min-w-0 break-words text-[var(--platform-text-primary)]">{item.productName}</span>
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className="block min-w-0 break-all font-mono text-xs">{item.sku}</span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3">{String(item.quantity)}</td>
-                  <td className="px-3 py-3">
-                    <span className="block min-w-0 break-words">{item.warehouseLocation}</span>
-                  </td>
-                  <td className="px-3 py-3">
-                    <Link
-                      href={`/warehouse/fulfillment/${orderRow.orderId}/products/${encodeURIComponent(item.id)}`}
-                      className="platform-btn-secondary platform-btn-sm"
-                    >
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+                      </td>
+                      <td className="max-w-[16rem] px-3 py-3">
+                        <span className="block min-w-0 break-words text-[var(--platform-text-primary)]">
+                          {item.productName}
+                        </span>
+                        {item.productSlug ? (
+                          <span className="mt-0.5 block min-w-0 break-all text-xs text-[var(--platform-text-muted)]">
+                            {item.productSlug}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="block min-w-0 break-all font-mono text-xs">{item.sku}</span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3">{String(item.quantity)}</td>
+                      <td className="px-3 py-3">
+                        <span className="block min-w-0 break-words">{item.warehouseLocation}</span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <button
+                          type="button"
+                          aria-expanded={previewOpen}
+                          onClick={() => togglePreview(item.id)}
+                          className="platform-btn-secondary platform-btn-sm"
+                        >
+                          {previewOpen ? "Hide product" : "View product"}
+                        </button>
+                      </td>
+                    </tr>
+                    {previewOpen ? (
+                      <tr>
+                        <td colSpan={6} className="bg-[var(--platform-surface)]/40 px-3 py-3">
+                          <div
+                            data-warehouse-product-mini-panel
+                            className="grid gap-3 rounded-[10px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]/70 p-3 sm:grid-cols-[auto_minmax(0,1fr)]"
+                          >
+                            <OrderProductThumbnail
+                              src={imageSrc}
+                              alt={item.productName}
+                              size="preview"
+                              enlargeOnClick={Boolean(imageSrc)}
+                              className="justify-self-start [&_img]:object-contain"
+                            />
+                            <div className="grid min-w-0 gap-2">
+                              <div className="flex min-w-0 items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-[var(--platform-text-primary)]">
+                                    {item.productName}
+                                  </p>
+                                  {item.productSlug ? (
+                                    <p className="mt-0.5 break-all text-xs text-[var(--platform-text-muted)]">
+                                      {item.productSlug}
+                                    </p>
+                                  ) : null}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewItemId(null)}
+                                  className="shrink-0 text-xs text-[var(--platform-text-muted)] hover:text-[var(--platform-text-primary)]"
+                                  aria-label="Close product preview"
+                                >
+                                  Close
+                                </button>
+                              </div>
+                              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                                <div>
+                                  <dt className="type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                                    SKU
+                                  </dt>
+                                  <dd className="mt-0.5 break-all font-mono text-xs text-[var(--platform-text-secondary)]">
+                                    {item.sku || "—"}
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt className="type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                                    Qty to pick
+                                  </dt>
+                                  <dd className="mt-0.5 text-[var(--platform-text-secondary)]">{item.quantity}</dd>
+                                </div>
+                                <div className="sm:col-span-2">
+                                  <dt className="type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+                                    Location
+                                  </dt>
+                                  <dd className="mt-0.5 break-words text-[var(--platform-text-secondary)]">
+                                    {item.warehouseLocation || "—"}
+                                  </dd>
+                                </div>
+                              </dl>
+                              <div>
+                                <Link href={detailsHref} className="platform-btn-secondary platform-btn-sm">
+                                  Open details
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

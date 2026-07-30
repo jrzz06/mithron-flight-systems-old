@@ -125,17 +125,17 @@ async function countSupplierInventoryAlerts(supplierId: string): Promise<number>
 // (pending approvals, orders needing review, fulfillment queue) where a stale badge
 // is actively misleading. React `cache()` still dedupes within a single request.
 export const getAdminNavMetricsPayload = cache(async (): Promise<AdminNavMetricsPayload> => {
-  const [pendingSupplierApprovals, pendingOrdersReview, newEnquiries, newContactRequests] = await Promise.all([
+  const [pendingSupplierApprovals, pendingOrdersReview, newLeads] = await Promise.all([
     countProducts("workflow_status=eq.pending_review"),
     countRows("status=in.(paid,admin_review,pending_payment)"),
-    countTable("enquiries", "status=eq.new"),
-    countTable("contact_requests", "status=eq.new")
+    countTable("leads", "status=eq.new")
   ]);
   return {
     pendingSupplierApprovals,
     pendingOrdersReview,
-    newEnquiries,
-    newContactRequests
+    newEnquiries: newLeads,
+    // Kept for API shape compatibility; contact_requests was merged into leads.
+    newContactRequests: 0
   };
 });
 

@@ -1,4 +1,5 @@
 import type { MediaAsset, Product, StorySection } from "@/config/types";
+import { mediaSrcIdentityKey } from "@/lib/media/cdn-url";
 import type { TrustCardContent } from "@/services/cms";
 import type { ProductShellItem } from "@/services/catalog";
 import {
@@ -198,13 +199,26 @@ function normalizeCopy(value: string) {
 }
 
 function uniqueMediaBySrc(items: MediaAsset[]) {
-  const seen = new Set<string>();
-  return items.filter((item) => {
+  const chosen = new Map<string, MediaAsset>();
+  for (const item of items) {
     const src = item.src?.trim();
-    if (!src || seen.has(src)) return false;
-    seen.add(src);
-    return true;
-  });
+    if (!src) continue;
+    const key = mediaSrcIdentityKey(src);
+    if (!key) continue;
+    const existing = chosen.get(key);
+    if (!existing) {
+      chosen.set(key, item);
+      continue;
+    }
+    // Prefer the linked/responsive copy when the same storage object appears
+    // as both /cdn-media JSON hero and absolute Supabase primary image.
+    const existingScore = (existing.responsive ? 2 : 0) + mediaReliabilityScore(existing.src);
+    const nextScore = (item.responsive ? 2 : 0) + mediaReliabilityScore(item.src);
+    if (nextScore > existingScore) {
+      chosen.set(key, item);
+    }
+  }
+  return [...chosen.values()];
 }
 
 function mediaReliabilityScore(src: string) {

@@ -2,6 +2,7 @@
 
 import type { PersistedCartItem } from "@/config/types";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { mergeCartItemLists } from "@/lib/cart/merge-cart-items";
 
 const SYNC_DEBOUNCE_MS = 300;
 
@@ -20,48 +21,7 @@ type RemoteCartPayload = {
   updatedAt: string | null;
 };
 
-function cartLineKey(item: Pick<PersistedCartItem, "productSlug" | "bundleId" | "variantId">) {
-  return `${item.productSlug}:${item.bundleId}:${item.variantId ?? ""}`;
-}
-
-function clampQuantity(value: number) {
-  if (!Number.isFinite(value)) return 1;
-  return Math.max(1, Math.min(99, Math.trunc(value)));
-}
-
-function mergeCartArrays(serverItems: PersistedCartItem[], localItems: PersistedCartItem[]) {
-  const merged = new Map<string, PersistedCartItem>();
-  const order: string[] = [];
-
-  const ingest = (items: PersistedCartItem[], preferDisplayFields: boolean) => {
-    for (const item of items) {
-      const key = cartLineKey(item);
-      const existing = merged.get(key);
-      if (!existing) {
-        merged.set(key, { ...item, quantity: clampQuantity(item.quantity) });
-        order.push(key);
-        continue;
-      }
-      const nextQuantity = clampQuantity(existing.quantity + item.quantity);
-      merged.set(key, {
-        ...existing,
-        ...(preferDisplayFields && item.productName ? { productName: item.productName } : {}),
-        ...(preferDisplayFields && item.bundleName ? { bundleName: item.bundleName } : {}),
-        ...(preferDisplayFields && item.image ? { image: item.image } : {}),
-        quantity: nextQuantity
-      });
-    }
-  };
-
-  ingest(serverItems, false);
-  ingest(localItems, true);
-
-  return order.map((key) => merged.get(key)!).filter(Boolean);
-}
-
-export function mergeCartItemLists(serverItems: PersistedCartItem[], localItems: PersistedCartItem[]) {
-  return mergeCartArrays(serverItems, localItems);
-}
+export { mergeCartItemLists };
 
 async function putAuthenticatedCartItems(items: PersistedCartItem[]): Promise<
   | { ok: true; payload: RemoteCartPayload }
@@ -124,6 +84,53 @@ export async function fetchAuthenticatedCartItems(): Promise<RemoteCartPayload> 
   return { items, updatedAt };
 }
 
+export async function mergeGuestCartIntoAuthenticatedCart(
+  guestItems: PersistedCartItem[],
+  idempotencyKey: string
+): Promise<RemoteCartPayload> {
+  const response = await fetchWithTimeout("/api/account/cart/merge", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": idempotencyKey
+    },
+    body: JSON.stringify({ items: guestItems }),
+    cache: "no-store"
+  });
+
+  const json = (await response.json().catch(() => ({}))) as Partial<RemoteCartPayload> & {
+    error?: string;
+    code?: string;
+  };
+
+  if (response.status === 401) {
+    lastKnownUpdatedAt = null;
+    throw new Error(json.error ?? "Unauthorized.");
+  }
+
+  if (response.status === 403 && json.code === "profile_incomplete") {
+    return { items: [], updatedAt: null };
+  }
+
+  if (!response.ok) {
+    throw new Error(json.error ?? "Unable to merge guest cart.");
+  }
+
+  const items = Array.isArray(json.items) ? (json.items as PersistedCartItem[]) : [];
+  const updatedAt = typeof json.updatedAt === "string" ? json.updatedAt : null;
+  lastKnownUpdatedAt = updatedAt;
+  return { items, updatedAt };
+}
+
+export function resetAuthenticatedCartSyncState() {
+  if (syncTimer) {
+    globalThis.clearTimeout(syncTimer);
+    syncTimer = null;
+  }
+  pendingItems = null;
+  lastKnownUpdatedAt = null;
+}
+
 export async function clearAuthenticatedCartRemote() {
   const response = await fetch("/api/account/cart", {
     method: "DELETE",
@@ -136,6 +143,7 @@ export async function clearAuthenticatedCartRemote() {
     if (response.status === 403 && payload.code === "profile_incomplete") return;
     throw new Error(payload.error ?? "Unable to clear authenticated cart.");
   }
+  lastKnownUpdatedAt = null;
 }
 
 export async function flushAuthenticatedCartSync(
@@ -165,7 +173,7 @@ export async function flushAuthenticatedCartSync(
           return;
         }
         if (result.conflict) {
-          nextItems = mergeCartArrays(result.payload.items, nextItems);
+          nextItems = mergeCartItemLists(result.payload.items, nextItems);
           attempt += 1;
           continue;
         }

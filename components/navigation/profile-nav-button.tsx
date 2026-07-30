@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { LogoutForm } from "@/components/auth/logout-form";
 import { createClient } from "@/lib/client";
 import {
   cancelNavPanelSchedule,
@@ -158,16 +159,15 @@ export function ProfileNavButton() {
                 >
                   Orders
                 </Link>
-                <form action="/auth/logout" method="post">
-                  <button
-                    type="submit"
-                    role="menuitem"
-                    className={styles.menuItem}
-                    onClick={() => closePanel()}
-                  >
-                    Sign out
-                  </button>
-                </form>
+                <LogoutForm
+                  label="Sign out"
+                  buttonRole="menuitem"
+                  buttonClassName={styles.menuItem}
+                  onLogoutClick={() => {
+                    closePanel();
+                    setSignedIn(false);
+                  }}
+                />
               </>
             ) : (
               <Link

@@ -68,6 +68,7 @@ describe("cart auth sync modules", () => {
     expect(authSync).toContain("handleCartAuthSignedOut");
     expect(authSync).toContain("clearGuestCartStorage");
     expect(authSync).toContain("rehydrateBuyNowSession");
+    expect(authSync).toContain("mergeGuestCartIntoAuthenticatedSession");
   });
 
   it("gates cart UI on session readiness", () => {

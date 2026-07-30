@@ -6,7 +6,6 @@ import { ProductRibbon } from "@/components/product/product-ribbon";
 import type { Product } from "@/config/types";
 import type { ProductCardImageSource } from "@/lib/media/catalog-card-image";
 import { formatShelfProductName } from "@/lib/product-shelf-card-meta";
-import { clipProductPreviewText, sanitizeProductPreviewText } from "@/lib/product-preview-text";
 import { HomeProductShelfCard } from "@/components/product/home-product-shelf-card";
 import { cn, formatINR } from "@/lib/utils";
 
@@ -59,8 +58,6 @@ export const ProductHoverCard = memo(function ProductHoverCard({
     );
   }
 
-  const description = clipProductPreviewText(product.tagline, 88);
-
   return (
     <article
       data-testid={`premium-product-card-${product.slug}`}
@@ -99,13 +96,6 @@ export const ProductHoverCard = memo(function ProductHoverCard({
             <h3 className="premium-product-card__title mb-1 line-clamp-2 min-h-[2.4rem] text-[13px] font-extrabold leading-snug tracking-tight text-gray-900 sm:text-sm md:text-[15px]">
               {formatShelfProductName(product.name)}
             </h3>
-
-            <p
-              data-testid={`premium-product-description-${product.slug}`}
-              className="premium-product-card__description mb-2 line-clamp-2 min-h-[2.1rem] text-[11px] font-normal leading-normal text-slate-500 sm:min-h-[2.4rem] sm:text-xs"
-            >
-              {description}
-            </p>
           </div>
 
           <div className="premium-product-card__footer mt-auto flex items-center justify-between gap-1.5 border-t border-gray-100/90 pt-2 min-w-0">
@@ -162,9 +152,4 @@ function CatalogProductCard({
       />
     </div>
   );
-}
-
-function getCatalogCardPreview(product: ProductHoverCardProduct) {
-  const clean = sanitizeProductPreviewText(product.tagline).trim();
-  return clean ? clipProductPreviewText(clean, 110) : "";
 }

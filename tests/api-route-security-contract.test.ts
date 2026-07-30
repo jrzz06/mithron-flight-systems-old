@@ -51,6 +51,7 @@ const ROUTE_CATEGORIES: Record<string, RouteSecurityCategory> = {
   "app/api/account/addresses/route.ts": "session_auth",
   "app/api/account/cart/route.ts": "session_auth",
   "app/api/account/cart/items/route.ts": "session_auth",
+  "app/api/account/cart/merge/route.ts": "session_auth",
   "app/api/account/contact-defaults/route.ts": "session_auth",
   "app/api/account/reviews/route.ts": "session_auth",
   "app/api/notifications/route.ts": "session_auth",

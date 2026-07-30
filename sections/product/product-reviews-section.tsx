@@ -85,7 +85,8 @@ function RatingDistribution({
     <div className={styles.reviewDistribution} role="group" aria-label="Filter by rating">
       {([5, 4, 3, 2, 1] as const).map((stars) => {
         const count = summary.distribution[stars];
-        const width = `${Math.max(6, Math.round((count / maxCount) * 100))}%`;
+        const width =
+          count === 0 ? "0%" : `${Math.max(6, Math.round((count / maxCount) * 100))}%`;
         const isActive = activeRating === stars;
         return (
           <button

@@ -142,4 +142,32 @@ describe("auth redirect origin resolution", () => {
     expect(allowList).toContain("https://www.rtacademia.com/**");
     expect(allowList).toContain("https://rtacademia.com/auth/callback");
   });
+
+  it("allows rtacademia hosts by default without env extras", () => {
+    expect(isObsoleteAppHost("www.rtacademia.com")).toBe(false);
+    expect(isObsoleteAppHost("rtacademia.com")).toBe(false);
+    expect(sanitizeAppOrigin("https://www.rtacademia.com")).toBe("https://www.rtacademia.com");
+
+    const allowList = buildAuthRedirectAllowList({});
+    expect(allowList).toContain("https://www.rtacademia.com/**");
+    expect(allowList).toContain("https://rtacademia.com/auth/callback");
+  });
+
+  it("prefers the live rtacademia browser origin for client OAuth redirects", () => {
+    const originalWindow = globalThis.window;
+    // @ts-expect-error test shim
+    globalThis.window = {
+      location: {
+        hostname: "www.rtacademia.com",
+        origin: "https://www.rtacademia.com",
+        protocol: "https:"
+      }
+    };
+    try {
+      expect(resolveClientAuthOrigin({})).toBe("https://www.rtacademia.com");
+      expect(resolveClientAuthOrigin({})).not.toContain("127.0.0.1");
+    } finally {
+      globalThis.window = originalWindow;
+    }
+  });
 });

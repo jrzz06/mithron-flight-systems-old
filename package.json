@@ -103,6 +103,7 @@
     "test:load:k6:validate": "k6 run -e SCENARIO=validate -e TARGET=local -e BASE_URL=http://127.0.0.1:3000 tools/k6/suite.js",
     "test:load:k6:average": "k6 run -e SCENARIO=average -e TARGET=local -e BASE_URL=http://127.0.0.1:3000 tools/k6/suite.js",
     "test:load:k6:average:vercel": "k6 run -e SCENARIO=average -e TARGET=production -e BASE_URL=https://final-mithron-deploy.vercel.app tools/k6/suite.js",
+    "test:load:k6:fair:vercel": "k6 run -e SCENARIO=fair -e TARGET=production -e BASE_URL=https://final-mithron-deploy.vercel.app tools/k6/suite.js",
     "test:load:k6:spike": "k6 run -e SCENARIO=spike -e TARGET=local -e CONFIRM_SPIKE=1 -e BASE_URL=http://127.0.0.1:3000 tools/k6/suite.js",
     "test:load:k6:soak": "k6 run -e SCENARIO=soak -e TARGET=local -e CONFIRM_SOAK=1 -e BASE_URL=http://127.0.0.1:3000 tools/k6/suite.js",
     "test:e2e:control-panel-perf": "playwright test tests/e2e/control-panel-perf.spec.ts --project=desktop",

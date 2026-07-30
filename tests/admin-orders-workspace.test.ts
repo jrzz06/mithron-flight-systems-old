@@ -92,6 +92,17 @@ describe("admin orders view helpers", () => {
     expect(resolveProductImage(products, "missing")).toBeNull();
   });
 
+  it("resolves product images from JSON media objects", () => {
+    const products = [
+      { slug: "drone-b", image: { src: "/media/drone-b.jpg", alt: "Drone B" } },
+      { slug: "drone-c", image: null, hero: { url: "https://cdn.example.com/drone-c.jpg" } },
+      { slug: "drone-d", gallery: [{ src: "/media/drone-d.jpg" }] }
+    ] as AdminRow[];
+    expect(resolveProductImage(products, "drone-b")).toBe("/media/drone-b.jpg");
+    expect(resolveProductImage(products, "drone-c")).toBe("https://cdn.example.com/drone-c.jpg");
+    expect(resolveProductImage(products, "drone-d")).toBe("/media/drone-d.jpg");
+  });
+
   it("splits order timestamps into date and time parts", () => {
     const parts = orderDateParts(
       order({ created_at: "2026-06-01T10:30:00.000Z" })

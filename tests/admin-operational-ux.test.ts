@@ -24,7 +24,7 @@ describe("admin operational UX", () => {
     expect(source("components/admin/operational-action-panel.tsx")).toContain("notifyActionResult");
     expect(nav).toContain("usePathname");
     expect(nav).toContain("aria-current");
-    expect(nav).toContain("/auth/logout");
+    expect(nav).toContain("LogoutForm");
     expect(frame).toContain("PlatformShell");
     expect(navConfig).toContain("Home");
     expect(navConfig).toContain("Dashboard");
@@ -64,8 +64,8 @@ describe("admin operational UX", () => {
     expect(page).toContain("/admin/orders?queue=review");
     expect(page).toContain("Supplier approvals");
     expect(page).toContain("/admin/suppliers/products");
-    expect(page).toContain("Customer enquiries");
-    expect(page).toContain("/admin/enquiries");
+    expect(page).toContain("Customer leads");
+    expect(page).toContain("/admin/leads");
     expect(page).not.toContain("data-admin-quick-actions");
     expect(page).not.toContain("Hard delete");
     expect(page).not.toContain("Open storefront");
@@ -79,7 +79,7 @@ describe("admin operational UX", () => {
     expect(page).toContain("data-admin-kpi-strip");
     expect(page).toContain("Action queue");
     expect(page).toContain("Inventory alerts");
-    expect(page).toContain("listAdminEnquiries");
+    expect(page).toContain("AdminDashboardEnquiryQueue");
     expect(page).toContain("pendingSupplierSubmissionRows");
     expect(page).not.toContain("data-admin-quick-actions");
     expect(page).not.toContain("Recent orders");

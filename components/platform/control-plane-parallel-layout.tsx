@@ -25,16 +25,16 @@ export function ControlPlaneParallelLayout({
       data-control-plane-theme="dark"
       data-admin-performance-theme
       {...shellDataAttributes}
-      className="min-h-dvh bg-[var(--platform-bg)] text-[var(--platform-text-primary)]"
+      className="h-dvh overflow-hidden bg-[var(--platform-bg)] text-[var(--platform-text-primary)]"
     >
       <OperatorToastBridge />
-      <div className="flex min-h-dvh flex-col lg:pl-[248px]">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden lg:pl-[248px]">
         {shell}
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <div
             {...{ [contentDataAttribute]: true }}
             data-admin-content
-            className="flex min-h-0 flex-1 flex-col px-4 py-5 md:px-6 md:py-6"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 md:px-6 md:py-6"
           >
             {children}
           </div>

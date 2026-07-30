@@ -7,7 +7,6 @@ import {
   getCatalogGstLabel,
   type ProductShelfCardItem
 } from "@/lib/product-shelf-card-meta";
-import { sanitizeProductPreviewText } from "@/lib/product-preview-text";
 import { cn, formatINR } from "@/lib/utils";
 import styles from "@/sections/home/home-shelf-shared.module.css";
 
@@ -76,11 +75,10 @@ export function HomeProductShelfCard({
   product: ProductShelfCardItem;
   priority?: boolean;
   layout?: "default" | "dji";
-  /** Catalog listings get rating, GST note, 2-line title/desc. Homepage stays "shelf". */
+  /** Catalog listings get rating, GST note, 2-line title. Homepage stays "shelf". */
   presentation?: "shelf" | "catalog";
   imageSizes?: string;
 }) {
-  const description = sanitizeProductPreviewText(product.tagline ?? "").trim();
   const isDji = layout === "dji";
   const isCatalog = presentation === "catalog";
   const rating =
@@ -145,15 +143,6 @@ export function HomeProductShelfCard({
             >
               {formatShelfProductName(product.name)}
             </h3>
-            <p
-              className={cn(
-                "line-clamp-2",
-                styles.productDescriptor,
-                isCatalog && styles.productDescriptorFixed
-              )}
-            >
-              {description || "\u00A0"}
-            </p>
           </div>
           <div
             className={cn(
@@ -257,14 +246,6 @@ export function HomeProductShelfCard({
           >
             {formatShelfProductName(product.name)}
           </h3>
-          <p
-            className={cn(
-              "mb-1.5 line-clamp-2 min-h-0 text-[11px] font-normal leading-normal text-slate-500 sm:text-xs",
-              styles.productDescriptor
-            )}
-          >
-            {description}
-          </p>
         </div>
         <div
           className={cn(

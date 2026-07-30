@@ -344,9 +344,12 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
     Boolean(feedbackMessage);
 
   return (
-    <>
+    <div
+      data-admin-orders-workspace
+      className="flex min-h-0 h-full flex-1 flex-col overflow-hidden"
+    >
       {showFeedback ? (
-        <div data-order-transition-feedback>
+        <div data-order-transition-feedback className="shrink-0 pb-3">
           <OperationalFeedback
             status={feedbackStatus}
             message={feedbackMessage}
@@ -372,6 +375,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
           const activeFirstItem = activeItems[0] ?? null;
 
           return (
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <AdminOrdersShell
             hasSelectedOrder={Boolean(activeOrder)}
             header={
@@ -485,6 +489,7 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
               ) : null
             }
           />
+          </div>
           );
         }}
       </AdminOrdersOptimisticProvider>
@@ -498,6 +503,6 @@ function AdminOrdersWorkspaceInner(props: AdminOrdersWorkspaceProps) {
       />
 
       <ShortcutsLegend open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-    </>
+    </div>
   );
 }

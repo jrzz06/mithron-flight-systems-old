@@ -34,6 +34,7 @@ const TABLE_IDENTITY_KEYS: Partial<Record<AdminEntityTable, string[]>> = {
   inventory: ["id", "product_slug"],
   warehouse_stock: ["id", "product_slug", "warehouse_code"],
   mithron_products: ["slug", "id"],
+  leads: ["id"],
   profiles: ["id"],
   user_roles: ["id", "user_id"],
   payments: ["id"],
@@ -181,13 +182,13 @@ export const ADMIN_RESOURCE_TABLES: Record<AdminLiveResourceId, AdminEntityTable
   orders: ["orders", "order_items", "payments", "shipments", "shipment_timeline", "inventory"],
   inventory: ["inventory", "warehouse_stock", "inventory_movements", "mithron_products"],
   products: ["mithron_products", "inventory", "warehouse_stock", "product_media_assets", "media_assets"],
-  enquiries: ["enquiries", "orders", "contact_requests"],
-  contact_requests: ["contact_requests", "orders", "enquiries"],
+  enquiries: ["leads", "orders", "enquiries", "contact_requests"],
+  contact_requests: ["leads", "contact_requests", "orders", "enquiries"],
   suppliers: ["mithron_products", "profiles", "user_roles", "notifications"],
   users: ["profiles", "user_roles", "admin_invites", "roles", "activity_logs"],
   warehouses: ["warehouses"],
   audit: ["activity_logs", "security_events", "audit_logs", "notifications"],
-  archives: ["data_archive_runs", "orders", "enquiries", "contact_requests"],
-  dashboard: ["orders", "payments", "inventory", "mithron_products", "enquiries", "notifications", "activity_logs"],
-  nav_metrics: ["orders", "enquiries", "contact_requests", "mithron_products", "notifications"]
+  archives: ["data_archive_runs", "orders", "enquiries", "contact_requests", "leads"],
+  dashboard: ["orders", "payments", "inventory", "mithron_products", "leads", "enquiries", "notifications", "activity_logs"],
+  nav_metrics: ["orders", "leads", "enquiries", "contact_requests", "mithron_products", "notifications"]
 };

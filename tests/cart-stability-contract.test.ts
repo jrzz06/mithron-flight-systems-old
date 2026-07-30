@@ -50,10 +50,18 @@ describe("cart & checkout stability contracts", () => {
 
   it("merges guest cart and preserves contact draft on sign-in", () => {
     const authSync = source("lib/cart/cart-auth-sync.ts");
-    expect(authSync).toContain("mergeCartItemLists");
+    expect(authSync).toContain("mergeGuestCartIntoAuthenticatedCart");
     expect(authSync).toContain("preserveCheckout");
     expect(authSync).toContain("readGuestCartSnapshot");
     expect(authSync).toContain("mergeGuestItems");
+    expect(authSync).toContain("clearGuestCartStorage");
+    // Guest storage cleared only after successful merge path.
+    expect(authSync).toContain("Source of truth is now the DB cart");
+
+    const mergeRoute = source("app/api/account/cart/merge/route.ts");
+    expect(mergeRoute).toContain("X-Idempotency-Key");
+    expect(mergeRoute).toContain("mergeCartItemLists");
+    expect(mergeRoute).toContain("customer_cart_idempotency");
 
     const merged = mergeCartItemLists(
       [{ productSlug: "a", bundleId: "standard", quantity: 1 }],

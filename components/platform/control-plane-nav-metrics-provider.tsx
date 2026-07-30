@@ -53,6 +53,7 @@ const ADMIN_METRICS_TABLES = new Set([
   "payments",
   "mithron_products",
   "notifications",
+  "leads",
   "enquiries",
   "contact_requests"
 ]);

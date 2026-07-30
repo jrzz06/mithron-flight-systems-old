@@ -58,15 +58,20 @@ function notificationTarget(
     if (scope === "admin" || scope === "operations") return `/admin/orders?order=${encodeURIComponent(row.entity_id)}`;
     if (scope === "warehouse") return `/warehouse/orders/${encodeURIComponent(row.entity_id)}`;
   }
+  if (row.entity_table === "leads" && (scope === "admin" || scope === "operations")) {
+    return row.entity_id
+      ? `/admin/leads?open=${encodeURIComponent(row.entity_id)}`
+      : "/admin/leads";
+  }
   if (row.entity_table === "enquiries" && (scope === "admin" || scope === "operations")) {
     return row.entity_id
-      ? `/admin/enquiries?open=${encodeURIComponent(row.entity_id)}`
-      : "/admin/enquiries";
+      ? `/admin/leads?open=${encodeURIComponent(row.entity_id)}`
+      : "/admin/leads";
   }
   if (row.entity_table === "contact_requests" && (scope === "admin" || scope === "operations")) {
     return row.entity_id
-      ? `/admin/contact-requests?open=${encodeURIComponent(row.entity_id)}`
-      : "/admin/contact-requests";
+      ? `/admin/leads?open=${encodeURIComponent(row.entity_id)}`
+      : "/admin/leads";
   }
   return fallbackHref;
 }

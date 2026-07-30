@@ -34,7 +34,6 @@ function buildProductConfiguratorModel(product: Product): ProductConfiguratorMod
   return {
     slug: product.slug,
     name: product.name,
-    tagline: product.tagline,
     category: product.category,
     badge: product.badge,
     badgeStyle: product.badgeStyle,

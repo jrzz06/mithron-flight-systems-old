@@ -204,7 +204,8 @@ describe("home landing composite contract", () => {
     expect(shelfCss).toContain(".productCardDji");
     expect(shelfCss).not.toContain(".productSlideIndicator");
     expect(shelfCard).not.toContain("productSlideIndicator");
-    expect(shelfCss).toContain(".productDescriptor");
+    expect(shelfCss).not.toContain(".productDescriptor");
+    expect(shelfCard).not.toContain("productDescriptor");
     expect(shelfCss).toContain(".productPriceDji");
     expect(shelfCss).toContain(".productBuyNowDji");
     expect(shelfCss).toContain("--shelf-carousel-cta-min-height");

@@ -41,6 +41,11 @@ import { useResolvedCart } from "@/hooks/use-resolved-cart";
 import { useBuyNowHasHydrated, useBuyNowStore } from "@/store/buy-now-session";
 import { useCartSessionReady, useCartStore } from "@/store/cart";
 import { fetchWithTimeout, raceWithTimeout } from "@/lib/fetch-with-timeout";
+import {
+  PreSalesConsultationPanel,
+  formatPreSalesInquiryTag,
+  type PreSalesConsultationValues
+} from "@/components/pre-sales/pre-sales-consultation-panel";
 import styles from "./checkout.module.css";
 
 function readCheckoutErrorMessage(response: Response, payload: Record<string, unknown>) {
@@ -878,33 +883,14 @@ export function CheckoutPageClient() {
   }, [fullName, checkout.email, phoneNational, phone]);
 
   const [showDroneModal, setShowDroneModal] = useState(false);
-  const [modalTimer, setModalTimer] = useState(10);
-  const [preferredLanguage, setPreferredLanguage] = useState("English");
-  const [inquiryType, setInquiryType] = useState("Purchase Related");
   const hasTriggeredDroneModalRef = useRef(false);
 
   useEffect(() => {
     if (isCartSessionReady && activeStep === 1 && !hasTriggeredDroneModalRef.current) {
       hasTriggeredDroneModalRef.current = true;
-      setModalTimer(10);
       setShowDroneModal(true);
     }
   }, [isCartSessionReady, activeStep]);
-
-  useEffect(() => {
-    if (!showDroneModal) return;
-    const interval = setInterval(() => {
-      setModalTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setShowDroneModal(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [showDroneModal]);
 
   const isStep2Complete = useMemo(() => {
     if (usingSavedAddress) {
@@ -1447,7 +1433,7 @@ export function CheckoutPageClient() {
     }
   }
 
-  async function sendEnquiry() {
+  async function sendEnquiry(messageOverride?: string) {
     if (loading) return;
     if (!validateBase(false)) return;
 
@@ -1480,7 +1466,10 @@ export function CheckoutPageClient() {
             ...(guestHeaders!.headers as Record<string, string>)
           };
 
-      const message = enquiryMessage.trim() || "Checkout enquiry from cart.";
+      const message =
+        (typeof messageOverride === "string" ? messageOverride.trim() : "")
+        || enquiryMessage.trim()
+        || "Checkout enquiry from cart.";
 
       const response = await fetchWithTimeout("/api/checkout/enquiry", {
         method: "POST",
@@ -2152,171 +2141,77 @@ export function CheckoutPageClient() {
       </div>
 
       {showDroneModal ? (
-        <div className={styles.droneModalOverlay} onClick={() => setShowDroneModal(false)}>
-          <div className={styles.droneModalCard} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.waterWaveTrack}>
-              <div className={styles.waterWaveFill} style={{ width: `${(modalTimer / 10) * 100}%` }}>
-                <svg className={styles.waterWaveSvg} viewBox="0 0 1200 48" preserveAspectRatio="none" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="emeraldWaterPrimary" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#1f6b46" />
-                      <stop offset="50%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#34d399" />
-                    </linearGradient>
-                    <linearGradient id="emeraldWaterSecondary" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="rgba(34, 197, 94, 0.75)" />
-                      <stop offset="100%" stopColor="rgba(52, 211, 153, 0.45)" />
-                    </linearGradient>
-                    <linearGradient id="emeraldWaterTertiary" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="rgba(16, 185, 129, 0.35)" />
-                      <stop offset="100%" stopColor="rgba(220, 252, 231, 0.18)" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    className={styles.waterWavePath3}
-                    d="M0,28 C200,48 400,8 600,28 C800,48 1000,8 1200,28 L1200,0 L0,0 Z"
-                  />
-                  <path
-                    className={styles.waterWavePath2}
-                    d="M0,22 C180,-2 360,42 540,22 C720,-2 900,42 1080,22 C1140,12 1200,22 1200,22 L1200,0 L0,0 Z"
-                  />
-                  <path
-                    className={styles.waterWavePath1}
-                    d="M0,18 C150,34 300,2 450,18 C600,34 750,2 900,18 C1050,34 1200,18 1200,18 L1200,0 L0,0 Z"
-                  />
-                </svg>
-              </div>
-            </div>
+        <PreSalesConsultationPanel
+          open={showDroneModal}
+          variant="checkout"
+          productSummary={checkoutItems.map((item) => item.productName).join(", ") || "Drone System"}
+          defaults={{
+            fullName,
+            email: checkout.email,
+            phone: phoneNational,
+            notes: enquiryMessage
+          }}
+          onValuesChange={(values: PreSalesConsultationValues) => {
+            setFullName(values.fullName);
+            setCheckoutContact({ email: values.email });
+            setPhoneNational(values.phone);
+            setEnquiryMessage(values.notes);
+          }}
+          onClose={() => setShowDroneModal(false)}
+          onCancel={() => {
+            setShowDroneModal(false);
+            goToStep(2);
+          }}
+          onSubmit={(values) => {
+            setFullName(values.fullName);
+            setCheckoutContact({ email: values.email });
+            setPhoneNational(values.phone);
+            const tag = formatPreSalesInquiryTag(values.inquiryType, values.preferredLanguage);
+            const nextMessage = values.notes.includes("[Inquiry:")
+              ? values.notes
+              : values.notes.trim()
+                ? `${tag} ${values.notes.trim()}`
+                : tag;
+            setEnquiryMessage(nextMessage);
 
-            <div className={styles.preSalesHeader}>
-              <h2 className={styles.preSalesTitle}>Pre-Sales Consultation</h2>
-              <p className={styles.preSalesSubtext}>
-                Thank you for choosing Mithron Drone Systems. To help us address your requirements, please share your details below. Our flight engineering team will contact you shortly.
-              </p>
-            </div>
+            if (!checkoutItems.length) {
+              reportCheckoutError(isBuyNowFlow ? "Your Buy Now request expired." : "Your cart is empty.");
+              return;
+            }
+            if (!values.fullName.trim()) {
+              reportCheckoutError("Full name is required.");
+              return;
+            }
+            if (values.fullName.trim().length < 2) {
+              reportCheckoutError("Enter your full name.");
+              return;
+            }
+            if (!values.email.trim()) {
+              reportCheckoutError("Email is required.");
+              return;
+            }
+            if (!isValidCheckoutEmail(values.email.trim())) {
+              reportCheckoutError("Enter a valid email address.");
+              return;
+            }
+            if (!values.phone.trim()) {
+              reportCheckoutError("Phone number is required.");
+              return;
+            }
+            const phoneResult = validatePhoneWithCountry(phoneCountryCode, values.phone);
+            if (!phoneResult.ok) {
+              reportCheckoutError(phoneResult.error);
+              return;
+            }
+            if (!isValidCheckoutPhone(phoneResult.value)) {
+              reportCheckoutError("Enter a valid phone number (8–15 digits).");
+              return;
+            }
 
-            <div className={styles.preSalesBody}>
-              <div className={styles.preSalesField}>
-                <label className={styles.preSalesLabel}>Type of your inquiry*</label>
-                <select
-                  value={inquiryType}
-                  onChange={(e) => setInquiryType(e.target.value)}
-                  className={styles.preSalesSelect}
-                >
-                  <option value="Purchase Related">Purchase Related</option>
-                  <option value="Bulk Order">Bulk Order</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Services">Services</option>
-                  <option value="Academic">Academic</option>
-                  <option value="Development">Development</option>
-                  <option value="Loan / Financing">Loan / Financing</option>
-                </select>
-              </div>
-
-              <div className={styles.preSalesGridTwo}>
-                <div className={styles.preSalesField}>
-                  <label className={styles.preSalesLabel}>Preferred Contact Language</label>
-                  <select
-                    value={preferredLanguage}
-                    onChange={(e) => setPreferredLanguage(e.target.value)}
-                    className={styles.preSalesSelect}
-                  >
-                    <option value="English">English</option>
-                    <option value="Tamil">Tamil</option>
-                    <option value="Hindi">Hindi</option>
-                  </select>
-                </div>
-
-                <div className={styles.preSalesField}>
-                  <label className={styles.preSalesLabel}>Product Summary</label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={checkoutItems.map((i) => i.productName).join(", ") || "Drone System"}
-                    className={styles.preSalesInput}
-                    style={{ background: "#f8fafc" }}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.preSalesGridTwo}>
-                <div className={styles.preSalesField}>
-                  <label className={styles.preSalesLabel}>Your name*</label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your name"
-                    className={styles.preSalesInput}
-                  />
-                </div>
-
-                <div className={styles.preSalesField}>
-                  <label className={styles.preSalesLabel}>Your email address*</label>
-                  <input
-                    type="email"
-                    value={checkout.email}
-                    onChange={(e) => setCheckoutContact({ email: e.target.value })}
-                    placeholder="Enter your email"
-                    className={styles.preSalesInput}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.preSalesField}>
-                <label className={styles.preSalesLabel}>Mobile number*</label>
-                <input
-                  type="tel"
-                  value={phoneNational}
-                  onChange={(e) => setPhoneNational(e.target.value)}
-                  placeholder="Enter mobile number"
-                  className={styles.preSalesInput}
-                />
-              </div>
-
-              <div className={styles.preSalesField}>
-                <label className={styles.preSalesLabel}>Specific notes or requirements</label>
-                <textarea
-                  value={enquiryMessage}
-                  onChange={(e) => setEnquiryMessage(e.target.value)}
-                  placeholder="Share quantity, delivery timeline, or custom questions..."
-                  className={styles.preSalesTextarea}
-                />
-              </div>
-
-              <div className={styles.preSalesFooter}>
-                <button
-                  type="button"
-                  className={styles.preSalesCancelBtn}
-                  onClick={() => {
-                    setShowDroneModal(false);
-                    goToStep(2);
-                  }}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  className={styles.preSalesSubmitBtn}
-                  onClick={() => {
-                    if (!validateStep1()) return;
-                    setShowDroneModal(false);
-                    const tag = `[Inquiry: ${inquiryType} | Language: ${preferredLanguage}]`;
-                    if (!enquiryMessage.includes("[Inquiry:")) {
-                      setEnquiryMessage((prev) => (prev ? `${tag} ${prev}` : tag));
-                    }
-                    void sendEnquiry();
-                  }}
-                >
-                  Submit Enquiry
-                </button>
-              </div>
-
-              <p className={styles.preSalesTimerHint}>Auto-closing in {modalTimer}s</p>
-            </div>
-          </div>
-        </div>
+            setShowDroneModal(false);
+            void sendEnquiry(nextMessage);
+          }}
+        />
       ) : null}
     </div>
   );

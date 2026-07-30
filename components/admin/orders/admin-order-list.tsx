@@ -34,7 +34,7 @@ type AdminOrderListProps = {
   permanentDeleteAdminOrderAction: (formData: FormData) => Promise<void>;
 };
 
-const ESTIMATED_ROW_HEIGHT = 148;
+const ESTIMATED_ROW_HEIGHT = 108;
 
 export function AdminOrderList({
   orders,

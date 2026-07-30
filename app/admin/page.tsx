@@ -41,9 +41,9 @@ export default async function AdminPage() {
       tone: "text-amber-300"
     },
     {
-      label: "Customer enquiries",
+      label: "Customer leads",
       value: formatDashboardCount(operationalCounts.openEnquiries),
-      href: "/admin/enquiries?status=new",
+      href: "/admin/leads",
       tone: "text-sky-300"
     },
     {

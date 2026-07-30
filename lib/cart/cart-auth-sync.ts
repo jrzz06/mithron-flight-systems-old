@@ -5,8 +5,10 @@ import {
   cancelAuthenticatedCartSync,
   fetchAuthenticatedCartItems,
   flushAuthenticatedCartSync,
-  mergeCartItemLists
+  mergeGuestCartIntoAuthenticatedCart,
+  resetAuthenticatedCartSyncState
 } from "@/lib/cart/cart-server-sync";
+import { cartLineKey } from "@/lib/cart-line-key";
 import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 import { rehydrateBuyNowSession, useBuyNowStore } from "@/store/buy-now-session";
 import { useCartPricingStore } from "@/store/cart-pricing";
@@ -24,13 +26,18 @@ import type { CheckoutDraft, PersistedCartItem } from "@/config/types";
 
 /** Bound auth/session bootstrap so a hung Supabase client cannot leave cart/checkout spinning forever. */
 const CART_SESSION_AUTH_TIMEOUT_MS = 8_000;
+const MERGE_IDEMPOTENCY_STORAGE_PREFIX = "mithron-cart-merge-id:";
 
 function readLegacyGuestCart(): { items: unknown[]; checkout?: unknown } | null {
   if (typeof window === "undefined") return null;
   const raw = window.localStorage.getItem(LEGACY_CART_STORAGE_KEY);
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as { state?: { items?: unknown[]; checkout?: unknown }; items?: unknown[]; checkout?: unknown };
+    const parsed = JSON.parse(raw) as {
+      state?: { items?: unknown[]; checkout?: unknown };
+      items?: unknown[];
+      checkout?: unknown;
+    };
     if (parsed.state) {
       return { items: parsed.state.items ?? [], checkout: parsed.state.checkout };
     }
@@ -71,6 +78,42 @@ function readGuestCartSnapshot(): { items: PersistedCartItem[]; checkout: Partia
   }
 }
 
+function guestSnapshotFingerprint(items: PersistedCartItem[]) {
+  return items
+    .map((item) => `${cartLineKey(item)}:${item.quantity}`)
+    .sort()
+    .join("|");
+}
+
+function resolveMergeIdempotencyKey(items: PersistedCartItem[]) {
+  if (typeof window === "undefined") return crypto.randomUUID();
+  const fingerprint = guestSnapshotFingerprint(items) || "empty";
+  const storageKey = `${MERGE_IDEMPOTENCY_STORAGE_PREFIX}${fingerprint}`;
+  try {
+    const existing = window.sessionStorage.getItem(storageKey);
+    if (existing) return existing;
+    const next = crypto.randomUUID();
+    window.sessionStorage.setItem(storageKey, next);
+    return next;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
+function clearMergeIdempotencyKeys() {
+  if (typeof window === "undefined") return;
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < window.sessionStorage.length; i += 1) {
+      const key = window.sessionStorage.key(i);
+      if (key?.startsWith(MERGE_IDEMPOTENCY_STORAGE_PREFIX)) keys.push(key);
+    }
+    for (const key of keys) window.sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
 function migrateLegacyGuestStorageIfNeeded() {
   if (typeof window === "undefined") return;
   if (window.localStorage.getItem(GUEST_CART_STORAGE_KEY)) return;
@@ -89,60 +132,77 @@ function migrateLegacyGuestStorageIfNeeded() {
   window.localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
 }
 
-async function loadAuthenticatedCartSession(options?: {
+function buildPreservedCheckout(preserveCheckout?: Partial<CheckoutDraft> | null): CheckoutDraft {
+  return {
+    step: "cart",
+    promoCode: "",
+    email: preserveCheckout?.email?.trim() || "",
+    fullName: preserveCheckout?.fullName?.trim() || "",
+    phone: preserveCheckout?.phone?.trim() || "",
+    region: preserveCheckout?.region?.trim() || "India"
+  };
+}
+
+/**
+ * Load authenticated cart, optionally merging guest lines via the atomic merge API.
+ * Guest localStorage is cleared only after a successful merge/load commit.
+ */
+async function mergeGuestCartIntoAuthenticatedSession(options?: {
   mergeGuestItems?: PersistedCartItem[];
   preserveCheckout?: Partial<CheckoutDraft> | null;
 }) {
-  const preservedCheckout: CheckoutDraft = {
-    step: "cart",
-    promoCode: "",
-    email: options?.preserveCheckout?.email?.trim() || "",
-    fullName: options?.preserveCheckout?.fullName?.trim() || "",
-    phone: options?.preserveCheckout?.phone?.trim() || "",
-    region: options?.preserveCheckout?.region?.trim() || "India"
-  };
+  const preservedCheckout = buildPreservedCheckout(options?.preserveCheckout);
+  const guestItems = options?.mergeGuestItems ?? [];
 
+  cancelAuthenticatedCartSync();
+  resetAuthenticatedCartSyncState();
+  useCartPricingStore.getState().reset();
+
+  // Switch to authenticated mode in memory without wiping guest storage yet.
   resetCartSession({
     source: "authenticated",
     items: [],
     checkout: preservedCheckout,
     isCartSessionReady: false
   });
-  clearGuestCartStorage();
-  useCartPricingStore.getState().reset();
 
   try {
-    const { items: remoteItems } = await fetchAuthenticatedCartItems();
-    const mergedItems = options?.mergeGuestItems?.length
-      ? mergeCartItemLists(remoteItems, options.mergeGuestItems)
-      : remoteItems;
+    let cart: { items: PersistedCartItem[]; updatedAt: string | null };
 
-    resetCartSession({
-      source: "authenticated",
-      items: mergedItems,
-      checkout: preservedCheckout,
-      isCartSessionReady: false
-    });
-
-    if (options?.mergeGuestItems?.length) {
-      await flushAuthenticatedCartSync(mergedItems).catch((error) => {
-        console.error("[cart] Failed to sync merged guest cart.", error);
-      });
+    if (guestItems.length) {
+      const idempotencyKey = resolveMergeIdempotencyKey(guestItems);
+      cart = await mergeGuestCartIntoAuthenticatedCart(guestItems, idempotencyKey);
+    } else {
+      cart = await fetchAuthenticatedCartItems();
     }
-  } catch (error) {
-    console.error("[cart] Failed to load authenticated cart.", error);
-    const fallbackItems = options?.mergeGuestItems ?? [];
+
     resetCartSession({
       source: "authenticated",
-      items: fallbackItems,
+      items: cart.items,
       checkout: preservedCheckout,
       isCartSessionReady: false
     });
+
+    // Source of truth is now the DB cart — clear guest only after success.
+    clearGuestCartStorage();
+    clearMergeIdempotencyKeys();
+    useCartPricingStore.getState().reset();
+  } catch (error) {
+    console.error("[cart] Failed to merge/load authenticated cart.", error);
+    // Keep guest storage intact for retry. Fall back to guest lines in memory if present.
+    resetCartSession({
+      source: "authenticated",
+      items: guestItems,
+      checkout: preservedCheckout,
+      isCartSessionReady: false
+    });
+    throw error;
   }
 }
 
 async function loadGuestCartSession() {
   cancelAuthenticatedCartSync();
+  resetAuthenticatedCartSyncState();
   useCartPricingStore.getState().reset();
   resetCartSession({
     source: "guest",
@@ -172,9 +232,36 @@ async function resolveAuthCartSource() {
   }
 }
 
+async function runAuthenticatedBootstrap() {
+  const guestSnapshot = readGuestCartSnapshot();
+  await mergeGuestCartIntoAuthenticatedSession({
+    mergeGuestItems: guestSnapshot.items,
+    preserveCheckout: guestSnapshot.checkout
+  });
+  await rehydrateBuyNowSession();
+}
+
 export async function initializeCartSession() {
   if (sessionInitPromise) {
     await sessionInitPromise;
+    // If init finished as authenticated but guest leftovers remain, merge them now.
+    const leftover = readGuestCartSnapshot();
+    if (
+      useCartStore.getState().cartSource === "authenticated"
+      && leftover.items.length > 0
+    ) {
+      markCartSessionPending();
+      try {
+        await mergeGuestCartIntoAuthenticatedSession({
+          mergeGuestItems: leftover.items,
+          preserveCheckout: leftover.checkout
+        });
+      } catch (error) {
+        console.error("[cart] Post-init guest merge failed.", error);
+      } finally {
+        markCartSessionReady();
+      }
+    }
     return;
   }
 
@@ -185,6 +272,23 @@ export async function initializeCartSession() {
     currentState.isCartSessionReady
     && currentState.cartSource === expectedSource
   ) {
+    // Cold auth session that is "ready" but still has guest leftovers (e.g. race).
+    if (expectedSource === "authenticated") {
+      const leftover = readGuestCartSnapshot();
+      if (leftover.items.length) {
+        markCartSessionPending();
+        try {
+          await mergeGuestCartIntoAuthenticatedSession({
+            mergeGuestItems: leftover.items,
+            preserveCheckout: leftover.checkout
+          });
+        } catch (error) {
+          console.error("[cart] Ready-state guest merge failed.", error);
+        } finally {
+          markCartSessionReady();
+        }
+      }
+    }
     await rehydrateBuyNowSession();
     return;
   }
@@ -193,11 +297,11 @@ export async function initializeCartSession() {
     markCartSessionPending();
     try {
       if (expectedSource === "authenticated") {
-        await loadAuthenticatedCartSession();
+        await runAuthenticatedBootstrap();
       } else {
         await loadGuestCartSession();
+        await rehydrateBuyNowSession();
       }
-      await rehydrateBuyNowSession();
     } catch (error) {
       console.error("[cart] Cart session init failed; marking ready with guest fallback.", error);
       try {
@@ -219,21 +323,29 @@ export async function initializeCartSession() {
 }
 
 export async function handleCartAuthSignedIn() {
-  // Coalesce with in-flight initializeCartSession to avoid duplicate cart fetches.
+  const guestSnapshot = readGuestCartSnapshot();
+
+  // Coalesce with in-flight init, then still merge if guest leftovers remain.
   if (sessionInitPromise) {
     await sessionInitPromise;
-    return;
+    const leftover = readGuestCartSnapshot();
+    if (leftover.items.length === 0 && useCartStore.getState().cartSource === "authenticated") {
+      return;
+    }
   }
 
   sessionInitPromise = (async () => {
     markCartSessionPending();
     try {
-      const guestSnapshot = readGuestCartSnapshot();
-      await loadAuthenticatedCartSession({
-        mergeGuestItems: guestSnapshot.items,
-        preserveCheckout: guestSnapshot.checkout
+      await mergeGuestCartIntoAuthenticatedSession({
+        mergeGuestItems: guestSnapshot.items.length
+          ? guestSnapshot.items
+          : readGuestCartSnapshot().items,
+        preserveCheckout: guestSnapshot.checkout ?? readGuestCartSnapshot().checkout
       });
       await rehydrateBuyNowSession();
+    } catch (error) {
+      console.error("[cart] Sign-in cart merge failed.", error);
     } finally {
       markCartSessionReady();
     }
@@ -248,9 +360,13 @@ export async function handleCartAuthSignedIn() {
 
 export async function handleCartAuthSignedOut() {
   useBuyNowStore.getState().clearBuyNow();
+  cancelAuthenticatedCartSync();
+  resetAuthenticatedCartSyncState();
   markCartSessionPending();
   try {
+    // Auth cart stays in the database only — never copy into guest storage.
     clearGuestCartStorage();
+    clearMergeIdempotencyKeys();
     await loadGuestCartSession();
   } finally {
     markCartSessionReady();
