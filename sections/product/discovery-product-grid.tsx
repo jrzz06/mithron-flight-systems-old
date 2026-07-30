@@ -17,7 +17,7 @@ export function DiscoveryProductGrid({
   if (!products.length) return null;
 
   return (
-    <div className={cn("mt-6 w-full min-w-0", className)} data-catalog-shelf-cards="">
+    <div className={cn("catalog-page-shell mt-6 w-full min-w-0", className)} data-catalog-shelf-cards="">
       <div className="catalog-product-grid w-full min-w-0 justify-items-stretch">
         {products.map((product, index) => (
           <HomeProductShelfCard

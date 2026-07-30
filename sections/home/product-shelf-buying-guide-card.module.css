@@ -166,3 +166,21 @@
     transition: none;
   }
 }
+
+@media (max-width: 1279px) {
+  .copy {
+    padding: clamp(10px, 2.5vw, 16px) clamp(10px, 2.5vw, 16px) 8px;
+  }
+
+  .eyebrow {
+    font-size: clamp(0.6875rem, 2vw, 0.75rem);
+  }
+
+  .headline {
+    font-size: clamp(0.875rem, 2.8vw, 1.125rem);
+  }
+
+  .imageFrame {
+    min-height: clamp(80px, 22vw, 120px);
+  }
+}

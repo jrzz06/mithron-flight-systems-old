@@ -34,3 +34,13 @@
     transition: none;
   }
 }
+
+@media (max-width: 1279px) {
+  .card {
+    gap: clamp(8px, 2vw, 12px);
+  }
+
+  .label {
+    font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+  }
+}

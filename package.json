@@ -109,9 +109,8 @@
     "db:push:dry-run": "node tools/ensure-supabase-link.mjs && npx supabase db push --dry-run",
     "verify:auth-email": "node tools/verify-auth-email-delivery.mjs",
     "verify:email-providers": "node tools/verify-email-provider-fallback.mjs",
-    "vercel:prune-aliases": "node tools/prune-vercel-aliases.mjs",
     "vercel:promote-canonical": "node tools/promote-canonical-alias.mjs",
-    "vercel:deploy:prod": "vercel --prod --yes && npm run vercel:promote-canonical && npm run vercel:prune-aliases",
+    "vercel:deploy:prod": "vercel --prod --yes && npm run vercel:promote-canonical",
     "audit:dead-code": "node tools/dead-code-audit.mjs",
     "audit:knip": "knip",
     "audit:depcheck": "depcheck"

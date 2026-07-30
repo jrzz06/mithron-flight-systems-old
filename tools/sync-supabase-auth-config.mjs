@@ -21,16 +21,46 @@ const DEFAULT_AUTH_REDIRECT_ORIGINS = [
   BRAND_PRODUCTION_ORIGIN
 ];
 
+function normalizeSiteUrl(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed.replace(/\/$/, "");
+  return `https://${trimmed.replace(/^\/+/, "").replace(/\/$/, "")}`;
+}
+
+function addAuthRedirectOrigin(origins, value) {
+  const normalized = normalizeSiteUrl(value ?? "");
+  if (normalized) origins.add(normalized);
+}
+
+function parseAllowedAppHosts(env) {
+  const defaults = [
+    "final-mithron-deploy.vercel.app",
+    "www.mithron.co",
+    "mithron.co",
+    "localhost",
+    "127.0.0.1"
+  ];
+  const extra = (env.get("MITHRON_ALLOWED_APP_HOSTS") ?? "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+  return [...new Set([...defaults, ...extra])];
+}
+
 function buildAuthRedirectAllowList(env) {
   const origins = new Set(DEFAULT_AUTH_REDIRECT_ORIGINS);
-  const configuredProduction = env.get("MITHRON_PRODUCTION_HOST")?.trim();
-  if (configuredProduction) {
-    origins.add(configuredProduction.replace(/\/$/, ""));
+  addAuthRedirectOrigin(origins, env.get("MITHRON_PRODUCTION_HOST"));
+  addAuthRedirectOrigin(origins, env.get("NEXT_PUBLIC_SITE_URL"));
+
+  for (const host of parseAllowedAppHosts(env)) {
+    if (host === "localhost" || host === "127.0.0.1" || host.startsWith("localhost:") || host.startsWith("127.0.0.1:")) {
+      addAuthRedirectOrigin(origins, `http://${host}`);
+      continue;
+    }
+    addAuthRedirectOrigin(origins, `https://${host}`);
   }
-  const siteUrl = env.get("NEXT_PUBLIC_SITE_URL")?.trim();
-  if (siteUrl) {
-    origins.add(siteUrl.replace(/\/$/, ""));
-  }
+
   return [...origins].flatMap((origin) => [
     `${origin}/**`,
     `${origin}/auth/callback`,
@@ -147,8 +177,14 @@ async function main() {
   console.log("Current auth config summary:");
   console.log(JSON.stringify(summarize(current), null, 2));
 
+  const productionSiteUrl = normalizeSiteUrl(
+    env.get("MITHRON_PRODUCTION_HOST")?.trim()
+      || env.get("NEXT_PUBLIC_SITE_URL")?.trim()
+      || CANONICAL_PRODUCTION_ORIGIN
+  );
+
   const patch = {
-    site_url: CANONICAL_PRODUCTION_ORIGIN,
+    site_url: productionSiteUrl,
     uri_allow_list: ALLOW_LIST,
     mailer_autoconfirm: false,
     mailer_otp_length: 8,

@@ -66,7 +66,7 @@ export function ProductShelfSection({
               {(config.heroEyebrow || config.eyebrow) ? (
                 <span className={styles.shelfHeroEyebrow}>{config.heroEyebrow || config.eyebrow}</span>
               ) : null}
-              <span className={`${styles.shelfHeroHeading} text-xl font-extrabold tracking-tight sm:text-3xl md:text-5xl`}>
+              <span className={`${styles.shelfHeroHeading} font-extrabold tracking-tight`}>
                 {config.title}
               </span>
               {config.heroBody ? (

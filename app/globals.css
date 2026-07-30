@@ -194,14 +194,14 @@ html[data-product-nav="pending"] {
   --ds-t-card: var(--type-product-title);
   --ds-t-body: 16px;
   --ds-t-label: var(--type-badge);
-  --ds-s1: 8px;
-  --ds-s2: 12px;
-  --ds-s3: 16px;
-  --ds-s4: 24px;
-  --ds-s5: 32px;
-  --ds-s6: 48px;
-  --ds-s7: 64px;
-  --ds-s8: 96px;
+  --ds-s1: clamp(6px, 0.6vw, 8px);
+  --ds-s2: clamp(8px, 1vw, 12px);
+  --ds-s3: clamp(12px, 1.25vw, 16px);
+  --ds-s4: clamp(16px, 1.875vw, 24px);
+  --ds-s5: clamp(20px, 2.5vw, 32px);
+  --ds-s6: clamp(28px, 3.75vw, 48px);
+  --ds-s7: clamp(36px, 5vw, 64px);
+  --ds-s8: clamp(48px, 7.5vw, 96px);
   --ds-r-sm: 8px;
   --ds-r-md: 12px;
   --ds-r-lg: 16px;
@@ -334,7 +334,7 @@ html[data-product-nav="pending"] {
   --product-stage-floor: none;
   --product-stage-halo: none;
   /* Ambient product stage — transparent for card gradient flow */
-  --product-stage-radial: transparent;
+  --product-stage-radial: radial-gradient(ellipse 65% 55% at 50% 48%, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.45) 50%, transparent 100%);
   --surface-gradient-card: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
   --surface-gradient-cool: linear-gradient(180deg, #fcfcfd 0%, #f8fafc 54%, #f4f7fa 100%);
   --surface-aurora-layer:
@@ -424,6 +424,17 @@ html[data-product-nav="pending"] {
   width: min(100%, var(--home-content-max-width));
   margin-inline: auto;
   padding-inline: var(--home-section-inline);
+}
+
+[data-home-premium-shell="true"] {
+  --home-premium-max-width: 1680px;
+  --home-premium-inline: 20px;
+}
+
+@media (min-width: 1536px) {
+  [data-home-premium-shell="true"] {
+    --home-premium-inline: 72px;
+  }
 }
 
 @media (min-width: 641px) {
@@ -3374,15 +3385,40 @@ canvas {
 
 @media (max-width: 1279px) {
   :root {
-    --shelf-card-aspect-ratio: 3 / 4;
-    --shelf-view-all-aspect-ratio: 3 / 4;
-    --shelf-card-min-width: 208px;
-    --shelf-card-max-width: 272px;
+    --shelf-card-aspect-ratio: 3 / 5;
+    --shelf-view-all-aspect-ratio: 3 / 5;
+    /* Carousel shelf tokens (max-width: 1279px only)
+     * ROLLBACK: restore previous --shelf-card-width clamps directly, or git revert.
+     * Tokens: --shelf-carousel-card-width, --shelf-carousel-cards-per-view,
+     * --shelf-carousel-cutout-scale, --shelf-carousel-type-*, --shelf-carousel-cta-*.
+     * Wired in: app/globals.css (this block), sections/home/home-shelf-shared.module.css.
+     */
+    --shelf-carousel-card-width: clamp(168px, 27vw, 228px);
+    --shelf-carousel-cards-per-view: 3.15;
+    --shelf-carousel-cutout-scale: clamp(0.92, 0.08vw + 0.88, 1.08);
+    --shelf-carousel-type-min: 0.75rem;
+    --shelf-carousel-type-preferred: 2.5vw;
+    --shelf-carousel-type-max: 1rem;
+    --shelf-carousel-kicker-min: 0.625rem;
+    --shelf-carousel-kicker-preferred: 2vw;
+    --shelf-carousel-kicker-max: 0.8125rem;
+    --shelf-carousel-desc-min: 0.6875rem;
+    --shelf-carousel-desc-preferred: 2.2vw;
+    --shelf-carousel-desc-max: 0.875rem;
+    --shelf-carousel-price-min: 0.8125rem;
+    --shelf-carousel-price-preferred: 2.8vw;
+    --shelf-carousel-price-max: 1rem;
+    --shelf-carousel-cta-min-height: clamp(30px, 8vw, 36px);
+    --shelf-carousel-cta-font-min: 0.6875rem;
+    --shelf-carousel-cta-font-preferred: 2vw;
+    --shelf-carousel-cta-font-max: 0.8125rem;
+    --shelf-card-min-width: 168px;
+    --shelf-card-max-width: 228px;
     --shelf-card-min-height: 320px;
     --shelf-card-max-height: 420px;
     --shelf-card-body-min: 96px;
-    --shelf-cards-per-viewport: 2.65;
-    --shelf-card-width: clamp(208px, 32vw, 272px);
+    --shelf-cards-per-viewport: var(--shelf-carousel-cards-per-view);
+    --shelf-card-width: var(--shelf-carousel-card-width);
     --store-bottom-chrome: calc(var(--assistant-fab-size) + var(--assistant-fab-inset) + 12px);
   }
 
@@ -3401,8 +3437,10 @@ canvas {
   :root {
     --shelf-card-aspect-ratio: 4 / 3;
     --shelf-view-all-aspect-ratio: 4 / 3;
-    --shelf-cards-per-viewport: 1.35;
-    --shelf-card-width: clamp(228px, 58vw, 288px);
+    --shelf-carousel-card-width: clamp(160px, 42vw, 200px);
+    --shelf-carousel-cards-per-view: 2.15;
+    --shelf-cards-per-viewport: var(--shelf-carousel-cards-per-view);
+    --shelf-card-width: var(--shelf-carousel-card-width);
     /* Cinematic Precision storefront type scale — mobile (~12–15% down) */
     --type-brand-header: clamp(34px, 8vw, 44px);
     --type-featured-title: clamp(34px, 7vw, 44px);
@@ -3423,8 +3461,8 @@ canvas {
     --ds-t-card: var(--type-product-title);
     --ds-t-label: var(--type-badge);
     --type-card: var(--type-product-title);
-    --shelf-card-min-width: 228px;
-    --shelf-card-max-width: 288px;
+    --shelf-card-min-width: 160px;
+    --shelf-card-max-width: 200px;
     --shelf-card-min-height: 0;
     --shelf-card-max-height: none;
     --shelf-card-body-min: 72px;
@@ -3432,17 +3470,19 @@ canvas {
 
   .catalog-page-shell {
     --catalog-inline: 1rem; /* px-4 */
+    overflow-x: clip;
   }
 }
 
 @media (max-width: 479px) {
   :root {
     --fluid-page-inline: clamp(12px, 3.2vw, 16px);
-    --shelf-card-min-width: 192px;
-    --shelf-card-max-width: 236px;
+    --shelf-carousel-card-width: clamp(152px, 40vw, 188px);
+    --shelf-card-min-width: 152px;
+    --shelf-card-max-width: 188px;
     --shelf-card-min-height: 0;
     --shelf-card-max-height: none;
-    --shelf-card-width: clamp(192px, 50vw, 236px);
+    --shelf-card-width: var(--shelf-carousel-card-width);
   }
 
   .catalog-page-shell {

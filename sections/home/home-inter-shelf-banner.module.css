@@ -1,5 +1,5 @@
 .section {
-  padding-block: var(--ds-s6);
+  padding-block: var(--ds-s5);
   /* Horizontal alignment via [data-home-content-shell] in globals.css */
 }
 

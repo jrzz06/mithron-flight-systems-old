@@ -178,17 +178,17 @@
 
 .badge {
   position: absolute;
-  top: 18px;
-  left: 18px;
+  top: clamp(10px, 2.5vw, 18px);
+  left: clamp(10px, 2.5vw, 18px);
   display: inline-flex;
-  min-height: 28px;
+  min-height: clamp(24px, 3.2vw, 28px);
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: var(--ds-r-pill);
   background: rgba(255, 255, 255, 0.92);
-  padding: 0 12px;
+  padding: 0 clamp(8px, 1.5vw, 12px);
   color: var(--ds-ink);
-  font-size: 11px;
+  font-size: clamp(10px, 1.4vw, 11px);
   font-weight: 600;
   line-height: 1;
   letter-spacing: var(--tracking-wide);

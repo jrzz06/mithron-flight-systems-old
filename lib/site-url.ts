@@ -182,35 +182,43 @@ export function hasConfiguredSiteUrl(env: Record<string, string | undefined> = p
   return Boolean(sanitizeAppOrigin(env.NEXT_PUBLIC_SITE_URL, env));
 }
 
-/** Client-side auth redirects: prefer canonical URL; reject obsolete deployment hosts. */
+/** Client-side auth redirects: prefer the live browser origin on allowed hosts. */
 export function resolveClientAuthOrigin(env: Record<string, string | undefined> = process.env) {
-  const configured = sanitizeAppOrigin(env.NEXT_PUBLIC_SITE_URL, env);
-  if (configured) return configured;
-
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (isObsoleteAppHost(host, env)) return getCanonicalProductionOrigin(env);
     const browserOrigin = sanitizeAppOrigin(window.location.origin, env);
-    if (browserOrigin) return browserOrigin;
+    if (browserOrigin && isAllowedAppHost(new URL(browserOrigin).hostname, env)) {
+      return browserOrigin;
+    }
   }
+
+  const configured = sanitizeAppOrigin(env.NEXT_PUBLIC_SITE_URL, env);
+  if (configured) return configured;
 
   if (env.VERCEL_ENV === "production") return getCanonicalProductionOrigin(env);
 
   return getSiteOrigin(env);
 }
 
+function addAuthRedirectOrigin(origins: Set<string>, value: string | null | undefined) {
+  const sanitized = sanitizeAppOrigin(value ? normalizeSiteUrl(value) : null);
+  if (sanitized) origins.add(sanitized);
+}
+
 /** Supabase Auth redirect allow-list entries (wildcard suffix). */
 export function buildAuthRedirectAllowList(env: Record<string, string | undefined> = process.env) {
   const origins = new Set<string>(DEFAULT_AUTH_REDIRECT_ORIGINS);
 
-  const configuredProduction = env.MITHRON_PRODUCTION_HOST?.trim();
-  if (configuredProduction) {
-    origins.add(normalizeSiteUrl(configuredProduction).replace(/\/$/, ""));
-  }
+  addAuthRedirectOrigin(origins, env.MITHRON_PRODUCTION_HOST);
+  addAuthRedirectOrigin(origins, env.NEXT_PUBLIC_SITE_URL);
 
-  const siteUrl = env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (siteUrl) {
-    origins.add(normalizeSiteUrl(siteUrl).replace(/\/$/, ""));
+  for (const host of getAllowedAppHosts(env)) {
+    if (LOCAL_APP_HOSTS.some((localHost) => host === localHost || host.startsWith(`${localHost}:`))) {
+      addAuthRedirectOrigin(origins, `http://${host}`);
+      continue;
+    }
+    addAuthRedirectOrigin(origins, `https://${host}`);
   }
 
   return [...origins].flatMap((origin) => [

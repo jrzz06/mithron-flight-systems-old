@@ -71,7 +71,7 @@ export function HomeProductShelfCard({
   priority = false,
   layout = "default",
   presentation = "shelf",
-  imageSizes = "(max-width: 479px) 54vw, (max-width: 767px) 56vw, (max-width: 1279px) 32vw, 280px"
+  imageSizes = "(max-width: 479px) 42vw, (max-width: 767px) 44vw, (max-width: 1279px) 27vw, 280px"
 }: {
   product: ProductShelfCardItem;
   priority?: boolean;

@@ -207,6 +207,7 @@ describe("home landing composite contract", () => {
     expect(shelfCss).toContain(".productDescriptor");
     expect(shelfCss).toContain(".productPriceDji");
     expect(shelfCss).toContain(".productBuyNowDji");
+    expect(shelfCss).toContain("--shelf-carousel-cta-min-height");
     expect(shelfCss).toContain(".productFooterDji");
     expect(shelfCss).toMatch(/\.productCardDji \.productFooterDji\s*\{[^}]*margin-top:\s*auto/s);
     expect(shelfCss).toContain("--shelf-dji-product-col");
@@ -360,6 +361,7 @@ describe("home landing composite contract", () => {
     expect(component).not.toContain("Product lineup");
     expect(shelfSection).toContain("shelfHeroEyebrow");
     expect(shelfSection).toContain("shelfHeroHeading");
+    expect(shelfSection).not.toContain("text-xl sm:text-3xl md:text-5xl");
     expect(shelfSection).toContain("{config.title}");
     expect(shelfSection).toContain("shelfHeroBody");
     expect(shelfSection).toContain("shelfHeroCta");

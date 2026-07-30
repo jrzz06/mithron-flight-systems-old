@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/request-origin";
 import { resolveClientAuthRedirectPath } from "@/lib/auth/redirects";
 import {
+  buildAuthRedirectAllowList,
   CANONICAL_PRODUCTION_ORIGIN,
   getSiteOrigin,
   hasConfiguredSiteUrl,
@@ -119,11 +120,26 @@ describe("auth redirect origin resolution", () => {
     ).toBe(true);
   });
 
-  it("prefers NEXT_PUBLIC_SITE_URL for client auth redirects", () => {
-    expect(
-      resolveClientAuthOrigin({
-        NEXT_PUBLIC_SITE_URL: CANONICAL_ORIGIN
-      })
-    ).toBe(CANONICAL_ORIGIN);
+  it("prefers the configured site URL when no browser context exists", () => {
+    const originalWindow = globalThis.window;
+    // @ts-expect-error test shim — server routes have no browser origin
+    delete globalThis.window;
+    try {
+      expect(
+        resolveClientAuthOrigin({
+          NEXT_PUBLIC_SITE_URL: CANONICAL_ORIGIN
+        })
+      ).toBe(CANONICAL_ORIGIN);
+    } finally {
+      globalThis.window = originalWindow;
+    }
+  });
+
+  it("includes custom allowed hosts in the auth redirect allow list", () => {
+    const allowList = buildAuthRedirectAllowList({
+      MITHRON_ALLOWED_APP_HOSTS: "www.rtacademia.com,rtacademia.com"
+    });
+    expect(allowList).toContain("https://www.rtacademia.com/**");
+    expect(allowList).toContain("https://rtacademia.com/auth/callback");
   });
 });

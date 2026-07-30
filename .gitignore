@@ -84,3 +84,6 @@ supabase/.temp/**
 !supabase/.temp/project-ref
 .vercel
 .env*
+
+.vercel
+.env*

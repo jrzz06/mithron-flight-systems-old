@@ -19,13 +19,13 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(carouselBlock?.[0]).toContain("scroll-snap-type: x mandatory");
     expect(carouselBlock?.[0]).toContain("var(--shelf-card-width)");
     expect(carouselBlock?.[0]).not.toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
-    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-card-width:\s*clamp\(168px,\s*27vw,\s*228px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-card-width:\s*clamp\(168px,\s*48vw,\s*208px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-card-width:\s*clamp\(188px,\s*52vw,\s*232px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(168px,\s*27vw,\s*228px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(152px,\s*40vw,\s*188px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(160px,\s*42vw,\s*200px\)/);
     expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-card-aspect-ratio:\s*4\s*\/\s*3/);
     expect(globalsCss).not.toMatch(/--shelf-card-width:[\s\S]*calc\(\(100% - var\(--card-gap\)\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-cards-per-viewport:\s*3\.15/);
-    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-cards-per-viewport:\s*1\.35/);
+    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-cards-per-view:\s*3\.15/);
+    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-cards-per-view:\s*2\.15/);
     expect(css).not.toMatch(/@media \(min-width: 1024px\) and \(max-width: 1279px\)/);
   });
 
@@ -37,11 +37,14 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(tabletShelfBlock?.[0]).toContain("touch-action: pan-x pan-y");
   });
 
-  it("applies 44px touch targets to shelf Buy Now and catalog CTA at 767px", () => {
+  it("uses fluid shelf carousel CTA height while keeping catalog CTA at 44px on phone", () => {
     const homeCss = source("sections/home/home-shelf-shared.module.css");
     const globalsCss = source("app/globals.css");
 
-    expect(homeCss).toMatch(/@media \(max-width: 767px\)[\s\S]*\.productBuyNow[\s\S]*min-height: var\(--mobile-touch-min/);
+    expect(homeCss).toMatch(
+      /@media \(max-width: 1279px\)[\s\S]*\.productShelfSection \.productCardDji \.productBuyNowDji[\s\S]*--shelf-carousel-cta-min-height/
+    );
+    expect(homeCss).toMatch(/@media \(max-width: 767px\)[\s\S]*\.productCardCatalog \.productBuyNowCatalog[\s\S]*min-height: var\(--mobile-touch-min/);
     expect(globalsCss).toMatch(
       /@media \(max-width: 767px\)[\s\S]*\.catalog-page-shell \.premium-product-card-shell\[data-cta-layout="buy-row"\] \.premium-product-card__cta-buy[\s\S]*min-height: var\(--mobile-touch-min/
     );
@@ -104,7 +107,7 @@ describe("mobile responsive contract (phone <=767px)", () => {
 
   it("uses mobile shelf image sizes aligned to peek carousel width", () => {
     const component = source("components/product/home-product-shelf-card.tsx");
-    expect(component).toContain("(max-width: 479px) 54vw, (max-width: 767px) 56vw, (max-width: 1279px) 32vw, 280px");
+    expect(component).toContain("(max-width: 479px) 42vw, (max-width: 767px) 44vw, (max-width: 1279px) 27vw, 280px");
   });
 
   it("hides shelf edge fades and uses responsive shelf card geometry on phone", () => {
@@ -224,16 +227,15 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(cardCss).toMatch(/\.cta \{[\s\S]*width:\s*100%/);
   });
 
-  it("uses horizontal space-between shelf footers on phone", () => {
+  it("uses stacked shelf footers with fluid carousel CTA on phone", () => {
     const css = source("sections/home/home-shelf-shared.module.css");
     const phoneBlocks = [...css.matchAll(/@media \(max-width: 767px\)[\s\S]*?(?=@media|$)/g)].map((match) => match[0]);
     const phoneBlock = phoneBlocks.join("\n");
-    const buyNowBlock = phoneBlock.match(/\.productBuyNow \{[\s\S]*?\}/)?.[0] ?? "";
+    const buyNowBlock = phoneBlock.match(/\.productShelfSection \.productBuyNowDji \{[\s\S]*?\}/)?.[0] ?? "";
 
-    expect(phoneBlock).toMatch(/\.productFooter[\s\S]*justify-content:\s*space-between/);
-    expect(buyNowBlock).toMatch(/min-height:\s*var\(--mobile-touch-min/);
-    expect(phoneBlock).not.toMatch(/\.productFooter[\s\S]*grid-template-columns:\s*1fr/);
-    expect(buyNowBlock).not.toContain("width: 100%");
+    expect(phoneBlock).toMatch(/\.productCardDji:not\(\.productCardCatalog\) \.productFooterDji[\s\S]*flex-direction:\s*column/);
+    expect(buyNowBlock).toMatch(/min-height:\s*var\(--shelf-carousel-cta-min-height/);
+    expect(phoneBlock).toMatch(/\.productCardDji:not\(\.productCardCatalog\) \.productBuyNowDji[\s\S]*width:\s*100%/);
   });
 
   it("uses equal row sizing on catalog grids", () => {
@@ -421,11 +423,11 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(globalsCss).toContain("--bp-tablet-mid:");
     expect(globalsCss).toContain("--bp-tablet-wide:");
     expect(globalsCss).toMatch(/@media \(max-width: 390px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-card-width:\s*clamp\(168px,\s*27vw,\s*228px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-card-width:\s*clamp\(168px,\s*48vw,\s*208px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-card-width:\s*clamp\(188px,\s*52vw,\s*232px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(168px,\s*27vw,\s*228px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(152px,\s*40vw,\s*188px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(160px,\s*42vw,\s*200px\)/);
     expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-card-aspect-ratio:\s*4\s*\/\s*3/);
-    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-cards-per-viewport:\s*3\.15/);
+    expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-cards-per-view:\s*3\.15/);
     expect(globalsCss).not.toMatch(/@media \(min-width: 820px\) and \(max-width: 1023px\)/);
     expect(globalsCss).not.toMatch(/@media \(min-width: 853px\) and \(max-width: 1023px\)/);
   });

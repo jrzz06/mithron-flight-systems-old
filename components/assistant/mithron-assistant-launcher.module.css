@@ -96,15 +96,15 @@
 
 @media (max-width: 420px) {
   .root {
-    --assistant-fab-inset: 14px;
-    --assistant-fab-size: 58px;
+    --assistant-fab-inset: 12px;
+    --assistant-fab-size: clamp(48px, 14vw, 56px);
   }
 }
 
 @media (max-width: 767px) {
   .root {
-    right: 16px;
-    bottom: var(--assistant-fab-offset, 90px);
+    right: clamp(12px, 4vw, 16px);
+    bottom: var(--assistant-fab-offset, calc(var(--assistant-fab-inset, 14px) + env(safe-area-inset-bottom, 0px)));
     z-index: var(--z-overlay-launcher, 30);
   }
 }

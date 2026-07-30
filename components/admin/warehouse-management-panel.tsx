@@ -28,14 +28,14 @@ export function CreateWarehouseForm({ action }: CreateWarehouseFormProps) {
         required
         minLength={3}
         placeholder="Mumbai Fulfillment Center"
-        className="h-10 rounded-lg border border-slate-700 bg-[#10151d] px-3 text-sm text-slate-100 outline-none"
+        className="h-11 min-h-[44px] rounded-lg border border-slate-700 bg-[#10151d] px-3 text-sm text-slate-100 outline-none"
       />
       <input
         name="warehouse_location"
         placeholder="City, region, or country"
-        className="h-10 rounded-lg border border-slate-700 bg-[#10151d] px-3 text-sm text-slate-100 outline-none"
+        className="h-11 min-h-[44px] rounded-lg border border-slate-700 bg-[#10151d] px-3 text-sm text-slate-100 outline-none"
       />
-      <OperationalSubmitButton pendingLabel="Creating" className="inline-flex h-9 items-center rounded-lg border border-emerald-500/30 bg-emerald-950/25 px-3 text-sm font-semibold text-emerald-200">
+      <OperationalSubmitButton pendingLabel="Creating" className="inline-flex min-h-[44px] h-11 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-950/25 px-4 text-sm font-semibold text-emerald-200">
         Create warehouse
       </OperationalSubmitButton>
     </form>

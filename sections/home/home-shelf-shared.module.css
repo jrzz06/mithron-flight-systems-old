@@ -206,11 +206,11 @@
 
 .shelfHeroHeading {
   display: block;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   max-width: 100%;
   color: var(--shelf-hero-ink, #111113);
   font-family: var(--type-display);
-  font-size: clamp(1.75rem, 2.2vw, 2.25rem);
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.12;
@@ -225,7 +225,7 @@
 .shelfHeroTitle {
   color: var(--shelf-hero-muted);
   font-family: var(--type-ui);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.02em;
   transition: color 320ms var(--ease-cinematic);
@@ -234,9 +234,9 @@
 .shelfHeroCopy strong {
   display: block;
   max-width: 18ch;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   font-family: var(--type-display);
-  font-size: clamp(1.75rem, 2.2vw, 2.25rem);
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
   font-weight: 600;
   letter-spacing: 0.06em;
   line-height: 1;
@@ -249,10 +249,10 @@
   display: -webkit-box;
   overflow: hidden;
   max-width: 36ch;
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   color: var(--shelf-hero-muted);
   font-family: var(--type-ui);
-  font-size: clamp(0.9375rem, 1.05vw, 1rem);
+  font-size: clamp(0.8125rem, 1.1vw, 0.9375rem);
   font-weight: 400;
   letter-spacing: 0;
   line-height: var(--leading-body);
@@ -266,21 +266,21 @@
 .shelfHeroCta {
   display: inline-flex;
   width: fit-content;
-  min-height: var(--mobile-touch-min, 44px);
+  min-height: clamp(36px, 4vw, 42px);
   align-items: center;
   justify-content: center;
-  margin-top: 28px;
+  margin-top: 20px;
   border: var(--shelf-hero-cta-border);
   border-radius: 999px;
   background: var(--shelf-hero-cta-bg);
   box-shadow: var(--shelf-hero-cta-shadow);
   color: var(--shelf-hero-cta-ink);
   font-family: var(--type-ui);
-  font-size: 15px;
+  font-size: clamp(12px, 1.4vw, 14px);
   font-weight: 600;
   letter-spacing: 0;
   font-synthesis: none;
-  padding: 0 24px;
+  padding: 0 20px;
   transition:
     background-color 260ms var(--ease-cinematic),
     box-shadow 260ms var(--ease-cinematic),
@@ -464,12 +464,12 @@
 .productCardDji .productKicker {
   order: 0;
   flex: 0 0 auto;
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   overflow: visible;
   color: #047857;
   font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: clamp(10px, 1.1vw, 11px);
+  font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1.2;
   white-space: nowrap;
@@ -488,10 +488,10 @@
   text-overflow: ellipsis;
   color: var(--shelf-card-ink, #18181b);
   font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-  font-size: clamp(1.0625rem, 1.25vw, 1.25rem);
+  font-size: clamp(13px, 1.3vw, 15px);
   font-weight: 600;
   letter-spacing: 0.01em;
-  line-height: 1.3;
+  line-height: 1.25;
   font-synthesis: none;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -505,9 +505,9 @@
   min-height: 0;
   margin: 2px 0 0;
   overflow: hidden;
-  color: #3f3f46;
+  color: #4b5563;
   font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-  font-size: 14px;
+  font-size: clamp(11px, 1.1vw, 12px);
   font-weight: 400;
   line-height: 1.4;
   text-transform: none;
@@ -525,7 +525,7 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
   min-width: 0;
   padding: 0;
@@ -544,7 +544,7 @@
   min-width: 0;
   color: var(--shelf-card-ink, #18181b);
   font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-  font-size: clamp(1.1875rem, 1.4vw, 1.375rem);
+  font-size: clamp(14px, 1.5vw, 17px);
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.15;
@@ -557,14 +557,14 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 0 16px;
+  min-height: 36px;
+  padding: 0 14px;
   border: none;
   border-radius: 8px;
   background: var(--brand-accent, #1f6b46);
   color: #ffffff;
   font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-  font-size: 13px;
+  font-size: clamp(11px, 1.2vw, 13px);
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1;
@@ -1344,7 +1344,6 @@
 
 @media (max-width: 1279px) {
   .productCard {
-    aspect-ratio: auto;
     min-width: var(--shelf-card-min-width);
     max-width: var(--shelf-card-max-width);
     min-height: 0;
@@ -1399,7 +1398,84 @@
 
 @media (max-width: 1279px) {
   .productShelfSection {
-    overflow-x: visible;
+    overflow-x: clip;
+  }
+
+  .productShelfSection[data-shelf-tone="world"],
+  .productShelfSection[data-shelf-tone="care"],
+  .productShelfSection[data-shelf-tone="global"] {
+    --shelf-cutout-scale: var(--shelf-carousel-cutout-scale, 1.08);
+    --shelf-card-pad-x: clamp(10px, 2.8vw, 16px);
+    --shelf-card-pad-top: clamp(10px, 2.4vw, 16px);
+    --shelf-card-pad-bottom: clamp(12px, 2.8vw, 20px);
+  }
+
+  .productShelfSection .productCardDji .productImageWell,
+  .productShelfSection .productImageWell {
+    max-height: clamp(96px, 28vw, 180px);
+  }
+
+  .productShelfSection .productCardDji .productKicker {
+    font-size: clamp(
+      var(--shelf-carousel-kicker-min, 0.625rem),
+      var(--shelf-carousel-kicker-preferred, 2vw),
+      var(--shelf-carousel-kicker-max, 0.8125rem)
+    );
+  }
+
+  .productShelfSection .productCardDji .productName {
+    font-size: clamp(
+      var(--shelf-carousel-type-min, 0.75rem),
+      var(--shelf-carousel-type-preferred, 2.5vw),
+      var(--shelf-carousel-type-max, 1rem)
+    );
+  }
+
+  .productShelfSection .productCardDji .productDescriptor {
+    font-size: clamp(
+      var(--shelf-carousel-desc-min, 0.6875rem),
+      var(--shelf-carousel-desc-preferred, 2.2vw),
+      var(--shelf-carousel-desc-max, 0.875rem)
+    );
+  }
+
+  .productShelfSection .productCardDji .productPriceDji {
+    font-size: clamp(
+      var(--shelf-carousel-price-min, 0.8125rem),
+      var(--shelf-carousel-price-preferred, 2.8vw),
+      var(--shelf-carousel-price-max, 1rem)
+    );
+  }
+
+  .productShelfSection .productCardDji .productFooterDji {
+    min-height: auto;
+  }
+
+  .productShelfSection .productCardDji .productBuyNowDji {
+    min-height: var(--shelf-carousel-cta-min-height, clamp(30px, 8vw, 36px));
+    padding: 0 clamp(8px, 2.5vw, 12px);
+    font-size: clamp(
+      var(--shelf-carousel-cta-font-min, 0.6875rem),
+      var(--shelf-carousel-cta-font-preferred, 2vw),
+      var(--shelf-carousel-cta-font-max, 0.8125rem)
+    );
+  }
+
+  .productShelfHero {
+    margin-top: clamp(12px, 2vw, 18px);
+  }
+
+  .shelfHeroCopy {
+    padding: 0 clamp(20px, 4.5vw, 36px);
+  }
+
+  .shelfHeroEyebrow {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+  }
+
+  .shelfHeroCta {
+    font-size: clamp(0.8125rem, 2.4vw, 0.9375rem);
+    padding: 0 clamp(16px, 4vw, 24px);
   }
 
   .productShelfSection .shelfBoard {
@@ -1419,18 +1495,18 @@
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    margin-inline: calc(-1 * var(--product-shelf-inline, 20px));
-    width: calc(100% + 2 * var(--product-shelf-inline, 20px));
-    grid-auto-columns: unset;
+    margin-inline: calc(-1 * var(--home-section-inline, 20px));
+    width: calc(100% + 2 * var(--home-section-inline, 20px));
+    grid-auto-columns: var(--shelf-card-width);
     gap: var(--shelf-row-gap, clamp(6px, 0.65vw, 10px));
-    grid-auto-flow: unset;
+    grid-auto-flow: column;
     grid-template-columns: none;
     overflow-x: auto;
     overflow-y: visible;
     overscroll-behavior-x: contain;
-    padding-inline: var(--product-shelf-inline, 20px);
+    padding-inline: var(--home-section-inline, 20px);
     padding-block: var(--shelf-card-shadow-gutter, 12px);
-    scroll-padding-inline: var(--product-shelf-inline, 20px);
+    scroll-padding-inline: var(--home-section-inline, 20px);
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -1447,7 +1523,7 @@
     touch-action: pan-x pan-y;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding-inline: var(--product-shelf-inline, 20px);
+    padding-inline: var(--home-section-inline, 20px);
   }
 
   .productShelfGrid[data-shelf-layout="dji"] .shelfRightStack {
@@ -1470,23 +1546,22 @@
     flex: 0 0 var(--shelf-card-width);
     width: var(--shelf-card-width);
     max-width: var(--shelf-card-width);
-    aspect-ratio: auto;
+    aspect-ratio: var(--shelf-card-aspect-ratio);
     height: auto;
     display: flex;
     flex-direction: column;
+    grid-template-rows: auto 1fr auto;
     scroll-snap-align: start;
     overflow: visible;
   }
 
   .productCardDji .productFooterDji {
     margin-top: auto;
-    min-height: var(--mobile-touch-min, 44px);
     flex-shrink: 0;
     overflow: visible;
   }
 
   .productBuyNowDji {
-    min-height: var(--mobile-touch-min, 44px);
     padding: 0 12px;
   }
 
@@ -1611,6 +1686,12 @@
 }
 
 @media (min-width: 768px) and (max-width: 1279px) {
+  .productShelfSection[data-shelf-tone="world"],
+  .productShelfSection[data-shelf-tone="care"],
+  .productShelfSection[data-shelf-tone="global"] {
+    --shelf-cutout-scale: clamp(0.96, 0.06vw + 0.9, 1.04);
+  }
+
   .productShelfHero {
     height: clamp(300px, 42vw, 380px);
     margin-bottom: clamp(12px, 1.6vw, 18px);
@@ -1655,7 +1736,11 @@
     min-height: calc(1.3em * 2);
     margin: 0;
     font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-    font-size: clamp(1.0625rem, 2vw, 1.25rem);
+    font-size: clamp(
+      var(--shelf-carousel-type-min, 0.75rem),
+      var(--shelf-carousel-type-preferred, 2.5vw),
+      var(--shelf-carousel-type-max, 1rem)
+    );
     font-weight: 600;
     letter-spacing: 0.01em;
     line-height: 1.3;
@@ -1675,7 +1760,11 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     overflow: hidden;
-    font-size: 0.9375rem;
+    font-size: clamp(
+      var(--shelf-carousel-desc-min, 0.6875rem),
+      var(--shelf-carousel-desc-preferred, 2.2vw),
+      var(--shelf-carousel-desc-max, 0.875rem)
+    );
     font-weight: 400;
     letter-spacing: 0.01em;
     line-height: 1.4;
@@ -1690,16 +1779,24 @@
   }
 
   .productPriceDji {
-    font-size: clamp(1.1875rem, 2vw, 1.375rem);
+    font-size: clamp(
+      var(--shelf-carousel-price-min, 0.8125rem),
+      var(--shelf-carousel-price-preferred, 2.8vw),
+      var(--shelf-carousel-price-max, 1rem)
+    );
     font-weight: 700;
     letter-spacing: 0.01em;
     color: var(--shelf-card-ink, #18181b);
   }
 
-  .productBuyNowDji {
-    padding: 0 16px;
-    font-size: 0.8125rem;
-    min-height: 40px;
+  .productShelfSection .productCardDji .productBuyNowDji {
+    padding: 0 clamp(10px, 2.5vw, 16px);
+    font-size: clamp(
+      var(--shelf-carousel-cta-font-min, 0.6875rem),
+      var(--shelf-carousel-cta-font-preferred, 2vw),
+      var(--shelf-carousel-cta-font-max, 0.8125rem)
+    );
+    min-height: var(--shelf-carousel-cta-min-height, clamp(32px, 7vw, 40px));
   }
 }
 
@@ -1771,7 +1868,7 @@
   .productImageWell {
     overflow: hidden;
     aspect-ratio: 4 / 3;
-    max-height: none;
+    max-height: clamp(96px, 28vw, 180px);
     padding: var(--shelf-cutout-pad, 0px);
     margin-bottom: 0;
     background: #ffffff;
@@ -1779,7 +1876,7 @@
 
   .productCardDji .productImageWell {
     aspect-ratio: 4 / 3;
-    max-height: none;
+    max-height: clamp(96px, 28vw, 180px);
     padding: var(--shelf-cutout-pad, 0px);
   }
 
@@ -1814,7 +1911,10 @@
   }
 
   .productCardDji {
-    padding: 16px 16px 20px;
+    padding:
+      var(--shelf-card-pad-top, 12px)
+      var(--shelf-card-pad-x, 12px)
+      var(--shelf-card-pad-bottom, 16px);
   }
 
   .productKicker {
@@ -1824,7 +1924,11 @@
     text-overflow: clip;
     min-height: auto;
     margin: 0 0 4px;
-    font-size: 0.8125rem;
+    font-size: clamp(
+      var(--shelf-carousel-kicker-min, 0.625rem),
+      var(--shelf-carousel-kicker-preferred, 2vw),
+      var(--shelf-carousel-kicker-max, 0.8125rem)
+    );
     font-weight: 600;
     letter-spacing: 0.06em;
     line-height: 1.2;
@@ -1833,7 +1937,11 @@
 
   .productCardDji .productKicker {
     color: #047857;
-    font-size: 0.8125rem;
+    font-size: clamp(
+      var(--shelf-carousel-kicker-min, 0.625rem),
+      var(--shelf-carousel-kicker-preferred, 2vw),
+      var(--shelf-carousel-kicker-max, 0.8125rem)
+    );
     font-weight: 600;
   }
 
@@ -1845,11 +1953,15 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     min-height: calc(1.3em * 2);
-    max-height: calc(1.3em * 2);
+    max-height: none;
     margin: 0;
     padding: 0;
     font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-    font-size: clamp(1.0625rem, 4.2vw, 1.25rem);
+    font-size: clamp(
+      var(--shelf-carousel-type-min, 0.75rem),
+      var(--shelf-carousel-type-preferred, 2.5vw),
+      var(--shelf-carousel-type-max, 1rem)
+    );
     font-weight: 600;
     line-height: 1.3;
     letter-spacing: 0.01em;
@@ -1864,10 +1976,14 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     min-height: calc(1.4em * 2);
-    max-height: calc(1.4em * 2);
+    max-height: none;
     margin: 4px 0 0;
     padding: 0;
-    font-size: clamp(0.875rem, 3.4vw, 0.9375rem);
+    font-size: clamp(
+      var(--shelf-carousel-desc-min, 0.6875rem),
+      var(--shelf-carousel-desc-preferred, 2.2vw),
+      var(--shelf-carousel-desc-max, 0.875rem)
+    );
     font-weight: 400;
     letter-spacing: 0.01em;
     line-height: 1.4;
@@ -1913,12 +2029,11 @@
     border-top: none;
   }
 
-  .productCardCatalog .productBuyNowCatalog,
-  .productCardDji:not(.productCardCatalog) .productBuyNowDji {
+  .productCardCatalog .productBuyNowCatalog {
     width: 100%;
     max-width: 100%;
     height: 36px;
-    min-height: 36px;
+    min-height: var(--mobile-touch-min, 44px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1926,6 +2041,25 @@
     background-color: #064e3b;
     color: #ffffff;
     font-size: 12px;
+    font-weight: 600;
+  }
+
+  .productCardDji:not(.productCardCatalog) .productBuyNowDji {
+    width: 100%;
+    max-width: 100%;
+    min-height: var(--shelf-carousel-cta-min-height, clamp(30px, 8vw, 36px));
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background-color: #064e3b;
+    color: #ffffff;
+    font-size: clamp(
+      var(--shelf-carousel-cta-font-min, 0.6875rem),
+      var(--shelf-carousel-cta-font-preferred, 2vw),
+      var(--shelf-carousel-cta-font-max, 0.8125rem)
+    );
     font-weight: 600;
   }
 
@@ -1937,12 +2071,15 @@
   }
 
   .productCardDji .productPriceDji {
-    font-size: 14px;
+    font-size: clamp(
+      var(--shelf-carousel-price-min, 0.8125rem),
+      var(--shelf-carousel-price-preferred, 2.8vw),
+      var(--shelf-carousel-price-max, 1rem)
+    );
     font-weight: 700;
     color: #111827;
   }
 
-  .productCardDji .productName,
   .productCardDji .productNameCatalog {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -1957,7 +2094,6 @@
     color: #111827;
   }
 
-  .productCardDji .productDescriptor,
   .productCardDji .productDescriptorFixed {
     display: block;
     white-space: nowrap;
@@ -1975,7 +2111,10 @@
   .productCard.productCardDji,
   .productCardDji {
     height: 100%;
-    padding: 12px;
+    padding:
+      var(--shelf-card-pad-top, 12px)
+      var(--shelf-card-pad-x, 12px)
+      var(--shelf-card-pad-bottom, 16px);
     border-radius: 16px;
   }
 
@@ -1985,7 +2124,11 @@
     min-width: 0;
     overflow: visible;
     font-family: var(--font-ui-stack, var(--font-google-sans-flex), system-ui, sans-serif);
-    font-size: 14px;
+    font-size: clamp(
+      var(--shelf-carousel-price-min, 0.8125rem),
+      var(--shelf-carousel-price-preferred, 2.8vw),
+      var(--shelf-carousel-price-max, 1rem)
+    );
     font-weight: 700;
     letter-spacing: 0.01em;
     line-height: 1.15;
@@ -1995,16 +2138,20 @@
   }
 
   .productBuyNow,
-  .productBuyNowDji {
+  .productShelfSection .productBuyNowDji {
     flex-shrink: 0;
     box-sizing: border-box;
-    min-height: 36px;
+    min-height: var(--shelf-carousel-cta-min-height, clamp(30px, 8vw, 36px));
     min-width: 0;
     max-width: none;
-    height: 36px;
-    padding: 0 12px;
+    height: auto;
+    padding: 0 clamp(8px, 2.5vw, 12px);
     border-radius: 8px;
-    font-size: 12px;
+    font-size: clamp(
+      var(--shelf-carousel-cta-font-min, 0.6875rem),
+      var(--shelf-carousel-cta-font-preferred, 2vw),
+      var(--shelf-carousel-cta-font-max, 0.8125rem)
+    );
     font-weight: 600;
     letter-spacing: 0.01em;
     white-space: nowrap;
@@ -2018,9 +2165,5 @@
   .productShelfSection[data-shelf-tone="care"] .productImageWell,
   .productShelfSection[data-shelf-tone="global"] .productImageWell {
     background: #ffffff;
-  }
-
-  .shelfHeroBackdrop::after {
-    display: none;
   }
 }

@@ -1,8 +1,7 @@
 name: Promote canonical Vercel alias
 
-# Keep final-mithron-deploy.vercel.app on the latest production deployment.
-# Without this, the sticky alias can lag behind git-linked deploys and make
-# production look like an older build than localhost.
+# Keep every production host on the latest deployment (canonical Vercel alias + rtacademia custom domains).
+# Without this, sticky aliases can lag behind git-linked deploys and serve stale UI.
 
 on:
   push:
@@ -19,14 +18,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Promote canonical alias
+      - name: Promote production aliases
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::error::VERCEL_TOKEN secret is missing — cannot promote final-mithron-deploy.vercel.app"
+            echo "::error::VERCEL_TOKEN secret is missing — cannot promote production aliases"
             exit 1
           fi
           npm run vercel:promote-canonical

@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 /**
- * Point final-mithron-deploy.vercel.app at the latest READY production deployment.
- * Git-linked Vercel deploys update project aliases automatically but leave this
- * sticky canonical alias on an older deployment — causing localhost vs prod drift.
+ * Point all sticky production aliases at the latest READY production deployment.
+ * Git-linked Vercel deploys update branch aliases automatically but custom domains
+ * and the canonical final-mithron-deploy alias can remain pinned to older builds.
  */
 import { spawnSync } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 
-const CANONICAL_HOST = "final-mithron-deploy.vercel.app";
 const PROJECT = "mithron-flight-systems";
 const SCOPE = "kbkbkh";
 const MAX_ATTEMPTS = 24;
 const RETRY_MS = 15_000;
+
+/** Every host that must serve the same latest production deployment. */
+const PRODUCTION_ALIASES = [
+  "final-mithron-deploy.vercel.app",
+  "www.rtacademia.com",
+  "rtacademia.com",
+  "mithron-flight-systems-kbkbkh.vercel.app",
+  "mithron-flight-systems-jrzz06-kbkbkh.vercel.app",
+  "mithron-flight-systems-git-main-kbkbkh.vercel.app"
+];
 
 function run(args) {
   const result = spawnSync("npx", ["vercel", ...args], {
@@ -61,34 +70,42 @@ async function waitForReadyDeployment() {
   throw new Error(`Timed out waiting for a Ready production deployment after ${MAX_ATTEMPTS} attempts`);
 }
 
+function promoteAlias(deploymentHost, aliasHost) {
+  const deployment = deploymentHost.replace(/^https?:\/\//, "");
+  console.log(`Promoting https://${aliasHost} → https://${deployment}`);
+  const aliased = run(["alias", "set", deployment, aliasHost, "--scope", SCOPE]);
+  const message = `${aliased.stdout}${aliased.stderr}`.trim();
+  if (aliased.status !== 0) {
+    throw new Error(`Failed to promote ${aliasHost}:\n${message}`);
+  }
+  console.log(message || `Success! https://${aliasHost} → https://${deployment}`);
+}
+
 async function main() {
   if (!process.env.VERCEL_TOKEN) {
     console.warn("VERCEL_TOKEN unset — relying on local Vercel CLI login.");
   }
 
   const deploymentHost = await waitForReadyDeployment();
-  const deploymentUrl = deploymentHost.startsWith("http")
-    ? deploymentHost
-    : `https://${deploymentHost}`;
+  const failures = [];
 
-  console.log(`Promoting ${deploymentUrl} → https://${CANONICAL_HOST}`);
-
-  const aliased = run([
-    "alias",
-    "set",
-    deploymentUrl.replace(/^https?:\/\//, ""),
-    CANONICAL_HOST,
-    "--scope",
-    SCOPE
-  ]);
-
-  const message = `${aliased.stdout}${aliased.stderr}`.trim();
-  if (aliased.status !== 0) {
-    console.error(message);
-    process.exit(aliased.status);
+  for (const aliasHost of PRODUCTION_ALIASES) {
+    try {
+      promoteAlias(deploymentHost, aliasHost);
+    } catch (error) {
+      failures.push({ aliasHost, error: error instanceof Error ? error.message : String(error) });
+    }
   }
 
-  console.log(message || `Success! https://${CANONICAL_HOST} → ${deploymentUrl}`);
+  if (failures.length) {
+    console.error("Some aliases failed to promote:");
+    for (const failure of failures) {
+      console.error(`- ${failure.aliasHost}: ${failure.error}`);
+    }
+    process.exit(1);
+  }
+
+  console.log(`All ${PRODUCTION_ALIASES.length} production aliases now point to https://${deploymentHost}`);
 }
 
 main().catch((error) => {

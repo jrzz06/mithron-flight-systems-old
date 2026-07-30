@@ -152,10 +152,10 @@
     flex-wrap: nowrap;
     gap: clamp(12px, 2vw, 18px);
     align-items: stretch;
-    margin-inline: calc(-1 * var(--home-mobile-inline, clamp(18px, 5vw, 28px)));
-    width: calc(100% + 2 * var(--home-mobile-inline, clamp(18px, 5vw, 28px)));
-    padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
-    scroll-padding-inline: var(--home-mobile-inline, clamp(18px, 5vw, 28px));
+    margin-inline: calc(-1 * var(--home-premium-inline, clamp(18px, 5vw, 28px)));
+    width: calc(100% + 2 * var(--home-premium-inline, clamp(18px, 5vw, 28px)));
+    padding-inline: var(--home-premium-inline, clamp(18px, 5vw, 28px));
+    scroll-padding-inline: var(--home-premium-inline, clamp(18px, 5vw, 28px));
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
