@@ -86,7 +86,7 @@ export function ProductPositionCard({
         <div className="flex min-w-0 items-center gap-3 rounded-[8px] bg-[var(--platform-surface-muted)] p-3">
           <div className="relative size-14 shrink-0 overflow-hidden rounded-[7px] bg-white">
             {product.imageSrc ? (
-              <Image src={product.imageSrc} alt="" fill sizes="56px" className="object-contain p-1" />
+              <Image src={product.imageSrc} alt="" fill sizes="56px" unoptimized className="object-contain p-1" />
             ) : null}
           </div>
           <div className="min-w-0">

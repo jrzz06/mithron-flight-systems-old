@@ -35,14 +35,14 @@ describe("Supabase free-plan performance contract", () => {
     expect(productUpload).not.toContain("file_size_bytes: String(file.size)");
   });
 
-  it("keeps admin thumbnails on the optimized Next image pipeline", () => {
+  it("keeps admin thumbnails off the Vercel image optimization pipeline", () => {
     const productGrid = source("app/admin/products/product-catalog-grid.tsx");
-    expect(productGrid).not.toContain("unoptimized");
+    expect(productGrid).toContain("unoptimized");
     expect(productGrid).toContain("loading=\"lazy\"");
-    // Inventory manager may use deferred/resolved image URLs without an explicit lazy attr;
-    // still require the Next image pipeline (no unoptimized escapes).
+    // Inventory manager may use deferred/resolved image URLs without an explicit Image;
+    // staff catalog thumbs must bypass the Next image optimizer.
     const inventory = source("components/admin/inventory-manager.tsx");
-    expect(inventory).not.toContain("unoptimized");
+    expect(inventory).not.toContain("from \"next/image\"");
   });
 
   it("caps high-volume Supabase admin queries and avoids 500-row media fetches", () => {

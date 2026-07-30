@@ -5,7 +5,7 @@ import {
   REDIS_CACHE_KEYS
 } from "@/lib/cache-redis";
 
-export async function invalidateCatalogRedisCaches(productSlug?: string) {
+export async function invalidateCatalogRedisCaches(productSlug?: string, categorySlug?: string) {
   const keys: string[] = [
     REDIS_CACHE_KEYS.catalogSearchIndex,
     REDIS_CACHE_KEYS.catalogShowroom,
@@ -22,9 +22,16 @@ export async function invalidateCatalogRedisCaches(productSlug?: string) {
       REDIS_CACHE_KEYS.productPage(productSlug)
     );
   }
+  if (categorySlug) {
+    keys.push(REDIS_CACHE_KEYS.catalogCategory(categorySlug));
+  }
+
   await Promise.all([
     deleteCachedKeys(keys),
-    invalidateRedisKeyPattern("catalog:category:"),
+    // Targeted edits skip the full category pattern wipe; bulk still clears all category keys.
+    productSlug || categorySlug
+      ? Promise.resolve()
+      : invalidateRedisKeyPattern("catalog:category:"),
     invalidateRedisKeyPattern("catalog:media:"),
     invalidateRedisKeyPattern("catalog:search-q:"),
     invalidateRedisKeyPattern("catalog:cart-pricing:"),

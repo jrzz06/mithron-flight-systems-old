@@ -393,7 +393,7 @@ function ProductRow({
         )}
       >
         <div className="relative size-14 shrink-0 overflow-hidden rounded-[8px] border border-[var(--platform-border)] bg-white">
-          {item.imageSrc ? <Image src={item.imageSrc} alt="" fill sizes="56px" className="object-contain p-1" /> : null}
+          {item.imageSrc ? <Image src={item.imageSrc} alt="" fill sizes="56px" unoptimized className="object-contain p-1" /> : null}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

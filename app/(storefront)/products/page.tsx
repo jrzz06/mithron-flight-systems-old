@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { CatalogPage } from "@/sections/catalog/catalog-page";
 import { getCatalogShowroomProducts } from "@/services/catalog";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Products",

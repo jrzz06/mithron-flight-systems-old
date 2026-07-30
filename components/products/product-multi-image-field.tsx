@@ -204,6 +204,7 @@ export function ProductMultiImageField({
                       sizes="(max-width: 640px) 45vw, 180px"
                       className="object-cover pointer-events-none"
                       loading="lazy"
+                      unoptimized
                       draggable={false}
                     />
                     {isPrimary ? (

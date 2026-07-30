@@ -51,7 +51,7 @@ function CmsMediaField({
       <div className="grid gap-2 sm:grid-cols-[96px_minmax(0,1fr)]">
         <div data-cms-media-preview className="relative h-24 overflow-hidden rounded-lg border border-slate-800 bg-[#0b1017]">
           {previewSrc ? (
-            <Image src={previewSrc} alt={defaultAlt || selectedMedia?.alt || label} fill sizes="96px" loading="lazy" className="object-cover" />
+            <Image src={previewSrc} alt={defaultAlt || selectedMedia?.alt || label} fill sizes="96px" loading="lazy" unoptimized className="object-cover" />
           ) : (
             <div className="grid h-full place-items-center">
               <ImageIcon className="h-5 w-5 text-slate-500" aria-hidden="true" />

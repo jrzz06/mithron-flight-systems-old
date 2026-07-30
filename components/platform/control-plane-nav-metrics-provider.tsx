@@ -191,14 +191,6 @@ export function ControlPlaneNavMetricsProvider({
     };
   }, [scope, refreshFromPoll]);
 
-  useEffect(() => {
-    function handleVisibility() {
-      if (!document.hidden) refreshFromPoll();
-    }
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [refreshFromPoll]);
-
   const value = useMemo(
     () => metrics,
     [

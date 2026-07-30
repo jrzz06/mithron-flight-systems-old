@@ -255,6 +255,7 @@ export function WarehouseFulfillmentDetail({
                           alt={item.productName}
                           width={40}
                           height={40}
+                          unoptimized
                           className="h-full w-full object-contain"
                         />
                       ) : (

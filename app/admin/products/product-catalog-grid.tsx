@@ -95,6 +95,7 @@ function ProductImage({ product }: { product: ProductCatalogGridRow }) {
           fill
           sizes="(min-width: 1536px) 16vw, (min-width: 1280px) 20vw, (min-width: 768px) 40vw, 90vw"
           loading="lazy"
+          unoptimized
           className="object-contain p-4"
         />
       ) : (

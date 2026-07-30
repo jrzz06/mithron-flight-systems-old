@@ -20,6 +20,8 @@ public/**/*.enhanced.json
 public/**/*.bak
 tools/load-test-results.json
 tools/load-test-results*.json
+tools/k6/results/*
+!tools/k6/results/.gitkeep
 
 # local MCP / QA dumps
 .playwright-mcp/

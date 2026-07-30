@@ -123,6 +123,7 @@ export default async function WarehouseProductDetailPage({ params, searchParams 
                   alt={productName}
                   width={320}
                   height={320}
+                  unoptimized
                   className="h-full w-full object-contain p-3"
                 />
               ) : (

@@ -6,7 +6,7 @@ import { BlogArticleCard } from "@/components/blog/blog-article-card";
 import { listPublishedBlogPosts } from "@/services/blog-posts";
 import styles from "@/sections/blog/blog-pages.module.css";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Blog – Mithron",

@@ -7,7 +7,7 @@ import { EditorRenderedContent } from "@/components/editor/editor-rendered-conte
 import { footerOfficialLinks } from "@/config/footer-links";
 import { fallbackSnapshot, getPublicCmsSnapshot } from "@/services/cms";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Contact Us – Mithron",

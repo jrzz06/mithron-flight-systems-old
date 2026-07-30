@@ -51,7 +51,7 @@ export function BannerImagePreview({
       <div className="flex justify-center overflow-hidden rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-3">
         <div className="relative overflow-hidden rounded-[6px] border border-[var(--platform-border)] bg-black" style={{ width: frame.width, maxWidth: "100%", aspectRatio: frame.aspect }}>
           {imageSrc ? (
-            <Image src={imageSrc} alt="" fill sizes="800px" className="object-cover" />
+            <Image src={imageSrc} alt="" fill sizes="800px" unoptimized className="object-cover" />
           ) : (
             <div className="grid h-full min-h-[120px] place-items-center text-xs text-white/70">No image selected</div>
           )}

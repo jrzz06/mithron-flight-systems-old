@@ -4,7 +4,7 @@ import { BlogArticleContent } from "@/sections/blog/blog-article-content";
 import { getBlogPostBySlug, listPublishedBlogPosts } from "@/services/blog-posts";
 import { getPublishedProductsBySlugs } from "@/services/catalog";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 type PageProps = {
   params: Promise<{ slug: string }>;

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EditorRenderedContent } from "@/components/editor/editor-rendered-content";
 import { fallbackSnapshot, getPublicCmsSnapshot } from "@/services/cms";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "About Us – Mithron",

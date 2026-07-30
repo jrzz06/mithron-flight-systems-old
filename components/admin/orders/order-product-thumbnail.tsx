@@ -31,7 +31,7 @@ export function OrderProductThumbnail({
       aria-hidden={!alt}
     >
       {src ? (
-        <Image src={src} alt={alt} fill className="object-cover" sizes={dimensions.sizes} loading="lazy" />
+        <Image src={src} alt={alt} fill className="object-cover" sizes={dimensions.sizes} loading="lazy" unoptimized />
       ) : (
         <div className="grid h-full w-full place-items-center text-[var(--platform-text-muted)]">
           <Package size={dimensions.icon} strokeWidth={1.5} aria-hidden />

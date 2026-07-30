@@ -28,7 +28,7 @@ type ProductPageProps = {
 };
 
 export const dynamicParams = true;
-export const revalidate = 60;
+export const revalidate = 300;
 
 function buildProductConfiguratorModel(product: Product): ProductConfiguratorModel {
   return {

@@ -152,6 +152,7 @@ export function AdminSupplierProductsQueue({
                               alt={product.name}
                               fill
                               sizes="220px"
+                              unoptimized
                               className="object-contain p-3"
                             />
                           ) : (
@@ -177,6 +178,7 @@ export function AdminSupplierProductsQueue({
                                       alt={item.alt || product.name}
                                       fill
                                       sizes="64px"
+                                      unoptimized
                                       className="object-cover"
                                     />
                                   </div>

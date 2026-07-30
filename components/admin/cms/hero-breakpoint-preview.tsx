@@ -65,7 +65,7 @@ export function HeroBreakpointPreview({
           sizes={`${frame.width}px`}
           className="object-cover"
           style={{ objectPosition: frame.objectPosition }}
-          unoptimized={previewSrc.startsWith("blob:")}
+          unoptimized
         />
 
         {device === "desktop" ? (

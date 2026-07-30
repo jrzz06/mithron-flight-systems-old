@@ -3,7 +3,7 @@ import { heroAssets } from "@/config/assets";
 import { CatalogPage } from "@/sections/catalog/catalog-page";
 import { getFeaturedProducts } from "@/services/catalog";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function MithronCarePlusPage() {
   let products: Awaited<ReturnType<typeof getFeaturedProducts>> = [];

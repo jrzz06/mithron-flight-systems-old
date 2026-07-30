@@ -228,6 +228,7 @@ export function OperationalRecordGrid({
                 width={56}
                 height={56}
                 sizes="56px"
+                unoptimized
                 className="h-full w-full object-cover"
               />
             ) : (

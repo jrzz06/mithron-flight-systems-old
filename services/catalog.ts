@@ -1625,10 +1625,18 @@ async function fetchAllCatalogRows<T>(select: string, extraFilter = ""): Promise
   return rows;
 }
 
-async function fetchCatalogRowsForCategoryName(categoryName: string): Promise<MithronProductRow[]> {
-  return fetchCatalogRows<MithronProductRow>(
-    `select=${catalogListSelect}&${publishedCatalogFilter}&category=eq.${encodeURIComponent(categoryName)}&order=sort_order.asc,slug.asc&limit=${CATALOG_CATEGORY_MAX_ROWS}`
-  );
+async function fetchCatalogRowsForCategoryName(
+  categoryName: string,
+  categorySlug?: string
+): Promise<MithronProductRow[]> {
+  const query = `select=${catalogListSelect}&${publishedCatalogFilter}&category=eq.${encodeURIComponent(categoryName)}&order=sort_order.asc,slug.asc&limit=${CATALOG_CATEGORY_MAX_ROWS}`;
+  if (categorySlug) {
+    return fetchCatalogRowsWithTags<MithronProductRow>(query, [
+      "catalog-products",
+      `catalog-category:${categorySlug}`
+    ]);
+  }
+  return fetchCatalogRows<MithronProductRow>(query);
 }
 
 async function fetchCatalogSearchRowsFallback(query: string, limit: number): Promise<CatalogSearchRow[]> {
@@ -2263,8 +2271,9 @@ export const getProductRowBySlug = cache(async (slug: string) => {
   if (!normalizedSlug) return null;
   // Single-flight collapses hot-PDP stampede under flash traffic (same row, same ISR window).
   return withSingleFlight(REDIS_CACHE_KEYS.catalogProductRow(normalizedSlug), 60, async () => {
-    const rows = await fetchCatalogRows<MithronProductRow>(
-      `select=${productSelect}&slug=eq.${encodeURIComponent(normalizedSlug)}&${publishedCatalogFilter}&limit=1`
+    const rows = await fetchCatalogRowsWithTags<MithronProductRow>(
+      `select=${productSelect}&slug=eq.${encodeURIComponent(normalizedSlug)}&${publishedCatalogFilter}&limit=1`,
+      ["catalog-products", `product:${normalizedSlug}`]
     );
     return rows[0] ?? null;
   });
@@ -2284,8 +2293,9 @@ export type ProductCoreCacheEntry = {
 async function buildProductCoreEntry(slug: string): Promise<ProductCoreCacheEntry | null> {
   const normalizedSlug = slug.trim();
   if (!normalizedSlug) return null;
-  const rows = await fetchCatalogRows<MithronProductRow>(
-    `select=${productCoreSelect}&slug=eq.${encodeURIComponent(normalizedSlug)}&${publishedCatalogFilter}&limit=1`
+  const rows = await fetchCatalogRowsWithTags<MithronProductRow>(
+    `select=${productCoreSelect}&slug=eq.${encodeURIComponent(normalizedSlug)}&${publishedCatalogFilter}&limit=1`,
+    ["catalog-products", `product:${normalizedSlug}`]
   );
   const row = rows[0];
   if (!row) return null;
@@ -2519,7 +2529,7 @@ export const getProductsByCategorySlug = cache(async (slug: CatalogCategorySlug)
     const definition = getCatalogCategoryDefinition(slug);
     if (!definition.categoryNames.length) return [];
 
-    const rawRows = await fetchCatalogRowsForCategoryName(definition.categoryNames[0]!);
+    const rawRows = await fetchCatalogRowsForCategoryName(definition.categoryNames[0]!, slug);
     const slugs = rawRows.map((row) => row.slug).filter(Boolean);
     const [rows, ratingMap] = await Promise.all([
       overlayLiveInventoryAvailability(rawRows),

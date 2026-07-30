@@ -19,7 +19,7 @@ export function generateStaticParams() {
 }
 
 // Catalog filters are isolated in a Suspense boundary inside CatalogPage.
-export const revalidate = 60;
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
