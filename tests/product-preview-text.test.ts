@@ -24,13 +24,22 @@ describe("product preview text", () => {
 });
 
 describe("product marketing tagline", () => {
-  it("falls back when tagline is a quantity-discount placeholder", () => {
+  it("returns empty when tagline is a quantity-discount placeholder (no invented fallback)", () => {
     const tagline = getProductMarketingTagline({
       name: "SOURCE 8008SL 110KV",
       category: "Accessories",
       tagline: "( MORE NUMBER QUANTITIES WILL HAVE A DISCOUNT)"
     });
-    expect(tagline.toLowerCase()).not.toContain("more number");
-    expect(tagline.toLowerCase()).not.toContain("discount");
+    expect(tagline).toBe("");
+  });
+
+  it("returns the admin tagline when present", () => {
+    expect(
+      getProductMarketingTagline({
+        name: "Demo",
+        category: "Agri Drones",
+        tagline: "Operator-ready field system."
+      })
+    ).toBe("Operator-ready field system.");
   });
 });

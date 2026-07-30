@@ -198,7 +198,7 @@ describe("product admin draft form", () => {
       },
       fields: {
         name: "Agri Kisan Drone Small",
-        tagline: "Agri Kisan Drone Small catalog product",
+        tagline: "",
         price: 120000,
         category: "Agri Drones",
         image: {

@@ -66,7 +66,7 @@ export const ProductHoverCard = memo(function ProductHoverCard({
       data-testid={`premium-product-card-${product.slug}`}
       data-card-variant={variant}
       className={cn(
-        "premium-product-card-shell group flex h-full flex-col justify-between overflow-hidden rounded-xl border border-black/5 bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9]/50 to-white p-2.5 transition-colors duration-200 hover:-translate-y-0.5 sm:p-3",
+        "premium-product-card-shell group flex h-full flex-col justify-between overflow-hidden rounded-xl border border-black/5 bg-white transition-colors duration-200 hover:-translate-y-0.5",
         className
       )}
     >
@@ -166,6 +166,5 @@ function CatalogProductCard({
 
 function getCatalogCardPreview(product: ProductHoverCardProduct) {
   const clean = sanitizeProductPreviewText(product.tagline).trim();
-  if (clean) return clipProductPreviewText(clean, 110);
-  return `Browse ${product.name} specs, availability, and pricing.`;
+  return clean ? clipProductPreviewText(clean, 110) : "";
 }

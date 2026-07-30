@@ -28,8 +28,9 @@ describe("PatternBackground", () => {
     expect(component).not.toContain('"use client"');
     expect(component).toContain('from "lucide-react"');
     expect(component).toContain("Crown");
-    expect(css).toContain("var(--product-stage-halo)");
-    expect(css).toContain("var(--product-stage-floor)");
+    expect(css).toContain(".stagePattern");
+    expect(css).toContain("background: #ffffff");
+    expect(css).toContain("box-shadow: none");
     expect(css).not.toContain(".patternSvg");
   });
 

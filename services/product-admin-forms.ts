@@ -682,7 +682,7 @@ export function buildProductCategoryMetadataFromFormData(formData: FormData): Pr
 export function buildProductDraftFromFormData(formData: FormData): ProductDraftFormInput {
   const name = readRequiredString(formData, "name", "Product");
   const slug = assertSlugSafe(readOptionalString(formData, "slug") ?? slugFromProductName(name), "Product");
-  const tagline = readOptionalString(formData, "tagline") ?? `${name} catalog product`;
+  const tagline = readOptionalString(formData, "tagline") ?? "";
   const category = readProductCategory(formData);
   const image = readMediaObject(formData, "image", "Product", name, { priority: true });
   const hero = readOptionalMediaObject(formData, "hero", "Product", name, { priority: true }) ?? image;

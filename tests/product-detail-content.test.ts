@@ -39,31 +39,41 @@ describe("product detail content", () => {
     expect(getHighlightSpecs(baseProduct)[0]).toEqual(["Endurance", "28 min"]);
   });
 
-  it("prefers long seo copy for overview text", () => {
+  it("shows Admin Availability and Battery while still hiding system Source keys", () => {
     const product = {
       ...baseProduct,
-      seoDescription: "A long-form product overview with mission context and deployment guidance for operators."
+      specs: {
+        Availability: "In stock",
+        Battery: "30,000 mAh",
+        Source: "hidden",
+        "Product ID": "hidden-id"
+      }
     };
-    expect(getProductOverviewText(product)).toContain("long-form product overview");
+    expect(getCustomerFacingSpecs(product).map(([key]) => key)).toEqual([
+      "Availability",
+      "Battery"
+    ]);
   });
 
-  it("prefers full product description over clipped tagline", () => {
+  it("prefers admin description, then seo, then tagline — never sourceDescription", () => {
     const product = {
       ...baseProduct,
-      tagline: "51 minutes (Single Battery), 102 KM FOV 90° Video...",
-      description:
-        "51 minutes (Single Battery), 102 KM FOV 90° Video transmission with professional aerial imaging workflow."
+      description: undefined,
+      sourceDescription: "Full Wix Studio product copy with deployment guidance for field operators.",
+      seoDescription: "Admin SEO overview for operators."
     };
-    expect(getProductOverviewText(product)).toContain("Video transmission");
-    expect(getProductOverviewText(product)).not.toMatch(/\.\.\.$/);
+    expect(getProductOverviewText(product)).toContain("Admin SEO overview");
   });
 
-  it("uses sourceDescription when cms description is missing", () => {
+  it("does not use sourceDescription when cms description is missing", () => {
     const product = {
       ...baseProduct,
+      description: undefined,
+      seoDescription: undefined,
+      tagline: "",
       sourceDescription: "Full Wix Studio product copy with deployment guidance for field operators."
     };
-    expect(getProductOverviewText(product)).toContain("Full Wix Studio product copy");
+    expect(getProductOverviewText(product)).toBe("");
   });
 
   it("renders spec-heavy html descriptions for the product page", () => {
@@ -107,13 +117,12 @@ describe("product detail content", () => {
     expect(html).toContain("one of the best product");
   });
 
-  it("falls back to sourceDescription only when description is empty", () => {
+  it("does not fall back to sourceDescription for product description display", () => {
     const product = {
       ...baseProduct,
       sourceDescription: "Imported Wix copy with field deployment guidance."
     };
-    const html = getProductDescriptionHtml(product);
-    expect(html).toContain("Imported Wix copy");
+    expect(getProductDescriptionHtml(product)).toBeNull();
   });
 
   it("does not fall back to seoDescription for product description display", () => {
@@ -129,9 +138,10 @@ describe("product detail content", () => {
       ...baseProduct,
       description: "First paragraph stays intact.\n\nSecond paragraph stays intact."
     };
-    const html = getProductDescriptionHtml(product);
-    expect(html).toContain("<p>First paragraph stays intact.</p>");
-    expect(html).toContain("<p>Second paragraph stays intact.</p>");
+    // Pass-through only — paragraph wrap happens once at EditorRenderedContent.
+    expect(getProductDescriptionHtml(product)).toBe(
+      "First paragraph stays intact.\n\nSecond paragraph stays intact."
+    );
   });
 
   it("prefers clean marketing copy for the buy box summary", () => {
@@ -152,13 +162,34 @@ describe("product detail content", () => {
     expect(getProductBuyBoxSummary(product)).toBe("");
   });
 
-  it("can skip fallback story when overview is rendered separately", () => {
+  it("preserves admin spec entry order without auto-sorting", () => {
+    const product = {
+      ...baseProduct,
+      specs: {
+        Sensor: "RGB",
+        Resolution: "4K",
+        Battery: "5000 mAh",
+        Storage: "128 GB",
+        Weight: "1.2 kg",
+        Source: "hidden"
+      }
+    };
+    expect(getCustomerFacingSpecs(product).map(([key]) => key)).toEqual([
+      "Sensor",
+      "Resolution",
+      "Battery",
+      "Storage",
+      "Weight"
+    ]);
+  });
+
+  it("never invents synthetic story chapters from overview/tagline", () => {
     const product = {
       ...baseProduct,
       seoDescription: "Operator-ready overview for field deployment."
     };
     expect(getStoryChapters(product, { includeFallback: false })).toEqual([]);
-    expect(getStoryChapters(product, { includeFallback: true })).toHaveLength(1);
+    expect(getStoryChapters(product, { includeFallback: true })).toEqual([]);
   });
 });
 

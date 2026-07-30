@@ -112,6 +112,8 @@ export function ProductDetailEditDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <form
+        id="update-product"
+        data-product-quick-edit
         onSubmit={handleSubmit}
         className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-[var(--platform-border)] bg-[var(--platform-surface)] text-[var(--platform-text-primary)] shadow-2xl"
       >
@@ -129,7 +131,8 @@ export function ProductDetailEditDialog({
           </button>
         </div>
 
-        <input type="hidden" name="slug" value={product.id} />
+        <input type="hidden" name="product_slug" value={product.id} />
+        <input type="hidden" name="change_summary" value={`Quick edit product ${product.id}`} />
         {editorProduct?.updatedAt ? <input type="hidden" name="expected_updated_at" value={editorProduct.updatedAt} /> : null}
 
         {isLoading ? (

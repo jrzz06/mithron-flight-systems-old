@@ -27,9 +27,9 @@
   width: var(--pattern-badge-size, 36px);
   height: var(--pattern-badge-size, 36px);
   border-radius: 999px;
-  background: var(--pattern-badge-fill, #6b6b6b);
-  color: var(--pattern-badge-icon, #f5a623);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  background: var(--pattern-badge-fill, #1f6b46);
+  color: var(--pattern-badge-icon, #ffffff);
+  box-shadow: none;
   pointer-events: none;
 }
 

@@ -51,13 +51,6 @@ describe("product description normalization", () => {
   it("rejoins a bare spec label split from its value by a decoded tab entity", () => {
     const blocks = parseProductDescriptionBlocks("Battery&#009;30,000 mAh");
     expect(blocks).toEqual([{ type: "spec", label: "Battery", value: "30,000 mAh" }]);
-
-    const html = getProductDescriptionHtml({
-      ...demoProduct(),
-      description: "Battery&#009;30,000 mAh"
-    });
-    expect(html).toContain("<strong>Battery:</strong> 30,000 mAh");
-    expect(html).not.toMatch(/<p>Battery<\/p>/i);
   });
 
   it("still splits two complete label:value pairs joined by a tab entity", () => {
@@ -114,14 +107,12 @@ Warranty:
     expect(first).toBe(second);
   });
 
-  it("renders normalized descriptions on the product page without layout changes", () => {
+  it("storefront data layer passes through admin description without sanitizing", () => {
     const html = getProductDescriptionHtml({
       ...demoProduct(),
       description: "UAV Type: Hexacopter&#009;Endurance: 28 min"
     });
-    expect(html).toContain("<strong>UAV Type:</strong> Hexacopter");
-    expect(html).toContain("<strong>Endurance:</strong> 28 min");
-    expect(html).not.toContain("&#009;");
+    expect(html).toBe("UAV Type: Hexacopter&#009;Endurance: 28 min");
   });
 
   it("keeps intro paragraphs separate from specs", () => {
@@ -209,11 +200,9 @@ Package Contents:
     expect(html).not.toMatch(/<strong>Battery:<\/strong>\s*Set 22000/i);
   });
 
-  it("re-normalizes a single messy paragraph blob on display", () => {
+  it("passes through messy admin html on the data layer without inventing structure", () => {
     const messyHtml = `<p>${DASH_SPECS_BLOB}</p>`;
     const html = getProductDescriptionHtml({ ...demoProduct(), description: messyHtml });
-    expect(html).toMatch(/Category \(As Per Dgca\)/i);
-    expect(html).toMatch(/<strong>Maximum Endurance/i);
-    expect(html?.match(/<p>/g)?.length ?? 0).toBeGreaterThan(1);
+    expect(html).toBe(messyHtml);
   });
 });

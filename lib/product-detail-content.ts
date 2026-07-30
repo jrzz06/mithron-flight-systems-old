@@ -1,9 +1,8 @@
 import type { Product } from "@/config/types";
 import { clipProductPreviewText, sanitizeProductPreviewText } from "@/lib/product-preview-text";
-import { prepareEditorHtmlForDisplay } from "@/lib/editor/prepare-html";
-import { normalizeProductDescriptionHtml, decodeDescriptionEntities, isUnstructuredDescription, descriptionNormalizePlainText } from "@/lib/product-description-normalize";
-import { isSpecLikeBlob, sortSpecEntries, expandSpecEntries, isHighlightSpecValue } from "@/lib/product-spec-text";
-const HIDDEN_SPEC_KEYS = new Set(["Product ID", "Source", "Currency", "Category", "Availability"]);
+import { isSpecLikeBlob, isHighlightSpecValue } from "@/lib/product-spec-text";
+
+const HIDDEN_SPEC_KEYS = new Set(["Product ID", "Source", "Currency", "Category"]);
 
 const HIGHLIGHT_SPEC_KEYS = [
   "Endurance",
@@ -34,6 +33,7 @@ function cleanCopy(value: string | null | undefined) {
   return clean;
 }
 
+/** Admin-entered specs only, in stored order — no sort, expand, or invented rows. */
 export function getCustomerFacingSpecs(product: Product) {
   if (!product || typeof product !== "object" || !product.specs) return [];
 
@@ -49,17 +49,20 @@ export function getCustomerFacingSpecs(product: Product) {
     });
   }
 
-  return sortSpecEntries(expandSpecEntries(rawEntries));
+  return rawEntries;
 }
 
 export function getHighlightSpecs(product: Product, limit = 6) {
+  // Prefer Admin order; only rank among the already-filtered list for compact highlight chips.
   const specs = getCustomerFacingSpecs(product).filter(([, value]) => isHighlightSpecValue(value));
-  const ranked = specs.sort(([left], [right]) => {
+  const ranked = [...specs].sort(([left], [right]) => {
     const leftRank = HIGHLIGHT_SPEC_KEYS.findIndex((key) => key.toLowerCase() === left.toLowerCase());
     const rightRank = HIGHLIGHT_SPEC_KEYS.findIndex((key) => key.toLowerCase() === right.toLowerCase());
     const safeLeft = leftRank >= 0 ? leftRank : HIGHLIGHT_SPEC_KEYS.length;
     const safeRight = rightRank >= 0 ? rightRank : HIGHLIGHT_SPEC_KEYS.length;
-    return safeLeft - safeRight;
+    if (safeLeft !== safeRight) return safeLeft - safeRight;
+    // Stable relative to Admin order when ranks tie / both unknown.
+    return specs.findIndex(([k]) => k === left) - specs.findIndex(([k]) => k === right);
   });
 
   return ranked.slice(0, limit);
@@ -69,48 +72,13 @@ function plainDescriptionText(value: string) {
   return sanitizeProductPreviewText(value).trim();
 }
 
-function hasHtmlTags(value: string) {
-  return /<[^>]+>/.test(value);
-}
-
-function normalizeStoredDescriptionHtml(raw: string): string | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-
-  const decoded = decodeDescriptionEntities(trimmed);
-  if (hasHtmlTags(decoded)) {
-    return prepareEditorHtmlForDisplay(decoded);
-  }
-
-  const plain = descriptionNormalizePlainText(decoded);
-  const needsStructuralNormalize =
-    /&#\d+;|&#x[0-9a-f]+;/i.test(trimmed)
-    || /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\uFEFF]/.test(decoded)
-    || isSpecLikeBlob(plain)
-    || isUnstructuredDescription(plain, trimmed)
-    || (!hasHtmlTags(trimmed) && plain.includes(":"));
-
-  if (!needsStructuralNormalize && hasHtmlTags(trimmed)) {
-    return prepareEditorHtmlForDisplay(decoded);
-  }
-
-  const normalized = normalizeProductDescriptionHtml(trimmed);
-  if (!normalized) return null;
-  return prepareEditorHtmlForDisplay(normalized);
-}
-
+/**
+ * Admin `description` HTML only — pass-through for the render boundary.
+ * XSS sanitize happens exactly once in EditorRenderedContent.
+ */
 export function getProductDescriptionHtml(product: Product): string | null {
   const description = product.description?.trim();
-  if (description) {
-    return normalizeStoredDescriptionHtml(description);
-  }
-
-  const sourceDescription = product.sourceDescription?.trim();
-  if (sourceDescription) {
-    return normalizeStoredDescriptionHtml(sourceDescription);
-  }
-
-  return null;
+  return description || null;
 }
 
 export function getProductBuyBoxSummary(product: Product) {
@@ -123,7 +91,7 @@ export function getProductOverviewHtml(product: Product) {
   const description = product.description?.trim();
   if (!description) return null;
   if (!/<[^>]+>/.test(description)) return null;
-  return prepareEditorHtmlForDisplay(description);
+  return description;
 }
 
 export function getProductOverviewText(product: Product) {
@@ -137,22 +105,12 @@ export function getProductOverviewText(product: Product) {
     return plainDescriptionText(htmlOverview.replace(/<[^>]+>/g, " "));
   }
 
-  const sourceDescription = product.sourceDescription?.trim();
-  if (sourceDescription) {
-    return plainDescriptionText(sourceDescription);
-  }
-
-  const candidates = [
-    product.seoDescription,
-    product.ogDescription,
-    ...product.story.map((chapter) => chapter.body),
-    ...product.bundles.map((bundle) => bundle.description)
-  ]
+  // Admin SEO / tagline only — never invent from source_description, story, or bundles.
+  const candidates = [product.seoDescription, product.tagline]
     .map((value) => cleanCopy(value))
     .filter(Boolean);
 
-  const unique = [...new Set(candidates)];
-  return unique.sort((left, right) => right.length - left.length)[0] ?? "";
+  return candidates[0] ?? "";
 }
 
 export function getStoryChapters(product: Product, options?: { includeFallback?: boolean }) {
@@ -166,19 +124,9 @@ export function getStoryChapters(product: Product, options?: { includeFallback?:
     .filter((chapter) => chapter.title || chapter.body);
 
   if (chapters.length) return chapters;
-  if (options?.includeFallback === false) return [];
-
-  const overview = getProductOverviewText(product);
-  if (!overview) return [];
-
-  return [{
-    id: "overview",
-    kicker: product.category,
-    title: product.name,
-    body: overview,
-    media: product.hero,
-    align: "center" as const
-  }];
+  // Never invent synthetic story chapters from overview/tagline.
+  void options;
+  return [];
 }
 
 export function getDedicatedProductStoryChapters(product: Product, options?: { includeFallback?: boolean }) {

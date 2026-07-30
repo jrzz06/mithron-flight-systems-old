@@ -8,7 +8,7 @@ import type { ProductEnquiryProduct } from "@/components/product/product-enquiry
 import { Button } from "@/components/ui/button";
 import type { Bundle, MediaAsset, ProductVariant } from "@/config/types";
 import { cn, formatINR } from "@/lib/utils";
-import { productBadgeCssClass } from "@/lib/product-badge";
+import { ProductRibbon } from "@/components/product/product-ribbon";
 import { formatAvailability } from "@/lib/product-spec-text";
 import { deriveProductSku } from "@/lib/product-sku";
 import { initializeCartSession } from "@/lib/cart/cart-auth-sync";
@@ -239,9 +239,7 @@ export function ProductConfigurator({
 
           {product.badge ? (
             <div className={styles.badgeRow}>
-              <span className={cn(styles.featureBadge, productBadgeCssClass(product.badgeStyle ?? "default", "showroom"))}>
-                {product.badge}
-              </span>
+              <ProductRibbon text={product.badge} style={product.badgeStyle} placement="inline" />
             </div>
           ) : null}
 

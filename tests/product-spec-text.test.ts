@@ -101,7 +101,7 @@ describe("product spec text", () => {
 });
 
 describe("product marketing copy", () => {
-  it("returns category tagline instead of spec blobs", () => {
+  it("returns empty instead of inventing a category tagline for spec blobs", () => {
     expect(
       getProductMarketingTagline({
         name: "Multispectral Camera Survey Drone",
@@ -109,6 +109,6 @@ describe("product marketing copy", () => {
         tagline: MULTISPECTRAL_SPEC_BLOB,
         sourceDescription: MULTISPECTRAL_SPEC_BLOB
       })
-    ).toBe("High-precision mapping workflow.");
+    ).toBe("");
   });
 });

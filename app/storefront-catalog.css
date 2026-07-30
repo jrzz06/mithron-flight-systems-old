@@ -210,7 +210,7 @@
   justify-self: stretch !important;
   aspect-ratio: auto !important;
   box-sizing: border-box;
-  padding: 0.5rem 0.625rem !important; /* 8px top/bottom, 10px sides — compact 2-col */
+  /* No shell padding — .productCardDji supplies the single inset */
   border-radius: 0.875rem !important; /* 14px */
   border: 1px solid rgba(15, 23, 42, 0.06) !important;
   background: linear-gradient(180deg, #e4eef6 0%, #f0f6fa 45%, #ffffff 85%) !important;
@@ -219,15 +219,6 @@
   isolation: isolate;
   container-type: normal;
   transition: all 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-@media (min-width: 1024px) {
-  .catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"],
-  [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"],
-  .catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"],
-  [data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"] {
-    padding: 0.625rem 0.75rem !important; /* 10px top/bottom, 12px sides */
-  }
 }
 
 .catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"]:is(:hover, :focus-within, :focus-visible),
@@ -600,13 +591,12 @@
     gap: 8px !important;
   }
 
-  /* 2 — Card shell padding: sides 10px, top 4px, bottom 6px
-          Card width = (100vw - 2×container-pad - 8px) / 2 via 1fr columns — no px hardcoded. */
+  /* 2 — Compact card inset on narrow phones (single surface — not a nested shell frame) */
   .catalog-page-shell .premium-product-card-shell[data-shelf-card-layout="dji"],
   [data-catalog-shelf-cards] .premium-product-card-shell[data-shelf-card-layout="dji"],
   .catalog-page-shell a[data-testid="home-product-card"][data-shelf-card-layout="dji"],
   [data-catalog-shelf-cards] a[data-testid="home-product-card"][data-shelf-card-layout="dji"] {
-    padding: 4px 10px 6px !important; /* top 4px, sides 10px, bottom 6px */
+    padding: 10px 10px 12px !important;
   }
 
   /* 3 — Image well: cap max-height ~15-20% shorter to trim card height */

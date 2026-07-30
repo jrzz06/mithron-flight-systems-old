@@ -544,16 +544,16 @@ html[data-product-nav="pending"] {
 .premium-product-card-shell {
   overflow: hidden;
   border-radius: 20px;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  background: linear-gradient(180deg, #e4eef6 0%, #f0f6fa 45%, #ffffff 85%);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-  transition: all 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: #ffffff;
+  box-shadow: none;
+  transition: border-color 300ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .premium-product-card-shell:is(:hover, :focus-within, :focus-visible) {
-  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.09), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  border-color: rgba(15, 23, 42, 0.12);
-  transform: translateY(-3px);
+  box-shadow: none;
+  border-color: rgba(17, 17, 17, 0.14);
+  transform: translateY(-2px);
 }
 
 .premium-product-card.mithron-elevated-card--interactive:is(:hover, :focus-within, :focus-visible),
@@ -5436,7 +5436,7 @@ canvas {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: var(--type-badge);
   font-weight: var(--type-badge-weight);
   letter-spacing: 0.04em;
@@ -5446,43 +5446,45 @@ canvas {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  box-shadow: none;
 }
 
 .product-badge {
   min-height: 22px;
   padding: 0.2rem 0.45rem;
+  border-radius: 6px;
   font-size: var(--type-badge);
   font-weight: var(--type-badge-weight);
 }
 
 .product-badge--default,
 .product-badge-showroom--default {
-  background: rgba(15, 23, 42, 0.82);
-  color: #f8fafc;
+  background: #2f2f2f;
+  color: #ffffff;
 }
 
 .product-badge--success,
 .product-badge-showroom--success {
-  background: #ecfdf5;
-  color: #065f46;
+  background: #ff6b6b;
+  color: #ffffff;
 }
 
 .product-badge--warning,
 .product-badge-showroom--warning {
   background: #fff7ed;
-  color: #9a3412;
+  color: #c2410c;
 }
 
 .product-badge--premium,
 .product-badge-showroom--premium {
-  background: #1f2937;
-  color: #f5d0a0;
+  background: #ecfdf5;
+  color: #1f6b46;
 }
 
 .product-badge--sale,
 .product-badge-showroom--sale {
-  background: #7f1d1d;
-  color: #fff1f2;
+  background: #fef2f2;
+  color: #e11d2e;
 }
 
 .home-shelf-favorite {

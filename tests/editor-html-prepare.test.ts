@@ -47,6 +47,36 @@ describe("editor html prepare pipeline", () => {
     expect(clean).toContain("<li>One</li>");
   });
 
+  it("preserves the supported TipTap storefront contract without loss", () => {
+    const dirty = [
+      "<h1>H1</h1><h2>H2</h2><h3>H3</h3><h4>H4</h4>",
+      "<p><strong>Bold</strong> <em>Italic</em> <u>Underline</u> <s>Strike</s></p>",
+      "<ul><li>Bullet</li></ul><ol><li>Numbered</li></ol>",
+      "<blockquote>Quote</blockquote>",
+      "<p><code>inline</code></p><pre><code>block</code></pre>",
+      '<p><a href="https://example.com">Link</a></p>',
+      "<table><thead><tr><th>K</th></tr></thead><tbody><tr><td>V</td></tr></tbody></table>"
+    ].join("");
+    const clean = prepareEditorHtmlForDisplay(dirty);
+    expect(clean).toContain("<h1>H1</h1>");
+    expect(clean).toContain("<h2>H2</h2>");
+    expect(clean).toContain("<h3>H3</h3>");
+    expect(clean).toContain("<h4>H4</h4>");
+    expect(clean).toContain("<strong>Bold</strong>");
+    expect(clean).toContain("<em>Italic</em>");
+    expect(clean).toContain("<u>Underline</u>");
+    expect(clean).toContain("<s>Strike</s>");
+    expect(clean).toContain("<li>Bullet</li>");
+    expect(clean).toContain("<li>Numbered</li>");
+    expect(clean).toContain("<blockquote>");
+    expect(clean).toContain("<code>inline</code>");
+    expect(clean).toContain("<pre>");
+    expect(clean).toContain('href="https://example.com"');
+    expect(clean).toContain("<table>");
+    expect(clean).toContain("<th>K</th>");
+    expect(clean).toContain("<td>V</td>");
+  });
+
   it("removes scripts and event handlers", () => {
     const dirty = '<p>Safe</p><script>alert(1)</script><img src=x onerror="alert(1)">';
     const clean = prepareEditorHtmlForDisplay(dirty);

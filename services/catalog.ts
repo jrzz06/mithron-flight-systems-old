@@ -39,7 +39,7 @@ import {
   SEARCH_TERTIARY_MIN_TOKEN,
   tokenizeSearchQuery
 } from "@/lib/search-query";
-import { canonicalizeSpecRecord, formatAvailability, isSpecLikeBlob, parseInlineSpecPairs } from "@/lib/product-spec-text";
+import { formatAvailability, isSpecLikeBlob } from "@/lib/product-spec-text";
 import { getCatalogProductRatingMap } from "@/lib/catalog-product-ratings";
 import { customerFacingAvailability } from "@/services/inventory-csv";
 import { availabilityLabelFromQuantity, getInventoryQuantitiesBySlug } from "@/services/inventory";
@@ -804,60 +804,50 @@ function normalizeBundles(row: MithronProductRow, description: string): Bundle[]
   }];
 }
 
-const INTERNAL_SPEC_KEYS = new Set(["Product ID", "Source", "Currency", "Category", "Availability"]);
+/**
+ * Admin `specs` only — no parse from source_description, no invented Product ID/Category rows.
+ * Availability is kept solely for schema.org (hidden from customer-facing Key specs UI).
+ */
+function normalizeSpecs(row: MithronProductRow): Record<string, string> {
+  const raw = row.specs as unknown;
+  const adminSpecs: Record<string, string> = {};
 
-function countCustomerFacingSpecs(specs: Record<string, string>) {
-  return Object.entries(specs).filter(([key, value]) => !INTERNAL_SPEC_KEYS.has(key) && value.trim()).length;
-}
-
-function normalizeSpecs(row: MithronProductRow) {
-  const rawSpecs = (row.specs ?? {}) as Record<string, string>;
-  const hasAdminSpecs = countCustomerFacingSpecs(rawSpecs) > 0;
-
-  const specs = canonicalizeSpecRecord(
-    Object.fromEntries(Object.entries(rawSpecs).map(([key, value]) => [key, cleanText(value)])),
-    { preserveKeys: INTERNAL_SPEC_KEYS }
-  );
-
-  const merged: Record<string, string> = {
-    "Product ID": row.source_catalog_id ?? row.slug,
-    Category: row.category,
-    Availability: formatAvailability(customerFacingAvailability(row.source_availability, specs.Availability ?? "Unknown")),
-    Currency: row.source_currency ?? specs.Currency ?? "INR",
-    ...specs,
-    Source: row.source_url ?? specs.Source ?? "Mithron product database"
-  };
-
-  if (!hasAdminSpecs && countCustomerFacingSpecs(merged) < 3) {
-    const parsed = parseInlineSpecPairs(row.source_description ?? row.tagline ?? "");
-    for (const [key, value] of Object.entries(parsed)) {
-      if (!merged[key]?.trim()) merged[key] = value;
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== "object") continue;
+      const key = cleanText(String((item as { key?: unknown }).key ?? ""));
+      const value = cleanText(String((item as { value?: unknown }).value ?? ""));
+      if (!key || !value) continue;
+      if (!(key in adminSpecs)) adminSpecs[key] = value;
+    }
+  } else if (raw && typeof raw === "object") {
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+      const cleanKey = cleanText(key);
+      const cleanValue = cleanText(String(value ?? ""));
+      if (!cleanKey || !cleanValue) continue;
+      adminSpecs[cleanKey] = cleanValue;
     }
   }
 
-  return merged;
+  const availability = formatAvailability(
+    customerFacingAvailability(row.source_availability, adminSpecs.Availability ?? "Unknown")
+  );
+
+  return {
+    ...adminSpecs,
+    Availability: availability
+  };
 }
 
-function normalizeStory(row: MithronProductRow, marketingTagline: string, hero: MediaAsset): StorySection[] {
-  if (row.story?.length) {
-    return row.story.map((section) => ({
-      ...section,
-      title: cleanText(section.title),
-      body: clipProductPreviewText(cleanText(section.body), 1200),
-      media: section.media ?? hero
-    }));
-  }
+function normalizeStory(row: MithronProductRow, _marketingTagline: string, hero: MediaAsset): StorySection[] {
+  if (!row.story?.length) return [];
 
-  const name = cleanText(row.name);
-
-  return [{
-    id: "overview",
-    kicker: cleanText(row.category) || "Overview",
-    title: name,
-    body: marketingTagline,
-    media: hero,
-    align: "center"
-  }];
+  return row.story.map((section) => ({
+    ...section,
+    title: cleanText(section.title),
+    body: clipProductPreviewText(cleanText(section.body), 1200),
+    media: section.media ?? hero
+  }));
 }
 
 function resolveProductImage(

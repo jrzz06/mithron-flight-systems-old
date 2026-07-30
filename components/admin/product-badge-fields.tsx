@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 import { ProductFieldLabel } from "@/components/admin/product-info-tooltip";
 import {
   PRODUCT_BADGE_PRESETS,
@@ -8,8 +8,18 @@ import {
   PRODUCT_BADGE_STYLES,
   PRODUCT_BADGE_TEXT_MAX,
   normalizeProductBadgeStyle,
+  productBadgeCssClass,
   type ProductBadgeStyle
 } from "@/lib/product-badge";
+import { cn } from "@/lib/utils";
+
+const STYLE_SWATCHES: Record<ProductBadgeStyle, { bg: string; ink: string }> = {
+  default: { bg: "#2f2f2f", ink: "#ffffff" },
+  success: { bg: "#ff6b6b", ink: "#ffffff" },
+  warning: { bg: "#fff7ed", ink: "#c2410c" },
+  premium: { bg: "#ecfdf5", ink: "#1f6b46" },
+  sale: { bg: "#fef2f2", ink: "#e11d2e" }
+};
 
 export function ProductBadgeFields({
   text = "",
@@ -18,19 +28,20 @@ export function ProductBadgeFields({
   text?: string;
   style?: ProductBadgeStyle | string;
 }) {
-  const normalizedStyle = normalizeProductBadgeStyle(style);
-  const textRef = useRef<HTMLInputElement>(null);
-  const styleRef = useRef<HTMLSelectElement>(null);
+  const [ribbonText, setRibbonText] = useState(text);
+  const [ribbonStyle, setRibbonStyle] = useState<ProductBadgeStyle>(normalizeProductBadgeStyle(style));
 
   function applyPreset(preset: (typeof PRODUCT_BADGE_PRESETS)[number]) {
-    if (textRef.current) textRef.current.value = preset.text;
-    if (styleRef.current) styleRef.current.value = preset.style;
+    setRibbonText(preset.text);
+    setRibbonStyle(preset.style);
   }
 
   function clearRibbon() {
-    if (textRef.current) textRef.current.value = "";
-    if (styleRef.current) styleRef.current.value = "default";
+    setRibbonText("");
+    setRibbonStyle("default");
   }
+
+  const previewLabel = ribbonText.trim();
 
   return (
     <section data-product-badge-fields className="grid gap-4">
@@ -60,15 +71,37 @@ export function ProductBadgeFields({
         ))}
       </div>
 
+      <div
+        className="relative h-28 overflow-hidden rounded-[10px] border border-[var(--platform-border)] bg-[var(--platform-surface)]"
+        data-testid="product-badge-preview"
+        aria-hidden={!previewLabel}
+      >
+        {previewLabel ? (
+          <span
+            className={cn(
+              "absolute top-0 left-0 z-10 inline-flex max-w-[70%] items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-[6px] px-2.5 py-1 text-[11px] font-semibold leading-tight tracking-[0.04em] shadow-none",
+              productBadgeCssClass(ribbonStyle, "showroom")
+            )}
+          >
+            {previewLabel}
+          </span>
+        ) : (
+          <p className="absolute inset-0 flex items-center justify-center text-xs text-[var(--platform-text-muted)]">
+            No ribbon — leave text empty to hide on storefront
+          </p>
+        )}
+        <div className="pointer-events-none absolute inset-x-8 bottom-3 top-8 rounded-md border border-dashed border-[var(--platform-border)] opacity-50" />
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1.5 text-sm sm:col-span-2">
-          <ProductFieldLabel tooltip="Short label on the product image. Leave empty to hide the ribbon.">
+          <ProductFieldLabel tooltip="Short label on the product image, top-left. Leave empty to hide the ribbon.">
             Ribbon text
           </ProductFieldLabel>
           <input
-            ref={textRef}
             name="badge_text"
-            defaultValue={text}
+            value={ribbonText}
+            onChange={(event) => setRibbonText(event.target.value)}
             maxLength={PRODUCT_BADGE_TEXT_MAX}
             placeholder="Leave empty for no ribbon"
             className="h-10 w-full rounded-[10px] border-0 bg-[var(--platform-surface)] px-3 text-sm text-[var(--platform-text-primary)] outline-none placeholder:text-[var(--platform-text-muted)] focus:bg-[var(--platform-accent-soft)] focus:ring-2 focus:ring-[var(--platform-focus-ring)]"
@@ -77,23 +110,41 @@ export function ProductBadgeFields({
             {PRODUCT_BADGE_TEXT_MAX} characters max. Empty means no ribbon on the storefront.
           </span>
         </label>
-        <label className="grid gap-1.5 text-sm">
-          <ProductFieldLabel tooltip="Color style for the ribbon badge.">
+
+        <div className="grid gap-1.5 text-sm sm:col-span-2">
+          <ProductFieldLabel tooltip="Color style for the ribbon badge. Matches the storefront tag.">
             Ribbon style
           </ProductFieldLabel>
-          <select
-            ref={styleRef}
-            name="badge_style"
-            defaultValue={normalizedStyle}
-            className="h-10 w-full rounded-[10px] border-0 bg-[var(--platform-surface)] px-3 text-sm text-[var(--platform-text-primary)] outline-none focus:bg-[var(--platform-accent-soft)] focus:ring-2 focus:ring-[var(--platform-focus-ring)]"
-          >
-            {PRODUCT_BADGE_STYLES.map((option) => (
-              <option key={option} value={option}>
-                {PRODUCT_BADGE_STYLE_LABELS[option]}
-              </option>
-            ))}
-          </select>
-        </label>
+          <input type="hidden" name="badge_style" value={ribbonStyle} />
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Ribbon style">
+            {PRODUCT_BADGE_STYLES.map((option) => {
+              const swatch = STYLE_SWATCHES[option];
+              const selected = ribbonStyle === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setRibbonStyle(option)}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-[10px] border px-3 py-2 text-xs font-medium transition",
+                    selected
+                      ? "border-[var(--platform-text-primary)] bg-[var(--platform-accent-soft)] text-[var(--platform-text-primary)]"
+                      : "border-[var(--platform-border)] text-[var(--platform-text-secondary)] hover:border-[var(--platform-text-muted)]"
+                  )}
+                >
+                  <span
+                    className="inline-block h-4 w-4 shrink-0 rounded-[4px]"
+                    style={{ background: swatch.bg, boxShadow: `inset 0 0 0 1px ${swatch.ink}33` }}
+                    aria-hidden="true"
+                  />
+                  {PRODUCT_BADGE_STYLE_LABELS[option]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </section>
   );

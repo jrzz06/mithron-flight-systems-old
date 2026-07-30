@@ -7,7 +7,7 @@ import {
   getCatalogGstLabel,
   type ProductShelfCardItem
 } from "@/lib/product-shelf-card-meta";
-import { getProductMarketingTagline } from "@/lib/product-marketing-copy";
+import { sanitizeProductPreviewText } from "@/lib/product-preview-text";
 import { cn, formatINR } from "@/lib/utils";
 import styles from "@/sections/home/home-shelf-shared.module.css";
 
@@ -80,11 +80,7 @@ export function HomeProductShelfCard({
   presentation?: "shelf" | "catalog";
   imageSizes?: string;
 }) {
-  const description = getProductMarketingTagline({
-    name: product.name,
-    category: product.category,
-    tagline: product.tagline
-  });
+  const description = sanitizeProductPreviewText(product.tagline ?? "").trim();
   const isDji = layout === "dji";
   const isCatalog = presentation === "catalog";
   const rating =
@@ -102,8 +98,8 @@ export function HomeProductShelfCard({
       <Link
         href={`/product/${product.slug}`}
         className={cn(
-          "group flex w-full h-full flex-col overflow-hidden bg-gradient-to-b from-[#e4eef6] via-[#f0f6fa] to-white",
-          isCatalog && "premium-product-card-shell rounded-xl border border-black/5 p-2 sm:p-2.5",
+          "group flex w-full h-full flex-col overflow-hidden bg-white",
+          isCatalog && "premium-product-card-shell rounded-xl border border-black/5",
           styles.productCard,
           styles.productCardDji,
           isCatalog && styles.productCardCatalog
@@ -215,7 +211,7 @@ export function HomeProductShelfCard({
     <Link
       href={`/product/${product.slug}`}
       className={cn(
-        "premium-product-card-shell group flex h-full flex-col justify-between overflow-hidden rounded-xl border border-black/5 bg-gradient-to-b from-[#e4eef6] via-[#f0f6fa] to-white p-2 sm:p-2.5",
+        "premium-product-card-shell group flex h-full flex-col justify-between overflow-hidden rounded-xl border border-black/5 bg-white",
         styles.productCard
       )}
       data-testid="home-product-card"

@@ -8,8 +8,8 @@ export const PATTERN_DEFAULTS = {
   badge: {
     size: 36,
     offset: 16,
-    fill: "#6B6B6B",
-    iconColor: "#F5A623",
+    fill: "#1f6b46",
+    iconColor: "#ffffff",
     iconSize: 16
   }
 } as const;
@@ -49,7 +49,7 @@ export function PatternBackground({
           <Crown
             className={styles.badgeIcon}
             size={PATTERN_DEFAULTS.badge.iconSize}
-            strokeWidth={2}
+            strokeWidth={1.5}
             aria-hidden="true"
           />
         </div>

@@ -842,18 +842,6 @@
   color: #4b5563;
 }
 
-.featureBadge {
-  border-radius: 999px;
-  border: 1px solid #c6e7d4;
-  background: var(--brand-badge-solid-bg, #ecfdf5);
-  padding: 0.25rem 0.75rem;
-  font-weight: 500;
-  font-size: 0.8125rem;
-  letter-spacing: normal;
-  text-transform: none;
-  color: var(--brand-badge-solid-ink, #065f46);
-}
-
 .productTitle {
   margin-top: 1rem;
   max-width: none;

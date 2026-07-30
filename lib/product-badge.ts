@@ -13,7 +13,7 @@ export const PRODUCT_BADGE_STYLE_LABELS: Record<ProductBadgeStyle, string> = {
 };
 
 export const PRODUCT_BADGE_PRESETS: Array<{ label: string; text: string; style: ProductBadgeStyle }> = [
-  { label: "New", text: "New", style: "success" },
+  { label: "New", text: "NEW", style: "success" },
   { label: "Sale", text: "Sale", style: "sale" },
   { label: "Best Seller", text: "Best Seller", style: "premium" }
 ];

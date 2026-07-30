@@ -20,14 +20,27 @@ export function ProductSpecFields({
         <ProductFieldLabel tooltip="Structured key/value specs shown on the storefront spec table. Saved exactly as typed - nothing here gets auto-rewritten.">
           Key specs
         </ProductFieldLabel>
-        <span className="text-xs text-[var(--platform-text-muted)]">Optional - leave blank rows empty</span>
+        <span className="text-xs text-[var(--platform-text-muted)]">Optional — leave blank rows empty</span>
       </div>
+      <p className="text-xs text-[var(--platform-text-muted)]">
+        Placeholders are examples only. Duplicate keys are ignored — only the first is saved.
+      </p>
       <input type="hidden" name="specs_editor_present" value="1" />
       <div className="grid gap-2">
         {rows.map((row, index) => (
           <div key={index} className="grid grid-cols-2 gap-2">
-            <input name="spec_key" defaultValue={row[0]} placeholder="Battery" className={fieldClass} />
-            <input name="spec_value" defaultValue={row[1]} placeholder="30,000 mAh" className={fieldClass} />
+            <input
+              name="spec_key"
+              defaultValue={row[0]}
+              placeholder="Key (e.g. Battery)"
+              className={fieldClass}
+            />
+            <input
+              name="spec_value"
+              defaultValue={row[1]}
+              placeholder="Value (e.g. 30,000 mAh)"
+              className={fieldClass}
+            />
           </div>
         ))}
       </div>
