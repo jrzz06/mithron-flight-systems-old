@@ -75,7 +75,7 @@ export function HomeProductShelfCard({
   product: ProductShelfCardItem;
   priority?: boolean;
   layout?: "default" | "dji";
-  /** Catalog listings get rating, GST note, 2-line title. Homepage stays "shelf". */
+  /** Catalog listings get rating + reserved compare-at slot. Homepage shelf is "shelf". */
   presentation?: "shelf" | "catalog";
   imageSizes?: string;
 }) {
@@ -83,7 +83,7 @@ export function HomeProductShelfCard({
   const isCatalog = presentation === "catalog";
   const rating =
     typeof product.rating === "number" && product.rating > 0 ? product.rating : null;
-  const gstLabel = isCatalog ? getCatalogGstLabel(product) : null;
+  const gstLabel = getCatalogGstLabel(product);
   const compareAt =
     typeof product.compareAt === "number" &&
     Number.isFinite(product.compareAt) &&
@@ -96,8 +96,8 @@ export function HomeProductShelfCard({
       <Link
         href={`/product/${product.slug}`}
         className={cn(
-          "group flex w-full h-full flex-col overflow-hidden bg-white",
-          isCatalog && "premium-product-card-shell rounded-xl border border-black/5",
+          "group flex w-full h-full flex-col overflow-hidden",
+          isCatalog ? "bg-white premium-product-card-shell rounded-xl border border-black/5" : "bg-transparent",
           styles.productCard,
           styles.productCardDji,
           isCatalog && styles.productCardCatalog
@@ -146,15 +146,18 @@ export function HomeProductShelfCard({
           </div>
           <div
             className={cn(
-              "mt-auto flex min-w-0",
-              isCatalog
-                ? "relative flex-col items-stretch justify-start gap-2"
-                : "flex-col items-stretch justify-start gap-2 md:flex-row md:items-center md:justify-between md:gap-3",
+              "mt-auto flex min-w-0 flex-col items-stretch justify-start gap-2",
               styles.productFooterDji,
               isCatalog && styles.productFooterCatalog
             )}
           >
-            <div className={cn("relative min-w-0 flex-1", styles.productPriceBlock, isCatalog && styles.productPriceBlockCatalog)}>
+            <div
+              className={cn(
+                "relative min-w-0 flex-1",
+                styles.productPriceBlock,
+                isCatalog ? styles.productPriceBlockCatalog : styles.productPriceBlockShelf
+              )}
+            >
               {isCatalog ? (
                 <span
                   className={styles.productCompareAt}
@@ -163,6 +166,10 @@ export function HomeProductShelfCard({
                   aria-hidden={compareAt ? undefined : true}
                 >
                   {compareAt ? formatINR(compareAt) : "\u00A0"}
+                </span>
+              ) : compareAt ? (
+                <span className={styles.productCompareAtShelf} data-shelf-compare-at="">
+                  {formatINR(compareAt)}
                 </span>
               ) : null}
               <span
@@ -175,15 +182,17 @@ export function HomeProductShelfCard({
                 {formatINR(product.price)}
               </span>
               {gstLabel ? (
-                <span className={styles.productGstNote} data-catalog-gst-note="">
+                <span
+                  className={cn(isCatalog ? styles.productGstNote : styles.productGstNoteShelf)}
+                  {...(isCatalog ? { "data-catalog-gst-note": "" } : { "data-shelf-gst-note": "" })}
+                >
                   {gstLabel}
                 </span>
               ) : null}
             </div>
             <span
               className={cn(
-                "relative w-full shrink-0 md:w-auto",
-                isCatalog && "w-full",
+                "relative w-full shrink-0",
                 styles.productBuyNowDji,
                 isCatalog && styles.productBuyNowCatalog
               )}

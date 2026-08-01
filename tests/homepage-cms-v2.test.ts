@@ -312,7 +312,7 @@ describe("mini carousel cms fallback", () => {
     expect(items[0]?.href).toContain("/product/test-drone");
   });
 
-  it("prefers live product fields over stored slide overrides", () => {
+  it("prefers CMS heading when set, else live product label", () => {
     const items = resolveHomeMiniCarouselItems(products, {
       enabled: true,
       slides: [
@@ -321,8 +321,33 @@ describe("mini carousel cms fallback", () => {
           enabled: true,
           imageSrc: "/media/stale.jpg",
           imageAlt: "Stale",
-          heading: "Stale heading",
+          heading: "CMS Display Name",
           description: "Stale copy",
+          ctaLabel: "View",
+          href: "/product/wrong",
+          productSlug: "test-drone",
+          sortOrder: 0
+        }
+      ]
+    });
+    expect(items).toHaveLength(1);
+    expect(items[0]?.label).toBe("CMS Display Name");
+    expect(items[0]?.fullLabel).toBe("Test Drone");
+    expect(items[0]?.href).toBe("/product/test-drone");
+    expect(items[0]?.media.src).toBe("/media/test.jpg");
+  });
+
+  it("falls back to product label when CMS heading is empty", () => {
+    const items = resolveHomeMiniCarouselItems(products, {
+      enabled: true,
+      slides: [
+        {
+          id: "slide-no-heading",
+          enabled: true,
+          imageSrc: "",
+          imageAlt: "",
+          heading: "   ",
+          description: "",
           ctaLabel: "View",
           href: "/product/wrong",
           productSlug: "test-drone",
@@ -333,6 +358,5 @@ describe("mini carousel cms fallback", () => {
     expect(items).toHaveLength(1);
     expect(items[0]?.label).toBe("Test Drone");
     expect(items[0]?.href).toBe("/product/test-drone");
-    expect(items[0]?.media.src).toBe("/media/test.jpg");
   });
 });

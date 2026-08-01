@@ -31,7 +31,7 @@ describe("product shelf mobile scroll", () => {
     expect(carouselBlock?.[0]).toContain("scroll-snap-type: x mandatory");
     expect(carouselBlock?.[0]).toContain("var(--shelf-card-width)");
     expect(carouselBlock?.[0]).not.toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
-    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(160px,\s*42vw,\s*200px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(154px,\s*43vw,\s*178px\)/);
     expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-card-aspect-ratio:\s*4\s*\/\s*3/);
     expect(globalsCss).toMatch(/--shelf-card-width:/);
   });

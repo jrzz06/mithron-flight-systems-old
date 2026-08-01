@@ -35,7 +35,141 @@
 
 @media (max-width: 767px) {
   .headerInner {
+    gap: 0.4rem;
+    padding: 0.5rem var(--mobile-page-inline, 16px) 0.625rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.75rem;
+    gap: 0.2rem;
+  }
+
+  .buyBoxPremium .buyBoxInner {
+    gap: 0.45rem;
+  }
+
+  .buyBoxCategory {
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+  }
+
+  .productTitlePremium {
+    font-size: clamp(1.45rem, 6.2vw, 1.8rem) !important;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+  }
+
+  .productSubtitle {
+    margin-top: 0.25rem;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+  }
+
+  .productTitle {
+    margin-top: 0.65rem;
+    font-size: clamp(1.35rem, 5.8vw, 1.7rem);
+    line-height: 1.15;
+  }
+
+  .productTagline {
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .priceBlock {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+  }
+
+  .priceHero {
+    font-size: clamp(1.55rem, 6vw, 1.95rem);
+  }
+
+  .priceRow {
+    margin-top: 1rem;
+    gap: 0.5rem;
+  }
+
+  .priceCurrent {
+    font-size: clamp(1.35rem, 5.5vw, 1.75rem);
+  }
+
+  .buyBoxRating {
+    margin-top: 0.4rem;
+    gap: 0.4rem;
+  }
+
+  .buyBoxRatingMeta {
+    font-size: 0.8125rem;
+  }
+
+  .tabList {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--mobile-page-inline, 12px);
+    margin-inline: calc(-1 * var(--mobile-page-inline, 12px));
+    padding-inline: var(--mobile-page-inline, 12px);
+    padding-bottom: 2px;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: inset -12px 0 12px -12px rgba(15, 23, 42, 0.06);
+  }
+
+  .tabPill,
+  .tabPillLabel {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  .relatedProductGrid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    grid-auto-flow: unset;
+    grid-auto-columns: unset;
+    grid-template-columns: unset;
+    gap: var(--mobile-card-gap, 10px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--mobile-page-inline, 16px);
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+  }
+
+  .relatedCard {
+    flex: 0 0 min(72vw, 280px);
+    width: min(72vw, 280px);
+    max-width: min(72vw, 280px);
+    scroll-snap-align: start;
+    height: auto;
+  }
+
+  .relatedSection {
     padding-inline: var(--mobile-page-inline, 16px);
+  }
+
+  .quantityButton {
+    width: var(--mobile-touch-min, 44px);
+    height: var(--mobile-touch-min, 44px);
+  }
+
+  .sectionNavInner {
+    gap: 1rem;
+    padding-inline: var(--mobile-page-inline, 12px);
+    scroll-padding-inline: var(--mobile-page-inline, 12px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sectionNavLink {
+    min-height: var(--mobile-touch-min, 44px);
+  }
+
+  .relatedCardCta {
+    width: var(--mobile-touch-min, 44px);
+    height: var(--mobile-touch-min, 44px);
   }
 }
 
@@ -2062,75 +2196,6 @@
   width: 100%;
   height: 180px;
   object-fit: cover;
-}
-
-@media (max-width: 767px) {
-  .tabList {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: var(--mobile-page-inline, 12px);
-    margin-inline: calc(-1 * var(--mobile-page-inline, 12px));
-    padding-inline: var(--mobile-page-inline, 12px);
-    padding-bottom: 2px;
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: inset -12px 0 12px -12px rgba(15, 23, 42, 0.06);
-  }
-
-  .tabPill,
-  .tabPillLabel {
-    flex-shrink: 0;
-    scroll-snap-align: start;
-  }
-
-  .relatedProductGrid {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    grid-auto-flow: unset;
-    grid-auto-columns: unset;
-    grid-template-columns: unset;
-    gap: var(--mobile-card-gap, 10px);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--mobile-page-inline, 16px);
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.25rem;
-  }
-
-  .relatedCard {
-    flex: 0 0 min(72vw, 280px);
-    width: min(72vw, 280px);
-    max-width: min(72vw, 280px);
-    scroll-snap-align: start;
-    height: auto;
-  }
-
-  .relatedSection {
-    padding-inline: var(--mobile-page-inline, 16px);
-  }
-
-  .quantityButton {
-    width: var(--mobile-touch-min, 44px);
-    height: var(--mobile-touch-min, 44px);
-  }
-
-  .sectionNavInner {
-    gap: 1rem;
-    padding-inline: var(--mobile-page-inline, 12px);
-    scroll-padding-inline: var(--mobile-page-inline, 12px);
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .sectionNavLink {
-    min-height: var(--mobile-touch-min, 44px);
-  }
-
-  .relatedCardCta {
-    width: var(--mobile-touch-min, 44px);
-    height: var(--mobile-touch-min, 44px);
-  }
 }
 
 /* Mobile-only: max-width 480px — reduce "Recommended next" container side

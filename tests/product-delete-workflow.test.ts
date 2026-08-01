@@ -52,6 +52,26 @@ describe("product delete workflow", () => {
     expect(isProductArchivedRecord({ workflow_status: "published" })).toBe(false);
   });
 
+  it("allows force delete only when order and shipment history are empty", async () => {
+    const { productDeletionAllowsForce } = await import("@/lib/product-deletion");
+    expect(productDeletionAllowsForce({
+      inventory_movements: 2,
+      shipment_items: 0,
+      order_items: 0,
+      hero_banners: 0,
+      product_reviews: 0,
+      faqs: 0
+    })).toBe(true);
+    expect(productDeletionAllowsForce({
+      inventory_movements: 0,
+      shipment_items: 1,
+      order_items: 0,
+      hero_banners: 0,
+      product_reviews: 0,
+      faqs: 0
+    })).toBe(false);
+  });
+
   it("returns blocker counts with hasBlockers boolean", async () => {
     vi.stubGlobal("fetch", mockFetch((url) => {
       if (url.includes("/inventory_movements?")) {
@@ -136,6 +156,60 @@ describe("product delete workflow", () => {
       .rejects.toThrow("Cannot force delete product archived-product with order or shipment history");
   });
 
+  it("force_hard cascades inventory movements before deleting the product", async () => {
+    const deletedUrls: string[] = [];
+    vi.stubGlobal("fetch", mockFetch((url, init) => {
+      const method = (init?.method ?? "GET").toUpperCase();
+      if (method === "DELETE") {
+        deletedUrls.push(url);
+        return new Response(JSON.stringify([{ id: "deleted-1" }]), { status: 200 });
+      }
+      if (url.includes("/mithron_products?")) {
+        return new Response(JSON.stringify([{
+          slug: "flying-drone",
+          workflow_status: "archived",
+          archived_at: "2026-01-01T00:00:00.000Z"
+        }]), { status: 200 });
+      }
+      if (url.includes("/inventory_movements?")) {
+        return new Response(JSON.stringify([{ id: "movement-1" }]), { status: 200 });
+      }
+      if (url.includes("/audit_logs")) {
+        return new Response("{}", { status: 201 });
+      }
+      return new Response(JSON.stringify([]), { status: 200 });
+    }));
+
+    const result = await deleteOrArchiveProduct("flying-drone", "actor-1", { mode: "force_hard" }, testEnv);
+    expect(result.outcome).toBe("force_deleted");
+    expect(result.deletedDependencies?.inventory_movements).toBeGreaterThan(0);
+    expect(deletedUrls.some((url) => url.includes("/inventory_movements?") && url.includes("product_id=eq.flying-drone"))).toBe(true);
+    expect(deletedUrls.some((url) => url.includes("/mithron_products?") && url.includes("slug=eq.flying-drone"))).toBe(true);
+    const movementDeleteIndex = deletedUrls.findIndex((url) => url.includes("/inventory_movements?"));
+    const productDeleteIndex = deletedUrls.findIndex((url) => url.includes("/mithron_products?"));
+    expect(movementDeleteIndex).toBeGreaterThan(-1);
+    expect(productDeleteIndex).toBeGreaterThan(movementDeleteIndex);
+  });
+
+  it("hard mode still blocks when inventory movements exist without force", async () => {
+    vi.stubGlobal("fetch", mockFetch((url) => {
+      if (url.includes("/mithron_products?")) {
+        return new Response(JSON.stringify([{
+          slug: "flying-drone",
+          workflow_status: "archived",
+          archived_at: "2026-01-01T00:00:00.000Z"
+        }]), { status: 200 });
+      }
+      if (url.includes("/inventory_movements?")) {
+        return new Response(JSON.stringify([{ id: "movement-1" }]), { status: 200 });
+      }
+      return new Response(JSON.stringify([]), { status: 200 });
+    }));
+
+    await expect(deleteOrArchiveProduct("flying-drone", "actor-1", { mode: "hard" }, testEnv))
+      .rejects.toThrow("Archive it instead of hard deleting");
+  });
+
   it("restricts products.permanent_delete to admin role", () => {
     expect(roleHasPermission("admin", "products.permanent_delete")).toBe(true);
     expect(roleHasPermission("warehouse", "products.permanent_delete")).toBe(false);
@@ -173,7 +247,7 @@ describe("product delete workflow", () => {
     }))).toThrow("Force delete must be explicitly confirmed.");
   });
 
-  it("wires remove, permanent delete, force delete, and blocker preview actions", () => {
+  it("wires remove, permanent delete via force_delete FormData, and blocker preview actions", () => {
     const pageSource = readFileSync(join(process.cwd(), "app/admin/products/page.tsx"), "utf8");
     const gridSource = readFileSync(join(process.cwd(), "app/admin/products/product-catalog-grid.tsx"), "utf8");
     const actionSource = readFileSync(join(process.cwd(), "app/admin/products/actions.ts"), "utf8");
@@ -184,20 +258,27 @@ describe("product delete workflow", () => {
     expect(adminActionsSource).toContain('options.mode === "auto"');
     expect(adminActionsSource).toContain("assertProductCanForceDelete");
     expect(adminActionsSource).toContain('"force_deleted"');
+    expect(adminActionsSource).toContain('force: true');
+    expect(adminActionsSource).toContain('product_id');
     expect(actionSource).toContain("saveProductRemoveFormAction");
+    expect(actionSource).toContain("saveProductHardDeleteFormAction");
     expect(actionSource).toContain("saveProductForceDeleteFormAction");
+    expect(actionSource).toContain('formData.get("force_delete")');
+    expect(actionSource).toContain('mode: "force_hard"');
     expect(actionSource).toContain("previewProductDeleteAction");
     expect(actionSource).toContain("deleteOrArchiveProduct");
     expect(actionSource).toContain('actionKind: "remove"');
     expect(actionSource).toContain('actionKind: "permanent_delete"');
     expect(actionSource).toContain('products.permanent_delete');
     expect(gridSource).toContain("saveProductRemoveFormAction");
-    expect(gridSource).toContain("saveProductForceDeleteFormAction");
+    expect(gridSource).toContain("saveProductHardDeleteFormAction");
+    expect(gridSource).not.toContain("saveProductForceDeleteFormAction");
+    expect(gridSource).toContain('name="force_delete"');
     expect(gridSource).toContain("previewProductDeleteAction");
     expect(gridSource).toContain('data-product-row-action={isArchivedView ? "permanent-delete" : "remove"}');
     expect(gridSource).not.toContain("setDeletedProductIds");
-    expect(pageSource).toContain("product_action");
     expect(pageSource).toContain("canForceDelete={canForceDeleteProducts}");
+    expect(pageSource).toContain("ProductCatalogGrid");
     expect(buildProductDeleteFromFormData(formData({
       product_slug: "source-delete-me",
       confirm_slug: "source-delete-me"

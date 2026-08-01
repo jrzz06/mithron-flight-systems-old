@@ -38,6 +38,25 @@ describe("home landing composite contract", () => {
     expect(homePageContent).not.toContain("homeShelves");
   });
 
+  it("reserves multi-viewport height in the below-fold Suspense fallback to prevent first-paint CLS", () => {
+    const homePageContent = source("sections/home/home-page-content.tsx");
+    const fallbackStart = homePageContent.indexOf("function HomeBelowHeroFallback");
+    const fallbackEnd = homePageContent.indexOf("async function HomeHeroAsync");
+    const fallback = homePageContent.slice(fallbackStart, fallbackEnd);
+
+    expect(fallback).toContain('data-home-below-hero-skeleton');
+    expect(fallback).toContain("min-h-[88svh]");
+    expect(fallback).toContain("min-h-[100dvh]");
+    expect(fallback).toContain('minHeight: "clamp(700px, 95svh, 110svh)"');
+    expect(fallback).toContain("min-h-[50vh]");
+    // Lone short pulse must not be the only reserved space (causes ~1vh page then expand).
+    expect(fallback).not.toMatch(
+      /function HomeBelowHeroFallback\(\)\s*\{\s*return\s*<div className="min-h-\[40vh]/
+    );
+    expect((fallback.match(/min-h-\[100dvh\]/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((fallback.match(/clamp\(700px, 95svh, 110svh\)/g) ?? []).length).toBeGreaterThanOrEqual(2);
+  });
+
   it("defines the requested chapter order and proof states without fake verified testimonials", () => {
     const component = source("sections/home/home-landing-composite.tsx");
     const resolution = source("lib/home/homepage-resolution.ts");

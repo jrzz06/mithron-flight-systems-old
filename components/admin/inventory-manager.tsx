@@ -11,7 +11,10 @@ import { ConfirmDialog } from "@/components/notifications/confirm-dialog";
 import { getControlPlaneThemeAttrs } from "@/lib/control-plane-theme";
 import { notify } from "@/lib/feedback/notify";
 import { previewInventoryProductDeleteAction } from "@/app/admin/inventory/actions";
-import type { ProductDeletionBlockerResult } from "@/services/admin-actions";
+import {
+  productDeletionAllowsForce,
+  type ProductDeletionBlockerResult
+} from "@/lib/product-deletion";
 import type { SimpleInventoryRow, SimpleInventoryStatus } from "@/services/simple-inventory-view";
 import type { InventoryStockMetrics } from "@/services/inventory-metrics";
 import type { CatalogFilter } from "@/services/csv-inventory-source";
@@ -26,6 +29,7 @@ type InventoryManagerProps = {
   bulkAction?: InventoryAction;
   restockAction?: InventoryAction;
   permanentDeleteAction?: InventoryAction;
+  /** @deprecated Force delete is handled by permanentDeleteAction when force_delete=1 is posted. */
   forceDeleteAction?: InventoryAction;
   canForceDelete?: boolean;
   readOnly?: boolean;
@@ -434,7 +438,7 @@ export function InventoryManager({
   bulkAction,
   restockAction,
   permanentDeleteAction,
-  forceDeleteAction,
+  forceDeleteAction: _forceDeleteAction,
   canForceDelete = false,
   readOnly = false,
   exportHref,
@@ -535,17 +539,40 @@ export function InventoryManager({
     let cancelled = false;
     previewInventoryProductDeleteAction(deleteRow.productSlug)
       .then((result) => {
-        if (!cancelled) setDeleteBlockers(result);
+        if (cancelled) return;
+        setDeleteBlockers(result);
+        // Soft blockers only: auto-arm force so typed confirm deletes instead of racing hard-delete.
+        if (
+          canForceDelete
+          && result.hasBlockers
+          && productDeletionAllowsForce(result.blockers)
+        ) {
+          setForceDeleteConfirmed(true);
+        } else {
+          setForceDeleteConfirmed(false);
+        }
       })
       .catch(() => {
-        if (!cancelled) setDeleteBlockers(null);
+        if (!cancelled) {
+          setDeleteBlockers(null);
+          setForceDeleteConfirmed(false);
+        }
         notify.error("Failed to load delete details.", { source: "admin-inventory", id: "inventory:delete-preview" });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [deleteRow]);
+  }, [canForceDelete, deleteRow]);
+
+  const deleteBlockedByHistory = Boolean(
+    deleteBlockers
+    && (deleteBlockers.blockers.order_items > 0 || deleteBlockers.blockers.shipment_items > 0)
+  );
+  const deleteSubmitDisabled =
+    deleteBlockers === null
+    || deleteBlockedByHistory
+    || (Boolean(deleteBlockers?.hasBlockers) && !forceDeleteConfirmed);
 
   useEffect(() => {
     if (!deleteRow) return;
@@ -1061,11 +1088,7 @@ export function InventoryManager({
           className="fixed inset-0 z-50 grid place-items-center bg-black/55 p-4 backdrop-blur-[2px]"
         >
           <form
-            action={
-              forceDeleteConfirmed && forceDeleteAction
-                ? forceDeleteAction
-                : permanentDeleteAction
-            }
+            action={permanentDeleteAction}
             className="w-full max-w-md rounded-2xl border border-slate-800 bg-[#10151d] p-5 shadow-2xl shadow-black/40"
           >
             <input type="hidden" name="product_slug" value={deleteRow.productSlug} />
@@ -1085,16 +1108,24 @@ export function InventoryManager({
             <p className="mt-3 text-sm leading-6 text-slate-400">
               Permanently deletes this archived product and its inventory rows. This cannot be undone.
             </p>
-            {deleteBlockers?.hasBlockers ? (
+            {deleteBlockers === null ? (
               <p className="mt-3 rounded-lg border border-slate-800 bg-[#0b1017] px-3 py-2 text-xs leading-5 text-slate-300">
-                Operational references block permanent delete: {formatBlockerSummary(deleteBlockers.blockers)}.
+                Checking operational references…
+              </p>
+            ) : deleteBlockedByHistory ? (
+              <p className="mt-3 rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs leading-5 text-rose-100">
+                Cannot permanently delete: this product has order or shipment history ({formatBlockerSummary(deleteBlockers.blockers)}).
+              </p>
+            ) : deleteBlockers.hasBlockers ? (
+              <p className="mt-3 rounded-lg border border-slate-800 bg-[#0b1017] px-3 py-2 text-xs leading-5 text-slate-300">
+                Operational references will be removed with force delete: {formatBlockerSummary(deleteBlockers.blockers)}.
               </p>
             ) : (
               <p className="mt-3 rounded-lg border border-slate-800 bg-[#0b1017] px-3 py-2 text-xs leading-5 text-slate-300">
                 No operational references were found. Permanent delete is allowed.
               </p>
             )}
-            {canForceDelete && deleteBlockers?.hasBlockers ? (
+            {canForceDelete && deleteBlockers?.hasBlockers && !deleteBlockedByHistory ? (
               <label className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-300">
                 <input
                   type="checkbox"
@@ -1103,7 +1134,7 @@ export function InventoryManager({
                   className="mt-0.5"
                 />
                 <span>
-                  Force delete despite operational references. Order and shipment history still block force delete.
+                  Force delete and remove inventory movements / storefront references. Order and shipment history still block delete.
                 </span>
               </label>
             ) : null}
@@ -1117,7 +1148,7 @@ export function InventoryManager({
               </button>
               <OperationalSubmitButton
                 pendingLabel="Deleting..."
-                disabled={Boolean(deleteBlockers?.hasBlockers) && !forceDeleteConfirmed}
+                disabled={deleteSubmitDisabled}
                 confirmMessage={`Permanently delete ${deleteRow.productName}? This cannot be undone.`}
                 requireTypedText={deleteRow.productSlug}
                 className="inline-flex h-9 items-center rounded-lg border border-rose-500/35 bg-rose-950/40 px-4 text-xs font-semibold text-rose-100 hover:bg-rose-900/45 disabled:cursor-not-allowed disabled:opacity-50"

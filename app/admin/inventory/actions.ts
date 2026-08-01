@@ -140,9 +140,25 @@ export async function previewInventoryProductDeleteAction(slug: string): Promise
   return getProductDeletionBlockers(normalizedSlug);
 }
 
-/** Permanent hard delete for an archived inventory product (cascades inventory + warehouse_stock). */
+/** Permanent or force hard delete for an archived inventory product (reads force_delete from FormData). */
 export async function permanentDeleteAdminInventoryAction(formData: FormData): Promise<InventoryActionResult> {
   try {
+    const wantsForce = String(formData.get("force_delete") ?? "").trim() === "1"
+      || String(formData.get("force_delete") ?? "").toLowerCase() === "true"
+      || String(formData.get("force_delete") ?? "").toLowerCase() === "on";
+
+    if (wantsForce) {
+      await requireAdminPermission("products.permanent_delete");
+      const deleteInput = buildProductForceDeleteFromFormData(formData);
+      const context = await getCurrentAuthContext();
+      const result = await deleteOrArchiveProduct(deleteInput.identity.slug, context.userId, { mode: "force_hard" });
+      if (result.outcome === "archived") {
+        throw new Error("Product could not be force deleted.");
+      }
+      await revalidateAfterInventoryProductDelete(deleteInput.identity.slug);
+      return { ok: true, status: "success", message: "Product force deleted." };
+    }
+
     await requirePermission("products.write");
     const deleteInput = buildProductDeleteFromFormData(formData);
     const context = await getCurrentAuthContext();
@@ -158,20 +174,13 @@ export async function permanentDeleteAdminInventoryAction(formData: FormData): P
   }
 }
 
-/** Force hard delete when operational blockers exist (admin + products.permanent_delete). */
+/**
+ * @deprecated Prefer permanentDeleteAdminInventoryAction with force_delete=1.
+ * Kept so older form posts keep working.
+ */
 export async function forceDeleteAdminInventoryAction(formData: FormData): Promise<InventoryActionResult> {
-  try {
-    await requireAdminPermission("products.permanent_delete");
-    const deleteInput = buildProductForceDeleteFromFormData(formData);
-    const context = await getCurrentAuthContext();
-    const result = await deleteOrArchiveProduct(deleteInput.identity.slug, context.userId, { mode: "force_hard" });
-    if (result.outcome === "archived") {
-      throw new Error("Product could not be force deleted.");
-    }
-    await revalidateAfterInventoryProductDelete(deleteInput.identity.slug);
-    return { ok: true, status: "success", message: "Product force deleted." };
-  } catch (error) {
-    if (isActionNavigationError(error)) throw error;
-    return inventoryResultFromError(error);
+  if (!formData.get("force_delete")) {
+    formData.set("force_delete", "1");
   }
+  return permanentDeleteAdminInventoryAction(formData);
 }

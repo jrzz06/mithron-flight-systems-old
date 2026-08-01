@@ -95,12 +95,15 @@ export function resolveHomeMiniCarouselItems(
 
       if (product) {
         const imageSrc = product.image?.src || slide.imageSrc.trim() || "";
-        const label = formatMiniCarouselLabel(product);
+        const cmsHeading = slide.heading.trim();
+        const label = cmsHeading || formatMiniCarouselLabel(product);
+        const fullLabel =
+          sanitizeProductPreviewText(product.name || product.category) || cmsHeading || label;
         return [
           {
             itemKey: slide.id || `cms-slide-${index}`,
             label,
-            fullLabel: sanitizeProductPreviewText(product.name || product.category),
+            fullLabel,
             href: `/product/${product.slug}`,
             media: {
               src: imageSrc,

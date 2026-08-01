@@ -58,13 +58,21 @@ describe("hero carousel premium composition", () => {
     expect(globals).toContain(".hero-carousel-control--right");
     expect(globals).toContain(".hero-banner-product-image :is(img, video)");
     expect(globals).toContain("object-position: var(--hero-image-object-position, center center)");
-    expect(hero).toContain('mobileObjectPosition: "78% 47%"');
-    expect(hero).toContain('mobileTransform: "translate3d(0, 0, 0) scale(1.1)"');
+    expect(hero).toContain('mobileObjectPosition: "70% 36%"');
+    expect(hero).toContain('mobileObjectPosition: "82% 34%"');
+    expect(hero).toContain('mobileTransform: "translate3d(0, 0, 0) scale(1)"');
+    expect(hero).toContain('data-hero-slide-id={item.id}');
+    expect(globals).toContain('[data-hero-slide-id="mapping-flight"]');
     expect(hero).toContain("hero-banner-media-bleed");
     expect(hero).toContain('bg-[#050505]');
     expect(hero).toContain("--hero-image-mobile-origin");
+    expect(hero).toContain("hero-pagination-dot");
     expect(globals).toContain(".hero-banner-media-bleed");
     expect(globals).toContain("max-width: none !important");
+    expect(globals).toContain("Zoom-out without letterboxing");
+    expect(globals).toContain("justify-content: flex-end !important");
+    expect(globals).toContain("Hairline frosted pagination");
+    expect(globals).toContain("width: max(152%, 100%) !important");
   });
 
   it("uses a CSS opacity crossfade carousel contract", () => {

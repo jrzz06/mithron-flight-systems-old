@@ -102,13 +102,20 @@ describe("product badge helpers", () => {
     expect(ribbonCss).toContain("box-shadow: none");
     expect(ribbonCss).not.toContain("border-radius: 9999px");
 
-    expect(globals).toContain("background: #fef2f2");
-    expect(globals).toContain("color: #e11d2e");
+    expect(ribbonCss).toContain("background: #047857");
+    expect(ribbonCss).toContain("color: #ffffff");
+    expect(ribbonCss).toContain("background: #ff6b6b");
+    expect(ribbonCss).toContain('data-ribbon-style="premium"');
+
+    expect(globals).toContain("background: #047857");
+    expect(globals).toContain("color: #ffffff");
     expect(globals).toContain("background: #ff6b6b");
-    expect(globals).toContain("background: #ecfdf5");
-    expect(globals).toContain("color: #1f6b46");
+    expect(globals).toContain("background: #e11d2e");
+    expect(globals).not.toContain("background: #ecfdf5");
 
     expect(adminFields).toContain("product-badge-preview");
     expect(adminFields).toContain("productBadgeCssClass");
+    expect(adminFields).toContain('bg: "#047857"');
+    expect(adminFields).toContain('ink: "#ffffff"');
   });
 });

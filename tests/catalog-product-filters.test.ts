@@ -24,4 +24,12 @@ describe("catalog product filters", () => {
     expect(PUBLISHED_STOREFRONT_FILTER).toContain("or(merge_status.is.null,merge_status.eq.active)");
     expect(PUBLISHED_STOREFRONT_FILTER).not.toMatch(/(^|&)or=/);
   });
+
+  it("publishedCatalogFilter reuses PUBLISHED_STOREFRONT_FILTER and excludes legacy rows", async () => {
+    const { publishedCatalogFilter } = await import("@/lib/catalog/filters");
+    expect(publishedCatalogFilter).toContain(PUBLISHED_STOREFRONT_FILTER);
+    expect(publishedCatalogFilter).toContain("archived_at.is.null");
+    expect(publishedCatalogFilter).toContain("category=neq.");
+    expect(publishedCatalogFilter).toContain("slug=not.like.audit-trace-*");
+  });
 });

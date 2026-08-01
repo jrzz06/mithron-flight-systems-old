@@ -227,7 +227,7 @@
   "missions": {
     "agri": {
       "cta": "Explore Agri Drones",
-      "body": "<p style=\"text-align:left\">Register, book, and finance drones across India's AGRONE<span style=\"color:rgb(255, 0, 0)\"> network..... </span></p>",
+      "body": "<p style=\"text-align:left;color:#ffffff\">Register, book, and finance drones across India's AGRONE network.</p>",
       "href": "/agriculture",
       "tiles": [
         {
@@ -287,7 +287,7 @@
     },
     "city": {
       "cta": "Explore City Drones",
-      "body": "<p>Urban platforms for rentals, training, care, and technician support.</p>",
+      "body": "<p style=\"color:#ffffff\">Urban platforms for rentals, training, care, and technician support.</p>",
       "href": "/surveillance",
       "tiles": [
         {

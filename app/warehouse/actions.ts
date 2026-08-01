@@ -689,6 +689,8 @@ export async function saveInventoryQuickEditFormAction(formData: FormData) {
     if (shouldArchiveProduct) {
       productPayload.workflow_status = "archived";
       productPayload.is_visible = false;
+      productPayload.published_at = null;
+      productPayload.archived_at = now;
     }
     await updateProductPublicationRecord(productPayload, actorId);
   }
@@ -930,6 +932,8 @@ export async function saveInventoryBulkUpdateFormAction(formData: FormData) {
     if (nextStatus === "archived") {
       productPayload.workflow_status = "archived";
       productPayload.is_visible = false;
+      productPayload.published_at = null;
+      productPayload.archived_at = now;
     }
     if (nextCategory || nextStatus === "archived") {
       await updateProductPublicationRecord(productPayload, actorId);

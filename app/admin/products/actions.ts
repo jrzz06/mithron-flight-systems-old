@@ -915,6 +915,55 @@ export async function saveProductRemoveFormAction(formData: FormData) {
 
 export async function saveProductHardDeleteFormAction(formData: FormData) {
   await runProductAction({ actionKind: "permanent_delete" }, async () => {
+    const wantsForce = String(formData.get("force_delete") ?? "").trim() === "1"
+      || String(formData.get("force_delete") ?? "").toLowerCase() === "true"
+      || String(formData.get("force_delete") ?? "").toLowerCase() === "on";
+
+    if (wantsForce) {
+      await requireAdminPermission("products.permanent_delete");
+      const deleteInput = buildProductForceDeleteFromFormData(formData);
+      const { actorId, actorRole } = await currentActorContext();
+      const result = await deleteOrArchiveProduct(deleteInput.identity.slug, actorId, { mode: "force_hard" });
+      if (result.outcome === "archived") {
+        throw new Error("Product could not be force deleted.");
+      }
+
+      await recordProductAuditTrail(
+        {
+          action: "products.hard_delete",
+          entityTable: "mithron_products",
+          entityId: deleteInput.identity.slug,
+          snapshot: {
+            product_slug: deleteInput.identity.slug,
+            deleted_dependencies: result.deletedDependencies,
+            before_data: result.beforeData,
+            blockers: result.blockers,
+            force_delete: true
+          },
+          actorId,
+          actorRole,
+          changeSummary: deleteInput.changeSummary,
+          severity: "warning",
+          metadata: {
+            product_slug: deleteInput.identity.slug,
+            delete_mode: "force_hard_delete",
+            deleted_dependencies: result.deletedDependencies,
+            blockers: result.blockers,
+            force_delete: true
+          }
+        }
+      );
+
+      await revalidateCatalogSurfaces(deleteInput.identity.slug);
+      revalidatePath("/admin/products");
+      revalidatePath("/admin");
+      revalidatePath("/");
+      revalidatePath("/admin/inventory");
+      revalidatePath("/warehouse/inventory");
+
+      return "Product force deleted.";
+    }
+
     const deleteInput = buildProductDeleteFromFormData(formData);
     const { actorId, actorRole } = await currentActorContext();
     const result = await deleteOrArchiveProduct(deleteInput.identity.slug, actorId, { mode: "hard" });
@@ -957,51 +1006,12 @@ export async function saveProductHardDeleteFormAction(formData: FormData) {
   });
 }
 
+/** @deprecated Prefer saveProductHardDeleteFormAction with force_delete=1. */
 export async function saveProductForceDeleteFormAction(formData: FormData) {
-  await runProductAction({ actionKind: "permanent_delete" }, async () => {
-    await requireAdminPermission("products.permanent_delete");
-    const deleteInput = buildProductForceDeleteFromFormData(formData);
-    const { actorId, actorRole } = await currentActorContext();
-    const result = await deleteOrArchiveProduct(deleteInput.identity.slug, actorId, { mode: "force_hard" });
-    if (result.outcome === "archived") {
-      throw new Error("Product could not be force deleted.");
-    }
-
-    await recordProductAuditTrail(
-      {
-        action: "products.hard_delete",
-        entityTable: "mithron_products",
-        entityId: deleteInput.identity.slug,
-        snapshot: {
-          product_slug: deleteInput.identity.slug,
-          deleted_dependencies: result.deletedDependencies,
-          before_data: result.beforeData,
-          blockers: result.blockers,
-          force_delete: true
-        },
-        actorId,
-        actorRole,
-        changeSummary: deleteInput.changeSummary,
-        severity: "warning",
-        metadata: {
-          product_slug: deleteInput.identity.slug,
-          delete_mode: "force_hard_delete",
-          deleted_dependencies: result.deletedDependencies,
-          blockers: result.blockers,
-          force_delete: true
-        }
-      }
-    );
-
-    await revalidateCatalogSurfaces(deleteInput.identity.slug);
-    revalidatePath("/admin/products");
-    revalidatePath("/admin");
-    revalidatePath("/");
-    revalidatePath("/admin/inventory");
-    revalidatePath("/warehouse/inventory");
-
-    return "Product force deleted.";
-  });
+  if (!formData.get("force_delete")) {
+    formData.set("force_delete", "1");
+  }
+  return saveProductHardDeleteFormAction(formData);
 }
 
 export async function saveProductInventoryWorkflowFormAction(formData: FormData) {

@@ -177,7 +177,7 @@ export function CheckoutOrderSummary({
   promoCode,
   checkoutBusy = false,
   className,
-  checkoutFormId = "checkout-form",
+  checkoutFormId: _checkoutFormId = "checkout-form",
   itemsOverride,
   checkoutMode = "cart"
 }: CheckoutOrderSummaryProps) {
@@ -272,54 +272,35 @@ export function CheckoutOrderSummary({
       </div>
 
       <div className="lg:hidden">
-        <section className={cn("overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[var(--elevation-card-rest)]", className)}>
+        <section className={cn(styles.mobileSummaryCard, className)}>
           <button
             type="button"
-            className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f6b46] focus-visible:ring-inset"
+            className={styles.mobileSummaryToggle}
             aria-expanded={mobileExpanded}
             onClick={() => setMobileExpanded((current) => !current)}
           >
-            <div>
+            <div className={styles.mobileSummaryLeft}>
               <p className={styles.eyebrow}>Order summary</p>
-              <p className="mt-1 text-base font-semibold text-slate-900">
+              <p className={styles.mobileSummaryMeta}>
                 {itemCount} {itemCount === 1 ? "item" : "items"}
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <p className="text-lg font-semibold tabular-nums text-slate-900">
+            <div className={styles.mobileSummaryRight}>
+              <p className={styles.mobileSummaryTotal}>
                 {showPendingPrices ? "…" : formatINR(finalAmount)}
               </p>
               <ChevronDown
-                className={cn("size-5 text-slate-500 transition-transform", mobileExpanded && "rotate-180")}
+                className={cn(styles.mobileSummaryChevron, mobileExpanded && styles.mobileSummaryChevronOpen)}
                 aria-hidden="true"
               />
             </div>
           </button>
           {mobileExpanded ? (
-            <div className="border-t border-slate-200 px-5 pb-5 pt-4">
+            <div className={styles.mobileSummaryBody}>
               <SummaryPanel {...panelProps} />
             </div>
           ) : null}
         </section>
-
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
-          <div className="mx-auto flex max-w-[min(100%,var(--ds-container-checkout))] items-center justify-between gap-4">
-            <div>
-              <p className="type-meta font-semibold uppercase tracking-[0.12em] text-slate-500">Final amount</p>
-              <p className="text-lg font-bold tabular-nums text-slate-900">
-                {showPendingPrices ? "…" : formatINR(finalAmount)}
-              </p>
-            </div>
-            <button
-              type="submit"
-              form={checkoutFormId}
-              disabled={checkoutBusy || !items.length}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#1f6b46] px-5 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {checkoutBusy ? "Sending…" : "Send enquiry to Mithron"}
-            </button>
-          </div>
-        </div>
       </div>
     </>
   );

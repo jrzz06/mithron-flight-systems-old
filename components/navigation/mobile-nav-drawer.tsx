@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type TouchEvent as ReactTouchEvent } from "react";
 import { ChevronDown, Search, UserRound, X } from "@/components/icons/storefront-icons";
+import { MithronBrandMark } from "@/components/brand/mithron-brand-mark";
 import type { NavigationNode } from "@/config/types";
 import type { EnterpriseMenuConfig, EnterpriseMenuOption } from "@/lib/nav-menu-types";
 import { isStorefrontGuestOnly } from "@/lib/storefront/guest-demo";
+
+/** Match CSS drawer transition duration for gesture snap-back. */
+const DRAWER_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const SWIPE_CLOSE_PX = 72;
 
 function getEnterpriseMenuSubLinks(menu: EnterpriseMenuConfig): EnterpriseMenuOption[] {
   if (menu.type === "mega") {
@@ -37,12 +42,61 @@ export function MobileNavDrawer({
     [enterpriseMenuConfigs]
   );
   const [expandedLabels, setExpandedLabels] = useState<Set<string>>(() => new Set());
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const dragAxis = useRef<"x" | "y" | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!open) {
+      setEntered(false);
       setExpandedLabels(new Set());
+      setDragOffset(0);
+      setIsDragging(false);
+      touchStartX.current = null;
+      touchStartY.current = null;
+      dragAxis.current = null;
+      return;
     }
+
+    // Double rAF so the closed transform paints before the open transition.
+    let frameTwo = 0;
+    const frameOne = window.requestAnimationFrame(() => {
+      frameTwo = window.requestAnimationFrame(() => setEntered(true));
+    });
+    return () => {
+      window.cancelAnimationFrame(frameOne);
+      window.cancelAnimationFrame(frameTwo);
+    };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    const focusTimer = window.setTimeout(() => {
+      closeButtonRef.current?.focus({ preventScroll: true });
+    }, 40);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      window.clearTimeout(focusTimer);
+    };
+  }, [open, onClose]);
 
   const toggleExpanded = (label: string) => {
     setExpandedLabels((current) => {
@@ -56,132 +110,223 @@ export function MobileNavDrawer({
     });
   };
 
+  const onTouchStart = useCallback((event: ReactTouchEvent) => {
+    if (!open) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    dragAxis.current = null;
+    setIsDragging(true);
+  }, [open]);
+
+  const onTouchMove = useCallback((event: ReactTouchEvent) => {
+    if (touchStartX.current == null || touchStartY.current == null) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+
+    if (dragAxis.current == null) {
+      if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) return;
+      dragAxis.current = Math.abs(deltaX) > Math.abs(deltaY) ? "x" : "y";
+      if (dragAxis.current === "y") {
+        setIsDragging(false);
+        return;
+      }
+    }
+
+    if (dragAxis.current !== "x") return;
+    // Only allow swipe-to-close (left).
+    setDragOffset(Math.min(0, deltaX));
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    const shouldClose = dragOffset <= -SWIPE_CLOSE_PX;
+    setIsDragging(false);
+    touchStartX.current = null;
+    touchStartY.current = null;
+    dragAxis.current = null;
+
+    if (shouldClose) {
+      setDragOffset(0);
+      onClose();
+      return;
+    }
+    setDragOffset(0);
+  }, [dragOffset, onClose]);
+
+  const panelStyle = useMemo(() => {
+    if (!entered) return undefined;
+    if (dragOffset === 0 && !isDragging) return undefined;
+    return {
+      transform: `translate3d(${dragOffset}px, 0, 0)`,
+      transition: isDragging ? "none" : `transform 340ms ${DRAWER_EASE}`
+    } as CSSProperties;
+  }, [entered, dragOffset, isDragging]);
+
+  const backdropStyle = useMemo(() => {
+    if (!entered || dragOffset === 0) return undefined;
+    const progress = Math.max(0, 1 + dragOffset / 280);
+    return { opacity: progress } as CSSProperties;
+  }, [entered, dragOffset]);
+
   return (
     <>
       <button
+        type="button"
         aria-label="Close navigation menu"
-        className={`adaptive-mobile-menu__backdrop fixed inset-0 z-[var(--z-dropdown)] cursor-default bg-slate-900/25 ${open ? "is-open" : ""}`}
+        className={`adaptive-mobile-menu__backdrop ${entered ? "is-open" : ""}`}
         tabIndex={open ? 0 : -1}
+        style={backdropStyle}
         onClick={onClose}
       />
-      <div
+      <nav
         data-testid="mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
         aria-hidden={!open}
-        className={`adaptive-mobile-menu fixed inset-x-4 top-[calc(var(--nav-anchor-bottom,var(--store-nav-offset))+8px)] z-[var(--z-dropdown-panel)] max-h-[calc(100dvh-var(--nav-anchor-bottom,var(--store-nav-offset))-16px)] overflow-y-auto rounded-[20px] border p-4 md:top-[calc(var(--nav-anchor-bottom,var(--store-nav-offset))+8px)] ${open ? "is-open" : ""}`}
+        className={`adaptive-mobile-menu ${entered ? "is-open" : ""}`}
+        style={panelStyle}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <p className="adaptive-mobile-menu__label text-[11px] font-medium uppercase tracking-[0.14em]">Navigation</p>
-          <button
-            type="button"
-            tabIndex={open ? 0 : -1}
-            aria-label="Close menu"
-            className="adaptive-mobile-menu__control nav-interactive nav-interactive--subtle inline-flex min-h-11 min-w-11 items-center justify-center rounded-full"
-            onClick={onClose}
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-
-        <ul className="space-y-1.5">
-          {navigationItems.map((item) => {
-            const menu = enterpriseMenuByLabel.get(item.label);
-            const subLinks = menu ? getEnterpriseMenuSubLinks(menu) : [];
-            const isExpanded = expandedLabels.has(item.label);
-
-            return (
-              <li key={item.label}>
-                {subLinks.length > 0 ? (
-                  <div className="adaptive-mobile-menu__accordion">
-                    <div className="flex items-stretch gap-1.5">
-                      <Link
-                        href={item.href}
-                        tabIndex={open ? 0 : -1}
-                        onClick={onClose}
-                        className="adaptive-mobile-menu__link nav-interactive inline-flex min-h-11 min-w-0 flex-1 items-center rounded-2xl border px-4 py-3.5 text-[14px] font-medium tracking-[0.01em]"
-                      >
-                        {item.label}
-                      </Link>
-                      <button
-                        type="button"
-                        tabIndex={open ? 0 : -1}
-                        aria-expanded={isExpanded}
-                        aria-controls={`mobile-menu-panel-${menu?.key ?? item.label}`}
-                        className="adaptive-mobile-menu__control nav-interactive inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-2xl border"
-                        onClick={() => toggleExpanded(item.label)}
-                      >
-                        <ChevronDown
-                          className={`size-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-                    <div
-                      id={`mobile-menu-panel-${menu?.key ?? item.label}`}
-                      hidden={!isExpanded}
-                      className="adaptive-mobile-menu__accordion-panel"
-                    >
-                      <ul className="mt-1.5 space-y-1">
-                        {subLinks.map((subLink) => (
-                          <li key={`${item.label}-${subLink.label}`}>
-                            <Link
-                              href={subLink.href}
-                              tabIndex={open && isExpanded ? 0 : -1}
-                              onClick={onClose}
-                              className="adaptive-mobile-menu__sublink nav-interactive inline-flex min-h-10 w-full items-center rounded-xl border px-3.5 py-2.5 text-[13px] font-medium tracking-[0.01em]"
-                            >
-                              {subLink.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    href={item.href}
-                    tabIndex={open ? 0 : -1}
-                    onClick={onClose}
-                    className="adaptive-mobile-menu__link nav-interactive inline-flex min-h-11 w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-[14px] font-medium tracking-[0.01em]"
-                  >
-                    {item.label}
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-
-        {onSearch ? (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <button
-              type="button"
+        <header className="adaptive-mobile-menu__header">
+          <div className="adaptive-mobile-menu__header-inner">
+            <Link
+              href="/"
+              aria-label="Go to Mithron home"
               tabIndex={open ? 0 : -1}
-              onFocus={onSearchIntent}
-              onPointerDown={onSearchIntent}
-              onPointerEnter={onSearchIntent}
-              onClick={() => {
-                onClose();
-                onSearch();
-              }}
-              className="adaptive-mobile-menu__action nav-interactive inline-flex h-11 items-center justify-center rounded-full border"
-              aria-label="Search"
+              onClick={onClose}
+              className="adaptive-mobile-menu__brand nav-interactive inline-flex shrink-0 items-center"
             >
-              <Search className="size-[18px]" />
-            </button>
-            {!isStorefrontGuestOnly() ? (
-              <Link
-                href="/account"
+              <MithronBrandMark />
+              <span className="sr-only">Mithron</span>
+            </Link>
+
+            <div className="adaptive-mobile-menu__header-actions">
+              {onSearch ? (
+                <button
+                  type="button"
+                  tabIndex={open ? 0 : -1}
+                  aria-label="Search"
+                  className="adaptive-mobile-menu__icon nav-interactive nav-interactive--subtle"
+                  onFocus={onSearchIntent}
+                  onPointerDown={onSearchIntent}
+                  onPointerEnter={onSearchIntent}
+                  onClick={() => {
+                    onClose();
+                    onSearch();
+                  }}
+                >
+                  <Search className="size-[18px]" />
+                </button>
+              ) : null}
+              <button
+                ref={closeButtonRef}
+                type="button"
                 tabIndex={open ? 0 : -1}
+                aria-label="Close menu"
+                className="adaptive-mobile-menu__icon nav-interactive nav-interactive--subtle"
                 onClick={onClose}
-                className="adaptive-mobile-menu__action nav-interactive inline-flex h-11 items-center justify-center rounded-full border"
-                aria-label="Account"
               >
-                <UserRound className="size-[18px]" />
-              </Link>
-            ) : null}
+                <X className="size-[18px]" />
+              </button>
+            </div>
           </div>
-        ) : null}
-      </div>
+        </header>
+
+        <div className="adaptive-mobile-menu__body">
+          <ul className="adaptive-mobile-menu__list">
+            {navigationItems.map((item) => {
+              const menu = enterpriseMenuByLabel.get(item.label);
+              const subLinks = menu ? getEnterpriseMenuSubLinks(menu) : [];
+              const isExpanded = expandedLabels.has(item.label);
+
+              return (
+                <li key={item.label} className="adaptive-mobile-menu__item">
+                  {subLinks.length > 0 ? (
+                    <div className="adaptive-mobile-menu__accordion">
+                      <div className="adaptive-mobile-menu__row">
+                        <Link
+                          href={item.href}
+                          tabIndex={open ? 0 : -1}
+                          onClick={onClose}
+                          className="adaptive-mobile-menu__link nav-interactive"
+                        >
+                          {item.label}
+                        </Link>
+                        <button
+                          type="button"
+                          tabIndex={open ? 0 : -1}
+                          aria-expanded={isExpanded}
+                          aria-controls={`mobile-menu-panel-${menu?.key ?? item.label}`}
+                          aria-label={`${isExpanded ? "Collapse" : "Expand"} ${item.label}`}
+                          className="adaptive-mobile-menu__chevron nav-interactive"
+                          onClick={() => toggleExpanded(item.label)}
+                        >
+                          <ChevronDown
+                            className={`size-4 transition-transform duration-[340ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${isExpanded ? "rotate-180" : ""}`}
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
+                      <div
+                        id={`mobile-menu-panel-${menu?.key ?? item.label}`}
+                        hidden={!isExpanded}
+                        className="adaptive-mobile-menu__accordion-panel"
+                      >
+                        <ul className="adaptive-mobile-menu__sublist">
+                          {subLinks.map((subLink) => (
+                            <li key={`${item.label}-${subLink.label}`}>
+                              <Link
+                                href={subLink.href}
+                                tabIndex={open && isExpanded ? 0 : -1}
+                                onClick={onClose}
+                                className="adaptive-mobile-menu__sublink nav-interactive"
+                              >
+                                {subLink.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      tabIndex={open ? 0 : -1}
+                      onClick={onClose}
+                      className="adaptive-mobile-menu__link nav-interactive"
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+
+            {!isStorefrontGuestOnly() ? (
+              <li className="adaptive-mobile-menu__item">
+                <Link
+                  href="/account"
+                  tabIndex={open ? 0 : -1}
+                  onClick={onClose}
+                  className="adaptive-mobile-menu__link adaptive-mobile-menu__link--action nav-interactive"
+                  aria-label="Account"
+                >
+                  <UserRound className="size-[18px]" aria-hidden="true" />
+                  <span>Account</span>
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+        </div>
+      </nav>
     </>
   );
 }

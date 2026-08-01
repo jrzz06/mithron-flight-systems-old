@@ -41,7 +41,8 @@ describe("product publish workflow", () => {
     expect(pageSource).toContain("data-product-publish-table=\"mithron_products\"");
     expect(actionSource).toContain("buildProductPublishStateFromFormData");
     expect(actionSource).toContain("saveProductPublishStateFormAction");
-    expect(catalogSource).toContain("workflow_status=eq.published");
+    expect(catalogSource).toContain("publishedCatalogFilter");
+    expect(catalogSource).toContain('from "@/lib/catalog/filters"');
   });
 
   it("maps product hard delete form data with explicit confirmation", () => {
@@ -79,7 +80,8 @@ describe("product publish workflow", () => {
     expect(gridSource).toContain("data-product-row-action=\"publish\"");
     expect(gridSource).toContain("saveProductRemoveFormAction");
     expect(gridSource).toContain("saveProductHardDeleteFormAction");
-    expect(gridSource).toContain("saveProductForceDeleteFormAction");
+    expect(gridSource).toContain('name="force_delete"');
+    expect(gridSource).not.toContain("saveProductForceDeleteFormAction");
     expect(gridSource).toContain('data-product-row-action={isArchivedView ? "permanent-delete" : "remove"}');
     expect(gridSource).toContain("name=\"confirm_slug\"");
     expect(pageSource).not.toContain("data-product-hard-delete-table=\"mithron_products\"");

@@ -3,11 +3,20 @@ import { getCatalogCategoryDefinition, isCatalogCategorySlug } from "@/lib/catal
 import { invalidateCatalogRedisCaches } from "@/lib/cache-invalidation";
 
 const BULK_CATALOG_SURFACE_TAGS = [
+  "catalog",
   "catalog-products",
   "catalog-search",
   "catalog-search-index",
   "catalog-showroom"
 ] as const;
+
+function revalidateBulkCatalogSurfaces() {
+  for (const tag of BULK_CATALOG_SURFACE_TAGS) {
+    revalidateTag(tag, "max");
+  }
+  revalidatePath("/");
+  revalidatePath("/products");
+}
 
 export async function revalidateCatalogSurfaces(
   productSlug?: string,
@@ -19,6 +28,8 @@ export async function revalidateCatalogSurfaces(
   if (normalizedProductSlug) {
     revalidateTag(`product:${normalizedProductSlug}`, "max");
     revalidatePath(`/product/${normalizedProductSlug}`);
+    // Archive/delete must drop the product from list/search caches immediately.
+    revalidateBulkCatalogSurfaces();
   }
 
   if (normalizedCategorySlug) {
@@ -33,11 +44,7 @@ export async function revalidateCatalogSurfaces(
   }
 
   if (!normalizedProductSlug && !normalizedCategorySlug) {
-    for (const tag of BULK_CATALOG_SURFACE_TAGS) {
-      revalidateTag(tag, "max");
-    }
-    revalidatePath("/");
-    revalidatePath("/products");
+    revalidateBulkCatalogSurfaces();
   }
 
   await invalidateCatalogRedisCaches(normalizedProductSlug, normalizedCategorySlug);

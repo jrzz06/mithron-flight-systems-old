@@ -14,11 +14,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const STYLE_SWATCHES: Record<ProductBadgeStyle, { bg: string; ink: string }> = {
-  default: { bg: "#2f2f2f", ink: "#ffffff" },
+  default: { bg: "#047857", ink: "#ffffff" },
   success: { bg: "#ff6b6b", ink: "#ffffff" },
-  warning: { bg: "#fff7ed", ink: "#c2410c" },
-  premium: { bg: "#ecfdf5", ink: "#1f6b46" },
-  sale: { bg: "#fef2f2", ink: "#e11d2e" }
+  warning: { bg: "#c2410c", ink: "#ffffff" },
+  premium: { bg: "#047857", ink: "#ffffff" },
+  sale: { bg: "#e11d2e", ink: "#ffffff" }
 };
 
 export function ProductBadgeFields({

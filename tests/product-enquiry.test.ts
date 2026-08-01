@@ -222,6 +222,12 @@ describe("product enquiry wiring", () => {
     expect(modal).toContain("createPortal");
     expect(modal).toContain("document.body");
     expect(modal).toContain("data-product-enquiry-modal");
+    const modalCss = readFileSync(join(process.cwd(), "components/product/product-enquiry-modal.module.css"), "utf8");
+    expect(modalCss).toContain("--z-modal");
+    expect(modalCss).toContain("translateZ(0)");
+    const showcaseCss = readFileSync(join(process.cwd(), "sections/product/showcase/product-showcase.module.css"), "utf8");
+    expect(showcaseCss).toContain("data-modal-scroll-locked");
+    expect(showcaseCss).toContain("stageImageZoom");
     expect(adminQueue).toContain("Push to Order");
     expect(enquiries).toContain("submitProductPageEnquiry");
     expect(configurator).toContain("Send Enquiry");

@@ -20,8 +20,8 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(carouselBlock?.[0]).toContain("var(--shelf-card-width)");
     expect(carouselBlock?.[0]).not.toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
     expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(168px,\s*27vw,\s*228px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(152px,\s*40vw,\s*188px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(160px,\s*42vw,\s*200px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(148px,\s*41vw,\s*168px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(154px,\s*43vw,\s*178px\)/);
     expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-card-aspect-ratio:\s*4\s*\/\s*3/);
     expect(globalsCss).not.toMatch(/--shelf-card-width:[\s\S]*calc\(\(100% - var\(--card-gap\)\)/);
     expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-cards-per-view:\s*3\.15/);
@@ -425,8 +425,8 @@ describe("mobile responsive contract (phone <=767px)", () => {
     expect(globalsCss).toContain("--bp-tablet-wide:");
     expect(globalsCss).toMatch(/@media \(max-width: 390px\)/);
     expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(168px,\s*27vw,\s*228px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(152px,\s*40vw,\s*188px\)/);
-    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(160px,\s*42vw,\s*200px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 479px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(148px,\s*41vw,\s*168px\)/);
+    expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-carousel-card-width:\s*clamp\(154px,\s*43vw,\s*178px\)/);
     expect(globalsCss).toMatch(/@media \(max-width: 767px\)[\s\S]*--shelf-card-aspect-ratio:\s*4\s*\/\s*3/);
     expect(globalsCss).toMatch(/@media \(max-width: 1279px\)[\s\S]*--shelf-carousel-cards-per-view:\s*3\.15/);
     expect(globalsCss).not.toMatch(/@media \(min-width: 820px\) and \(max-width: 1023px\)/);

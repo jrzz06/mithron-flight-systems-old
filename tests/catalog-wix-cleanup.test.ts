@@ -18,10 +18,12 @@ describe("catalog wix cleanup", () => {
 
   it("excludes legacy Imported Wix Inventory rows from storefront catalog queries", () => {
     const catalog = source("services/catalog.ts");
+    const filters = source("lib/catalog/filters.ts");
 
-    expect(catalog).toContain('const LEGACY_WIX_INVENTORY_CATEGORY = "Imported Wix Inventory"');
     expect(catalog).toContain("publishedCatalogFilter");
-    expect(catalog).toContain("category=neq.");
+    expect(filters).toContain('LEGACY_WIX_INVENTORY_CATEGORY = "Imported Wix Inventory"');
+    expect(filters).toContain("PUBLISHED_STOREFRONT_FILTER");
+    expect(filters).toContain("category=neq.");
   });
 
   it("ships product merge audit migration for duplicate reconciliation", () => {

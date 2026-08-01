@@ -14,6 +14,34 @@
   letter-spacing: 0.04em;
   pointer-events: none;
   box-shadow: none;
+  /* Solid fill + white label — matches card CTA weight */
+  background: #047857;
+  color: #ffffff;
+}
+
+.ribbon[data-ribbon-style="success"] {
+  background: #ff6b6b;
+  color: #ffffff;
+}
+
+.ribbon[data-ribbon-style="warning"] {
+  background: #c2410c;
+  color: #ffffff;
+}
+
+.ribbon[data-ribbon-style="premium"] {
+  background: #047857;
+  color: #ffffff;
+}
+
+.ribbon[data-ribbon-style="sale"] {
+  background: #e11d2e;
+  color: #ffffff;
+}
+
+.ribbon[data-ribbon-style="default"] {
+  background: #047857;
+  color: #ffffff;
 }
 
 .ribbonOverlay {

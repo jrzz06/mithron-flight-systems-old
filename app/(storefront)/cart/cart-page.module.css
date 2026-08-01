@@ -80,9 +80,96 @@
   font-size: 1.25rem;
 }
 
+/* Tablet + phone: single column, items then summary — no fixed overlay */
 @media (max-width: 1023px) {
+  .page {
+    padding: 16px 0 48px;
+  }
+
+  .container {
+    padding: 0 clamp(14px, 3.5vw, 20px);
+  }
+
+  .header {
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+
+  .title {
+    font-size: clamp(1.45rem, 4.5vw, 1.75rem);
+  }
+
+  .muted {
+    font-size: 0.875rem;
+  }
+
   .layout {
     grid-template-columns: 1fr;
-    padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px));
+    gap: 14px;
+    padding-bottom: 0;
+  }
+
+  .lines {
+    gap: 10px;
+    order: 1;
+  }
+
+  /* Ensure summary follows line items in the column */
+  .layout > :last-child {
+    order: 2;
+  }
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: 12px 0 40px;
+    min-height: auto;
+  }
+
+  .container {
+    padding: 0 var(--mobile-page-inline, 12px);
+  }
+
+  .header {
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+  }
+
+  .muted {
+    font-size: 0.8125rem;
+  }
+
+  .layout {
+    gap: 12px;
+  }
+
+  .lines {
+    gap: 8px;
+  }
+
+  .empty {
+    gap: 10px;
+    padding: 32px 16px;
+    border-radius: 14px;
+  }
+
+  .emptyIllustration {
+    width: 88px;
+    height: 88px;
+  }
+
+  .emptyTitle {
+    font-size: 1.0625rem;
+  }
+
+  .error {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.8125rem;
   }
 }

@@ -21,6 +21,7 @@ export function ProductRibbon({
 
   return (
     <span
+      data-ribbon-style={normalizedStyle}
       className={cn(
         styles.ribbon,
         placement === "inline" ? styles.ribbonInline : styles.ribbonOverlay,

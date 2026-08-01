@@ -6,8 +6,33 @@ import { HomeBelowHero } from "@/sections/home/home-below-hero";
 import { HomeHeroFallback, HomeHeroSection } from "@/sections/home/home-hero-section";
 import { getHomepageBelowFoldData, getHomepageHeroBanners } from "@/services/homepage-bundle";
 
+/**
+ * Reserves multi-viewport height while below-fold CMS/products stream in.
+ * Geometry mirrors HomeLandingComposite defaults (shelves → full-viewport banners →
+ * mission chapters → testimonials/articles/footer) so first paint is scrollable
+ * and Suspense resolve does not expand document height from ~40vh.
+ */
 function HomeBelowHeroFallback() {
-  return <div className="min-h-[40vh] animate-pulse bg-[#eef0f3]" aria-hidden="true" />;
+  return (
+    <div data-home-below-hero-skeleton aria-hidden="true">
+      {/* Mini carousel + 3 product shelves + inter-shelf banners */}
+      <div className="min-h-[88svh] animate-pulse bg-[#eef0f3]" />
+      {/* HomeFullViewportBanner × 2 — min-height: 100dvh */}
+      <div className="min-h-[100dvh] animate-pulse bg-[#e8eaed]" />
+      <div className="min-h-[100dvh] animate-pulse bg-[#eef0f3]" />
+      {/* Agri + City mission sections — clamp(700px, 95svh, 110svh) */}
+      <div
+        className="animate-pulse bg-[#e8eaed]"
+        style={{ minHeight: "clamp(700px, 95svh, 110svh)" }}
+      />
+      <div
+        className="animate-pulse bg-[#eef0f3]"
+        style={{ minHeight: "clamp(700px, 95svh, 110svh)" }}
+      />
+      {/* Testimonials + related articles + footer */}
+      <div className="min-h-[50vh] animate-pulse bg-[#e8eaed]" />
+    </div>
+  );
 }
 
 async function HomeHeroAsync({ cmsDraftPreview }: { cmsDraftPreview: boolean }) {

@@ -10,11 +10,13 @@ import { resolveNextImageSrc } from "@/lib/media/next-image-src";
 import { formatINR } from "@/lib/utils";
 import { notify } from "@/lib/feedback/notify";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
-import type { ProductDeletionBlockerResult } from "@/services/admin-actions";
+import {
+  productDeletionAllowsForce,
+  type ProductDeletionBlockerResult
+} from "@/lib/product-deletion";
 import {
   previewProductDeleteAction,
   saveProductDuplicateFormAction,
-  saveProductForceDeleteFormAction,
   saveProductHardDeleteFormAction,
   saveProductPublishStateFormAction,
   saveProductRemoveFormAction
@@ -24,7 +26,6 @@ import type { ProductCategoryOption } from "./product-category-field";
 
 const timedSaveProductPublishStateFormAction = wrapServerAction(saveProductPublishStateFormAction, { label: "Update product publish state" });
 const timedSaveProductDuplicateFormAction = wrapServerAction(saveProductDuplicateFormAction, { label: "Duplicate product" });
-const timedSaveProductForceDeleteFormAction = wrapServerAction(saveProductForceDeleteFormAction, { label: "Force delete product" });
 const timedSaveProductHardDeleteFormAction = wrapServerAction(saveProductHardDeleteFormAction, { label: "Permanently delete product" });
 const timedSaveProductRemoveFormAction = wrapServerAction(saveProductRemoveFormAction, { label: "Remove product" });
 
@@ -334,17 +335,44 @@ export function ProductCatalogGrid({
     let cancelled = false;
     previewProductDeleteAction(deleteProduct.id)
       .then((result) => {
-        if (!cancelled) setDeleteBlockers(result);
+        if (cancelled) return;
+        setDeleteBlockers(result);
+        if (
+          isArchivedView
+          && canForceDelete
+          && result.hasBlockers
+          && productDeletionAllowsForce(result.blockers)
+        ) {
+          setForceDeleteConfirmed(true);
+        } else {
+          setForceDeleteConfirmed(false);
+        }
       })
       .catch(() => {
-        if (!cancelled) setDeleteBlockers(null);
+        if (!cancelled) {
+          setDeleteBlockers(null);
+          setForceDeleteConfirmed(false);
+        }
         notify.error("Failed to load delete details.", { source: "admin", id: "product:delete-preview" });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [deleteProduct]);
+  }, [canForceDelete, deleteProduct, isArchivedView]);
+
+  const deleteBlockedByHistory = Boolean(
+    deleteBlockers
+    && (deleteBlockers.blockers.order_items > 0 || deleteBlockers.blockers.shipment_items > 0)
+  );
+  const deleteSubmitDisabled = Boolean(
+    isArchivedView
+    && (
+      deleteBlockers === null
+      || deleteBlockedByHistory
+      || (deleteBlockers.hasBlockers && !forceDeleteConfirmed)
+    )
+  );
 
   function updateProduct(id: string, fields: Partial<ProductCatalogGridRow>) {
     setProductOverrides((current) => ({
@@ -425,11 +453,9 @@ export function ProductCatalogGrid({
         <div data-product-delete-modal className="fixed inset-0 z-50 grid place-items-center bg-[color-mix(in_srgb,var(--platform-bg)_72%,transparent)] p-4 backdrop-blur-[2px]">
           <form
             action={
-              isArchivedView && forceDeleteConfirmed
-                ? timedSaveProductForceDeleteFormAction
-                : isArchivedView
-                  ? timedSaveProductHardDeleteFormAction
-                  : timedSaveProductRemoveFormAction
+              isArchivedView
+                ? timedSaveProductHardDeleteFormAction
+                : timedSaveProductRemoveFormAction
             }
             className="w-full max-w-md rounded-2xl border border-[var(--platform-border)] bg-[var(--platform-surface)] p-5"
             style={{ boxShadow: "var(--platform-shadow-md)" }}
@@ -457,10 +483,18 @@ export function ProductCatalogGrid({
                 ? "This permanently deletes the archived product from the database. This action cannot be undone."
                 : "Removes the product from the storefront. Products with stock or operational history are archived instead of destroyed."}
             </p>
-            {deleteBlockers?.hasBlockers ? (
+            {isArchivedView && deleteBlockers === null ? (
+              <p className="mt-3 rounded-lg bg-[var(--platform-surface-muted)] px-3 py-2 text-xs leading-5 text-[var(--platform-text-secondary)]">
+                Checking operational references…
+              </p>
+            ) : isArchivedView && deleteBlockedByHistory ? (
+              <p className="mt-3 rounded-lg bg-[var(--platform-danger-soft)] px-3 py-2 text-xs leading-5 text-[var(--platform-danger)]">
+                Cannot permanently delete: this product has order or shipment history ({formatBlockerSummary(deleteBlockers!.blockers)}).
+              </p>
+            ) : deleteBlockers?.hasBlockers ? (
               <p className="mt-3 rounded-lg bg-[var(--platform-surface-muted)] px-3 py-2 text-xs leading-5 text-[var(--platform-text-secondary)]">
                 {isArchivedView
-                  ? `Operational references block permanent delete: ${formatBlockerSummary(deleteBlockers.blockers)}.`
+                  ? `Operational references will be removed with force delete: ${formatBlockerSummary(deleteBlockers.blockers)}.`
                   : `This product has operational references (${formatBlockerSummary(deleteBlockers.blockers)}). It will be archived, not destroyed.`}
               </p>
             ) : isArchivedView ? (
@@ -468,7 +502,7 @@ export function ProductCatalogGrid({
                 No operational references were found. Permanent delete is allowed.
               </p>
             ) : null}
-            {isArchivedView && canForceDelete && deleteBlockers?.hasBlockers ? (
+            {isArchivedView && canForceDelete && deleteBlockers?.hasBlockers && !deleteBlockedByHistory ? (
               <label className="mt-4 flex items-start gap-2 text-xs leading-5 text-[var(--platform-text-secondary)]">
                 <input
                   type="checkbox"
@@ -477,7 +511,7 @@ export function ProductCatalogGrid({
                   className="mt-0.5"
                 />
                 <span>
-                  Force delete despite operational references. Order and shipment history still block force delete.
+                  Force delete and remove inventory movements / storefront references. Order and shipment history still block delete.
                 </span>
               </label>
             ) : null}
@@ -486,8 +520,8 @@ export function ProductCatalogGrid({
                 Cancel
               </button>
               <button
-                className="rounded-lg bg-[var(--platform-danger-soft)] px-4 py-2 text-sm font-medium text-[var(--platform-danger)] hover:bg-[var(--platform-danger-soft)]"
-                disabled={isArchivedView && Boolean(deleteBlockers?.hasBlockers) && !forceDeleteConfirmed}
+                className="rounded-lg bg-[var(--platform-danger-soft)] px-4 py-2 text-sm font-medium text-[var(--platform-danger)] hover:bg-[var(--platform-danger-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={deleteSubmitDisabled}
               >
                 {isArchivedView
                   ? forceDeleteConfirmed

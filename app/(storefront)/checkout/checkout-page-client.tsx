@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { CheckCircle2, Send } from "lucide-react";
 import { isValidCheckoutEmail, isValidCheckoutPhone, isCompleteGuestAddress } from "@/lib/api/checkout-schema";
 import {
   CUSTOMER_CONTACT_REQUIRED_MESSAGE,
@@ -30,7 +31,6 @@ import { ensureCashfreeCheckoutScript, ensureRazorpayCheckoutScript } from "@/li
 import { isStorefrontGuestOnly } from "@/lib/storefront/guest-demo";
 import { Button } from "@/components/ui/button";
 import { CheckoutOrderSummary } from "@/components/checkout/checkout-order-summary";
-import { CheckoutPaymentStepLazy } from "./checkout-payment-step";
 import { inrToPaise } from "@/services/payments/amount";
 import { cn, formatINR } from "@/lib/utils";
 import { useCheckoutFlow } from "@/hooks/use-checkout-flow";
@@ -41,11 +41,6 @@ import { useResolvedCart } from "@/hooks/use-resolved-cart";
 import { useBuyNowHasHydrated, useBuyNowStore } from "@/store/buy-now-session";
 import { useCartSessionReady, useCartStore } from "@/store/cart";
 import { fetchWithTimeout, raceWithTimeout } from "@/lib/fetch-with-timeout";
-import {
-  PreSalesConsultationPanel,
-  formatPreSalesInquiryTag,
-  type PreSalesConsultationValues
-} from "@/components/pre-sales/pre-sales-consultation-panel";
 import styles from "./checkout.module.css";
 
 function readCheckoutErrorMessage(response: Response, payload: Record<string, unknown>) {
@@ -222,8 +217,8 @@ export function CheckoutPageClient() {
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [showManualBillingForm, setShowManualBillingForm] = useState(false);
-  const [showEnquiry, setShowEnquiry] = useState(true);
-  const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
+  const [activeStep, setActiveStep] = useState<1 | 2>(1);
+  const [stickyMounted, setStickyMounted] = useState(false);
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   const contactTouchedRef = useRef({ fullName: false, phone: false, email: false });
   const [contactDraftReady, setContactDraftReady] = useState(false);
@@ -285,6 +280,10 @@ export function CheckoutPageClient() {
       phone: phone.trim()
     });
   }, [contactDraftReady, fullName, isCartSessionReady, phone, setCheckoutContact]);
+
+  useEffect(() => {
+    setStickyMounted(true);
+  }, []);
 
   const buildPaymentSuccessUrl = useCallback((orderId: string, signedIn: boolean) => {
     const params = new URLSearchParams({ orderId });
@@ -882,16 +881,6 @@ export function CheckoutPageClient() {
     );
   }, [fullName, checkout.email, phoneNational, phone]);
 
-  const [showDroneModal, setShowDroneModal] = useState(false);
-  const hasTriggeredDroneModalRef = useRef(false);
-
-  useEffect(() => {
-    if (isCartSessionReady && activeStep === 1 && !hasTriggeredDroneModalRef.current) {
-      hasTriggeredDroneModalRef.current = true;
-      setShowDroneModal(true);
-    }
-  }, [isCartSessionReady, activeStep]);
-
   const isStep2Complete = useMemo(() => {
     if (usingSavedAddress) {
       if (!billingSameAsShipping && !usingSavedBillingAddress && !isCompleteGuestAddress(guestBillingAddress)) {
@@ -956,7 +945,7 @@ export function CheckoutPageClient() {
       return true;
     }
     if (!guestAddress.line1.trim() || !guestAddress.city.trim() || !guestAddress.region.trim() || !guestAddress.postalCode.trim()) {
-      reportCheckoutError("Enter a complete shipping address to pay online.");
+      reportCheckoutError("Enter a complete shipping address.");
       return false;
     }
     if (!billingSameAsShipping && !usingSavedBillingAddress && !isCompleteGuestAddress(guestBillingAddress)) {
@@ -967,16 +956,13 @@ export function CheckoutPageClient() {
     return true;
   }, [billingSameAsShipping, guestAddress, guestBillingAddress, reportCheckoutError, usingSavedAddress, usingSavedBillingAddress]);
 
-  const goToStep = useCallback((targetStep: 1 | 2 | 3) => {
+  const goToStep = useCallback((targetStep: 1 | 2) => {
     if (targetStep === 2) {
       if (!validateStep1()) return;
-    } else if (targetStep === 3) {
-      if (!validateStep1()) return;
-      if (!validateStep2()) return;
     }
     setError("");
     setActiveStep(targetStep);
-  }, [validateStep1, validateStep2]);
+  }, [validateStep1]);
 
   function validateBase(requireAddress: boolean) {
     if (!validateStep1()) return false;
@@ -1002,12 +988,7 @@ export function CheckoutPageClient() {
     return "Enter delivery & billing address";
   }, [usingSavedAddress, shippingAddresses, checkout.shippingAddressId, guestAddress]);
 
-  const step3Summary = useMemo(() => {
-    if (paymentProvider === "razorpay") return "Razorpay (Cards, UPI, Netbanking)";
-    if (paymentProvider === "cashfree") return "Cashfree (Cards, UPI, Bank Transfer)";
-    if (paymentProvider) return paymentProvider;
-    return "Select payment gateway method";
-  }, [paymentProvider]);
+  // Payment step removed from enquiry-only checkout — keep provider summary helpers unused.
 
   async function openRazorpayCheckout(input: {
     key: string;
@@ -1435,7 +1416,7 @@ export function CheckoutPageClient() {
 
   async function sendEnquiry(messageOverride?: string) {
     if (loading) return;
-    if (!validateBase(false)) return;
+    if (!validateBase(true)) return;
 
     const requestId = ++checkoutActionRequestIdRef.current;
     const isCurrent = () => checkoutActionRequestIdRef.current === requestId;
@@ -1527,18 +1508,20 @@ export function CheckoutPageClient() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        <header className={styles.pageHeader}>
-          <p className={styles.eyebrow}>Checkout</p>
-          <h1 className={styles.pageTitle}>Send your enquiry</h1>
-          <p className={styles.pageLead}>
-            Share your details and cart — our team will follow up. You can create an account to track the request, or continue as a guest.
-          </p>
-        </header>
+        {!completed ? (
+          <header className={styles.pageHeader}>
+            <p className={styles.eyebrow}>Checkout</p>
+            <h1 className={styles.pageTitle}>Send your enquiry</h1>
+            <p className={styles.pageLead}>
+              Our team will follow up to confirm; payment after confirmation.
+            </p>
+          </header>
+        ) : null}
 
         <div className={styles.layout}>
-          <section className={styles.formPanel}>
+          <section className={cn(styles.formPanel, completed && styles.formPanelSuccess)}>
             {completed ? (
-              <div className="py-2">
+              <div className={styles.successPanel}>
                 <CheckCircle2 className={styles.successIcon} aria-hidden="true" />
                 <h2 className={styles.successTitle}>
                   {completed.mode === "payment" ? "Payment received" : "Enquiry submitted"}
@@ -1551,34 +1534,35 @@ export function CheckoutPageClient() {
 
                 <CheckoutInvoice completed={completed} items={items} />
 
-                <div className={styles.actions}>
+                <div className={styles.successActions}>
                   {completed.mode === "payment" ? (
                     <>
                       {completed.isSignedIn && !isStorefrontGuestOnly() ? (
-                        <Button asChild variant="accent">
+                        <Button asChild variant="accent" className={styles.successCta}>
                           <Link href="/account/orders">View orders</Link>
                         </Button>
                       ) : !isStorefrontGuestOnly() ? (
-                        <Button asChild variant="accent">
-                          <Link href={`/login?next=${encodeURIComponent("/account/orders")}`}>Create account to track orders</Link>
+                        <Button asChild variant="accent" className={styles.successCta}>
+                          <Link href={`/login?next=${encodeURIComponent("/account/orders")}`}>Create account to track</Link>
                         </Button>
                       ) : null}
                     </>
                   ) : (
                     <>
                       {completed.isSignedIn && !isStorefrontGuestOnly() ? (
-                        <Button asChild variant="accent">
+                        <Button asChild variant="accent" className={styles.successCta}>
                           <Link href="/account/enquiries">View my enquiries</Link>
                         </Button>
                       ) : !isStorefrontGuestOnly() ? (
-                        <Button asChild variant="accent">
-                          <Link href={`/login?next=${encodeURIComponent("/account/enquiries")}`}>Create account to track your enquiry</Link>
+                        <Button asChild variant="accent" className={styles.successCta}>
+                          <Link href={`/login?next=${encodeURIComponent("/account/enquiries")}`}>Create account to track</Link>
                         </Button>
                       ) : null}
                     </>
                   )}
                   <Button
                     variant="outline"
+                    className={styles.successSecondaryBtn}
                     onClick={() => {
                       if (isBuyNowFlow) {
                         clearBuyNow();
@@ -1598,15 +1582,13 @@ export function CheckoutPageClient() {
             ) : (
               <form
                 id="checkout-form"
-                className={cn(styles.form, "pb-28 lg:pb-0")}
+                className={styles.form}
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (activeStep === 1) {
-                    if (validateStep1()) void sendEnquiry();
-                  } else if (activeStep === 2) {
-                    goToStep(3);
+                    goToStep(2);
                   } else {
-                    void placeOrder();
+                    if (validateStep2()) void sendEnquiry();
                   }
                 }}
               >
@@ -1685,11 +1667,11 @@ export function CheckoutPageClient() {
 
                         {!isSignedIn && !isStorefrontGuestOnly() ? (
                           <div className={styles.fieldset} data-testid="checkout-auth-prompt">
-                            <p className={styles.legend}>Track your enquiry or order</p>
+                            <p className={styles.legend}>Track your enquiry</p>
                             <p className={styles.fieldHint}>
-                              Log in or create an account to track updates, or continue as a guest.
+                              Optional — continue as guest, or sign in to track updates.
                             </p>
-                            <div className={styles.actions}>
+                            <div className={styles.authActions}>
                               <Button asChild variant="outline" type="button">
                                 <Link href={loginNextHref}>Log in</Link>
                               </Button>
@@ -1707,7 +1689,7 @@ export function CheckoutPageClient() {
                           onToggle={(event) => setIsMessageOpen((event.target as HTMLDetailsElement).open)}
                         >
                           <summary className={styles.messageSummary}>
-                            <span>Add a note or special instructions (optional)</span>
+                            <span>Add a note (optional)</span>
                             <span aria-hidden="true">{isMessageOpen ? "▲" : "▼"}</span>
                           </summary>
                           <div className={styles.messageBody}>
@@ -1727,16 +1709,6 @@ export function CheckoutPageClient() {
                           <Button
                             type="button"
                             variant="accent"
-                            disabled={checkoutBusy || !checkoutItems.length}
-                            onClick={() => {
-                              if (validateStep1()) void sendEnquiry();
-                            }}
-                          >
-                            {loading === "enquiry" ? "Sending enquiry..." : "Send as Enquiry Only"}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
                             disabled={checkoutBusy || !checkoutItems.length}
                             onClick={() => goToStep(2)}
                           >
@@ -1990,137 +1962,25 @@ export function CheckoutPageClient() {
                           <Button
                             type="button"
                             variant="accent"
+                            className={cn(styles.stickyCta, styles.stickySendEnquiry)}
                             disabled={checkoutBusy || !checkoutItems.length}
-                            onClick={() => goToStep(3)}
+                            onClick={() => {
+                              if (validateStep2()) void sendEnquiry();
+                            }}
                           >
-                            Proceed to Payment →
+                            {loading === "enquiry" ? (
+                              "Sending…"
+                            ) : (
+                              <>
+                                <Send className="size-4 shrink-0" aria-hidden="true" strokeWidth={2.25} />
+                                Send Enquiry
+                              </>
+                            )}
                           </Button>
                         </div>
                       </div>
                     ) : null}
                   </div>
-
-                  {/* STEP 3: Payment Method & Place Order */}
-                  <div className={cn(styles.accordionItem, activeStep === 3 && styles.accordionItemActive)}>
-                    <button
-                      type="button"
-                      className={styles.accordionHeader}
-                      onClick={() => goToStep(3)}
-                    >
-                      <div className={styles.stepHeaderLeft}>
-                        <span className={cn(styles.stepBadge, activeStep === 3 ? styles.stepBadgeActive : styles.stepBadgeInactive)}>
-                          3
-                        </span>
-                        <div className={styles.stepTitleGroup}>
-                          <span className={styles.stepTitle}>Payment Method & Place Order</span>
-                          {activeStep !== 3 ? <span className={styles.stepSummary}>{step3Summary}</span> : null}
-                        </div>
-                      </div>
-                    </button>
-
-                    {activeStep === 3 ? (
-                      <div className={styles.accordionContent}>
-                        {paymentProviders.length > 0 ? (
-                          <CheckoutPaymentStepLazy
-                            paymentProviders={paymentProviders}
-                            paymentProvider={paymentProvider}
-                            onPaymentProviderChange={setPaymentProvider}
-                          />
-                        ) : (
-                          <p className={styles.fieldHint}>Select your payment method below to complete payment in a secure gateway window.</p>
-                        )}
-
-                        <div className={styles.stepActions}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={checkoutBusy}
-                            onClick={() => goToStep(2)}
-                          >
-                            ← Back to Address
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="accent"
-                            disabled={checkoutBusy || !checkoutItems.length}
-                            onClick={() => void placeOrder()}
-                          >
-                            {loading === "payment" || loading === "stub" ? "Processing payment..." : "Pay and Place Order"}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* Mobile Sticky CTA Bar */}
-                <div className={styles.mobileStickyBar}>
-                  {activeStep === 1 ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="accent"
-                        className="w-full"
-                        disabled={checkoutBusy || !checkoutItems.length}
-                        onClick={() => {
-                          if (validateStep1()) void sendEnquiry();
-                        }}
-                      >
-                        {loading === "enquiry" ? "Sending enquiry..." : "Send as Enquiry Only"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        disabled={checkoutBusy || !checkoutItems.length}
-                        onClick={() => goToStep(2)}
-                      >
-                        Continue to Delivery Address →
-                      </Button>
-                    </>
-                  ) : activeStep === 2 ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="accent"
-                        className="w-full"
-                        disabled={checkoutBusy || !checkoutItems.length}
-                        onClick={() => goToStep(3)}
-                      >
-                        Proceed to Payment →
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        disabled={checkoutBusy}
-                        onClick={() => goToStep(1)}
-                      >
-                        ← Back to Contact
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        type="button"
-                        variant="accent"
-                        className="w-full"
-                        disabled={checkoutBusy || !checkoutItems.length}
-                        onClick={() => void placeOrder()}
-                      >
-                        {loading === "payment" || loading === "stub" ? "Processing payment..." : "Pay and Place Order"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        disabled={checkoutBusy}
-                        onClick={() => goToStep(2)}
-                      >
-                        ← Back to Address
-                      </Button>
-                    </>
-                  )}
                 </div>
               </form>
             )}
@@ -2140,79 +2000,60 @@ export function CheckoutPageClient() {
         </div>
       </div>
 
-      {showDroneModal ? (
-        <PreSalesConsultationPanel
-          open={showDroneModal}
-          variant="checkout"
-          productSummary={checkoutItems.map((item) => item.productName).join(", ") || "Drone System"}
-          defaults={{
-            fullName,
-            email: checkout.email,
-            phone: phoneNational,
-            notes: enquiryMessage
-          }}
-          onValuesChange={(values: PreSalesConsultationValues) => {
-            setFullName(values.fullName);
-            setCheckoutContact({ email: values.email });
-            setPhoneNational(values.phone);
-            setEnquiryMessage(values.notes);
-          }}
-          onClose={() => setShowDroneModal(false)}
-          onCancel={() => {
-            setShowDroneModal(false);
-            goToStep(2);
-          }}
-          onSubmit={(values) => {
-            setFullName(values.fullName);
-            setCheckoutContact({ email: values.email });
-            setPhoneNational(values.phone);
-            const tag = formatPreSalesInquiryTag(values.inquiryType, values.preferredLanguage);
-            const nextMessage = values.notes.includes("[Inquiry:")
-              ? values.notes
-              : values.notes.trim()
-                ? `${tag} ${values.notes.trim()}`
-                : tag;
-            setEnquiryMessage(nextMessage);
-
-            if (!checkoutItems.length) {
-              reportCheckoutError(isBuyNowFlow ? "Your Buy Now request expired." : "Your cart is empty.");
-              return;
-            }
-            if (!values.fullName.trim()) {
-              reportCheckoutError("Full name is required.");
-              return;
-            }
-            if (values.fullName.trim().length < 2) {
-              reportCheckoutError("Enter your full name.");
-              return;
-            }
-            if (!values.email.trim()) {
-              reportCheckoutError("Email is required.");
-              return;
-            }
-            if (!isValidCheckoutEmail(values.email.trim())) {
-              reportCheckoutError("Enter a valid email address.");
-              return;
-            }
-            if (!values.phone.trim()) {
-              reportCheckoutError("Phone number is required.");
-              return;
-            }
-            const phoneResult = validatePhoneWithCountry(phoneCountryCode, values.phone);
-            if (!phoneResult.ok) {
-              reportCheckoutError(phoneResult.error);
-              return;
-            }
-            if (!isValidCheckoutPhone(phoneResult.value)) {
-              reportCheckoutError("Enter a valid phone number (8–15 digits).");
-              return;
-            }
-
-            setShowDroneModal(false);
-            void sendEnquiry(nextMessage);
-          }}
-        />
-      ) : null}
+      {stickyMounted && !completed
+        ? createPortal(
+            <div
+              className={cn(
+                "fixed inset-x-0 bottom-0 z-[300] flex flex-col items-stretch gap-1 border-t border-slate-200/80 bg-white px-3 pt-2.5 md:hidden",
+                "pb-[max(0.65rem,env(safe-area-inset-bottom,0px))] shadow-[0_-6px_20px_rgba(15,23,42,0.08)]"
+              )}
+              role="region"
+              aria-label="Checkout actions"
+            >
+              {activeStep === 1 ? (
+                <Button
+                  type="button"
+                  variant="accent"
+                  className={cn("w-full", styles.stickyCta, styles.stickyPrimary)}
+                  disabled={checkoutBusy || !checkoutItems.length}
+                  onClick={() => goToStep(2)}
+                >
+                  Continue
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="accent"
+                    className={cn("w-full", styles.stickyCta, styles.stickyPrimary, styles.stickySendEnquiry)}
+                    disabled={checkoutBusy || !checkoutItems.length}
+                    onClick={() => {
+                      if (validateStep2()) void sendEnquiry();
+                    }}
+                  >
+                    {loading === "enquiry" ? (
+                      "Sending…"
+                    ) : (
+                      <>
+                        <Send className="size-4 shrink-0" aria-hidden="true" strokeWidth={2.25} />
+                        Send Enquiry
+                      </>
+                    )}
+                  </Button>
+                  <button
+                    type="button"
+                    className={styles.stickyBackLink}
+                    disabled={checkoutBusy}
+                    onClick={() => goToStep(1)}
+                  >
+                    Back
+                  </button>
+                </>
+              )}
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

@@ -25,6 +25,8 @@ const MENU_OPEN_DELAY_MS = NAV_PANEL_OPEN_MS;
 const MENU_CLOSE_DELAY_MS = NAV_PANEL_CLOSE_MS;
 /** Cold-open only; category swaps while open are immediate. */
 const MENU_EXIT_MS = 240;
+/** Keep drawer mounted through slide-out (matches CSS 340ms + buffer). */
+const MOBILE_DRAWER_EXIT_MS = 360;
 const NAV_DESKTOP_PREFETCH_MIN_WIDTH = 1280;
 
 function canUseHoverIntent() {
@@ -386,7 +388,7 @@ export const StoreNav = forwardRef(function StoreNav(
     if (!mobileDrawerMounted) return;
     const hideTimer = window.setTimeout(() => {
       setMobileDrawerMounted(false);
-    }, MENU_EXIT_MS);
+    }, MOBILE_DRAWER_EXIT_MS);
     return () => window.clearTimeout(hideTimer);
   }, [mobileMenuOpen, mobileDrawerMounted]);
 

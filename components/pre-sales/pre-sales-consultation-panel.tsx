@@ -33,6 +33,8 @@ export type PreSalesConsultationPanelProps = {
   onCancel?: () => void;
   onSubmit: (values: PreSalesConsultationValues) => void | Promise<void>;
   variant?: "storefront" | "checkout";
+  /** Compact corner card — non-blocking, used on storefront. */
+  compact?: boolean;
   productSummary?: string;
   defaults?: Partial<PreSalesConsultationValues>;
   /** Sync contact fields back to parent (checkout shares these with the form). */
@@ -48,6 +50,8 @@ const TIMER_DEFAULT = 10;
 const STOREFRONT_SUBTEXT =
   "Talk with our flight engineering team about fit, configuration, or next steps. Share a few details — optional, no commitment required.";
 
+const COMPACT_SUBTEXT = "Questions about fit or next steps? Leave a few details.";
+
 const CHECKOUT_SUBTEXT =
   "Thank you for choosing Mithron Drone Systems. To help us address your requirements, please share your details below. Our flight engineering team will contact you shortly.";
 
@@ -61,6 +65,7 @@ export function PreSalesConsultationPanel({
   onCancel,
   onSubmit,
   variant = "storefront",
+  compact = false,
   productSummary,
   defaults,
   onValuesChange,
@@ -143,6 +148,21 @@ export function PreSalesConsultationPanel({
   useEffect(() => {
     if (!open) return;
 
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !submitting) {
+        event.preventDefault();
+        (onCancel ?? onClose)();
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+
+    if (compact) {
+      return () => {
+        window.removeEventListener("keydown", onKeyDown);
+      };
+    }
+
     const previousBodyOverflow = document.body.style.overflow;
     const previousHtmlOverflow = document.documentElement.style.overflow;
     const previousBodyPaddingRight = document.body.style.paddingRight;
@@ -154,21 +174,13 @@ export function PreSalesConsultationPanel({
       document.body.style.paddingRight = `${scrollbarGap}px`;
     }
 
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !submitting) {
-        event.preventDefault();
-        (onCancel ?? onClose)();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
     return () => {
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overflow = previousBodyOverflow;
       document.body.style.paddingRight = previousBodyPaddingRight;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, onCancel, onClose, submitting]);
+  }, [open, onCancel, onClose, submitting, compact]);
 
   function emitChange(next: PreSalesConsultationValues) {
     onValuesChange?.(next);
@@ -205,14 +217,20 @@ export function PreSalesConsultationPanel({
   const primaryId = `preSalesEmeraldWaterPrimary-${gradientId}`;
   const secondaryId = `preSalesEmeraldWaterSecondary-${gradientId}`;
   const tertiaryId = `preSalesEmeraldWaterTertiary-${gradientId}`;
+  const subtext =
+    compact ? COMPACT_SUBTEXT : variant === "checkout" ? CHECKOUT_SUBTEXT : STOREFRONT_SUBTEXT;
 
   return createPortal(
-    <div className={styles.overlay} role="presentation" onClick={dismiss}>
+    <div
+      className={cn(styles.overlay, compact && styles.overlayCompact)}
+      role="presentation"
+      onClick={compact ? undefined : dismiss}
+    >
       <div
         ref={cardRef}
-        className={styles.card}
+        className={cn(styles.card, compact && styles.cardCompact)}
         role="dialog"
-        aria-modal="true"
+        aria-modal={compact ? undefined : "true"}
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
       >
@@ -289,9 +307,7 @@ export function PreSalesConsultationPanel({
                 <h2 id={titleId} className={styles.title}>
                   Pre-Sales Consultation
                 </h2>
-                <p className={styles.subtext}>
-                  {variant === "checkout" ? CHECKOUT_SUBTEXT : STOREFRONT_SUBTEXT}
-                </p>
+                <p className={styles.subtext}>{subtext}</p>
               </div>
 
               <div className={styles.body}>
@@ -435,9 +451,13 @@ export function PreSalesConsultationPanel({
                   <textarea
                     id={`pre-sales-notes-${gradientId}`}
                     value={notes}
-                    placeholder="Share quantity, delivery timeline, or custom questions..."
+                    placeholder={
+                      compact
+                        ? "Quantity, timeline, or questions…"
+                        : "Share quantity, delivery timeline, or custom questions..."
+                    }
                     className={styles.textarea}
-                    rows={3}
+                    rows={compact ? 2 : 3}
                     onFocus={markInteraction}
                     onBlur={clearInteraction}
                     onChange={(event) => {

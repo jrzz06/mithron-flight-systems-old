@@ -25,7 +25,7 @@ function loadProjectEnv() {
 const agriMission = {
   eyebrow: "Solutions for Growth",
   title: "Agri Community World",
-  body: "Register, book, and finance drones across India's AGRONE network.",
+  body: "<p style=\"text-align:left;color:#ffffff\">Register, book, and finance drones across India's AGRONE network.</p>",
   href: "/agriculture",
   cta: "Explore Agri Drones",
   mediaNote: "",
@@ -86,7 +86,7 @@ const agriMission = {
 const cityMission = {
   eyebrow: "Solutions for Future Cities",
   title: "City Drone World",
-  body: "Urban platforms for rentals, training, care, and technician support.",
+  body: "<p style=\"color:#ffffff\">Urban platforms for rentals, training, care, and technician support.</p>",
   href: "/surveillance",
   cta: "Explore City Drones",
   mediaNote: "",

@@ -23,9 +23,9 @@ export const heroSlides: HeroSlide[] = [
     theme: "light",
     composition: {
       mode: "full-bleed",
-      textTone: "dark",
+      textTone: "light",
       mediaPosition: "72% 52%",
-      mobileMediaPosition: "78% 47%",
+      mobileMediaPosition: "70% 36%",
       productDominance: "flagship"
     }
   },
@@ -43,7 +43,7 @@ export const heroSlides: HeroSlide[] = [
       mode: "full-bleed",
       textTone: "light",
       mediaPosition: "62% 58%",
-      mobileMediaPosition: "66% 48%",
+      mobileMediaPosition: "82% 34%",
       productDominance: "flagship"
     }
   },
@@ -61,7 +61,7 @@ export const heroSlides: HeroSlide[] = [
       mode: "full-bleed",
       textTone: "light",
       mediaPosition: "78% 46%",
-      mobileMediaPosition: "82% 42%",
+      mobileMediaPosition: "80% 40%",
       productDominance: "flagship"
     }
   }

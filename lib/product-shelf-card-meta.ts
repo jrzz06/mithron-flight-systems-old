@@ -4,7 +4,7 @@ export type ProductShelfCardItem = {
   slug: string;
   name: string;
   price: number;
-  /** Compare-at / MRP when higher than `price` — shown struck on catalog cards. */
+  /** Compare-at / MRP when higher than `price` — struck on shelf + catalog cards. */
   compareAt?: number | null;
   tagline: string;
   category: string;
@@ -16,7 +16,7 @@ export type ProductShelfCardItem = {
   reviewCount?: number;
   /** When false, GST note is hidden. Defaults to charged when undefined. */
   chargeTax?: boolean;
-  /** Admin tax-included flag — drives Incl. GST vs Excl. GST on catalog cards. */
+  /** Admin tax-included flag — drives Incl. GST vs Excl. GST on shelf + catalog cards. */
   taxIncluded?: boolean;
   image: {
     src: string;

@@ -47,27 +47,28 @@ const heroImageComposition: Record<string, HeroImageComposition> = {
   "ag10-arrival": {
     focalPoint: "right-center drone over glacial terrain at sunrise",
     desktopObjectPosition: "72% 52%",
-    mobileObjectPosition: "78% 47%",
+    mobileObjectPosition: "70% 36%",
     desktopTransform: "translate3d(0, 0, 0) scale(1.08)",
-    mobileTransform: "translate3d(0, 0, 0) scale(1.1)",
+    mobileTransform: "translate3d(0, 0, 0) scale(1)",
     desktopFilter: "none",
     mobileFilter: "saturate(1.06) contrast(1.04)"
   },
   "mapping-flight": {
     focalPoint: "center caged drone over night sports court",
     desktopObjectPosition: "62% 58%",
-    mobileObjectPosition: "66% 48%",
+    /* Bias hard-right so the lattice cage sits in-frame (46% showed only city/goal) */
+    mobileObjectPosition: "82% 34%",
     desktopTransform: "translate3d(0, 0, 0) scale(1.08)",
-    mobileTransform: "translate3d(0, 0, 0) scale(1.1)",
+    mobileTransform: "translate3d(0, 0, 0) scale(1)",
     desktopFilter: "none",
     mobileFilter: "saturate(1.05) contrast(1.03)"
   },
   "drone-ecosystem": {
     focalPoint: "upper-right medical delivery drone over coastal horizon",
     desktopObjectPosition: "90% 52%",
-    mobileObjectPosition: "82% 42%",
+    mobileObjectPosition: "80% 40%",
     desktopTransform: "translate3d(0, 0, 0) scale(1.08)",
-    mobileTransform: "translate3d(0, 0, 0) scale(1.1)",
+    mobileTransform: "translate3d(0, 0, 0) scale(1)",
     desktopFilter: "none",
     mobileFilter: "saturate(1.05) contrast(1.03)"
   }
@@ -75,12 +76,12 @@ const heroImageComposition: Record<string, HeroImageComposition> = {
 
 // Ink tone for hero copy: "light" = white text, "dark" = dark text, "split" = dark title + white subtitle.
 const heroTextInkBySlide: Record<string, HeroInkTone> = {
-  "ag10-arrival": "dark",
+  "ag10-arrival": "light",
   "mapping-flight": "light",
   "drone-ecosystem": "light"
 };
 
-const heroTextInkByIndex: HeroInkTone[] = ["dark", "light", "dark"];
+const heroTextInkByIndex: HeroInkTone[] = ["light", "light", "dark"];
 
 function resolveHeroTextInk(slide: HeroSlide, slideIndex: number): HeroInkTone {
   const presetInk = heroTextInkBySlide[slide.id];
@@ -281,6 +282,7 @@ export function HeroCarousel({
           <div
             key={item.id}
             data-testid={`hero-slide-${item.id}`}
+            data-hero-slide-id={item.id}
             data-hero-slide-state={getSlideState(itemIndex)} // test-placeholder: data-hero-slide-state="active"
             data-hero-motion="static"
             className="absolute inset-0 hero-slide-frame"
@@ -337,7 +339,8 @@ export function HeroCarousel({
                   aria-label={`Go to hero slide ${itemIndex + 1}`}
                   aria-current={itemIndex === activeIndex ? "true" : "false"}
                   className={cn(
-                    "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-3 transition-[background-color,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    "hero-pagination-dot inline-flex items-center justify-center rounded-full transition-[background-color,opacity,width,height,box-shadow,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    "min-h-11 min-w-11 p-3",
                     itemIndex === activeIndex ? "opacity-100" : "opacity-80"
                   )}
                   onClick={() => goToSlide(itemIndex)}
@@ -345,7 +348,7 @@ export function HeroCarousel({
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "block h-1 rounded-full transition-[width,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                      "hero-pagination-dot__pip block h-1 rounded-full transition-[width,height,background-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
                       itemIndex === activeIndex ? cn("w-12", tone.activeDot) : cn("w-5", tone.dots)
                     )}
                   />

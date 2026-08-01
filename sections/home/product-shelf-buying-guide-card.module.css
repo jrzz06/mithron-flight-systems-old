@@ -6,8 +6,8 @@
   height: 100%;
   overflow: hidden;
   border: none;
-  border-radius: 0;
-  background: transparent;
+  border-radius: var(--shelf-dji-card-radius, 8px);
+  background: #ffffff;
   color: #09090b;
   text-decoration: none;
   box-shadow: none;
@@ -17,15 +17,21 @@
 .card:hover,
 .card:focus-visible {
   outline: none;
-  background: rgba(0, 0, 0, 0.015);
+  background: #fafafa;
+}
+
+.card:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.28);
+  outline-offset: 2px;
 }
 
 .copy {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 6px;
-  padding: 16px 16px 8px;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 18px 18px 10px;
 }
 
 .eyebrow {
@@ -33,47 +39,71 @@
   color: #71717a;
   font-family: var(--font-google-sans-flex), system-ui, sans-serif;
   font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.headlineRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
 }
 
 .headline {
   margin: 0;
-  max-width: 18ch;
-  color: #09090b;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 14ch;
+  color: #18181b;
   font-family: var(--font-google-sans-flex), system-ui, sans-serif;
-  font-size: clamp(1.05rem, 1.2vw, 1.375rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.05rem, 1.15vw, 1.3125rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
   line-height: 1.2;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  /* Match Care stack height — don't grow Global from longer headlines */
-  min-height: calc(1.2em * 3);
-  max-height: calc(1.2em * 3);
+}
+
+.chevron {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: #18181b;
+  color: #ffffff;
+}
+
+.chevronIcon {
+  width: 14px;
+  height: 14px;
 }
 
 .imageFrame {
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
-  min-height: 120px;
+  min-height: 0;
   margin-top: auto;
   overflow: hidden;
   background: transparent;
 }
 
-/* Provided iridescent glass backdrop for product cutouts */
+/* Soft layered slate gradient behind product cutouts */
 .cleanBackdrop {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    url("/media/mithron/shelves/buying-guide-backdrop.png") center / cover no-repeat;
+  background: linear-gradient(to top right, #f1f5f9 0%, #ffffff 50%, #e2e8f0 100%);
 }
 
 .cleanBackdrop::before {
@@ -81,7 +111,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 68% 52% at 50% 68%, rgba(255, 255, 255, 0.22) 0%, transparent 68%);
+    radial-gradient(ellipse 70% 55% at 50% 72%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
 }
 
 .cleanBackdrop::after {
@@ -90,29 +120,24 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.7) 0%,
     transparent 28%,
     transparent 72%,
-    rgba(255, 255, 255, 0.06) 100%
+    rgba(226, 232, 240, 0.28) 100%
   );
 }
 
 .image {
   z-index: 1;
   object-fit: contain;
-  object-position: center center;
-  padding: clamp(12px, 1.6vw, 20px);
-  /* Knock out studio-white plates so the card backdrop reads through */
+  object-position: center bottom;
+  padding: clamp(8px, 1.2vw, 14px) clamp(12px, 1.6vw, 20px) 0;
   mix-blend-mode: multiply;
   filter:
-    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35))
-    drop-shadow(0 12px 26px rgba(0, 0, 0, 0.42));
+    drop-shadow(0 4px 10px rgba(15, 23, 42, 0.1))
+    drop-shadow(0 10px 20px rgba(15, 23, 42, 0.08));
 }
 
-/*
- * Responsive image frames paint dominantColor as a solid placeholder.
- * That sits above .cleanBackdrop and hides the buying-guide bg — force clear.
- */
 .imageFrame :global(.mithron-responsive-image-frame) {
   background-color: transparent !important;
   background-image: none !important;
@@ -120,45 +145,23 @@
   --mithron-image-blur: none;
 }
 
-/* Image fills the card; copy fades white → transparent into the photo */
 .cardWithImage {
   height: 100%;
   min-height: 0;
-  background:
-    url("/media/mithron/shelves/buying-guide-backdrop.png") center / cover no-repeat,
-    #e8f0f8;
+  background: #ffffff;
 }
 
 .cardWithImage .imageFrame {
-  position: absolute;
-  inset: 0;
+  position: relative;
   z-index: 0;
-  flex: none;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 110px;
   margin-top: 0;
-  background: transparent;
 }
 
 .cardWithImage .copy {
   z-index: 1;
-  flex: 0 0 auto;
-  padding: 16px 16px 1.5rem;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.97) 0%,
-    rgba(255, 255, 255, 0.9) 45%,
-    rgba(255, 255, 255, 0.42) 75%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
-
-.cardWithImage .image {
-  padding: clamp(16px, 2vw, 28px) clamp(12px, 1.6vw, 20px) clamp(12px, 1.6vw, 20px);
-  padding-top: clamp(88px, 28%, 120px);
-  mix-blend-mode: multiply;
-  filter:
-    drop-shadow(0 5px 12px rgba(0, 0, 0, 0.38))
-    drop-shadow(0 16px 32px rgba(0, 0, 0, 0.48));
+  background: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -169,7 +172,7 @@
 
 @media (max-width: 1279px) {
   .copy {
-    padding: clamp(10px, 2.5vw, 16px) clamp(10px, 2.5vw, 16px) 8px;
+    padding: clamp(12px, 2.5vw, 16px) clamp(12px, 2.5vw, 16px) 8px;
   }
 
   .eyebrow {
@@ -177,10 +180,65 @@
   }
 
   .headline {
-    font-size: clamp(0.875rem, 2.8vw, 1.125rem);
+    font-size: clamp(0.9375rem, 2.8vw, 1.125rem);
+    max-width: 16ch;
+  }
+
+  .chevron {
+    width: 24px;
+    height: 24px;
+  }
+
+  .chevronIcon {
+    width: 12px;
+    height: 12px;
   }
 
   .imageFrame {
-    min-height: clamp(80px, 22vw, 120px);
+    min-height: clamp(72px, 20vw, 110px);
+  }
+}
+
+@media (max-width: 767px) {
+  .card,
+  .cardWithImage {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .copy {
+    padding: 8px 8px 4px;
+    gap: 2px;
+  }
+
+  .eyebrow {
+    font-size: clamp(0.55rem, 1.9vw, 0.625rem);
+  }
+
+  .headline {
+    font-size: clamp(0.75rem, 2.3vw, 0.875rem);
+    max-width: 13ch;
+    line-height: 1.15;
+  }
+
+  .chevron {
+    width: 20px;
+    height: 20px;
+  }
+
+  .chevronIcon {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* Keep guide + View All under product-card height so stretch can flush bottoms */
+  .cardWithImage .imageFrame,
+  .imageFrame {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .image {
+    padding: 4px 8px 0;
   }
 }

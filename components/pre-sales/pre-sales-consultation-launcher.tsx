@@ -24,7 +24,8 @@ const PreSalesConsultationPanel = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const AUTO_OPEN_DELAY_MS = 3000;
+/** Homepage-only auto-open delay (middle of the 10–20s browsing window). */
+const AUTO_OPEN_DELAY_MS = 15_000;
 
 function productSlugFromPathname(pathname: string) {
   if (!pathname.startsWith("/product/")) return null;
@@ -43,6 +44,8 @@ export function PreSalesConsultationLauncher() {
   const pathname = usePathname() ?? "";
   const cartItems = useCartStore((state) => state.items);
   const productSlug = useMemo(() => productSlugFromPathname(pathname), [pathname]);
+  const isCheckout = pathname === "/checkout" || pathname.startsWith("/checkout/");
+  const isHome = pathname === "/";
 
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -102,13 +105,13 @@ export function PreSalesConsultationLauncher() {
   }, []);
 
   useEffect(() => {
-    if (hasPreSalesAutoShown()) return;
+    if (!isHome || hasPreSalesAutoShown()) return;
     const timer = window.setTimeout(() => {
       if (hasPreSalesAutoShown()) return;
       openPanel(true);
     }, AUTO_OPEN_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [openPanel]);
+  }, [isHome, openPanel]);
 
   const summaryLabel = useMemo(() => {
     if (cartItems.length > 0) {
@@ -171,6 +174,8 @@ export function PreSalesConsultationLauncher() {
     }
   }
 
+  if (isCheckout) return null;
+
   return (
     <>
       {!open ? (
@@ -201,6 +206,7 @@ export function PreSalesConsultationLauncher() {
           onCancel={closePanel}
           onSubmit={handleSubmit}
           variant="storefront"
+          compact
           productSummary={summaryLabel}
           submitting={submitting}
           error={error}

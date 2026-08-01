@@ -28,6 +28,7 @@ type InventoryActionBridgeProps = {
   bulkAction: InventoryServerAction;
   restockAction: InventoryServerAction;
   permanentDeleteAction?: InventoryServerAction;
+  /** @deprecated Force delete is handled by permanentDeleteAction when force_delete=1 is posted. */
   forceDeleteAction?: InventoryServerAction;
   canForceDelete?: boolean;
   exportHref: string;
@@ -127,7 +128,8 @@ function mergeInventoryRow(storeRow: AdminEntityRow, fallback?: SimpleInventoryR
           ? storeRow.inventory_updated_at
           : null,
     supplierName: String(storeRow.supplierName ?? storeRow.supplier_name ?? ""),
-    isArchived: Boolean(storeRow.isArchived ?? storeRow.is_archived ?? stockStatus === "archived")
+    // Product archive only — do not infer from inventory stock_status alone.
+    isArchived: Boolean(storeRow.isArchived ?? storeRow.is_archived)
   };
 }
 
@@ -258,13 +260,6 @@ export function InventoryActionBridge({
         : undefined,
     [wrapAction, permanentDeleteAction]
   );
-  const wrappedForceDelete = useMemo(
-    () =>
-      forceDeleteAction
-        ? wrapAction(forceDeleteAction, undefined, "Force delete product", { removeOnSuccess: true })
-        : undefined,
-    [wrapAction, forceDeleteAction]
-  );
 
   return (
     <div className="grid gap-4" data-admin-inventory-live-bridge>
@@ -288,7 +283,6 @@ export function InventoryActionBridge({
         bulkAction={wrappedBulk}
         restockAction={wrappedRestock}
         permanentDeleteAction={wrappedPermanentDelete}
-        forceDeleteAction={wrappedForceDelete}
         canForceDelete={canForceDelete}
       />
     </div>

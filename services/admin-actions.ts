@@ -2,7 +2,17 @@ import { assertSupabaseAdminConfig } from "@/lib/env";
 import { fetchWithTimeout, SUPABASE_FETCH_TIMEOUT_MS } from "@/lib/fetch-with-timeout";
 import type { EnterprisePermission } from "@/lib/auth/permissions";
 import { LEADS_REST_SELECT } from "@/lib/leads/shared";
+import {
+  type ProductDeletionBlockers,
+  type ProductDeletionBlockerResult
+} from "@/lib/product-deletion";
 import { requirePermission } from "@/services/auth";
+
+export type {
+  ProductDeletionBlockers,
+  ProductDeletionBlockerResult
+} from "@/lib/product-deletion";
+export { productDeletionAllowsForce } from "@/lib/product-deletion";
 
 type EnvSource = Record<string, string | undefined>;
 type JsonRecord = Record<string, unknown>;
@@ -152,7 +162,7 @@ const adminReadColumnsByTable: Record<string, string> = {
   media_assets: "id,bucket,folder,storage_path,public_url,mime_type,width,height,size_bytes,content_hash,is_primary,is_visible,status,updated_at,created_at",
   product_media_assets: "product_slug,media_asset_id,usage,variant_id,sort_order,is_primary,created_at,updated_at",
   promotional_campaigns: "id,label,headline,cta_label,href,media_asset_id,starts_at,ends_at,sort_order,is_visible,status,revision,updated_at,created_at",
-  mithron_products: "slug,name,tagline,category,price,supplier_id,submitted_by,rejection_reason,workflow_status,is_visible,source_availability,sort_order,updated_at,created_at",
+  mithron_products: "slug,name,tagline,category,price,supplier_id,submitted_by,rejection_reason,workflow_status,published_at,archived_at,is_visible,source_availability,sort_order,updated_at,created_at",
   inventory: "id,product_slug,sku,variant_id,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at,created_at",
   warehouse_stock: "id,warehouse_code,product_slug,sku,variant_id,available_quantity,committed_quantity,last_counted_at,updated_at,created_at",
   inventory_movements: "id,product_slug,sku,variant_id,warehouse_code,warehouse_stock_id,movement_type,quantity_delta,quantity_before,quantity_after,reason_code,actor_user_id,related_order_id,related_shipment_id,created_at",
@@ -1125,21 +1135,6 @@ export function updateProductPublicationRecord(payload: JsonRecord, actorId: str
   return updateAdminRecord("mithron_products", "slug", String(payload.slug ?? ""), payload, actorId, env);
 }
 
-export type ProductDeletionBlockers = {
-  inventory_movements: number;
-  shipment_items: number;
-  order_items: number;
-  hero_banners: number;
-  product_reviews: number;
-  faqs: number;
-};
-
-export type ProductDeletionBlockerResult = {
-  blockers: ProductDeletionBlockers;
-  hasBlockers: boolean;
-  blockerCount: number;
-};
-
 export type ProductDeleteMode = "auto" | "hard" | "force_hard";
 
 export type ProductDeleteOutcome = "archived" | "deleted" | "force_deleted";
@@ -1149,12 +1144,26 @@ export function isProductArchivedRecord(product: JsonRecord) {
   return workflow === "archived" || Boolean(product.archived_at);
 }
 
+function uniqueRecordCount(rows: JsonRecord[]) {
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const id = String(row.id ?? "");
+    if (id) {
+      seen.add(id);
+      continue;
+    }
+    seen.add(JSON.stringify(row));
+  }
+  return seen.size;
+}
+
 export async function getProductDeletionBlockers(
   slug: string,
   env: EnvSource = process.env
 ): Promise<ProductDeletionBlockerResult> {
   const [
-    inventoryMovements,
+    movementsBySlug,
+    movementsByProductId,
     shipmentItems,
     orderItems,
     heroBanners,
@@ -1162,6 +1171,7 @@ export async function getProductDeletionBlockers(
     faqs
   ] = await Promise.all([
     fetchAdminRecordsByColumn("inventory_movements", "product_slug", slug, env),
+    fetchAdminRecordsByColumn("inventory_movements", "product_id", slug, env),
     fetchAdminRecordsByColumn("shipment_items", "product_id", slug, env),
     fetchAdminRecordsByColumn("order_items", "product_slug", slug, env),
     fetchAdminRecordsByColumn("hero_banners", "product_slug", slug, env),
@@ -1170,7 +1180,7 @@ export async function getProductDeletionBlockers(
   ]);
 
   const blockers: ProductDeletionBlockers = {
-    inventory_movements: inventoryMovements.length,
+    inventory_movements: uniqueRecordCount([...movementsBySlug, ...movementsByProductId]),
     shipment_items: shipmentItems.length,
     order_items: orderItems.length,
     hero_banners: heroBanners.length,
@@ -1232,18 +1242,30 @@ export async function archiveProductRecord(slug: string, actorId: string | null,
 async function hardDeleteProductRecord(
   slug: string,
   actorId: string | null,
-  env: EnvSource = process.env
+  env: EnvSource = process.env,
+  options: { force?: boolean } = {}
 ) {
   const product = await fetchExistingAdminRecord("mithron_products", { slug }, "slug", env);
   if (!product) {
     throw new Error(`Product ${slug} does not exist or was already deleted.`);
   }
 
-  const deletedDependencies = {
+  const deletedDependencies: Record<string, number> = {
     product_media_assets: (await deleteAdminRecordsByColumn("product_media_assets", "product_slug", slug, actorId, env)).length,
     inventory: (await deleteAdminRecordsByColumn("inventory", "product_slug", slug, actorId, env)).length,
     warehouse_stock: (await deleteAdminRecordsByColumn("warehouse_stock", "product_slug", slug, actorId, env)).length
   };
+
+  if (options.force) {
+    // FK is on product_id (ON DELETE RESTRICT); product_slug is the newer mirror column.
+    const movementsById = await deleteAdminRecordsByColumn("inventory_movements", "product_id", slug, actorId, env);
+    const movementsBySlug = await deleteAdminRecordsByColumn("inventory_movements", "product_slug", slug, actorId, env);
+    deletedDependencies.inventory_movements = uniqueRecordCount([...movementsById, ...movementsBySlug]);
+    deletedDependencies.hero_banners = (await deleteAdminRecordsByColumn("hero_banners", "product_slug", slug, actorId, env)).length;
+    deletedDependencies.product_reviews = (await deleteAdminRecordsByColumn("product_reviews", "product_slug", slug, actorId, env)).length;
+    deletedDependencies.faqs = (await deleteAdminRecordsByColumn("faqs", "product_slug", slug, actorId, env)).length;
+  }
+
   const deletedProduct = await deleteAdminRecord("mithron_products", "slug", slug, actorId, env);
 
   return {
@@ -1304,7 +1326,7 @@ export async function deleteOrArchiveProduct(
   }
 
   assertProductCanForceDelete(slug, blockerResult.blockers);
-  const deleted = await hardDeleteProductRecord(slug, actorId, env);
+  const deleted = await hardDeleteProductRecord(slug, actorId, env, { force: true });
   return {
     outcome: "force_deleted" as const,
     blockers: blockerResult.blockers,

@@ -147,7 +147,7 @@ export function StorefrontShellStreamingLayout({
       setAssistantMounted(true);
     };
 
-    // Mount pre-sales early so its internal 3s auto-open is measured from shell ready.
+    // Mount pre-sales early so homepage 15s auto-open is measured from shell ready.
     const mountPreSalesSoon = () => {
       if (!active || !isMountedRef.current) return;
       setPreSalesMounted(true);

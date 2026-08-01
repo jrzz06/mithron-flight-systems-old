@@ -91,6 +91,7 @@ export function ProductShelfSection({
                     key={`${config.id}-${product.slug}`}
                     product={product}
                     layout="dji"
+                    presentation="shelf"
                     priority={productIndex === 0}
                   />
                 ))}

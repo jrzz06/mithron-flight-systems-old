@@ -8,7 +8,7 @@
   border: none;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 0;
-  background: #ffffff;
+  background: transparent;
   color: #09090b;
   text-decoration: none;
   box-shadow: none;
@@ -42,5 +42,19 @@
 
   .label {
     font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .card {
+    gap: 4px;
+    min-height: 0;
+    height: 100%;
+    border-top: none;
+  }
+
+  .label {
+    font-size: clamp(0.7rem, 2.2vw, 0.8125rem);
+    font-weight: 600;
   }
 }
