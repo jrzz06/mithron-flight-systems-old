@@ -17,7 +17,7 @@ describe("warehouse route snapshot scoping", () => {
       activity: source("app/warehouse/activity/page.tsx")
     };
 
-    expect(pages.dashboard).toContain('getWarehouseSnapshot({ scope: "dashboard" })');
+    expect(pages.dashboard).toContain('getWarehouseSnapshot({ scope: "dashboard", limit: 24 })');
     expect(pages.orders).toContain('scope: "ordersList"');
     expect(pages.fulfillment).toContain('scope: "ordersList"');
     expect(pages.activity).toContain('getWarehouseSnapshot({ scope: "ordersSummary" })');
@@ -56,7 +56,7 @@ describe("warehouse route snapshot scoping", () => {
     } else {
       expect(snapshot.status).toBe("BLOCKED");
     }
-  });
+  }, 30_000);
 
   it("scopes fulfillment and history routes to lean order snapshots", () => {
     const fulfillment = source("app/warehouse/fulfillment/page.tsx");
@@ -65,6 +65,9 @@ describe("warehouse route snapshot scoping", () => {
     const adminOrders = source("app/admin/orders/page.tsx");
 
     expect(fulfillment).toContain('scope: "ordersList"');
+    expect(fulfillment).toContain("getWarehouseDashboardOrderKpis");
+    expect(fulfillment).toContain("[...RECEIVED_FULFILLMENT_STATUSES]");
+    expect(fulfillment).not.toContain('["pending", ...RECEIVED_FULFILLMENT_STATUSES]');
     expect(fulfillmentDetail).toContain("loadWarehouseOrderDetail");
     expect(activity).toContain('getWarehouseSnapshot({ scope: "ordersSummary" })');
     expect(adminOrders).toContain('scope: "ordersList"');

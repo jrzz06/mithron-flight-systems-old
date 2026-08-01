@@ -5,7 +5,6 @@ import { WarehouseOpsLiveSync } from "@/components/warehouse/warehouse-ops-live-
 import { WarehouseOrderQueueTable } from "@/components/warehouse/warehouse-order-queue-table";
 import {
   ORDER_STEP_FILTER_OPTIONS,
-  RECEIVED_FULFILLMENT_STATUSES,
   matchesEmployeeFulfillmentFilter
 } from "@/lib/warehouse/operational-labels";
 import {
@@ -13,7 +12,7 @@ import {
   type WarehouseOrderRow
 } from "@/lib/warehouse/order-helpers";
 import { isActionNavigationError } from "@/lib/server-action-errors";
-import { getWarehouseSnapshot } from "@/services/admin";
+import { getWarehouseDashboardOrderKpis, getWarehouseSnapshot } from "@/services/admin";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { getCurrentAuthContext } from "@/services/auth";
 import { filterOrdersForWarehouseScope, resolveWarehouseScope } from "@/services/warehouse-scope";
@@ -57,21 +56,6 @@ async function dispatchOrderWithFeedback(formData: FormData) {
     redirect(feedbackPath("error", messageFromError(error)));
   }
   redirect(feedbackPath("success", "Order dispatched."));
-}
-
-function countByStep(orders: Array<Record<string, unknown>>, statuses: string[]) {
-  return orders.filter((order) => statuses.includes(String(order.fulfillment_status ?? "pending"))).length;
-}
-
-function isToday(value: unknown) {
-  const raw = typeof value === "string" ? value.trim() : "";
-  if (!raw) return false;
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return false;
-  const now = new Date();
-  return date.getUTCFullYear() === now.getUTCFullYear()
-    && date.getUTCMonth() === now.getUTCMonth()
-    && date.getUTCDate() === now.getUTCDate();
 }
 
 function buildOrderRows(
@@ -136,9 +120,11 @@ export default async function WarehouseOrdersPage({ searchParams }: { searchPara
   });
 
   const queueRows = buildOrderRows(filteredOrders, itemsByOrder, defaultWarehouseCode);
-  const dispatchedToday = assignedOrders.filter((order) =>
-    ["shipped", "delivered"].includes(String(order.fulfillment_status ?? "")) && isToday(order.updated_at)
-  );
+  const kpis = await getWarehouseDashboardOrderKpis({
+    isGlobal: scope.isGlobal,
+    warehouseCode: scope.warehouseCode,
+    defaultWarehouseCode
+  });
 
   return (
     <ControlShell
@@ -161,10 +147,10 @@ export default async function WarehouseOrdersPage({ searchParams }: { searchPara
 
         <WarehouseKpiStrip
           tiles={[
-            { label: "Received", value: countByStep(assignedOrders, ["pending"]), href: "/warehouse/orders?fulfillment_status=pending" },
-            { label: "Picking", value: countByStep(assignedOrders, [...RECEIVED_FULFILLMENT_STATUSES]), href: "/warehouse/fulfillment" },
-            { label: "Dispatched Today", value: dispatchedToday.length, href: "/warehouse/activity" },
-            { label: "Cancelled", value: countByStep(assignedOrders, ["cancelled"]) }
+            { label: "Received", value: kpis.received, href: "/warehouse/orders?fulfillment_status=pending" },
+            { label: "Picking", value: kpis.picking, href: "/warehouse/fulfillment" },
+            { label: "Dispatched Today", value: kpis.dispatchedToday, href: "/warehouse/activity" },
+            { label: "Cancelled", value: kpis.cancelled }
           ]}
         />
 

@@ -104,7 +104,7 @@ export const warehouseNavGroups: PlatformNavGroup[] = [
     items: [
       { label: "Today", href: "/warehouse/dashboard", icon: "gauge" },
       { label: "Orders", href: "/warehouse/orders", icon: "orders" },
-      { label: "Fulfillment", href: "/warehouse/fulfillment", icon: "orders" },
+      { label: "Fulfillment", href: "/warehouse/fulfillment", icon: "fulfillment" },
       { label: "History", href: "/warehouse/activity", icon: "audit" }
     ]
   }

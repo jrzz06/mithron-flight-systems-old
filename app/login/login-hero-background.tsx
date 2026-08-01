@@ -5,12 +5,10 @@ import { useSyncExternalStore } from "react";
 import { resolveLoginHeroTier, type LoginHeroTier } from "@/lib/login-hero-tier";
 import styles from "./login.module.css";
 
-/** Supabase CDN master — delivered capped at 1920px via Next image optimizer. */
+/** Same-origin CDN proxy — Next image optimizer cannot reliably fetch Supabase directly (timeouts → blank bg). */
 const LOGIN_BG_SRC =
-  "https://ictnoydmxlywwxwnugal.supabase.co/storage/v1/object/public/mithron-story/storefront/shell/login-bg.webp";
+  "/cdn-media/storage/v1/object/public/mithron-story/storefront/shell/login-bg.webp";
 
-const LOGIN_HERO_WIDTH = 1920;
-const LOGIN_HERO_HEIGHT = 1080;
 const SUBJECT_FOCUS = "36% 46%";
 
 function subscribeToLoginHeroTier() {
@@ -39,14 +37,13 @@ export function LoginHeroBackground({ priority = true }: LoginHeroBackgroundProp
     <div className={styles.heroLayer} data-hero-tier={tier} aria-hidden="true">
       <Image
         src={LOGIN_BG_SRC}
-        width={LOGIN_HERO_WIDTH}
-        height={LOGIN_HERO_HEIGHT}
         alt=""
-        className={styles.heroImage}
-        sizes="(max-width: 1280px) 100vw, 1920px"
+        fill
+        sizes="100vw"
         quality={92}
         decoding="async"
         priority={priority}
+        className={styles.heroImage}
         style={{ objectPosition: SUBJECT_FOCUS }}
       />
 

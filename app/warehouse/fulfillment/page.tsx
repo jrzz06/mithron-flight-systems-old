@@ -9,7 +9,7 @@ import {
   type WarehouseOrderRow
 } from "@/lib/warehouse/order-helpers";
 import { isActionNavigationError } from "@/lib/server-action-errors";
-import { getWarehouseSnapshot } from "@/services/admin";
+import { getWarehouseDashboardOrderKpis, getWarehouseSnapshot } from "@/services/admin";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { getCurrentAuthContext } from "@/services/auth";
 import { filterOrdersForWarehouseScope, resolveWarehouseScope } from "@/services/warehouse-scope";
@@ -93,7 +93,7 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
   const defaultWarehouseCode = policy.defaultWarehouseCode;
 
   const assignedOrders = filterOrdersForWarehouseScope(snapshot.data.orders, scope, defaultWarehouseCode);
-  const activeStatuses = ["pending", ...RECEIVED_FULFILLMENT_STATUSES];
+  const activeStatuses = [...RECEIVED_FULFILLMENT_STATUSES];
 
   const itemsByOrder = new Map<string, number>();
   for (const item of snapshot.data.orderItems) {
@@ -102,19 +102,24 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
     itemsByOrder.set(orderId, (itemsByOrder.get(orderId) ?? 0) + Number(item.quantity ?? 0));
   }
 
-  // Status filter remains client-side (fulfillment_status multi-value); search is server-side.
+  // Picking queue only (packing); Received/pending stays on Orders. Search is server-side.
   const filteredOrders = assignedOrders.filter((order) => {
     const fulfillmentStatus = String(order.fulfillment_status ?? "");
-    return activeStatuses.includes(fulfillmentStatus);
+    return activeStatuses.includes(fulfillmentStatus as typeof RECEIVED_FULFILLMENT_STATUSES[number]);
   });
 
   const queueRows = buildOrderRows(filteredOrders, itemsByOrder, defaultWarehouseCode);
+  const kpis = await getWarehouseDashboardOrderKpis({
+    isGlobal: scope.isGlobal,
+    warehouseCode: scope.warehouseCode,
+    defaultWarehouseCode
+  });
 
   return (
     <ControlShell
       eyebrow="Fulfillment"
       title="Fulfillment"
-      description="Receive orders, then dispatch them in one place."
+      description="Pick and dispatch orders that are already in fulfillment."
       actions={[
         { label: "Orders", href: "/warehouse/orders" },
         { label: "History", href: "/warehouse/activity" }
@@ -131,8 +136,8 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
 
         <WarehouseKpiStrip
           tiles={[
-            { label: "Received", value: assignedOrders.filter((order) => String(order.fulfillment_status ?? "") === "pending").length },
-            { label: "Picking", value: assignedOrders.filter((order) => RECEIVED_FULFILLMENT_STATUSES.includes(String(order.fulfillment_status ?? "") as typeof RECEIVED_FULFILLMENT_STATUSES[number])).length }
+            { label: "Received", value: kpis.received, href: "/warehouse/orders?fulfillment_status=pending" },
+            { label: "Picking", value: kpis.picking, href: "/warehouse/fulfillment" }
           ]}
         />
 

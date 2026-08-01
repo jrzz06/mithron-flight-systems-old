@@ -36,6 +36,9 @@ describe("warehouse panel implementation", () => {
       expect(navConfig).toContain(label);
     }
     expect(navConfig).toContain("/warehouse/fulfillment");
+    expect(navConfig).toContain('icon: "fulfillment"');
+    expect(navConfig).toMatch(/label: "Orders"[\s\S]*icon: "orders"/);
+    expect(navConfig).toMatch(/label: "Fulfillment"[\s\S]*icon: "fulfillment"/);
     expect(navConfig).not.toContain("/warehouse/inventory");
     expect(navConfig).not.toContain("/warehouse/settings");
     expect(layout).toContain("ControlPlaneParallelLayout");

@@ -1952,6 +1952,7 @@ export type WarehouseDashboardOrderKpis = {
   received: number;
   picking: number;
   dispatchedToday: number;
+  cancelled: number;
 };
 
 /**
@@ -1967,7 +1968,7 @@ export async function getWarehouseDashboardOrderKpis(input: {
   const env = input.env ?? process.env;
   const config = getSupabaseAdminConfig(env);
   if (!config.configured) {
-    return { received: 0, picking: 0, dispatchedToday: 0 };
+    return { received: 0, picking: 0, dispatchedToday: 0, cancelled: 0 };
   }
 
   const hotCutoff = encodeURIComponent(operationalArchiveHotCutoffIso());
@@ -1989,20 +1990,22 @@ export async function getWarehouseDashboardOrderKpis(input: {
   }
 
   const base = `select=id&created_at=gte.${hotCutoff}${warehouseFilter}`;
-  const [received, picking, dispatchedToday] = await Promise.all([
+  const [received, picking, dispatchedToday, cancelled] = await Promise.all([
     countTableRows(config, "orders", `${base}&fulfillment_status=eq.pending&limit=1`),
     countTableRows(config, "orders", `${base}&fulfillment_status=eq.packing&limit=1`),
     countTableRows(
       config,
       "orders",
       `${base}&fulfillment_status=in.(shipped,delivered)&updated_at=gte.${dayStartIso}&updated_at=lt.${dayEndIso}&limit=1`
-    )
+    ),
+    countTableRows(config, "orders", `${base}&fulfillment_status=eq.cancelled&limit=1`)
   ]);
 
   return {
     received: received.count,
     picking: picking.count,
-    dispatchedToday: dispatchedToday.count
+    dispatchedToday: dispatchedToday.count,
+    cancelled: cancelled.count
   };
 }
 

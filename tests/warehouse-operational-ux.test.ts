@@ -34,9 +34,11 @@ describe("warehouse operational UX maturity", () => {
 
     expect(ordersPage).toContain("cancelWarehouseOrderFormAction");
     expect(ordersPage).toContain("dispatchWarehouseOrderFormAction");
+    expect(ordersPage).toContain("getWarehouseDashboardOrderKpis");
     expect(ordersPage).toContain('href: "/warehouse/fulfillment"');
     expect(ordersPage).toContain('label: "Received"');
     expect(ordersPage).toContain('label: "Picking"');
+    expect(ordersPage).not.toContain("countByStep");
     expect(queueTable).toContain("/warehouse/fulfillment/");
     expect(queueTable).toContain("OperationalMoreActions");
     expect(queueTable).toContain("Cancel & Delete Order");
@@ -56,8 +58,13 @@ describe("warehouse operational UX maturity", () => {
     const productDetail = source("app/warehouse/fulfillment/[id]/products/[itemId]/page.tsx");
     const detailComponent = source("components/warehouse/warehouse-fulfillment-detail.tsx");
     const actions = source("app/warehouse/actions.ts");
+    const navMetrics = source("services/nav-metrics.ts");
 
     expect(fulfillmentPage).toContain("data-warehouse-fulfillment-route");
+    expect(fulfillmentPage).toContain("getWarehouseDashboardOrderKpis");
+    expect(fulfillmentPage).toContain("RECEIVED_FULFILLMENT_STATUSES");
+    expect(fulfillmentPage).not.toContain('["pending", ...RECEIVED_FULFILLMENT_STATUSES]');
+    expect(fulfillmentPage).not.toContain('activeStatuses = ["pending"');
     expect(fulfillmentDetail).toContain("dispatchWarehouseOrderFormAction");
     expect(fulfillmentDetail).not.toContain("receiveWarehouseOrderFormAction");
     expect(detailComponent).not.toContain("Mark Received");
@@ -70,6 +77,9 @@ describe("warehouse operational UX maturity", () => {
     expect(productDetail).toContain("Product to dispatch");
     expect(productDetail).toContain("dispatchWarehouseOrderFormAction");
     expect(productDetail).toContain("canDispatchOrder");
+    expect(navMetrics).toContain("getWarehouseDashboardOrderKpis");
+    expect(navMetrics).toContain("fulfillmentPending: kpis.picking");
+    expect(navMetrics).not.toContain("fulfillment_status=in.(pending,packing)");
 
     // Dispatch reuses only active shipments and skips redundant fulfillment advance.
     expect(actions).toContain('activeShipmentStatuses = ["pending", "reserved", "packed", "ready_for_pickup"]');

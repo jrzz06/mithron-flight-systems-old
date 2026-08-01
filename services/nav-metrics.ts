@@ -139,9 +139,25 @@ export const getAdminNavMetricsPayload = cache(async (): Promise<AdminNavMetrics
   };
 });
 
-export const getWarehouseNavMetricsPayload = cache(async (): Promise<WarehouseNavMetricsPayload> => ({
-  fulfillmentPending: await countRows("fulfillment_status=in.(pending,packing)&status=in.(confirmed,assigned,processing,packed,dispatched,in_transit)")
-}));
+export const getWarehouseNavMetricsPayload = cache(async (): Promise<WarehouseNavMetricsPayload> => {
+  // Badge on Fulfillment = picking queue (packing), same scoped count as Today / Orders KPIs.
+  const { getWarehouseDashboardOrderKpis } = await import("@/services/admin");
+  const { getAdminSettingsPolicy } = await import("@/services/admin-settings-policy");
+  const { getCurrentAuthContext } = await import("@/services/auth");
+  const { resolveWarehouseScope } = await import("@/services/warehouse-scope");
+
+  const context = await getCurrentAuthContext();
+  const [policy, scope] = await Promise.all([
+    getAdminSettingsPolicy(),
+    resolveWarehouseScope({ userId: context.userId, role: context.role })
+  ]);
+  const kpis = await getWarehouseDashboardOrderKpis({
+    isGlobal: scope.isGlobal,
+    warehouseCode: scope.warehouseCode,
+    defaultWarehouseCode: policy.defaultWarehouseCode
+  });
+  return { fulfillmentPending: kpis.picking };
+});
 
 export const getSupplierNavMetricsPayload = cache(async (supplierId: string): Promise<SupplierNavMetricsPayload> => {
   const [pendingReview, needsAction, inventoryAlerts] = await Promise.all([

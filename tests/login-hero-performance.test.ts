@@ -19,7 +19,9 @@ describe("login hero performance tiers", () => {
     expect(hero).toContain('"use client"');
     expect(hero).toContain('data-hero-tier={tier}');
     expect(hero).toContain("useSyncExternalStore");
-    expect(hero).toContain('sizes="(max-width: 1280px) 100vw, 1920px"');
+    expect(hero).toContain('sizes="100vw"');
+    expect(hero).toContain("fill");
+    expect(hero).toContain("/cdn-media/storage/v1/object/public/mithron-story/storefront/shell/login-bg.webp");
     expect(hero).not.toContain("backgroundImage");
     expect(hero).toContain("styles.heroImageSky");
     expect(hero).not.toContain("unoptimized");

@@ -37,15 +37,24 @@
   z-index: 0;
   overflow: hidden;
   contain: layout paint style;
-  background: #0a0c0e;
+  /* Fallback while image loads / if fetch fails — matches cinematic night palette */
+  background:
+    radial-gradient(
+      ellipse 58% 48% at var(--login-hero-focus-x) var(--login-hero-focus-y),
+      #243548 0%,
+      #121820 52%,
+      #0a0c0e 100%
+    ),
+    #0a0c0e;
 }
 
 .heroImage {
   position: absolute;
-  inset: -2%;
+  inset: 0;
   display: block;
-  width: 104%;
-  height: 104%;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
   object-fit: cover;
   object-position: var(--login-hero-focus-x) var(--login-hero-focus-y);
   image-rendering: auto;
