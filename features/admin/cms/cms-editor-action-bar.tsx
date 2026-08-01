@@ -129,6 +129,9 @@ export function CmsEditorActionBar({
 
 export type CmsPreviewDevice = "desktop" | "tablet" | "mobile";
 
+/** Admin iframe preview: fail to error UI instead of hanging on "Loading preview…". */
+const CMS_IFRAME_PREVIEW_TIMEOUT_MS = 12_000;
+
 export function CmsLivePreviewPanel({
   previewHref,
   previewAnchor,
@@ -148,23 +151,33 @@ export function CmsLivePreviewPanel({
 }) {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [iframeState, setIframeState] = useState<"loading" | "ready" | "error">("loading");
+  const usesIframe = children == null;
+  const contentRefreshKey = refreshNonce + refreshKey;
 
   const iframeSrc = useMemo(() => {
     const base = previewHref ?? buildCmsPreviewHref({ anchor: previewAnchor, draft: true });
-    return appendPreviewRefreshParam(base, refreshNonce + refreshKey);
-  }, [previewAnchor, previewHref, refreshKey, refreshNonce]);
+    return appendPreviewRefreshParam(base, contentRefreshKey);
+  }, [previewAnchor, previewHref, contentRefreshKey]);
 
   const handleRefresh = useCallback(() => {
-    setIframeState("loading");
+    if (usesIframe) setIframeState("loading");
     setRefreshNonce((current) => current + 1);
-  }, []);
+  }, [usesIframe]);
 
   useEffect(() => {
     if (refreshKey > 0) {
-      setIframeState("loading");
+      if (usesIframe) setIframeState("loading");
       setRefreshNonce((current) => current + 1);
     }
-  }, [refreshKey]);
+  }, [refreshKey, usesIframe]);
+
+  useEffect(() => {
+    if (!usesIframe || iframeState !== "loading") return;
+    const timer = window.setTimeout(() => {
+      setIframeState((current) => (current === "loading" ? "error" : current));
+    }, CMS_IFRAME_PREVIEW_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [usesIframe, iframeState, iframeSrc]);
 
   return (
     <div
@@ -221,7 +234,15 @@ export function CmsLivePreviewPanel({
             maxWidth: "100%"
           }}
         >
-          {children ?? (
+          {children != null ? (
+            <div
+              key={contentRefreshKey}
+              className="min-h-[480px] w-full flex-1 overflow-auto bg-white"
+              data-cms-section-live-preview
+            >
+              {children}
+            </div>
+          ) : (
             <>
               {iframeState === "loading" ? (
                 <div className="absolute inset-0 z-10 grid place-items-center bg-[var(--platform-surface-muted)] text-sm text-[var(--platform-text-muted)]">

@@ -232,9 +232,23 @@ export function ProductReplacePicker({
 
   const visibleResults = useMemo(() => {
     const filtered = sourceResults.filter((item) => !excludeSlugs.includes(item.slug));
-    if (!currentSlug || !currentProduct) return filtered;
-    if (excludeSlugs.includes(currentSlug)) return filtered;
-    return [currentProduct, ...filtered.filter((item) => item.slug !== currentSlug)];
+    const rows =
+      currentSlug && currentProduct && !excludeSlugs.includes(currentSlug)
+        ? [
+            currentProduct,
+            ...filtered.filter(
+              (item) => item.slug !== currentSlug && item.slug !== currentProduct.slug
+            )
+          ]
+        : filtered;
+
+    // Guarantees unique React keys (`key={item.slug}`) even if API/browse merge doubles a slug.
+    const seen = new Set<string>();
+    return rows.filter((item) => {
+      if (!item.slug || seen.has(item.slug)) return false;
+      seen.add(item.slug);
+      return true;
+    });
   }, [currentProduct, currentSlug, excludeSlugs, sourceResults]);
 
   const handleSelect = (item: ProductReplaceItem) => {

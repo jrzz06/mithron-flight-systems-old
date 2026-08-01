@@ -56,6 +56,7 @@ import { CmsEditorActionBar, CmsLivePreviewPanel } from "@/features/admin/cms/cm
 import { HomepageBuilderProvider, useHomepageBuilder, useOptionalHomepageBuilder } from "@/features/admin/cms/homepage-builder-context";
 import { HomepageBuilderWorkspace } from "@/features/admin/cms/homepage-builder-workspace";
 import { HomepageBuilderNav } from "@/features/admin/cms/homepage-builder-nav";
+import { HomepageSectionPreview } from "@/features/admin/cms/homepage-section-preview";
 import { buildCmsPreviewHref } from "@/lib/cms/preview-href";
 import { cn } from "@/lib/utils";
 import { validateSectionForPublish } from "@/lib/cms/section-validation";
@@ -73,6 +74,16 @@ import { CmsSyncErrorPanel } from "@/components/admin/cms/cms-sync-error-panel";
 import { raceWithTimeout } from "@/lib/fetch-with-timeout";
 
 type ClientActionResult = { ok: boolean; message: string };
+
+/** Panels that use in-process section preview instead of a full /preview/home iframe. */
+const SECTION_LIVE_PREVIEW_IDS = new Set<HomepageSectionId>([
+  "mini-carousel",
+  "shelf-drone-world",
+  "shelf-drone-care",
+  "shelf-global-products",
+  "testimonials",
+  "related-articles"
+]);
 
 function errorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -806,13 +817,32 @@ export function CmsSectionEditor({
                 </div>
               }
               preview={
-                <CmsLivePreviewPanel
-                  previewHref={previewHref}
-                  device={device}
-                  onDeviceChange={setDevice}
-                  refreshKey={previewRefreshKey}
-                  embedded
-                />
+                SECTION_LIVE_PREVIEW_IDS.has(sectionId) ? (
+                  <CmsLivePreviewPanel
+                    previewHref={previewHref}
+                    device={device}
+                    onDeviceChange={setDevice}
+                    refreshKey={previewRefreshKey}
+                    embedded
+                  >
+                    <HomepageSectionPreview
+                      sectionId={sectionId}
+                      homepageCms={homepageContent}
+                      homepageV2={homepageV2}
+                      products={products}
+                      shelfProductSlugs={productSlugs}
+                      syncError={syncError}
+                    />
+                  </CmsLivePreviewPanel>
+                ) : (
+                  <CmsLivePreviewPanel
+                    previewHref={previewHref}
+                    device={device}
+                    onDeviceChange={setDevice}
+                    refreshKey={previewRefreshKey}
+                    embedded
+                  />
+                )
               }
             />
           </div>
