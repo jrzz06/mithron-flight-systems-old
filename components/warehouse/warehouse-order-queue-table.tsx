@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import {
   OperationalDangerAction,
   OperationalMoreActions,
   OperationalSecondaryAction
 } from "@/components/admin/operational-action-panel";
+import { WarehouseOpenOrderLink } from "@/components/warehouse/warehouse-open-order-link";
 import { employeeFulfillmentLabel } from "@/lib/warehouse/operational-labels";
 import {
   canCancelOrder,
@@ -14,8 +14,8 @@ import {
 } from "@/lib/warehouse/order-helpers";
 import { useUnreadOrderNotifications } from "@/hooks/use-unread-order-notifications";
 
-const actionButtonClass = "platform-btn-secondary platform-btn-sm";
-const dispatchButtonWrapClass = "[&_button]:h-8 [&_button]:w-auto [&_button]:rounded-[8px] [&_button]:px-3 [&_button]:text-xs";
+const dispatchButtonWrapClass =
+  "[&_button]:platform-btn-secondary [&_button]:platform-btn-sm [&_button]:h-8 [&_button]:w-auto [&_button]:min-h-8 [&_button]:rounded-[8px] [&_button]:px-3 [&_button]:text-xs";
 
 type WarehouseOrderQueueTableProps = {
   rows: WarehouseOrderRow[];
@@ -41,6 +41,67 @@ function StatusBadge({ step }: { step: string }) {
     <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${statusBadgeClass(step)}`}>
       {employeeFulfillmentLabel(step)}
     </span>
+  );
+}
+
+function OrderActions({
+  order,
+  step,
+  onView,
+  cancelAction,
+  dispatchAction
+}: {
+  order: WarehouseOrderRow;
+  step: string;
+  onView: (orderId: string) => void;
+  cancelAction: (formData: FormData) => Promise<void>;
+  dispatchAction: (formData: FormData) => Promise<void>;
+}) {
+  return (
+    <div className="platform-action-group flex min-w-0 flex-wrap items-start gap-2">
+      {canDispatchOrder(step) ? (
+        <>
+          <WarehouseOpenOrderLink orderId={order.orderId} onView={onView} />
+          <div className={dispatchButtonWrapClass}>
+            <OperationalSecondaryAction
+              action={dispatchAction}
+              buttonLabel="Dispatch"
+              pendingLabel="Dispatching"
+              confirmMessage={`Dispatch order ${order.orderNumber}?`}
+              confirmDescription="This moves the order to Dispatch History."
+              confirmLabel="Dispatch"
+            >
+              <input name="order_id" type="hidden" value={order.orderId} />
+              <input name="warehouse_code" type="hidden" value={order.warehouseCode} />
+            </OperationalSecondaryAction>
+          </div>
+        </>
+      ) : null}
+      {canCancelOrder(step) ? (
+        <OperationalMoreActions summaryLabel="More actions">
+          <OperationalDangerAction
+            action={cancelAction}
+            buttonLabel="Delete order"
+            pendingLabel="Deleting"
+            confirmMessage={`Delete order ${order.orderNumber}?`}
+            confirmDescription="This permanently deletes the order from the warehouse queue. Type the order number to confirm."
+            requireTypedText={order.orderNumber}
+            typedTextLabel={`Type ${order.orderNumber} to confirm`}
+            confirmLabel="Delete"
+          >
+            <input name="order_id" type="hidden" value={order.orderId} />
+            <input name="expected_updated_at" type="hidden" value={order.updatedAt} />
+            <textarea
+              name="cancel_reason"
+              required
+              rows={2}
+              placeholder="Deletion reason"
+              className="w-full min-w-0 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-sm"
+            />
+          </OperationalDangerAction>
+        </OperationalMoreActions>
+      ) : null}
+    </div>
   );
 }
 
@@ -96,61 +157,15 @@ function OrderRowCard({
           <dt className="text-[var(--platform-text-muted)]">Items</dt>
           <dd className="min-w-0 break-words">{String(order.itemCount)}</dd>
         </div>
-        <div className="min-w-0">
-          <dt className="text-[var(--platform-text-muted)]">Shipping</dt>
-          <dd className="min-w-0 break-words">{order.shippingMethod}</dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="text-[var(--platform-text-muted)]">Est. dispatch</dt>
-          <dd className="min-w-0 break-words">{order.estimatedDispatch}</dd>
-        </div>
       </dl>
-      <div className="platform-action-group mt-4 flex flex-wrap gap-2">
-        {canDispatchOrder(step) ? (
-          <>
-            <Link
-              href={`/warehouse/fulfillment/${order.orderId}`}
-              className={actionButtonClass}
-              onClick={() => onView(order.orderId)}
-            >
-              Open
-            </Link>
-            <div className={dispatchButtonWrapClass}>
-              <OperationalSecondaryAction
-                action={dispatchAction}
-                buttonLabel="Dispatch"
-                pendingLabel="Dispatching"
-              >
-                <input name="order_id" type="hidden" value={order.orderId} />
-                <input name="warehouse_code" type="hidden" value={order.warehouseCode} />
-              </OperationalSecondaryAction>
-            </div>
-          </>
-        ) : null}
-        {canCancelOrder(step) ? (
-          <OperationalMoreActions>
-            <OperationalDangerAction
-              action={cancelAction}
-              buttonLabel="Cancel & Delete Order"
-              pendingLabel="Cancelling"
-              confirmMessage={`Cancel & delete order ${order.orderNumber}?`}
-              confirmDescription="This permanently deletes the order from the warehouse queue. Type the order number to confirm."
-              requireTypedText={order.orderNumber}
-              typedTextLabel={`Type ${order.orderNumber} to confirm`}
-              confirmLabel="Cancel & delete"
-            >
-              <input name="order_id" type="hidden" value={order.orderId} />
-              <input name="expected_updated_at" type="hidden" value={order.updatedAt} />
-              <textarea
-                name="cancel_reason"
-                required
-                rows={2}
-                placeholder="Cancellation reason"
-                className="w-full min-w-0 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-sm"
-              />
-            </OperationalDangerAction>
-          </OperationalMoreActions>
-        ) : null}
+      <div className="mt-4">
+        <OrderActions
+          order={order}
+          step={step}
+          onView={onView}
+          cancelAction={cancelAction}
+          dispatchAction={dispatchAction}
+        />
       </div>
     </article>
   );
@@ -174,21 +189,18 @@ export function WarehouseOrderQueueTable({ rows, cancelAction, dispatchAction }:
           />
         )) : (
           <p className="px-2 py-8 text-center text-sm text-[var(--platform-text-muted)]">
-            No orders are waiting for processing.
+            No open orders waiting.
           </p>
         )}
       </div>
 
-      <table data-order-management-table="orders" className="platform-table hidden w-full min-w-[880px] border-collapse text-left text-sm md:table">
+      <table data-order-management-table="orders" className="platform-table hidden w-full min-w-[720px] border-collapse text-left text-sm md:table">
         <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
           <tr>
-            <th className="px-3 py-3 font-semibold">Order</th>
+            <th className="px-3 py-3 font-semibold">Order ID</th>
             <th className="px-3 py-3 font-semibold">Customer</th>
-            <th className="px-3 py-3 font-semibold">Order Date</th>
-            <th className="px-3 py-3 font-semibold">Items</th>
-            <th className="px-3 py-3 font-semibold">Shipping</th>
+            <th className="px-3 py-3 font-semibold">Phone</th>
             <th className="px-3 py-3 font-semibold">Status</th>
-            <th className="px-3 py-3 font-semibold">Est. Dispatch</th>
             <th className="px-3 py-3 font-semibold">Actions</th>
           </tr>
         </thead>
@@ -206,86 +218,35 @@ export function WarehouseOrderQueueTable({ rows, cancelAction, dispatchAction }:
                     <span className="min-w-0 break-words">{order.orderNumber}</span>
                   </span>
                 </td>
-                <td className="max-w-[16rem] px-3 py-3">
+                <td className="max-w-[14rem] px-3 py-3">
                   <span className="block min-w-0 truncate font-medium text-[var(--platform-text-primary)]" title={order.customerName}>
                     {order.customerName}
-                  </span>
-                  <span className="mt-0.5 block min-w-0 truncate text-xs text-[var(--platform-text-muted)]" title={order.customerPhone}>
-                    {order.customerPhone}
-                  </span>
-                  <span className="mt-0.5 block min-w-0 truncate text-xs text-[var(--platform-text-muted)]" title={order.customerEmail}>
-                    {order.customerEmail}
                   </span>
                   <span className="mt-1 block min-w-0 truncate text-xs text-[var(--platform-text-muted)]" title={order.shippingAddress}>
                     {order.shippingAddress}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-3 py-3">{order.orderDate}</td>
-                <td className="px-3 py-3">{String(order.itemCount)}</td>
                 <td className="px-3 py-3">
-                  <span className="block min-w-0 break-words">{order.shippingMethod}</span>
+                  <span className="block min-w-0 break-words">{order.customerPhone}</span>
                 </td>
                 <td className="px-3 py-3">
                   <StatusBadge step={step} />
                 </td>
                 <td className="px-3 py-3">
-                  <span className="block min-w-0 break-words">{order.estimatedDispatch}</span>
-                </td>
-                <td className="px-3 py-3">
-                  <div className="platform-action-group flex min-w-0 flex-wrap items-start gap-2">
-                    {canDispatchOrder(step) ? (
-                      <>
-                        <Link
-                          href={`/warehouse/fulfillment/${order.orderId}`}
-                          className={actionButtonClass}
-                          onClick={() => markOrderViewed(order.orderId)}
-                        >
-                          Open
-                        </Link>
-                        <div className={dispatchButtonWrapClass}>
-                          <OperationalSecondaryAction
-                            action={dispatchAction}
-                            buttonLabel="Dispatch"
-                            pendingLabel="Dispatching"
-                          >
-                            <input name="order_id" type="hidden" value={order.orderId} />
-                            <input name="warehouse_code" type="hidden" value={order.warehouseCode} />
-                          </OperationalSecondaryAction>
-                        </div>
-                      </>
-                    ) : null}
-                    {canCancelOrder(step) ? (
-                      <OperationalMoreActions>
-                        <OperationalDangerAction
-                          action={cancelAction}
-                          buttonLabel="Cancel & Delete Order"
-                          pendingLabel="Cancelling"
-                          confirmMessage={`Cancel & delete order ${order.orderNumber}?`}
-                          confirmDescription="This permanently deletes the order from the warehouse queue. Type the order number to confirm."
-                          requireTypedText={order.orderNumber}
-                          typedTextLabel={`Type ${order.orderNumber} to confirm`}
-                          confirmLabel="Cancel & delete"
-                        >
-                          <input name="order_id" type="hidden" value={order.orderId} />
-                          <input name="expected_updated_at" type="hidden" value={order.updatedAt} />
-                          <textarea
-                            name="cancel_reason"
-                            required
-                            rows={2}
-                            placeholder="Cancellation reason"
-                            className="w-full min-w-0 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-sm"
-                          />
-                        </OperationalDangerAction>
-                      </OperationalMoreActions>
-                    ) : null}
-                  </div>
+                  <OrderActions
+                    order={order}
+                    step={step}
+                    onView={markOrderViewed}
+                    cancelAction={cancelAction}
+                    dispatchAction={dispatchAction}
+                  />
                 </td>
               </tr>
             );
           }) : (
             <tr>
-              <td colSpan={8} className="px-4 py-10 text-center text-[var(--platform-text-muted)]">
-                No orders are waiting for processing.
+              <td colSpan={5} className="px-4 py-10 text-center text-[var(--platform-text-muted)]">
+                No open orders waiting.
               </td>
             </tr>
           )}

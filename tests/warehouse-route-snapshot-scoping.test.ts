@@ -17,10 +17,11 @@ describe("warehouse route snapshot scoping", () => {
       activity: source("app/warehouse/activity/page.tsx")
     };
 
-    expect(pages.dashboard).toContain('getWarehouseSnapshot({ scope: "dashboard", limit: 24 })');
+    expect(pages.dashboard).toContain("listWarehouseDashboardOpenOrders");
+    expect(pages.dashboard).toContain("getWarehouseDashboardOrderKpis");
     expect(pages.orders).toContain('scope: "ordersList"');
     expect(pages.fulfillment).toContain('scope: "ordersList"');
-    expect(pages.activity).toContain('getWarehouseSnapshot({ scope: "ordersSummary" })');
+    expect(pages.activity).toContain("listWarehouseHistoryOrders");
   });
 
   it("defines explicit warehouse snapshot scopes that avoid unrelated table reads", () => {
@@ -66,10 +67,10 @@ describe("warehouse route snapshot scoping", () => {
 
     expect(fulfillment).toContain('scope: "ordersList"');
     expect(fulfillment).toContain("getWarehouseDashboardOrderKpis");
-    expect(fulfillment).toContain("[...RECEIVED_FULFILLMENT_STATUSES]");
+    expect(fulfillment).toContain("RECEIVED_FULFILLMENT_STATUSES");
     expect(fulfillment).not.toContain('["pending", ...RECEIVED_FULFILLMENT_STATUSES]');
     expect(fulfillmentDetail).toContain("loadWarehouseOrderDetail");
-    expect(activity).toContain('getWarehouseSnapshot({ scope: "ordersSummary" })');
+    expect(activity).toContain("listWarehouseHistoryOrders");
     expect(adminOrders).toContain('scope: "ordersList"');
     expect(adminOrders).toContain("loadWarehouseOrderDetail");
     expect(adminOrders).toContain("loadAdminOrdersCatalogProducts");

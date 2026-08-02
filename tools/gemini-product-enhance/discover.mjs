@@ -63,17 +63,48 @@ async function main() {
     if (ONLY_MATCH && !slug.toLowerCase().includes(ONLY_MATCH)) continue;
 
     const wixFolder = `${PRODUCTS_PREFIX}/${slug}/wix-content`;
+    const rootFolder = `${PRODUCTS_PREFIX}/${slug}`;
     let entries = [];
+    let sourceFolder = wixFolder;
     try {
       entries = await listDir(supabase, SOURCE_BUCKET, wixFolder);
     } catch (err) {
-      log(`Skip ${slug}: ${err.message || err}`);
-      continue;
+      log(`Skip wix-content ${slug}: ${err.message || err}`);
+      entries = [];
     }
 
-    const images = entries
+    let images = entries
       .filter((f) => f?.name && isImage(f.name) && !f.name.startsWith("_"))
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    // Fallback: products without wix-content (root master PNG/JPEG/WebP only).
+    // Skip derived variants: .thumbnail / .medium / .large / .xlarge / double .avif
+    if (!images.length) {
+      try {
+        entries = await listDir(supabase, SOURCE_BUCKET, rootFolder);
+      } catch (err) {
+        log(`Skip ${slug}: ${err.message || err}`);
+        continue;
+      }
+      sourceFolder = rootFolder;
+      images = entries
+        .filter((f) => {
+          const n = f?.name || "";
+          if (!isImage(n) || n.startsWith("_")) return false;
+          if (/\.(thumbnail|medium|large|xlarge)\.(webp|png|jpe?g|avif)$/i.test(n)) return false;
+          if (/\.avif\.avif$/i.test(n)) return false;
+          // Prefer masters (png/jpeg) over already-encoded webp siblings of the same stem
+          return true;
+        })
+        .filter((f) => /\.(png|jpe?g)$/i.test(f.name) || (
+          /\.webp$/i.test(f.name) &&
+          !entries.some((o) => {
+            const stem = f.name.replace(/\.webp$/i, "");
+            return o?.name && new RegExp(`^${stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.(png|jpe?g)$`, "i").test(o.name);
+          })
+        ))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
 
     if (!images.length) continue;
 
@@ -88,10 +119,10 @@ async function main() {
         suffix,
         stagingName,
         sourceBucket: SOURCE_BUCKET,
-        sourcePath: `${wixFolder}/${img.name}`,
+        sourcePath: `${sourceFolder}/${img.name}`,
         sourceName: img.name,
         sourceSize: img.metadata?.size ?? null,
-        uploadPath: `${PRODUCTS_PREFIX}/${slug}/ai-enhanced/${stagingName}`,
+        uploadPath: `${PRODUCTS_PREFIX}/${slug}/ai-cutout/${stagingName}`,
       });
     });
 

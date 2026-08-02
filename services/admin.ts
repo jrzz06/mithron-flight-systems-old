@@ -144,10 +144,10 @@ type CountMetric = {
 };
 
 export type DashboardOperationalCounts = {
+  ordersReceivedToday: CountMetric;
   pendingOrdersReview: CountMetric;
-  lowStockAlerts: CountMetric;
-  pendingSupplierSubmissions: CountMetric;
-  openEnquiries: CountMetric;
+  pushedToWarehouse: CountMetric;
+  dispatchedToday: CountMetric;
 };
 
 export type PendingSupplierSubmission = {
@@ -204,7 +204,9 @@ const warehouseSnapshotScopes: Record<WarehouseSnapshotScope, Set<WarehouseSnaps
 const dashboardQueries = {
   orders: "select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,created_at,updated_at&order=created_at.desc&limit=8",
   ordersNeedingReview:
-    "select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,created_at,updated_at&status=in.(paid,admin_review,pending_payment)&order=created_at.desc&limit=8",
+    "select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,created_at,updated_at&status=in.(paid,admin_review,pending_payment)&deleted_at=is.null&order=created_at.desc&limit=8",
+  ordersPushedToWarehouse:
+    "select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,created_at,updated_at&or=(and(status.eq.assigned,fulfillment_status.not.in.(dispatched,delivered,shipped)),fulfillment_status.in.(packing,processing,picked,packed,ready_to_dispatch))&deleted_at=is.null&order=updated_at.desc&limit=8",
   shipments: "select=id,shipment_number,shipment_status,order_id,warehouse_id,updated_at,created_at&order=updated_at.desc&limit=8",
   inventoryMovements: "select=id,movement_type,product_slug,sku,quantity_delta,created_at&order=created_at.desc&limit=8",
   contentRevisions: "select=id,entity_table,entity_id,revision,change_summary,created_at&order=created_at.desc&limit=8",
@@ -216,6 +218,22 @@ const dashboardQueries = {
   lowStockInventory:
     "select=product_slug,sku,stock_status,quantity,reorder_threshold,updated_at,mithron_products(name)&stock_status=in.(low_stock,out_of_stock)&order=updated_at.desc&limit=8"
 } as const;
+
+/** Calendar-day bounds in Asia/Kolkata for admin home “today” KPIs. */
+function adminIstDayBounds(now = new Date()) {
+  const dateStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(now);
+  const dayStart = new Date(`${dateStr}T00:00:00+05:30`);
+  const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+  return {
+    dayStartIso: encodeURIComponent(dayStart.toISOString()),
+    dayEndIso: encodeURIComponent(dayEnd.toISOString())
+  };
+}
 
 const operationsQueries = {
   operationRoutes: "select=id,route_key,label,href,module_key,required_role,sort_order,is_visible,status&order=sort_order.asc&limit=40",
@@ -721,16 +739,19 @@ function statusFromMetrics(metrics: CountMetric[]): "LIVE" | "PARTIAL" {
 const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) => {
   const config = getSupabaseAdminConfig(env);
   const emptyOperationalCounts: DashboardOperationalCounts = {
+    ordersReceivedToday: { table: "orders.received_today", count: 0, status: "UNAVAILABLE" },
     pendingOrdersReview: { table: "orders.pending_review", count: 0, status: "UNAVAILABLE" },
-    lowStockAlerts: { table: "inventory.low_stock", count: 0, status: "UNAVAILABLE" },
-    pendingSupplierSubmissions: { table: "mithron_products.pending_review", count: 0, status: "UNAVAILABLE" },
-    openEnquiries: { table: "leads.open", count: 0, status: "UNAVAILABLE" }
+    pushedToWarehouse: { table: "orders.warehouse", count: 0, status: "UNAVAILABLE" },
+    dispatchedToday: { table: "orders.dispatched_today", count: 0, status: "UNAVAILABLE" }
   };
   const emptyData = {
     metrics: [] as CountMetric[],
     operationalCounts: emptyOperationalCounts,
     recentOrders: [] as AdminRow[],
+    ordersReceivedToday: [] as AdminRow[],
     ordersNeedingReview: [] as AdminRow[],
+    ordersPushedToWarehouse: [] as AdminRow[],
+    ordersDispatchedToday: [] as AdminRow[],
     recentNotifications: [] as AdminRow[],
     recentActivity: [] as AdminRow[],
     lowStockAlerts: [] as AdminRow[],
@@ -738,11 +759,24 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
   };
   if (!config.configured) return blockedSnapshot(config.message, emptyData);
 
+  const { dayStartIso, dayEndIso } = adminIstDayBounds();
+  const receivedTodayFilter =
+    `created_at=gte.${dayStartIso}&created_at=lt.${dayEndIso}&deleted_at=is.null`;
+  const dispatchedTodayFilter =
+    `fulfillment_status=in.(dispatched,delivered)&updated_at=gte.${dayStartIso}&updated_at=lt.${dayEndIso}&deleted_at=is.null`;
+  const warehouseFilter =
+    "or=(and(status.eq.assigned,fulfillment_status.not.in.(dispatched,delivered,shipped)),fulfillment_status.in.(packing,processing,picked,packed,ready_to_dispatch))&deleted_at=is.null";
+  const orderListSelect =
+    "select=id,order_number,customer_email,status,payment_status,fulfillment_status,channel,total,currency,created_at,updated_at";
+
   const [
     metrics,
     operationalCounts,
     recentOrders,
+    ordersReceivedToday,
     ordersNeedingReview,
+    ordersPushedToWarehouse,
+    ordersDispatchedToday,
     recentNotifications,
     recentActivity,
     lowStockAlerts,
@@ -755,36 +789,48 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
       countTable(config, "notifications")
     ]),
     Promise.all([
-      countTableRows(config, "orders", "select=id&status=in.(paid,admin_review,pending_payment)&limit=1").then((metric) => ({
+      countTableRows(config, "orders", `select=id&${receivedTodayFilter}&limit=1`).then((metric) => ({
+        ...metric,
+        table: "orders.received_today"
+      })),
+      countTableRows(config, "orders", "select=id&status=in.(paid,admin_review,pending_payment)&deleted_at=is.null&limit=1").then((metric) => ({
         ...metric,
         table: "orders.pending_review"
       })),
-      countTableRows(config, "inventory", "select=product_slug&stock_status=in.(low_stock,out_of_stock)&limit=1").then((metric) => ({
+      countTableRows(config, "orders", `select=id&${warehouseFilter}&limit=1`).then((metric) => ({
         ...metric,
-        table: "inventory.low_stock"
+        table: "orders.warehouse"
       })),
-      countTableRows(config, "mithron_products", "select=slug&workflow_status=eq.pending_review&limit=1").then((metric) => ({
+      countTableRows(config, "orders", `select=id&${dispatchedTodayFilter}&limit=1`).then((metric) => ({
         ...metric,
-        table: "mithron_products.pending_review"
-      })),
-      countTableRows(config, "leads", "select=id&status=eq.new&limit=1").then((metric) => ({
-        ...metric,
-        table: "leads.open"
+        table: "orders.dispatched_today"
       }))
-    ]).then(([pendingOrdersReview, lowStockAlertsCount, pendingSupplierSubmissions, openEnquiries]) => ({
+    ]).then(([ordersReceivedTodayCount, pendingOrdersReview, pushedToWarehouse, dispatchedToday]) => ({
+      ordersReceivedToday: ordersReceivedTodayCount,
       pendingOrdersReview,
-      lowStockAlerts: lowStockAlertsCount,
-      pendingSupplierSubmissions,
-      openEnquiries
+      pushedToWarehouse,
+      dispatchedToday
     })),
     fetchAdminRows(config, "orders", dashboardQueries.orders),
+    fetchAdminRows(config, "orders", `${orderListSelect}&${receivedTodayFilter}&order=created_at.desc&limit=8`),
     fetchAdminRows(config, "orders", dashboardQueries.ordersNeedingReview),
+    fetchAdminRows(config, "orders", dashboardQueries.ordersPushedToWarehouse),
+    fetchAdminRows(config, "orders", `${orderListSelect}&${dispatchedTodayFilter}&order=updated_at.desc&limit=8`),
     fetchAdminRows(config, "notifications", dashboardQueries.notifications),
     fetchAdminRows(config, "activity_logs", dashboardQueries.activityLogs),
     fetchAdminRows(config, "inventory", dashboardQueries.lowStockInventory),
     listPendingSupplierSubmissions(env)
   ]);
-  const rowTables = [recentOrders, ordersNeedingReview, recentNotifications, recentActivity, lowStockAlerts];
+  const rowTables = [
+    recentOrders,
+    ordersReceivedToday,
+    ordersNeedingReview,
+    ordersPushedToWarehouse,
+    ordersDispatchedToday,
+    recentNotifications,
+    recentActivity,
+    lowStockAlerts
+  ];
   const operationalMetricList = Object.values(operationalCounts);
 
   const lowStockAlertRows: AdminRow[] = lowStockAlerts.rows.map((row) => {
@@ -814,7 +860,10 @@ const loadAdminDashboardSnapshot = cache(async (env: EnvSource = process.env) =>
       metrics,
       operationalCounts,
       recentOrders: recentOrders.rows,
+      ordersReceivedToday: ordersReceivedToday.rows,
       ordersNeedingReview: ordersNeedingReview.rows,
+      ordersPushedToWarehouse: ordersPushedToWarehouse.rows,
+      ordersDispatchedToday: ordersDispatchedToday.rows,
       recentNotifications: recentNotifications.rows,
       recentActivity: recentActivity.rows,
       lowStockAlerts: lowStockAlertRows,
@@ -833,7 +882,7 @@ export async function getAdminDashboardSnapshot(env: EnvSource = process.env) {
     "getAdminDashboardSnapshot",
     () =>
       cacheControlPlaneRead(
-        ["admin-dashboard-snapshot"],
+        ["admin-dashboard-snapshot", "v2-order-funnel"],
         () => loadAdminDashboardSnapshot(env),
         {
           revalidate: 30,
@@ -1620,12 +1669,16 @@ export const loadProductManagerSnapshot = cache(async (
     ? `&product_slug=in.(${pageSlugs.map((slug) => encodeURIComponent(slug)).join(",")})`
     : "";
 
+  // Inventory/stock are ~1 row per product; media can have multiple rows per slug.
+  // Cap must cover the full page so stock does not show as false "unlinked".
+  const pageRelationLimit = Math.max(pageSlugs.length, listLimit);
+  const pageMediaRelationLimit = Math.max(pageSlugs.length * 4, listLimit);
   const emptyRelation = { rows: [] as AdminRow[], error: null as string | null, status: "LIVE" as const };
   const [mediaLinks, inventory, stock, movements] = pageSlugs.length
     ? await Promise.all([
-        fetchAdminRows(config, "product_media_assets", `select=product_slug,media_asset_id,usage,variant_id,is_primary,sort_order,alt_text,caption,metadata,updated_at${slugFilter}&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
-        fetchAdminRows(config, "inventory", `select=product_slug,sku,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at${slugFilter}&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
-        fetchAdminRows(config, "warehouse_stock", `select=warehouse_code,product_slug,sku,available_quantity,committed_quantity,last_counted_at,updated_at${slugFilter}&order=updated_at.desc&limit=${PRODUCT_RELATION_LIMIT}`),
+        fetchAdminRows(config, "product_media_assets", `select=product_slug,media_asset_id,usage,variant_id,is_primary,sort_order,alt_text,caption,metadata,updated_at${slugFilter}&order=updated_at.desc&limit=${pageMediaRelationLimit}`),
+        fetchAdminRows(config, "inventory", `select=product_slug,sku,stock_status,quantity,reserved_quantity,reorder_threshold,updated_at${slugFilter}&order=updated_at.desc&limit=${pageRelationLimit}`),
+        fetchAdminRows(config, "warehouse_stock", `select=warehouse_code,product_slug,sku,available_quantity,committed_quantity,last_counted_at,updated_at${slugFilter}&order=updated_at.desc&limit=${pageRelationLimit}`),
         fetchAdminRows(config, "inventory_movements", `select=id,movement_type,product_slug,sku,quantity_before,quantity_after,quantity_delta,reason_code,actor_user_id,related_order_id,related_shipment_id,created_at${slugFilter}&order=created_at.desc&limit=${MOVEMENT_AUDIT_LIMIT}`)
       ])
     : [emptyRelation, emptyRelation, emptyRelation, emptyRelation];
@@ -1949,10 +2002,18 @@ export async function getWarehouseSnapshot(input: WarehouseSnapshotInput = proce
 }
 
 export type WarehouseDashboardOrderKpis = {
+  /** Orders created today (any open or closed status in hot window). */
+  receivedToday: number;
+  /** Open queue — not dispatched / delivered / cancelled / returned / shipped / in_transit. */
+  pending: number;
+  /** Legacy alias: pending count (all awaiting fulfillment). */
   received: number;
+  /** Active picking subset (packing + related) — used by Fulfillment nav badge. */
   picking: number;
   dispatchedToday: number;
   cancelled: number;
+  /** False when any count request failed (do not treat zeros as empty success). */
+  available: boolean;
 };
 
 /**
@@ -1968,7 +2029,15 @@ export async function getWarehouseDashboardOrderKpis(input: {
   const env = input.env ?? process.env;
   const config = getSupabaseAdminConfig(env);
   if (!config.configured) {
-    return { received: 0, picking: 0, dispatchedToday: 0, cancelled: 0 };
+    return {
+      receivedToday: 0,
+      pending: 0,
+      received: 0,
+      picking: 0,
+      dispatchedToday: 0,
+      cancelled: 0,
+      available: false
+    };
   }
 
   const hotCutoff = encodeURIComponent(operationalArchiveHotCutoffIso());
@@ -1989,23 +2058,45 @@ export async function getWarehouseDashboardOrderKpis(input: {
     }
   }
 
-  const base = `select=id&created_at=gte.${hotCutoff}${warehouseFilter}`;
-  const [received, picking, dispatchedToday, cancelled] = await Promise.all([
-    countTableRows(config, "orders", `${base}&fulfillment_status=eq.pending&limit=1`),
-    countTableRows(config, "orders", `${base}&fulfillment_status=eq.packing&limit=1`),
+  const hotBase = `select=id&created_at=gte.${hotCutoff}${warehouseFilter}`;
+  const todayBase = `select=id${warehouseFilter}`;
+  const openExclude = "dispatched,delivered,cancelled,returned,shipped,in_transit";
+  const [receivedToday, pending, picking, dispatchedToday, cancelled] = await Promise.all([
     countTableRows(
       config,
       "orders",
-      `${base}&fulfillment_status=in.(shipped,delivered)&updated_at=gte.${dayStartIso}&updated_at=lt.${dayEndIso}&limit=1`
+      `${todayBase}&created_at=gte.${dayStartIso}&created_at=lt.${dayEndIso}&limit=1`
     ),
-    countTableRows(config, "orders", `${base}&fulfillment_status=eq.cancelled&limit=1`)
+    countTableRows(
+      config,
+      "orders",
+      `${hotBase}&fulfillment_status=not.in.(${openExclude})&limit=1`
+    ),
+    countTableRows(
+      config,
+      "orders",
+      `${hotBase}&fulfillment_status=in.(packing,processing,picked,packed)&limit=1`
+    ),
+    countTableRows(
+      config,
+      "orders",
+      `${hotBase}&fulfillment_status=in.(dispatched,delivered)&updated_at=gte.${dayStartIso}&updated_at=lt.${dayEndIso}&limit=1`
+    ),
+    countTableRows(config, "orders", `${hotBase}&fulfillment_status=eq.cancelled&limit=1`)
   ]);
 
+  const available = [receivedToday, pending, picking, dispatchedToday, cancelled].every(
+    (metric) => metric.status === "LIVE"
+  );
+
   return {
-    received: received.count,
+    receivedToday: receivedToday.count,
+    pending: pending.count,
+    received: pending.count,
     picking: picking.count,
     dispatchedToday: dispatchedToday.count,
-    cancelled: cancelled.count
+    cancelled: cancelled.count,
+    available
   };
 }
 

@@ -3,33 +3,18 @@ import { Suspense } from "react";
 import { ControlShell } from "@/components/admin/control-shell";
 import { ControlPlaneContentLoading } from "@/components/ui/control-plane-content-loading";
 import { WarehouseDashboardLiveSync } from "@/components/warehouse/warehouse-dashboard-live-sync";
+import { WarehouseDashboardRefreshButton } from "@/components/warehouse/warehouse-dashboard-refresh-button";
 import { WarehouseKpiStrip } from "@/components/warehouse/warehouse-kpi-strip";
-import { employeeFulfillmentLabel, RECEIVED_FULFILLMENT_STATUSES } from "@/lib/warehouse/operational-labels";
-import { getWarehouseDashboardOrderKpis, getWarehouseSnapshot } from "@/services/admin";
+import { WarehouseOpenOrderLink } from "@/components/warehouse/warehouse-open-order-link";
+import { employeeFulfillmentLabel } from "@/lib/warehouse/operational-labels";
+import { formatOrderDate } from "@/lib/warehouse/order-helpers";
+import { getWarehouseDashboardOrderKpis } from "@/services/admin";
 import { getAdminSettingsPolicy } from "@/services/admin-settings-policy";
 import { getCurrentAuthContext } from "@/services/auth";
-import {
-  filterOrdersForWarehouseScope,
-  resolveWarehouseScope
-} from "@/services/warehouse-scope";
+import { listWarehouseDashboardOpenOrders } from "@/services/warehouse-ops-queries";
+import { resolveWarehouseScope } from "@/services/warehouse-scope";
 
 export const dynamic = "force-dynamic";
-
-function text(value: unknown, fallback = "—") {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
-
-function orderMetadata(order: Record<string, unknown>) {
-  const metadata = order.metadata;
-  return metadata && typeof metadata === "object" && !Array.isArray(metadata)
-    ? metadata as Record<string, unknown>
-    : {};
-}
-
-function assignedEmployee(order: Record<string, unknown>) {
-  const metadata = orderMetadata(order);
-  return text(metadata.assigned_to ?? metadata.assigned_employee, "Unassigned");
-}
 
 async function WarehouseDashboardKpis() {
   const authPromise = getCurrentAuthContext();
@@ -43,92 +28,96 @@ async function WarehouseDashboardKpis() {
     defaultWarehouseCode: policy.defaultWarehouseCode
   });
 
+  if (!kpis.available) {
+    return (
+      <p
+        role="status"
+        className="rounded-[var(--platform-radius)] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+      >
+        Counts temporarily unavailable. Live updates will retry when the connection recovers.
+      </p>
+    );
+  }
+
   return (
     <WarehouseKpiStrip
       tiles={[
-        { label: "Received", value: kpis.received, href: "/warehouse/orders?fulfillment_status=pending" },
-        { label: "Picking", value: kpis.picking, href: "/warehouse/fulfillment" },
-        { label: "Dispatched Today", value: kpis.dispatchedToday, href: "/warehouse/activity" }
+        { label: "Received today", value: kpis.receivedToday, href: "/warehouse/orders" },
+        { label: "Pending", value: kpis.pending, href: "/warehouse/orders" },
+        { label: "Dispatched today", value: kpis.dispatchedToday, href: "/warehouse/activity" }
       ]}
     />
   );
 }
 
-async function WarehouseDashboardWorkQueue() {
+async function WarehouseDashboardOpenList() {
   const authPromise = getCurrentAuthContext();
-  const [snapshot, policy, scope] = await Promise.all([
-    getWarehouseSnapshot({ scope: "dashboard", limit: 24 }),
+  const [policy, scope] = await Promise.all([
     getAdminSettingsPolicy(),
     authPromise.then((ctx) => resolveWarehouseScope({ userId: ctx.userId, role: ctx.role }))
   ]);
-  const scopedOrders = filterOrdersForWarehouseScope(snapshot.data.orders, scope, policy.defaultWarehouseCode);
-
-  const itemsByOrder = new Map<string, number>();
-  for (const item of snapshot.data.orderItems) {
-    const orderId = text(item.order_id, "");
-    if (!orderId) continue;
-    itemsByOrder.set(orderId, (itemsByOrder.get(orderId) ?? 0) + Number(item.quantity ?? 0));
-  }
-
-  const workQueue = scopedOrders
-    .filter((order) => {
-      const step = text(order.fulfillment_status, "pending");
-      return ["pending", ...RECEIVED_FULFILLMENT_STATUSES].includes(step);
-    })
-    .slice(0, 20);
+  const list = await listWarehouseDashboardOpenOrders({
+    scope,
+    defaultWarehouseCode: policy.defaultWarehouseCode
+  });
 
   return (
     <section className="grid gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-[var(--platform-text-primary)]">Today&apos;s Work Queue</h2>
-        <Link href="/warehouse/orders" className="text-xs font-medium text-[var(--platform-accent)] hover:underline">
-          View all orders
-        </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-[var(--platform-text-primary)]">Open orders</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <WarehouseDashboardRefreshButton />
+          <a href="/warehouse/dashboard/export" className="platform-btn-secondary platform-btn-sm">
+            Download Excel
+          </a>
+          <Link href="/warehouse/orders" className="text-xs font-medium text-[var(--platform-accent)] hover:underline">
+            View all orders
+          </Link>
+        </div>
       </div>
-      <div className="overflow-x-auto rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]">
-        <table className="min-w-[960px] w-full border-collapse text-left text-sm">
-          <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Order</th>
-              <th className="px-4 py-3 font-semibold">Customer</th>
-              <th className="px-4 py-3 font-semibold">Items</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold">Assigned To</th>
-              <th className="px-4 py-3 font-semibold">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--platform-border)] text-[var(--platform-text-secondary)]">
-            {workQueue.length ? workQueue.map((order) => {
-              const orderId = text(order.id, "");
-              const orderNumber = text(order.order_number, orderId);
-              const step = text(order.fulfillment_status, "pending");
-              return (
-                <tr key={orderId}>
-                  <td className="px-4 py-3 font-medium text-[var(--platform-text-primary)]">{orderNumber}</td>
-                  <td className="px-4 py-3">{text(order.customer_email)}</td>
-                  <td className="px-4 py-3">{String(itemsByOrder.get(orderId) ?? 0)}</td>
-                  <td className="px-4 py-3">{employeeFulfillmentLabel(step)}</td>
-                  <td className="px-4 py-3">{assignedEmployee(order)}</td>
+      {!list.available ? (
+        <p
+          role="status"
+          className="rounded-[var(--platform-radius)] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+        >
+          Order list temporarily unavailable{list.blockedReason ? `: ${list.blockedReason}` : "."}
+        </p>
+      ) : (
+        <div className="overflow-x-auto rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]">
+          <table className="min-w-[720px] w-full border-collapse text-left text-sm">
+            <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Order</th>
+                <th className="px-4 py-3 font-semibold">Customer</th>
+                <th className="px-4 py-3 font-semibold">Phone</th>
+                <th className="px-4 py-3 font-semibold">Received</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--platform-border)] text-[var(--platform-text-secondary)]">
+              {list.rows.length ? list.rows.map((order) => (
+                <tr key={order.id}>
+                  <td className="px-4 py-3 font-medium text-[var(--platform-text-primary)]">{order.orderNumber}</td>
+                  <td className="px-4 py-3">{order.customerName}</td>
+                  <td className="px-4 py-3">{order.customerPhone}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{formatOrderDate(order.createdAt)}</td>
+                  <td className="px-4 py-3">{employeeFulfillmentLabel(order.fulfillmentStatus)}</td>
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/warehouse/fulfillment/${orderId}`}
-                      className="inline-flex min-h-8 items-center rounded-md border border-[var(--platform-border)] px-3 text-xs font-semibold text-[var(--platform-text-primary)] transition hover:border-[var(--platform-accent)]/40"
-                    >
-                      Open
-                    </Link>
+                    <WarehouseOpenOrderLink orderId={order.id} />
                   </td>
                 </tr>
-              );
-            }) : (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-[var(--platform-text-muted)]">
-                  No orders are waiting for processing.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center text-[var(--platform-text-muted)]">
+                    No open orders right now.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }
@@ -143,7 +132,7 @@ export default function WarehouseDashboardPage() {
     <ControlShell
       eyebrow=""
       title="Today's Operations"
-      description="Daily overview of orders waiting, in fulfillment, and dispatched today."
+      description="Orders received today, pending queue, and dispatched today — live from the warehouse database."
       actions={[
         { label: "Orders", href: "/warehouse/orders" },
         { label: "Fulfillment", href: "/warehouse/fulfillment" },
@@ -156,7 +145,7 @@ export default function WarehouseDashboardPage() {
         </Suspense>
         <Suspense
           fallback={
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" aria-busy="true">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
               {Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={index}
@@ -168,8 +157,8 @@ export default function WarehouseDashboardPage() {
         >
           <WarehouseDashboardKpis />
         </Suspense>
-        <Suspense fallback={<ControlPlaneContentLoading label="Loading work queue" />}>
-          <WarehouseDashboardWorkQueue />
+        <Suspense fallback={<ControlPlaneContentLoading label="Loading open orders" />}>
+          <WarehouseDashboardOpenList />
         </Suspense>
       </section>
     </ControlShell>

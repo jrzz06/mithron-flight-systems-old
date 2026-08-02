@@ -4,6 +4,7 @@ import { useCallback, useState, type ReactNode } from "react";
 import { OperationalSubmitButton } from "@/components/admin/operational-submit-button";
 import { wrapServerAction } from "@/hooks/use-async-action";
 import { notify } from "@/lib/feedback/notify";
+import { cn } from "@/lib/utils";
 
 const panelClass =
   "grid gap-2 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] p-4";
@@ -11,9 +12,11 @@ const inputClass =
   "rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-sm";
 const primaryButtonClass = "platform-btn-primary h-9 w-full rounded-[8px] px-3 text-xs font-medium";
 const secondaryButtonClass =
-  "h-9 w-full rounded-[8px] border border-[var(--platform-border)] px-3 text-xs font-medium";
+  "platform-btn-secondary h-9 w-full rounded-[8px] px-3 text-xs font-medium";
 const dangerButtonClass =
-  "h-9 w-full rounded-[8px] border border-rose-500/40 px-3 text-xs font-medium text-rose-200";
+  "platform-btn-danger h-9 w-full rounded-[8px] px-3 text-xs font-medium";
+const moreActionsSummaryClass =
+  "platform-btn-secondary platform-btn-sm cursor-pointer list-none marker:content-none [&::-webkit-details-marker]:hidden";
 
 export type OperationalActionResult = {
   ok?: boolean;
@@ -65,6 +68,11 @@ type OperationalPrimaryActionProps = {
   pendingLabel: string;
   children?: ReactNode;
   variant?: "primary" | "secondary";
+  confirmMessage?: string;
+  confirmDescription?: string;
+  confirmLabel?: string;
+  /** Extra classes on the form panel (e.g. compact width in warehouse detail). */
+  className?: string;
 };
 
 export function OperationalPrimaryAction({
@@ -74,12 +82,16 @@ export function OperationalPrimaryAction({
   buttonLabel,
   pendingLabel,
   children,
-  variant = "primary"
+  variant = "primary",
+  confirmMessage,
+  confirmDescription,
+  confirmLabel,
+  className = ""
 }: OperationalPrimaryActionProps) {
   const { timedAction, isPending } = useTimedOperationalAction(action, pendingLabel || buttonLabel);
 
   return (
-    <form action={timedAction} data-primary-action className={panelClass}>
+    <form action={timedAction} data-primary-action className={cn(panelClass, className)}>
       <div>
         <p className="type-meta font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
           {title}
@@ -93,6 +105,9 @@ export function OperationalPrimaryAction({
         busy={isPending}
         pendingLabel={pendingLabel}
         className={variant === "primary" ? primaryButtonClass : secondaryButtonClass}
+        confirmMessage={confirmMessage}
+        confirmDescription={confirmDescription}
+        confirmLabel={confirmLabel}
       >
         {buttonLabel}
       </OperationalSubmitButton>
@@ -102,15 +117,19 @@ export function OperationalPrimaryAction({
 
 type OperationalMoreActionsProps = {
   children: ReactNode;
+  summaryLabel?: string;
 };
 
-export function OperationalMoreActions({ children }: OperationalMoreActionsProps) {
+export function OperationalMoreActions({
+  children,
+  summaryLabel = "More actions"
+}: OperationalMoreActionsProps) {
   return (
-    <details data-more-actions className="rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)]">
-      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-[var(--platform-text-secondary)] marker:content-none [&::-webkit-details-marker]:hidden">
-        More actions
-      </summary>
-      <div className="grid gap-3 border-t border-[var(--platform-border)] px-4 py-4">{children}</div>
+    <details data-more-actions className="rounded-[8px]">
+      <summary className={moreActionsSummaryClass}>{summaryLabel}</summary>
+      <div className="mt-2 grid gap-3 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface)] px-4 py-4">
+        {children}
+      </div>
     </details>
   );
 }
@@ -208,19 +227,32 @@ export function OperationalSecondaryAction({
   action,
   buttonLabel,
   pendingLabel,
-  children
+  children,
+  confirmMessage,
+  confirmDescription,
+  confirmLabel
 }: {
   action: OperationalFormAction;
   buttonLabel: string;
   pendingLabel: string;
   children?: ReactNode;
+  confirmMessage?: string;
+  confirmDescription?: string;
+  confirmLabel?: string;
 }) {
   const { timedAction, isPending } = useTimedOperationalAction(action, pendingLabel || buttonLabel);
 
   return (
     <form action={timedAction} className="grid gap-2">
       {children}
-      <OperationalSubmitButton busy={isPending} pendingLabel={pendingLabel} className={secondaryButtonClass}>
+      <OperationalSubmitButton
+        busy={isPending}
+        pendingLabel={pendingLabel}
+        className={secondaryButtonClass}
+        confirmMessage={confirmMessage}
+        confirmDescription={confirmDescription}
+        confirmLabel={confirmLabel}
+      >
         {buttonLabel}
       </OperationalSubmitButton>
     </form>

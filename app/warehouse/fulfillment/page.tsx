@@ -52,7 +52,7 @@ async function dispatchOrderWithFeedback(formData: FormData) {
     if (isActionNavigationError(error)) throw error;
     redirect(feedbackPath("error", messageFromError(error)));
   }
-  redirect(feedbackPath("success", "Order dispatched."));
+  redirect(`/warehouse/activity?operation_status=success&operation_message=${encodeURIComponent("Order dispatched.")}`);
 }
 
 function buildOrderRows(
@@ -93,7 +93,6 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
   const defaultWarehouseCode = policy.defaultWarehouseCode;
 
   const assignedOrders = filterOrdersForWarehouseScope(snapshot.data.orders, scope, defaultWarehouseCode);
-  const activeStatuses = [...RECEIVED_FULFILLMENT_STATUSES];
 
   const itemsByOrder = new Map<string, number>();
   for (const item of snapshot.data.orderItems) {
@@ -105,7 +104,7 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
   // Picking queue only (packing); Received/pending stays on Orders. Search is server-side.
   const filteredOrders = assignedOrders.filter((order) => {
     const fulfillmentStatus = String(order.fulfillment_status ?? "");
-    return activeStatuses.includes(fulfillmentStatus as typeof RECEIVED_FULFILLMENT_STATUSES[number]);
+    return (RECEIVED_FULFILLMENT_STATUSES as readonly string[]).includes(fulfillmentStatus);
   });
 
   const queueRows = buildOrderRows(filteredOrders, itemsByOrder, defaultWarehouseCode);
@@ -136,8 +135,8 @@ export default async function WarehouseFulfillmentPage({ searchParams }: { searc
 
         <WarehouseKpiStrip
           tiles={[
-            { label: "Received", value: kpis.received, href: "/warehouse/orders?fulfillment_status=pending" },
-            { label: "Picking", value: kpis.picking, href: "/warehouse/fulfillment" }
+            { label: "Pending", value: kpis.available ? kpis.pending : "—", href: "/warehouse/orders" },
+            { label: "In fulfillment", value: kpis.available ? kpis.picking : "—", href: "/warehouse/fulfillment" }
           ]}
         />
 

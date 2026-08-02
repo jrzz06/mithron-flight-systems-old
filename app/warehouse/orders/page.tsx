@@ -4,10 +4,6 @@ import { WarehouseKpiStrip } from "@/components/warehouse/warehouse-kpi-strip";
 import { WarehouseOpsLiveSync } from "@/components/warehouse/warehouse-ops-live-sync";
 import { WarehouseOrderQueueTable } from "@/components/warehouse/warehouse-order-queue-table";
 import {
-  ORDER_STEP_FILTER_OPTIONS,
-  matchesEmployeeFulfillmentFilter
-} from "@/lib/warehouse/operational-labels";
-import {
   buildWarehouseOrderRow,
   type WarehouseOrderRow
 } from "@/lib/warehouse/order-helpers";
@@ -22,6 +18,15 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
+
+const CLOSED_FULFILLMENT = new Set([
+  "dispatched",
+  "delivered",
+  "cancelled",
+  "returned",
+  "shipped",
+  "in_transit"
+]);
 
 function searchValue(params: SearchParams, key: string) {
   const value = params[key];
@@ -44,7 +49,7 @@ async function cancelOrderWithFeedback(formData: FormData) {
     if (isActionNavigationError(error)) throw error;
     redirect(feedbackPath("error", messageFromError(error)));
   }
-  redirect(feedbackPath("success", "Order cancelled."));
+  redirect(feedbackPath("success", "Order deleted."));
 }
 
 async function dispatchOrderWithFeedback(formData: FormData) {
@@ -55,7 +60,7 @@ async function dispatchOrderWithFeedback(formData: FormData) {
     if (isActionNavigationError(error)) throw error;
     redirect(feedbackPath("error", messageFromError(error)));
   }
-  redirect(feedbackPath("success", "Order dispatched."));
+  redirect(`/warehouse/activity?operation_status=success&operation_message=${encodeURIComponent("Order dispatched.")}`);
 }
 
 function buildOrderRows(
@@ -74,7 +79,6 @@ function buildOrderRows(
 
 export default async function WarehouseOrdersPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
   const params = searchParams ? await searchParams : {};
-  const fulfillmentFilter = searchValue(params, "fulfillment_status");
   const query = searchValue(params, "q").trim();
   const pageRaw = Number(searchValue(params, "page") || "1");
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
@@ -105,10 +109,9 @@ export default async function WarehouseOrdersPage({ searchParams }: { searchPara
     itemsByOrder.set(orderId, (itemsByOrder.get(orderId) ?? 0) + Number(item.quantity ?? 0));
   }
 
-  // Search is server-side; fulfillment status + SKU haystack stay client-side on the page slice.
   const filteredOrders = assignedOrders.filter((order) => {
-    const fulfillmentStatus = String(order.fulfillment_status ?? "");
-    if (!matchesEmployeeFulfillmentFilter(fulfillmentStatus, fulfillmentFilter)) return false;
+    const fulfillmentStatus = String(order.fulfillment_status ?? "pending");
+    if (CLOSED_FULFILLMENT.has(fulfillmentStatus)) return false;
     if (!query) return true;
     const orderId = String(order.id ?? "");
     const skuHaystack = snapshot.data.orderItems
@@ -130,7 +133,7 @@ export default async function WarehouseOrdersPage({ searchParams }: { searchPara
     <ControlShell
       eyebrow=""
       title="Orders"
-      description="Orders received from admin. Open an order to receive or dispatch it."
+      description="Open orders — Open Order for details in Fulfillment, Dispatch when ready, or Delete under More actions."
       actions={[
         { label: "Fulfillment", href: "/warehouse/fulfillment" },
         { label: "History", href: "/warehouse/activity" }
@@ -147,14 +150,13 @@ export default async function WarehouseOrdersPage({ searchParams }: { searchPara
 
         <WarehouseKpiStrip
           tiles={[
-            { label: "Received", value: kpis.received, href: "/warehouse/orders?fulfillment_status=pending" },
-            { label: "Picking", value: kpis.picking, href: "/warehouse/fulfillment" },
-            { label: "Dispatched Today", value: kpis.dispatchedToday, href: "/warehouse/activity" },
-            { label: "Cancelled", value: kpis.cancelled }
+            { label: "Received today", value: kpis.available ? kpis.receivedToday : "—", href: "/warehouse/dashboard" },
+            { label: "Pending", value: kpis.available ? kpis.pending : "—", href: "/warehouse/orders" },
+            { label: "Dispatched today", value: kpis.available ? kpis.dispatchedToday : "—", href: "/warehouse/activity" }
           ]}
         />
 
-        <form className="grid gap-3 rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-4 md:grid-cols-[1fr_220px_auto] md:items-end">
+        <form method="get" className="grid gap-3 rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-4 md:grid-cols-[1fr_auto] md:items-end">
           <label className="grid gap-2 text-sm">
             <span className="text-[var(--platform-text-secondary)]">Search</span>
             <input
@@ -164,25 +166,13 @@ export default async function WarehouseOrdersPage({ searchParams }: { searchPara
               className="rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface)] px-3 py-2 text-[var(--platform-text-primary)] outline-none placeholder:text-[var(--platform-text-muted)]"
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span className="text-[var(--platform-text-secondary)]">Status</span>
-            <select
-              name="fulfillment_status"
-              defaultValue={fulfillmentFilter}
-              className="rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface)] px-3 py-2 text-[var(--platform-text-primary)] outline-none"
-            >
-              {ORDER_STEP_FILTER_OPTIONS.map((option) => (
-                <option key={option.value || "all"} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
-          <button className="rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--platform-text-primary)]">
-            Filter
+          <button className="platform-btn-secondary platform-btn-sm h-10 px-4">
+            Search
           </button>
         </form>
 
         <section className="grid gap-3">
-          <h2 className="text-sm font-semibold text-[var(--platform-text-primary)]">Order Queue</h2>
+          <h2 className="text-sm font-semibold text-[var(--platform-text-primary)]">Open orders</h2>
           <WarehouseOrderQueueTable
             rows={queueRows}
             cancelAction={cancelOrderWithFeedback}

@@ -500,27 +500,32 @@
 
   .body {
     gap: 4px;
-    padding: 1rem;
+    padding: 0.625rem 0.75rem 0.75rem;
   }
 
   .shell[data-card-variant="catalog"] .body {
     gap: 4px;
-    padding: 1rem;
+    padding: 0.625rem 0.75rem 0.75rem;
   }
 
   .footer {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
     gap: 0.5rem;
-    padding-top: 0.75rem;
+    padding-top: 0.5rem;
     min-height: 0;
+  }
+
+  .shell[data-card-variant="catalog"] .footer {
+    gap: 0.5rem;
+    padding-top: 0.5rem;
   }
 
   .cta {
     display: inline-flex;
-    width: auto;
+    width: 100%;
     max-width: 100%;
     min-height: var(--mobile-touch-min, 44px);
     min-width: 0;
@@ -528,6 +533,11 @@
     font-size: 13px;
     gap: 8px;
     justify-content: center;
+  }
+
+  .shell[data-card-variant="catalog"] .cta {
+    width: 100%;
+    max-width: 100%;
   }
 
   .ctaIcon {
@@ -541,9 +551,13 @@
     flex: 0 0 auto;
     flex-shrink: 0;
     width: fit-content;
-    align-self: center;
+    align-self: flex-start;
     white-space: nowrap;
     text-align: left;
+  }
+
+  .shell[data-card-variant="catalog"] .price {
+    align-self: flex-start;
   }
 }
 

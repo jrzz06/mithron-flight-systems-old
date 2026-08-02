@@ -25,7 +25,10 @@ function normalizeMediaUrl(url: string) {
 }
 
 export function isSupabaseProductStorageUrl(url: string) {
-  return normalizeMediaUrl(url).includes(".supabase.co/storage/v1/object/public/");
+  const normalized = normalizeMediaUrl(url);
+  if (normalized.includes("/storage/v1/object/public/mithron-products/")) return true;
+  if (normalized.includes("/cdn-media/storage/v1/object/public/mithron-products/")) return true;
+  return Boolean(parseStoragePublicUrl(normalized)?.bucket === "mithron-products");
 }
 
 export function resolveMediaAssetFromPublicUrl(url: string) {
@@ -90,7 +93,31 @@ async function deleteProductMediaLinksOnly(productSlug: string, mediaAssetId: st
   }
 }
 
-async function cleanupOrphanMediaAsset(
+export function collectProductMediaUrls(input: {
+  image?: unknown;
+  hero?: unknown;
+  gallery?: unknown;
+}) {
+  return collectSupabaseMediaUrls(input);
+}
+
+/** URLs present on the previous product that are absent from the saved media set. */
+export function collectDisplacedProductMediaUrls(input: {
+  previous: { image?: unknown; hero?: unknown; gallery?: unknown };
+  next: { image?: unknown; hero?: unknown; gallery?: unknown };
+  removedUrls?: string[];
+}) {
+  const previous = new Set(collectSupabaseMediaUrls(input.previous));
+  const next = new Set(collectSupabaseMediaUrls(input.next));
+  const displaced = [...previous].filter((url) => !next.has(url));
+  for (const url of input.removedUrls ?? []) {
+    const normalized = normalizeMediaUrl(url);
+    if (normalized) displaced.push(normalized);
+  }
+  return [...new Set(displaced)];
+}
+
+export async function cleanupOrphanMediaAsset(
   mediaAssetId: string,
   productSlug: string,
   actorId: string | null

@@ -92,17 +92,41 @@ describe("inventory dialog and stock workflow UX", () => {
     expect(adminExport).toContain("all: true");
   });
 
+  it("renders a blocked-reason banner when inventory load is degraded", () => {
+    render(
+      createElement(InventoryManager, {
+        rows: [],
+        exportHref: "/admin/inventory/export",
+        blockedReason: "inventory read failed: 503 Service Unavailable",
+        totalProductCount: 140,
+        inventoryMetrics: {
+          totalInventoryItems: 140,
+          inStock: 140,
+          lowStock: 0,
+          outOfStock: 0
+        }
+      })
+    );
+
+    expect(document.body.querySelector("[data-inventory-blocked-reason]")?.textContent).toMatch(
+      /couldn't load this data|inventory read failed|temporarily unavailable/i
+    );
+    expect(screen.getAllByText("Inventory could not be loaded. Refresh to retry.").length).toBeGreaterThan(0);
+  });
+
   it("renders the adjust stock dialog in a body-level fixed portal and releases scroll lock on escape", async () => {
     const action = vi.fn();
 
-    render(createElement(InventoryManager, {
-      rows: [inventoryRow],
-      action,
-      adjustAction: action,
-      importAction: action,
-      bulkAction: action,
-      exportHref: "/admin/inventory/export"
-    }));
+    render(
+      createElement(InventoryManager, {
+        rows: [inventoryRow],
+        action,
+        adjustAction: action,
+        importAction: action,
+        bulkAction: action,
+        exportHref: "/admin/inventory/export"
+      })
+    );
 
     fireEvent.click(screen.getByLabelText("More actions for HPC-3 Power Cube"));
     fireEvent.click(screen.getByRole("button", { name: "Adjust stock" }));

@@ -11,7 +11,7 @@ export function AccountCard({ children, className, as: Tag = "div" }: AccountCar
     <div className="rounded-[22px] bg-[var(--account-border)] p-[1px]">
       <Tag
         className={cn(
-          "rounded-[21px] bg-[var(--account-surface)] p-6 shadow-[var(--account-shadow-sm)] md:p-8",
+          "rounded-[21px] bg-[var(--account-surface)] p-4 shadow-[var(--account-shadow-sm)] sm:p-6 md:p-8",
           className
         )}
       >

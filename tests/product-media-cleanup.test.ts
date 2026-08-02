@@ -30,15 +30,27 @@ describe("product media cleanup", () => {
     expect(resolved?.mediaAssetId).toContain("media-products-");
   });
 
-  it("exports unlink and ensure helpers for admin actions", () => {
+  it("exports unlink, ensure, and displaced-url helpers for admin actions", () => {
     const cleanup = source("lib/product-media-cleanup.ts");
     const actions = source("app/admin/products/actions.ts");
     const admin = source("services/admin.ts");
+    const adminActions = source("services/admin-actions.ts");
 
     expect(cleanup).toContain("export async function unlinkRemovedProductMedia");
     expect(cleanup).toContain("export async function ensureProductMediaLinksForProduct");
+    expect(cleanup).toContain("export function collectDisplacedProductMediaUrls");
+    expect(cleanup).toContain("export async function cleanupOrphanMediaAsset");
     expect(actions).toContain("unlinkRemovedProductMedia");
     expect(actions).toContain("ensureProductMediaLinksForProduct");
+    expect(actions).toContain("collectDisplacedProductMediaUrls");
+    expect(adminActions).toContain("cleanupOrphanMediaAsset");
     expect(admin).toContain("description,description_json,specs");
+  });
+
+  it("reuses content_hash on product image upload retries", () => {
+    const upload = source("services/product-image-upload.ts");
+    expect(upload).toContain("createHash(\"sha256\")");
+    expect(upload).toContain("content_hash");
+    expect(upload).toContain("findReusableMediaAssetByContentHash");
   });
 });

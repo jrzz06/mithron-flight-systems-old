@@ -208,4 +208,33 @@ describe("inventory CSV workflow", () => {
     expect(actions).toContain("requireProductCatalogActor");
     expect(actions).toContain("updateProductPublicationRecord");
   });
+
+  it("covers every product-page slug for inventory joins instead of a hard 80-row cap", () => {
+    const admin = source("services/admin.ts");
+    const productManagerStart = admin.indexOf("export const loadProductManagerSnapshot");
+    const productManagerSlice = admin.slice(productManagerStart, productManagerStart + 12000);
+
+    expect(productManagerSlice).toContain("pageRelationLimit");
+    expect(productManagerSlice).toContain("Math.max(pageSlugs.length, listLimit)");
+    expect(productManagerSlice).toContain("limit=${pageRelationLimit}");
+    expect(productManagerSlice).not.toContain("limit=${PRODUCT_RELATION_LIMIT}");
+  });
+
+  it("surfaces inventory load failures instead of a silent empty catalog", () => {
+    const csvSource = source("services/csv-inventory-source.ts");
+    const adminPage = source("app/admin/inventory/page.tsx");
+    const bridge = source("components/admin/inventory-action-bridge.tsx");
+    const manager = source("components/admin/inventory-manager.tsx");
+
+    expect(csvSource).toContain("fetchRowsSafe");
+    expect(csvSource).toContain("shouldSkipInventoryCache");
+    expect(csvSource).toContain("blockedReason: secondaryErrors[0]");
+    expect(csvSource).toContain("totalProductCount");
+    expect(csvSource).not.toContain("totalProductCount: 0,\n      catalogFilter,\n      inventoryMetrics: emptyMetrics");
+    expect(adminPage).toContain("blockedReason={inventorySource.blockedReason}");
+    expect(bridge).toContain("blockedReason?: string");
+    expect(manager).toContain("data-inventory-blocked-reason");
+    expect(manager).toContain("connectivityMessage(blockedReason)");
+    expect(manager).toContain("Inventory could not be loaded. Refresh to retry.");
+  });
 });

@@ -12,7 +12,11 @@ import { parseSupplierProductForm } from "@/lib/supplier/product-form";
 import { logSupplierProductFormDebug } from "@/lib/supplier/product-form-debug";
 import type { SupplierProductFormState } from "@/lib/supplier/types";
 import { createNotificationRecord, fetchAdminRecordsByColumn } from "@/services/admin-actions";
-import { linkUploadedImagesToProduct } from "@/lib/product-gallery";
+import { linkUploadedImagesToProduct, parseRemovedGalleryUrls } from "@/lib/product-gallery";
+import {
+  collectDisplacedProductMediaUrls,
+  unlinkRemovedProductMedia
+} from "@/lib/product-media-cleanup";
 import { resolveSupplierProductImageFields, readProductImageSrc } from "@/lib/supplier/product-image";
 import { requirePermission } from "@/services/auth";
 import { revalidateAfterMutation } from "@/lib/control-plane/revalidate-realtime";
@@ -324,6 +328,30 @@ export async function updateSupplierProductFormStateAction(
         const message = linkError instanceof Error ? linkError.message : String(linkError);
         console.warn(`[supplier-products] failed to link uploaded images for ${slug}: ${message}`);
         imageLinkWarning = ` Uploaded images could not be linked (${message}) - reopen the product and re-save the images.`;
+      }
+    }
+
+    const displacedUrls = collectDisplacedProductMediaUrls({
+      previous: {
+        image: existingRow?.image,
+        hero: existingRow?.hero,
+        gallery: existingRow?.gallery
+      },
+      next: { image, hero, gallery },
+      removedUrls: parseRemovedGalleryUrls(formData)
+    });
+    if (displacedUrls.length) {
+      try {
+        await unlinkRemovedProductMedia({
+          productSlug: slug,
+          removedUrls: displacedUrls,
+          actorId: context.userId
+        });
+      } catch (cleanupError) {
+        if (isNextRedirect(cleanupError)) throw cleanupError;
+        const message = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+        console.warn(`[supplier-products] failed to cleanup displaced images for ${slug}: ${message}`);
+        imageLinkWarning = `${imageLinkWarning} Displaced image cleanup failed (${message}).`;
       }
     }
 

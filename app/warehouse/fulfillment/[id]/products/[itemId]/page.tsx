@@ -182,6 +182,9 @@ export default async function WarehouseProductDetailPage({ params, searchParams 
                 action={dispatchOrderWithFeedback}
                 buttonLabel="Dispatch"
                 pendingLabel="Dispatching"
+                confirmMessage={`Dispatch order ${orderNumber}?`}
+                confirmDescription="This moves the order to Dispatch History."
+                confirmLabel="Dispatch"
               >
                 <input name="order_id" type="hidden" value={id} />
                 <input name="warehouse_code" type="hidden" value={warehouseCode} />

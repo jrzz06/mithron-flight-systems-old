@@ -89,10 +89,10 @@ export function AdminSuppliersDirectory({ suppliers }: { suppliers: AdminSupplie
               <td className="px-3 py-2.5"><StatusPill status={supplier.verificationStatus} /></td>
               <td className="px-3 py-2.5 text-xs text-[var(--platform-text-muted)]">{formatDate(supplier.registeredAt)}</td>
               <td className="px-3 py-2.5">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/admin/suppliers/products?supplier=${encodeURIComponent(supplier.id)}`}
-                    className="text-xs font-medium text-[var(--platform-accent)]"
+                    className="inline-flex h-8 items-center text-xs font-medium text-[var(--platform-accent)]"
                   >
                     Products
                   </Link>

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { autoCutoutIfNeeded } from "@/lib/catalog/auto-cutout";
 import { assertSupabaseAdminConfig } from "@/lib/env";
@@ -211,6 +212,71 @@ export type ProductImageBufferUploadInput = {
   externalSourceUrl?: string;
 };
 
+async function findReusableMediaAssetByContentHash(input: {
+  folder: string;
+  contentHash: string;
+  bucket: string;
+}) {
+  const config = assertSupabaseAdminConfig();
+  const response = await fetchWithTimeout(
+    `${config.url}/rest/v1/media_assets?select=id,bucket,storage_path,public_url,responsive_variants&folder=eq.${encodeURIComponent(input.folder)}&content_hash=eq.${encodeURIComponent(input.contentHash)}&limit=1`,
+    {
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`
+      },
+      cache: "no-store"
+    }
+  );
+  if (!response.ok) return null;
+  const rows = (await response.json()) as Array<Record<string, unknown>>;
+  const row = rows[0];
+  if (!row) return null;
+
+  const storagePath = String(row.storage_path ?? "");
+  const bucket = String(row.bucket ?? input.bucket);
+  if (!storagePath) return null;
+
+  const head = await fetchWithTimeout(
+    `${config.url}/storage/v1/object/${bucket}/${encodeObjectPath(storagePath)}`,
+    {
+      method: "HEAD",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`
+      }
+    }
+  );
+  if (!head.ok) return null;
+
+  const responsive = row.responsive_variants;
+  let optimizedStoragePath: string | null = null;
+  if (responsive && typeof responsive === "object" && !Array.isArray(responsive)) {
+    for (const value of Object.values(responsive as Record<string, unknown>)) {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const path = (value as Record<string, unknown>).storage_path;
+        if (typeof path === "string" && path.includes(".large.webp")) {
+          optimizedStoragePath = path;
+          break;
+        }
+        if (!optimizedStoragePath && typeof path === "string" && path.trim()) {
+          optimizedStoragePath = path.trim();
+        }
+      }
+    }
+  }
+
+  return {
+    bucket,
+    storagePath,
+    optimizedStoragePath,
+    publicUrl: String(row.public_url ?? buildSupabasePublicObjectUrl(config.url, bucket, storagePath)),
+    mediaAssetId: String(row.id ?? buildMediaAssetId(bucket, storagePath)),
+    width: null as number | null,
+    height: null as number | null
+  };
+}
+
 export async function uploadSingleProductImageBuffer(
   input: ProductImageBufferUploadInput
 ): Promise<UploadedProductImage & { width: number | null; height: number | null }> {
@@ -248,9 +314,20 @@ export async function uploadSingleProductImageBuffer(
         : { autoProcessed: false, alreadyCutout: true, metrics: cutoutResult.metrics ?? null };
   }
 
+  const folder = `products/${input.productSlug}`;
+  const contentHash = createHash("sha256").update(buffer).digest("hex");
+  const reusable = await findReusableMediaAssetByContentHash({
+    folder,
+    contentHash,
+    bucket
+  });
+  if (reusable) {
+    return reusable;
+  }
+
   const storagePath = buildStorageObjectPath({
     bucket,
-    folder: `products/${input.productSlug}`,
+    folder,
     fileName: uploadFileName,
     at: uploadedAt
   });
@@ -265,11 +342,12 @@ export async function uploadSingleProductImageBuffer(
   const recordForm = new FormData();
   recordForm.set("id", mediaAssetId);
   recordForm.set("bucket", bucket);
-  recordForm.set("folder", `products/${input.productSlug}`);
+  recordForm.set("folder", folder);
   recordForm.set("storage_path", storagePath);
   recordForm.set("public_url", publicUrl);
   recordForm.set("mime_type", processedMimeType);
   recordForm.set("file_size_bytes", String(buffer.byteLength));
+  recordForm.set("content_hash", contentHash);
   recordForm.set("visibility", "public");
   recordForm.set("usage_scope", "product-catalog");
   recordForm.set("tags", `product, ${input.productSlug}`);
@@ -303,6 +381,7 @@ export async function uploadSingleProductImageBuffer(
       optimized_uploaded_bytes: optimizedUploadedBytes,
       product_slug: input.productSlug,
       source: input.source,
+      content_hash: contentHash,
       catalog_delivery: "original-primary-plus-responsive-variants",
       ...(input.externalSourceUrl ? { external_source_url: input.externalSourceUrl } : {}),
       ...(cutoutMetadata ? { cutout: cutoutMetadata } : {})

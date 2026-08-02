@@ -69,6 +69,7 @@ export default async function AdminInventoryPage({ searchParams }: { searchParam
         previousPageHref={previousPageHref}
         nextPageHref={nextPageHref}
         initialSearchQuery={initialProductSlug}
+        blockedReason={inventorySource.blockedReason}
       />
     </div>
   );

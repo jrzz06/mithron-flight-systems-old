@@ -854,22 +854,72 @@
 }
 
 @media (max-width: 767px) {
+  .loginRoot {
+    --login-space-xs: 0.375rem;
+    --login-space-sm: 0.5rem;
+    --login-space-md: 0.875rem;
+    --login-space-lg: 1.125rem;
+    --login-space-xl: 1.25rem;
+    --login-space-2xl: 1.5rem;
+    --login-control-h: 2.75rem;
+  }
+
   .cardWrap {
     justify-content: center;
     align-items: center;
     padding:
-      max(24px, env(safe-area-inset-top))
-      max(20px, env(safe-area-inset-right))
-      max(24px, env(safe-area-inset-bottom))
-      max(20px, env(safe-area-inset-left));
+      max(16px, env(safe-area-inset-top))
+      max(16px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left));
   }
 
   .card {
-    padding: 2rem 1.5rem 1.75rem;
+    width: 100%;
+    max-width: min(22.5rem, 100%);
+    padding: 1.25rem 1.125rem 1.25rem;
+  }
+
+  .cardLogoLink {
+    margin-bottom: var(--login-space-lg);
+  }
+
+  .cardTagline {
+    margin: -0.5rem 0 var(--login-space-md);
+  }
+
+  .cardTitle {
+    margin: 0 0 1rem;
+    font-size: 1.375rem;
+  }
+
+  .modeToggle {
+    margin-bottom: var(--login-space-md);
+  }
+
+  .modeTab {
+    min-height: 2.5rem;
+  }
+
+  .methodDivider {
+    margin: var(--login-space-sm) 0;
+  }
+
+  .authForm {
+    gap: var(--login-space-md);
+  }
+
+  .field {
+    gap: 0.5rem;
   }
 
   .authInput {
     font-size: 1rem;
+    padding: 0 0.875rem;
+  }
+
+  .authSubmit {
+    margin-top: var(--login-space-xs);
   }
 
   .otpDigit {

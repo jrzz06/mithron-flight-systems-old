@@ -53,7 +53,8 @@ import {
 } from "@/lib/product-gallery";
 import {
   ensureProductMediaLinksForProduct,
-  unlinkRemovedProductMedia
+  unlinkRemovedProductMedia,
+  collectDisplacedProductMediaUrls
 } from "@/lib/product-media-cleanup";
 import { uploadProductImagesForDraft } from "@/services/product-image-upload";
 import { resolveNextImageSrc } from "@/lib/media/next-image-src";
@@ -501,19 +502,32 @@ async function performProductQuickEdit(formData: FormData): Promise<string | und
     }
   }
 
-  if (removedUrls.length) {
+  const displacedUrls = collectDisplacedProductMediaUrls({
+    previous: {
+      image: existingProduct?.image,
+      hero: existingProduct?.hero,
+      gallery: existingProduct?.gallery
+    },
+    next: {
+      image: record.image ?? quickInput.fields.image ?? existingProduct?.image,
+      hero: record.hero ?? quickInput.fields.hero ?? existingProduct?.hero,
+      gallery: record.gallery ?? quickInput.fields.gallery ?? existingProduct?.gallery
+    },
+    removedUrls
+  });
+  if (displacedUrls.length) {
     try {
       await unlinkRemovedProductMedia({
         productSlug: quickInput.identity.slug,
-        removedUrls,
+        removedUrls: displacedUrls,
         actorId
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[admin-products] failed to unlink removed images for ${quickInput.identity.slug}: ${message}`);
+      console.warn(`[admin-products] failed to cleanup displaced images for ${quickInput.identity.slug}: ${message}`);
       imageLinkWarning = imageLinkWarning
-        ? `${imageLinkWarning} Removed image cleanup also failed (${message}).`
-        : `Product updated, but removed image cleanup failed (${message}).`;
+        ? `${imageLinkWarning} Displaced image cleanup also failed (${message}).`
+        : `Product updated, but displaced image cleanup failed (${message}).`;
     }
   }
 

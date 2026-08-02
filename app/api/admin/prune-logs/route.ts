@@ -3,15 +3,54 @@ import { withCronLock } from "@/lib/cron-lock";
 import { authorizeBearerSecret } from "@/lib/api/bearer-auth";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 
-const DEFAULT_RETENTION_DAYS = 90;
+const DEFAULT_RETENTION_DAYS = 60;
 const MIN_RETENTION_DAYS = 7;
 const MAX_RETENTION_DAYS = 365;
+const DEFAULT_REVISION_KEEP_LAST = 15;
+const MIN_REVISION_KEEP_LAST = 1;
+const MAX_REVISION_KEEP_LAST = 100;
+const DEFAULT_REVISION_RETENTION_DAYS = 120;
 
-function parseRetentionDays(value: string | null) {
-  if (!value?.trim()) return DEFAULT_RETENTION_DAYS;
+function parseBoundedInt(
+  value: string | null | undefined,
+  fallback: number,
+  min: number,
+  max: number
+) {
+  if (!value?.trim()) return fallback;
   const parsed = Number(value);
-  if (!Number.isInteger(parsed)) return DEFAULT_RETENTION_DAYS;
-  return Math.min(MAX_RETENTION_DAYS, Math.max(MIN_RETENTION_DAYS, parsed));
+  if (!Number.isInteger(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function resolveRetentionDays(request: Request) {
+  const url = new URL(request.url);
+  return parseBoundedInt(
+    url.searchParams.get("retention_days") ?? process.env.OBSERVABILITY_LOG_RETENTION_DAYS,
+    DEFAULT_RETENTION_DAYS,
+    MIN_RETENTION_DAYS,
+    MAX_RETENTION_DAYS
+  );
+}
+
+function resolveRevisionKeepLast(request: Request) {
+  const url = new URL(request.url);
+  return parseBoundedInt(
+    url.searchParams.get("revision_keep_last") ?? process.env.CONTENT_REVISION_KEEP_LAST,
+    DEFAULT_REVISION_KEEP_LAST,
+    MIN_REVISION_KEEP_LAST,
+    MAX_REVISION_KEEP_LAST
+  );
+}
+
+function resolveRevisionRetentionDays(request: Request) {
+  const url = new URL(request.url);
+  return parseBoundedInt(
+    url.searchParams.get("revision_retention_days") ?? process.env.CONTENT_REVISION_RETENTION_DAYS,
+    DEFAULT_REVISION_RETENTION_DAYS,
+    MIN_RETENTION_DAYS,
+    MAX_RETENTION_DAYS
+  );
 }
 
 function bearerAuthResponse(auth: Awaited<ReturnType<typeof authorizeBearerSecret>>) {
@@ -32,8 +71,9 @@ async function runPrune(request: Request) {
   const denied = bearerAuthResponse(auth);
   if (denied) return denied;
 
-  const url = new URL(request.url);
-  const retentionDays = parseRetentionDays(url.searchParams.get("retention_days"));
+  const retentionDays = resolveRetentionDays(request);
+  const revisionKeepLast = resolveRevisionKeepLast(request);
+  const revisionRetentionDays = resolveRevisionRetentionDays(request);
   const config = assertSupabaseAdminConfig(process.env);
   const response = await fetch(`${config.url}/rest/v1/rpc/prune_observability_logs`, {
     method: "POST",
@@ -42,7 +82,11 @@ async function runPrune(request: Request) {
       Authorization: `Bearer ${config.serviceRoleKey}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ retention_days: retentionDays }),
+    body: JSON.stringify({
+      retention_days: retentionDays,
+      revision_keep_last: revisionKeepLast,
+      revision_retention_days: revisionRetentionDays
+    }),
     cache: "no-store"
   });
 
@@ -53,7 +97,13 @@ async function runPrune(request: Request) {
   }
 
   const result = await response.json().catch(() => null);
-  return NextResponse.json({ ok: true, retentionDays, result });
+  return NextResponse.json({
+    ok: true,
+    retentionDays,
+    revisionKeepLast,
+    revisionRetentionDays,
+    result
+  });
 }
 
 export async function GET(request: Request) {

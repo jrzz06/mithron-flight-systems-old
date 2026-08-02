@@ -1,24 +1,21 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { Package } from "lucide-react";
 import {
   OperationalDangerAction,
   OperationalMoreActions,
   OperationalPrimaryAction
 } from "@/components/admin/operational-action-panel";
-import { OrderProductThumbnail } from "@/components/admin/orders/order-product-thumbnail";
 import { resolveNextImageSrc } from "@/lib/media/next-image-src";
-import { parseShipmentTracking } from "@/lib/customer/shipment-tracking";
 import { employeeFulfillmentLabel } from "@/lib/warehouse/operational-labels";
 import {
   canCancelOrder,
   canDispatchOrder,
-  EMPLOYEE_PROGRESS_STEPS,
-  employeeProgressStepIndex,
   formatOrderDate,
-  assignedPicker,
-  shippingMethod,
+  paymentStatusLabel,
   warehouseCustomerEmail,
   warehouseCustomerName,
   warehouseCustomerPhone,
@@ -26,14 +23,16 @@ import {
   type WarehouseOrderRow
 } from "@/lib/warehouse/order-helpers";
 
-type OrderItemRow = {
+export type OrderItemRow = {
   id: string;
   productName: string;
   productSlug: string;
   sku: string;
+  variantLabel: string;
   quantity: number;
+  lineTotal: string;
   image: string | null;
-  warehouseLocation: string;
+  imageCount: number;
 };
 
 type WarehouseFulfillmentDetailProps = {
@@ -44,62 +43,70 @@ type WarehouseFulfillmentDetailProps = {
   cancelAction: (formData: FormData) => Promise<void>;
 };
 
-function FulfillmentStepper({ status }: { status: string }) {
-  const activeIndex = employeeProgressStepIndex(status);
-  if (activeIndex < 0) {
-    return (
-      <p className="mt-3 text-sm font-medium text-[var(--platform-text-secondary)]">
-        Status: {employeeFulfillmentLabel(status)}
-      </p>
-    );
-  }
+const labelClass =
+  "text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]";
+const valueClass = "mt-1 text-sm leading-5 text-[var(--platform-text-primary)]";
+const valueStrongClass = "mt-1 text-base font-semibold leading-5 text-[var(--platform-text-primary)]";
 
+function ProductPreviewImage({ src, alt }: { src: string | null; alt: string }) {
   return (
-    <ol className="mt-4 flex min-w-0 flex-wrap items-center gap-2" aria-label="Fulfillment progress">
-      {EMPLOYEE_PROGRESS_STEPS.map((step, index) => {
-        const isComplete = index < activeIndex;
-        const isCurrent = index === activeIndex;
-        return (
-          <li key={step.key} className="flex min-w-0 items-center gap-2">
-            {index > 0 ? (
-              <span
-                className={`hidden h-px w-6 sm:block ${
-                  isComplete || isCurrent ? "bg-[var(--platform-accent)]" : "bg-[var(--platform-border)]"
-                }`}
-                aria-hidden
-              />
-            ) : null}
-            <span
-              className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
-                isCurrent
-                  ? "bg-[var(--platform-accent-soft)] text-[var(--platform-accent)]"
-                  : isComplete
-                    ? "bg-[var(--platform-surface)] text-[var(--platform-text-primary)]"
-                    : "bg-[var(--platform-surface)] text-[var(--platform-text-muted)]"
-              }`}
-            >
-              <span
-                className={`grid size-5 place-items-center rounded-full type-badge ${
-                  isCurrent || isComplete
-                    ? "bg-[var(--platform-accent)] text-white"
-                    : "bg-[var(--platform-border)] text-[var(--platform-text-muted)]"
-                }`}
-              >
-                {isComplete ? "✓" : index + 1}
-              </span>
-              {step.label}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+    <div className="relative mx-auto aspect-[4/3] w-full max-h-[min(48vh,20rem)] overflow-hidden rounded-[10px] border border-[var(--platform-border)] bg-[#f4f4f5] sm:mx-0 sm:max-w-sm">
+      {src ? (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className="object-contain p-3"
+          sizes="(max-width: 640px) 92vw, 24rem"
+          unoptimized
+          priority
+        />
+      ) : (
+        <div className="grid h-full min-h-[10rem] w-full place-items-center text-zinc-400">
+          <Package size={40} strokeWidth={1.5} aria-hidden />
+          <span className="mt-2 text-xs text-zinc-500">No product image</span>
+        </div>
+      )}
+    </div>
   );
 }
 
-function nextStepHint(status: string) {
-  if (!canDispatchOrder(status)) return null;
-  if (status === "pending") return "Next: review products, then dispatch this order.";
-  return "Next: dispatch this order.";
+function ProductRowThumb({
+  src,
+  alt,
+  imageCount
+}: {
+  src: string | null;
+  alt: string;
+  imageCount: number;
+}) {
+  const extra = Math.max(0, imageCount - 1);
+  return (
+    <div className="relative h-[76px] w-[76px] shrink-0 overflow-hidden rounded-[8px] border border-[var(--platform-border)] bg-[#f4f4f5]">
+      {src ? (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className="object-contain p-1.5"
+          sizes="76px"
+          unoptimized
+        />
+      ) : (
+        <div className="grid h-full w-full place-items-center text-zinc-400">
+          <Package size={22} strokeWidth={1.5} aria-hidden />
+        </div>
+      )}
+      {extra > 0 ? (
+        <span
+          className="absolute bottom-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white"
+          aria-label={`${extra} more images`}
+        >
+          +{extra}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 export function WarehouseFulfillmentDetail({
@@ -115,57 +122,79 @@ export function WarehouseFulfillmentDetail({
   const customerPhone = warehouseCustomerPhone(order);
   const address = warehouseShippingAddress(order);
   const step = orderRow.fulfillmentStatus;
-  const tracking = parseShipmentTracking(order.shipment_tracking);
-  const hint = nextStepHint(step);
+  const statusLabel = employeeFulfillmentLabel(step);
+  const paymentLabel = paymentStatusLabel(String(order.payment_status ?? orderRow.paymentStatusRaw));
+  const orderTotal = order.total != null ? String(order.total) : "—";
+  const currency = typeof order.currency === "string" && order.currency.trim() ? order.currency.trim() : "";
+  const totalDisplay = currency ? `${currency} ${orderTotal}` : orderTotal;
 
   function togglePreview(itemId: string) {
     setPreviewItemId((current) => (current === itemId ? null : itemId));
   }
 
   return (
-    <div className="grid min-w-0 gap-5">
-      <section className="@container grid min-w-0 gap-4 rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-4 @md:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)] @md:items-start">
-        <div className="min-w-0">
-          <h2 className="min-w-0 break-words text-lg font-semibold text-[var(--platform-text-primary)]">
+    <div className="mx-auto grid w-full max-w-5xl min-w-0 gap-3">
+      {/* Order summary + Dispatch */}
+      <section className="grid min-w-0 items-stretch gap-0 overflow-hidden rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] lg:grid-cols-[minmax(0,1fr)_minmax(14rem,17.5rem)]">
+        <div className="min-w-0 border-b border-[var(--platform-border)] p-4 sm:p-5 lg:border-b-0 lg:border-r">
+          <p className={labelClass}>Order ID</p>
+          <h2 className="mt-1 min-w-0 break-words text-xl font-semibold tracking-[-0.02em] text-[var(--platform-text-primary)] sm:text-2xl">
             {orderRow.orderNumber}
           </h2>
-          <p className="mt-1 text-sm text-[var(--platform-text-secondary)]">
-            {employeeFulfillmentLabel(step)}
-          </p>
-          <FulfillmentStepper status={step} />
-          {hint ? (
-            <p className="mt-3 text-sm font-medium text-[var(--platform-accent)]">{hint}</p>
-          ) : (
-            <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--platform-text-muted)]">
-              This order is {employeeFulfillmentLabel(step).toLowerCase()}. Courier details appear on the customer order tracking page after dispatch.
-            </p>
-          )}
+
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-3">
+            <div className="min-w-0">
+              <dt className={labelClass}>Order status</dt>
+              <dd className={valueStrongClass}>{statusLabel}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className={labelClass}>Received</dt>
+              <dd className={valueClass}>{formatOrderDate(order.created_at)}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className={labelClass}>Payment status</dt>
+              <dd className={valueStrongClass}>{paymentLabel}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className={labelClass}>Order total</dt>
+              <dd className={valueStrongClass}>{totalDisplay}</dd>
+            </div>
+          </dl>
         </div>
-        <div className="grid min-w-0 gap-3">
+
+        <div className="flex min-w-0 flex-col justify-center gap-2 p-4 sm:p-5">
           {canDispatchOrder(step) ? (
             <OperationalPrimaryAction
+              className="!border-0 !bg-transparent !p-0 !shadow-none"
               title="Dispatch order"
-              description="One click receives, prepares, and dispatches this order."
+              description="Mark dispatched and move to History."
               action={dispatchAction}
-              buttonLabel="Mark Dispatched"
+              buttonLabel="Dispatch"
               pendingLabel="Dispatching"
+              confirmMessage={`Dispatch order ${orderRow.orderNumber}?`}
+              confirmDescription="This moves the order to Dispatch History."
+              confirmLabel="Dispatch"
             >
               <input name="order_id" type="hidden" value={orderRow.orderId} />
               <input name="warehouse_code" type="hidden" value={orderRow.warehouseCode} />
             </OperationalPrimaryAction>
-          ) : null}
+          ) : (
+            <p className="text-sm text-[var(--platform-text-muted)]">
+              This order is {statusLabel.toLowerCase()}.
+            </p>
+          )}
 
           {canCancelOrder(step) ? (
-            <OperationalMoreActions>
+            <OperationalMoreActions summaryLabel="More actions">
               <OperationalDangerAction
                 action={cancelAction}
-                buttonLabel="Cancel & Delete Order"
-                pendingLabel="Cancelling"
-                confirmMessage={`Cancel & delete order ${orderRow.orderNumber}?`}
+                buttonLabel="Delete order"
+                pendingLabel="Deleting"
+                confirmMessage={`Delete order ${orderRow.orderNumber}?`}
                 confirmDescription="This permanently deletes the order from the warehouse queue. Type the order number to confirm."
                 requireTypedText={orderRow.orderNumber}
                 typedTextLabel={`Type ${orderRow.orderNumber} to confirm`}
-                confirmLabel="Cancel & delete"
+                confirmLabel="Delete"
               >
                 <input name="order_id" type="hidden" value={orderRow.orderId} />
                 <input name="expected_updated_at" type="hidden" value={orderRow.updatedAt} />
@@ -173,7 +202,7 @@ export function WarehouseFulfillmentDetail({
                   name="cancel_reason"
                   required
                   rows={2}
-                  placeholder="Cancellation reason"
+                  placeholder="Deletion reason"
                   className="w-full min-w-0 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 py-2 text-sm"
                 />
               </OperationalDangerAction>
@@ -182,195 +211,150 @@ export function WarehouseFulfillmentDetail({
         </div>
       </section>
 
-      <section className="@container grid min-w-0 gap-4 rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-4 @sm:grid-cols-2">
+      {/* Customer + shipping — equal columns */}
+      <section className="grid min-w-0 gap-4 rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-4 sm:grid-cols-2 sm:gap-6 sm:p-5">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Customer</h3>
-          <dl className="mt-3 grid gap-3 text-sm">
-            <div>
-              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Name</dt>
-              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerName}</dd>
+          <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Customer details</h3>
+          <dl className="mt-3 grid gap-3">
+            <div className="min-w-0">
+              <dt className={labelClass}>Name</dt>
+              <dd className={`${valueClass} break-words`}>{customerName}</dd>
             </div>
-            <div>
-              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Phone</dt>
-              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerPhone}</dd>
+            <div className="min-w-0">
+              <dt className={labelClass}>Phone</dt>
+              <dd className={`${valueClass} break-words`}>{customerPhone}</dd>
             </div>
-            <div>
-              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Email</dt>
-              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{customerEmail}</dd>
+            <div className="min-w-0">
+              <dt className={labelClass}>Email</dt>
+              <dd className={`${valueClass} break-words`}>{customerEmail}</dd>
             </div>
           </dl>
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Shipping</h3>
-          <dl className="mt-3 grid gap-3 text-sm">
-            <div>
-              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Method</dt>
-              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{shippingMethod(order)}</dd>
-            </div>
-            <div>
-              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Assigned</dt>
-              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{assignedPicker(order)}</dd>
-            </div>
-            <div>
-              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Created</dt>
-              <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{formatOrderDate(order.created_at)}</dd>
-            </div>
-            {tracking?.carrier ? (
-              <div>
-                <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Carrier</dt>
-                <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{tracking.carrier}</dd>
-              </div>
-            ) : null}
-            {tracking?.trackingNumber ? (
-              <div>
-                <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Tracking</dt>
-                <dd className="mt-1 min-w-0 break-words text-[var(--platform-text-secondary)]">{tracking.trackingNumber}</dd>
-              </div>
-            ) : null}
-            <div>
-              <dt className="type-meta font-medium uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">Ship to</dt>
-              {address && address !== "—" ? (
-                <dd className="mt-1 min-w-0 whitespace-pre-line break-words text-[var(--platform-text-secondary)]">{address}</dd>
-              ) : (
-                <dd className="mt-1 text-[var(--platform-text-muted)]">No shipping address on file.</dd>
-              )}
-            </div>
-          </dl>
+          <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Shipping address</h3>
+          {address && address !== "—" ? (
+            <p className={`mt-3 ${valueClass} whitespace-pre-line break-words`}>{address}</p>
+          ) : (
+            <p className="mt-3 text-sm text-[var(--platform-text-muted)]">No shipping address on file.</p>
+          )}
         </div>
       </section>
 
-      <section className="grid min-w-0 gap-3">
+      {/* Products */}
+      <section className="grid min-w-0 gap-2">
         <h3 className="text-sm font-semibold text-[var(--platform-text-primary)]">Products</h3>
-        <p className="text-sm text-[var(--platform-text-muted)]">
-          Click a product image or View product to confirm you are picking the correct item.
-        </p>
-        <div className="min-w-0 overflow-x-auto rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]">
-          <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-            <thead className="border-b border-[var(--platform-border)] type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
-              <tr>
-                <th className="px-3 py-3">Image</th>
-                <th className="px-3 py-3">Product</th>
-                <th className="px-3 py-3">SKU</th>
-                <th className="px-3 py-3">Qty</th>
-                <th className="px-3 py-3">Location</th>
-                <th className="px-3 py-3">Action</th>
+        <div className="min-w-0 overflow-hidden rounded-[var(--platform-radius)] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]">
+          <table className="w-full table-fixed border-collapse text-left text-sm">
+            <colgroup>
+              <col className="w-[5.75rem]" />
+              <col />
+              <col className="w-[3.25rem]" />
+              <col className="w-[5.5rem]" />
+              <col className="w-[7.25rem]" />
+            </colgroup>
+            <thead className="border-b border-[var(--platform-border)]">
+              <tr className={labelClass}>
+                <th className="px-3 py-2.5 font-medium">Image</th>
+                <th className="px-3 py-2.5 font-medium">Product</th>
+                <th className="px-3 py-2.5 font-medium text-right">Qty</th>
+                <th className="px-3 py-2.5 font-medium text-right">Price</th>
+                <th className="px-3 py-2.5 font-medium text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--platform-border)]">
               {items.map((item) => {
-                const previewOpen = previewItemId === item.id;
                 const imageSrc = item.image ? resolveNextImageSrc(item.image) : null;
-                const detailsHref = `/warehouse/fulfillment/${orderRow.orderId}/products/${encodeURIComponent(item.id)}`;
+                const previewOpen = previewItemId === item.id;
+                const subLine = [item.sku, item.variantLabel].filter(Boolean).join(" · ");
 
                 return (
                   <Fragment key={item.id}>
-                    <tr>
-                      <td className="px-3 py-3">
-                        <OrderProductThumbnail
-                          src={imageSrc}
-                          alt={item.productName}
-                          size="detail"
-                          enlargeOnClick={Boolean(imageSrc)}
-                          className="!h-16 !w-16 [&_img]:object-contain"
-                        />
-                      </td>
-                      <td className="max-w-[16rem] px-3 py-3">
-                        <span className="block min-w-0 break-words text-[var(--platform-text-primary)]">
-                          {item.productName}
-                        </span>
-                        {item.productSlug ? (
-                          <span className="mt-0.5 block min-w-0 break-all text-xs text-[var(--platform-text-muted)]">
-                            {item.productSlug}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="px-3 py-3">
-                        <span className="block min-w-0 break-all font-mono text-xs">{item.sku}</span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-3">{String(item.quantity)}</td>
-                      <td className="px-3 py-3">
-                        <span className="block min-w-0 break-words">{item.warehouseLocation}</span>
-                      </td>
-                      <td className="px-3 py-3">
-                        <button
-                          type="button"
-                          aria-expanded={previewOpen}
-                          onClick={() => togglePreview(item.id)}
-                          className="platform-btn-secondary platform-btn-sm"
-                        >
-                          {previewOpen ? "Hide product" : "View product"}
-                        </button>
-                      </td>
-                    </tr>
                     {previewOpen ? (
-                      <tr>
-                        <td colSpan={6} className="bg-[var(--platform-surface)]/40 px-3 py-3">
-                          <div
-                            data-warehouse-product-mini-panel
-                            className="grid gap-3 rounded-[10px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)]/70 p-3 sm:grid-cols-[auto_minmax(0,1fr)]"
-                          >
-                            <OrderProductThumbnail
-                              src={imageSrc}
-                              alt={item.productName}
-                              size="preview"
-                              enlargeOnClick={Boolean(imageSrc)}
-                              className="justify-self-start [&_img]:object-contain"
-                            />
-                            <div className="grid min-w-0 gap-2">
-                              <div className="flex min-w-0 items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="text-sm font-semibold text-[var(--platform-text-primary)]">
-                                    {item.productName}
-                                  </p>
-                                  {item.productSlug ? (
-                                    <p className="mt-0.5 break-all text-xs text-[var(--platform-text-muted)]">
-                                      {item.productSlug}
-                                    </p>
-                                  ) : null}
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewItemId(null)}
-                                  className="shrink-0 text-xs text-[var(--platform-text-muted)] hover:text-[var(--platform-text-primary)]"
-                                  aria-label="Close product preview"
-                                >
-                                  Close
-                                </button>
-                              </div>
-                              <dl className="grid gap-2 text-sm sm:grid-cols-2">
-                                <div>
-                                  <dt className="type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
-                                    SKU
-                                  </dt>
-                                  <dd className="mt-0.5 break-all font-mono text-xs text-[var(--platform-text-secondary)]">
-                                    {item.sku || "—"}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
-                                    Qty to pick
-                                  </dt>
-                                  <dd className="mt-0.5 text-[var(--platform-text-secondary)]">{item.quantity}</dd>
-                                </div>
-                                <div className="sm:col-span-2">
-                                  <dt className="type-meta uppercase tracking-[0.08em] text-[var(--platform-text-muted)]">
-                                    Location
-                                  </dt>
-                                  <dd className="mt-0.5 break-words text-[var(--platform-text-secondary)]">
-                                    {item.warehouseLocation || "—"}
-                                  </dd>
-                                </div>
-                              </dl>
-                              <div>
-                                <Link href={detailsHref} className="platform-btn-secondary platform-btn-sm">
-                                  Open details
-                                </Link>
-                              </div>
+                      <tr data-warehouse-product-preview>
+                        <td colSpan={5} className="bg-[var(--platform-surface)]/40 px-3 py-3">
+                          <div className="grid min-w-0 gap-3 rounded-[10px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] p-3">
+                            <div className="flex min-w-0 items-start justify-between gap-3">
+                              <p className="text-sm font-semibold text-[var(--platform-text-primary)]">
+                                Product details
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewItemId(null)}
+                                className="platform-btn-ghost platform-btn-sm shrink-0"
+                                aria-label="Close product details"
+                              >
+                                Close
+                              </button>
                             </div>
+                            <ProductPreviewImage src={imageSrc} alt={item.productName} />
+                            <dl className="grid min-w-0 gap-2.5 text-sm sm:grid-cols-2">
+                              <div className="min-w-0 sm:col-span-2">
+                                <dt className={labelClass}>Name</dt>
+                                <dd className={`${valueStrongClass} break-words`}>{item.productName}</dd>
+                              </div>
+                              {subLine ? (
+                                <div className="min-w-0 sm:col-span-2">
+                                  <dt className={labelClass}>SKU / Variant</dt>
+                                  <dd className={`${valueClass} break-all font-mono text-xs`}>{subLine}</dd>
+                                </div>
+                              ) : null}
+                              <div className="min-w-0">
+                                <dt className={labelClass}>Quantity</dt>
+                                <dd className={valueClass}>{item.quantity}</dd>
+                              </div>
+                              <div className="min-w-0">
+                                <dt className={labelClass}>Price</dt>
+                                <dd className={valueStrongClass}>{item.lineTotal}</dd>
+                              </div>
+                            </dl>
                           </div>
                         </td>
                       </tr>
                     ) : null}
+                    <tr className="align-middle">
+                      <td className="px-3 py-3">
+                        <ProductRowThumb
+                          src={imageSrc}
+                          alt={item.productName}
+                          imageCount={item.imageCount}
+                        />
+                      </td>
+                      <td className="min-w-0 px-3 py-3">
+                        <span
+                          className="line-clamp-2 text-sm font-medium leading-5 text-[var(--platform-text-primary)]"
+                          title={item.productName}
+                        >
+                          {item.productName}
+                        </span>
+                        {subLine ? (
+                          <span
+                            className="mt-1 block truncate font-mono text-xs text-[var(--platform-text-muted)]"
+                            title={subLine}
+                          >
+                            {subLine}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3 text-right tabular-nums text-[var(--platform-text-primary)]">
+                        {String(item.quantity)}
+                      </td>
+                      <td
+                        className="truncate px-3 py-3 text-right tabular-nums font-medium text-[var(--platform-text-primary)]"
+                        title={item.lineTotal}
+                      >
+                        {item.lineTotal}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <button
+                          type="button"
+                          aria-expanded={previewOpen}
+                          onClick={() => togglePreview(item.id)}
+                          className="platform-btn-secondary platform-btn-sm inline-flex min-w-[6.5rem] justify-center"
+                        >
+                          {previewOpen ? "Hide" : "View product"}
+                        </button>
+                      </td>
+                    </tr>
                   </Fragment>
                 );
               })}

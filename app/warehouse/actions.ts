@@ -369,6 +369,9 @@ async function revalidateInventoryPaths(productSlug?: string) {
 
 async function revalidateWarehouseFulfillmentPaths() {
   await revalidateAfterMutation("orders", "order_items", "shipments");
+  // Admin home KPIs (received / review / warehouse / dispatched) read the same orders rows.
+  revalidatePath("/admin");
+  revalidatePath("/admin/orders");
 }
 
 const FULFILLMENT_TRANSITION_SEQUENCE: Record<string, string> = {
@@ -1510,7 +1513,7 @@ export async function updateShipmentLifecycleFormAction(
 
   if (orderId && (input.shipmentStatus === "shipped" || input.shipmentStatus === "delivered")) {
     const nextFulfillment = String(
-      result.order?.fulfillment_status ?? (input.shipmentStatus === "delivered" ? "delivered" : "shipped")
+      result.order?.fulfillment_status ?? (input.shipmentStatus === "delivered" ? "delivered" : "dispatched")
     );
     const currentStatus = String(result.order?.status ?? orderBefore?.status ?? "active");
     const nextStatus = syncOrderStatusFromFulfillment(currentStatus, nextFulfillment);
@@ -1594,6 +1597,8 @@ export async function cancelWarehouseOrderFormAction(formData: FormData) {
   await revalidateWarehouseFulfillmentPaths();
   revalidatePath("/warehouse/fulfillment");
   revalidatePath("/warehouse/orders");
+  revalidatePath("/warehouse/activity");
+  revalidatePath("/warehouse/dashboard");
 }
 
 export async function advanceWarehouseOrderStepFormAction(formData: FormData) {
@@ -1671,4 +1676,8 @@ export async function dispatchWarehouseOrderFormAction(formData: FormData) {
 
   await revalidateWarehouseFulfillmentPaths();
   revalidatePath("/warehouse/inventory");
+  revalidatePath("/warehouse/activity");
+  revalidatePath("/warehouse/dashboard");
+  revalidatePath("/warehouse/orders");
+  revalidatePath("/warehouse/fulfillment");
 }

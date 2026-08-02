@@ -42,6 +42,7 @@ type InventoryActionBridgeProps = {
   nextPageHref?: string;
   allowCsvImport?: boolean;
   initialSearchQuery?: string;
+  blockedReason?: string;
 };
 
 function feedbackFromResult(result: InventoryActionResult) {

@@ -159,7 +159,7 @@ export function PlatformTopbar({
                 prefetch
                 onMouseEnter={() => prefetchHref(resolvedPrimaryAction.href)}
                 onFocus={() => prefetchHref(resolvedPrimaryAction.href)}
-                className="platform-btn-primary h-9 rounded-[8px] px-3 text-sm font-medium"
+                className="platform-btn-primary platform-btn-sm h-9 min-h-9 rounded-[8px] px-3 text-sm font-medium"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
                 {resolvedPrimaryAction.label}

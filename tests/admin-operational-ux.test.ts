@@ -60,12 +60,14 @@ describe("admin operational UX", () => {
 
     expect(page).toContain("data-admin-kpi-strip");
     expect(page).toContain("Action queue");
-    expect(page).toContain("Pending orders");
+    expect(page).toContain("Orders received today");
+    expect(page).toContain("Pending review");
+    expect(page).toContain("Pushed to warehouse");
+    expect(page).toContain("Dispatched today");
     expect(page).toContain("/admin/orders?queue=review");
-    expect(page).toContain("Supplier approvals");
-    expect(page).toContain("/admin/suppliers/products");
-    expect(page).toContain("Customer leads");
-    expect(page).toContain("/admin/leads");
+    expect(page).toContain("/admin/orders?queue=warehouse");
+    expect(page).not.toContain("Customer leads");
+    expect(page).not.toContain("/admin/leads");
     expect(page).not.toContain("data-admin-quick-actions");
     expect(page).not.toContain("Hard delete");
     expect(page).not.toContain("Open storefront");
@@ -78,9 +80,12 @@ describe("admin operational UX", () => {
     expect(page).toContain("data-admin-dashboard");
     expect(page).toContain("data-admin-kpi-strip");
     expect(page).toContain("Action queue");
-    expect(page).toContain("Inventory alerts");
-    expect(page).toContain("AdminDashboardEnquiryQueue");
-    expect(page).toContain("pendingSupplierSubmissionRows");
+    expect(page).toContain("ordersReceivedToday");
+    expect(page).toContain("ordersPushedToWarehouse");
+    expect(page).toContain("ordersDispatchedToday");
+    expect(page).not.toContain("AdminDashboardEnquiryQueue");
+    expect(page).not.toContain("Inventory alerts");
+    expect(page).not.toContain("Supplier approvals");
     expect(page).not.toContain("data-admin-quick-actions");
     expect(page).not.toContain("Recent orders");
     expect(page).not.toContain("Recent activity");
@@ -95,6 +100,11 @@ describe("admin operational UX", () => {
     expect(adminService).toContain("lowStockAlerts");
     expect(adminService).toContain("operationalCounts");
     expect(adminService).toContain("ordersNeedingReview");
+    expect(adminService).toContain("ordersReceivedToday");
+    expect(adminService).toContain("ordersPushedToWarehouse");
+    expect(adminService).toContain("ordersDispatchedToday");
+    expect(adminService).toContain("fulfillment_status=in.(dispatched,delivered)");
+    expect(adminService).toContain("adminIstDayBounds");
     expect(adminService).toContain("listPendingSupplierSubmissions");
     expect(adminService).not.toContain("recentShipments");
     expect(adminService).not.toContain("pendingOperations");

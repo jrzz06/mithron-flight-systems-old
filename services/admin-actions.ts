@@ -1250,6 +1250,15 @@ async function hardDeleteProductRecord(
     throw new Error(`Product ${slug} does not exist or was already deleted.`);
   }
 
+  const mediaLinks = await fetchAdminRecordsByColumn("product_media_assets", "product_slug", slug, env);
+  const mediaAssetIds = [
+    ...new Set(
+      mediaLinks
+        .map((link) => String(link.media_asset_id ?? "").trim())
+        .filter(Boolean)
+    )
+  ];
+
   const deletedDependencies: Record<string, number> = {
     product_media_assets: (await deleteAdminRecordsByColumn("product_media_assets", "product_slug", slug, actorId, env)).length,
     inventory: (await deleteAdminRecordsByColumn("inventory", "product_slug", slug, actorId, env)).length,
@@ -1267,6 +1276,23 @@ async function hardDeleteProductRecord(
   }
 
   const deletedProduct = await deleteAdminRecord("mithron_products", "slug", slug, actorId, env);
+
+  if (mediaAssetIds.length) {
+    const { cleanupOrphanMediaAsset } = await import("@/lib/product-media-cleanup");
+    let storageCleaned = 0;
+    for (const mediaAssetId of mediaAssetIds) {
+      try {
+        await cleanupOrphanMediaAsset(mediaAssetId, slug, actorId);
+        storageCleaned += 1;
+      } catch (error) {
+        console.warn(
+          `[admin-actions] failed to cleanup media asset ${mediaAssetId} for deleted product ${slug}:`,
+          error instanceof Error ? error.message : error
+        );
+      }
+    }
+    deletedDependencies.media_assets_cleanup_attempted = storageCleaned;
+  }
 
   return {
     ...deletedProduct,

@@ -15,6 +15,16 @@ describe("observability log pruning route", () => {
     expect(vercel).toContain("/api/admin/prune-logs");
   });
 
+  it("passes configurable retention and revision keep settings into the RPC", () => {
+    const route = readFileSync(join(process.cwd(), "app/api/admin/prune-logs/route.ts"), "utf8");
+    expect(route).toContain("OBSERVABILITY_LOG_RETENTION_DAYS");
+    expect(route).toContain("CONTENT_REVISION_KEEP_LAST");
+    expect(route).toContain("CONTENT_REVISION_RETENTION_DAYS");
+    expect(route).toContain("revision_keep_last");
+    expect(route).toContain("revision_retention_days");
+    expect(route).toContain("DEFAULT_RETENTION_DAYS = 60");
+  });
+
   it("stops mirroring security events into activity_logs", () => {
     const observability = readFileSync(join(process.cwd(), "services/security-observability.ts"), "utf8");
 

@@ -48,12 +48,12 @@ export default async function AdminSuppliersPage({ searchParams }: { searchParam
               name="q"
               defaultValue={query}
               placeholder="Company, email, or contact name"
-              className="h-9 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 text-sm"
+              className="h-9 min-h-9 rounded-[8px] border border-[var(--platform-border)] bg-[var(--platform-surface-muted)] px-3 text-sm"
             />
           </label>
-          <button type="submit" className="platform-btn-primary h-9 rounded-[8px] px-4 text-sm font-medium">Search</button>
+          <button type="submit" className="platform-btn-primary platform-btn-sm h-9 min-h-9 rounded-[8px] px-4 text-sm font-medium">Search</button>
         </form>
-        <Link href="/admin/suppliers/products" className="platform-btn-primary h-9 rounded-[8px] px-4 text-sm font-medium">
+        <Link href="/admin/suppliers/products" className="platform-btn-primary platform-btn-sm h-9 min-h-9 rounded-[8px] px-4 text-sm font-medium">
           Review submissions
         </Link>
       </div>

@@ -18,6 +18,7 @@ import {
 import type { SimpleInventoryRow, SimpleInventoryStatus } from "@/services/simple-inventory-view";
 import type { InventoryStockMetrics } from "@/services/inventory-metrics";
 import type { CatalogFilter } from "@/services/csv-inventory-source";
+import { connectivityMessage } from "@/lib/platform/copy";
 
 type InventoryAction = (formData: FormData) => void | Promise<void>;
 
@@ -44,6 +45,7 @@ type InventoryManagerProps = {
   nextPageHref?: string;
   allowCsvImport?: boolean;
   initialSearchQuery?: string;
+  blockedReason?: string;
 };
 
 function formatBlockerSummary(blockers: ProductDeletionBlockerResult["blockers"]) {
@@ -451,7 +453,8 @@ export function InventoryManager({
   previousPageHref,
   nextPageHref,
   allowCsvImport = true,
-  initialSearchQuery = ""
+  initialSearchQuery = "",
+  blockedReason
 }: InventoryManagerProps) {
   const [query, setQuery] = useState(initialSearchQuery);
   const deferredQuery = useDeferredValue(query);
@@ -486,7 +489,11 @@ export function InventoryManager({
       return matchesSearch && matchesStatus && matchesRange;
     });
   }, [deferredQuery, mergedRows, statusFilter, stockRangeFilter]);
+  const emptyInventoryMessage = blockedReason
+    ? "Inventory could not be loaded. Refresh to retry."
+    : "No inventory rows match the current filters.";
   const visibleRows = filteredRows;
+
   const mobileRowVirtualizer = useWindowVirtualizer({
     count: visibleRows.length,
     estimateSize: () => 220,
@@ -628,6 +635,15 @@ export function InventoryManager({
           </a>
         </div>
       </div>
+
+      {blockedReason ? (
+        <p
+          data-inventory-blocked-reason
+          className="rounded-xl border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-100"
+        >
+          {connectivityMessage(blockedReason) || "Inventory temporarily unavailable. Refresh to retry."}
+        </p>
+      ) : null}
 
       {!readOnly && restockAction ? (
         <div
@@ -831,7 +847,7 @@ export function InventoryManager({
               />
             )) : (
               <tr>
-                <td colSpan={readOnly ? 7 : 9} className="px-4 py-10 text-center text-sm text-slate-500">No inventory rows match the current filters.</td>
+                <td colSpan={readOnly ? 7 : 9} className="px-4 py-10 text-center text-sm text-slate-500">{emptyInventoryMessage}</td>
               </tr>
             )}
           </tbody>
@@ -895,7 +911,7 @@ export function InventoryManager({
             })}
           </div>
         ) : (
-          <p className="rounded-xl border border-slate-800 bg-[#10151d] px-4 py-8 text-center text-sm text-slate-500">No inventory rows match the current filters.</p>
+          <p className="rounded-xl border border-slate-800 bg-[#10151d] px-4 py-8 text-center text-sm text-slate-500">{emptyInventoryMessage}</p>
         )}
       </div>
 
