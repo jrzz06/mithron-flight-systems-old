@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { assertSupabaseAdminConfig } from "@/lib/env";
 import { parseStoragePublicUrl } from "@/lib/media/backfill-primary-media";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
@@ -182,7 +182,7 @@ type ListedObject = {
 };
 
 async function listAllObjects(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   prefix = ""
 ): Promise<Array<{ path: string; sizeBytes: number | null; createdAt: string | null }>> {
   const out: Array<{ path: string; sizeBytes: number | null; createdAt: string | null }> = [];
